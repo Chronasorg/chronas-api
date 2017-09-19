@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export default {
-  // POST /api/users
+  // POST /v1/users
   createUser: {
     body: {
       username: Joi.string().required(),
@@ -9,7 +9,7 @@ export default {
     }
   },
 
-  // POST /api/markers
+  // POST /v1/markers
   createMarker: {
     body: {
       name: Joi.string().required(),
@@ -18,7 +18,7 @@ export default {
     }
   },
 
-  // POST /api/areas
+  // POST /v1/areas
   createArea: {
     body: {
       name: Joi.string().required(),
@@ -30,7 +30,7 @@ export default {
     }
   },
 
-  // UPDATE /api/users/:userId
+  // UPDATE /v1/users/:userId
   updateUser: {
     body: {
       username: Joi.string(),
@@ -41,7 +41,7 @@ export default {
     }
   },
 
-  // UPDATE /api/markers/:markerId
+  // UPDATE /v1/markers/:markerId
   updateMarker: {
     body: {
       name: Joi.string(),
@@ -53,7 +53,7 @@ export default {
     }
   },
 
-  // UPDATE /api/area/:areaId
+  // UPDATE /v1/area/:areaId
   updateArea: {
     body: {
       name: Joi.string(),
@@ -68,7 +68,7 @@ export default {
     }
   },
 
-  // POST /api/auth/login
+  // POST /v1/auth/login
   login: {
     body: {
       username: Joi.string().required(),

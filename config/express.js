@@ -46,8 +46,8 @@ if (config.env === 'development') {
   }));
 }
 
-// mount all routes on /api path
-app.use('/api', routes);
+// route for v1 (current) requests
+app.use('/v1', routes);
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
@@ -65,7 +65,7 @@ app.use((err, req, res, next) => {
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const err = new APIError('API not found', httpStatus.NOT_FOUND);
+  const err = new APIError('API not found. Check the url, example: /v1/health', httpStatus.NOT_FOUND);
   return next(err);
 });
 

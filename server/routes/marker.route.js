@@ -8,20 +8,20 @@ import config from '../../config/config';
 const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
-  /** GET /api/markers - Get list of markers */
+  /** GET /v1/markers - Get list of markers */
   .get(expressJwt({ secret: config.jwtSecret }), markerCtrl.list)
 
-  /** POST /api/markers - Create new marker */
+  /** POST /v1/markers - Create new marker */
   .post(expressJwt({ secret: config.jwtSecret }), validate(paramValidation.createMarker), markerCtrl.create);
 
 router.route('/:markerId')
-  /** GET /api/markers/:markerId - Get marker */
+  /** GET /v1/markers/:markerId - Get marker */
   .get(expressJwt({ secret: config.jwtSecret }), markerCtrl.get)
 
-  /** PUT /api/markers/:markerId - Update marker */
+  /** PUT /v1/markers/:markerId - Update marker */
   .put(expressJwt({ secret: config.jwtSecret }), validate(paramValidation.updateMarker), markerCtrl.update)
 
-  /** DELETE /api/markers/:markerId - Delete marker */
+  /** DELETE /v1/markers/:markerId - Delete marker */
   .delete(expressJwt({ secret: config.jwtSecret }), markerCtrl.remove);
 
 /** Load marker when API with markerId route parameter is hit */

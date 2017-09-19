@@ -11,6 +11,6 @@ cache:
 git:
   depth: 3
 script:
-  - yarn test:check-coverage
+  - npm test:check-coverage
 after_script:
-  - yarn report-coverage
+  - npm report-coverage
