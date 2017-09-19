@@ -56,6 +56,7 @@ Refer [debug](https://www.npmjs.com/package/debug) to know how to selectively tu
 Tests:
 ```sh
 # Run tests written in ES6 
+
 npm run test
 
 # Run test along with code coverage
@@ -71,6 +72,7 @@ npm run test:check-coverage
 Lint:
 ```sh
 # Lint code with ESLint
+
 npm run lint
 
 # Run lint on any file change

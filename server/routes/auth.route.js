@@ -12,5 +12,3 @@ router.route('/login')
   .post(validate(paramValidation.login), authCtrl.login);
 
 export default router;
-
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJlYWN0IiwiaWF0IjoxNDg5NTg2NTkwfQ.uuA-LDsPtgoAAErbcZhOpqdNR9K6vvm_G_QT9io0NDI

@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "gulp serve",
-    "start:debug": "cross-env DEBUG=chronas-api:* yarn start",
+    "start:debug": "cross-env DEBUG=chronas-api:* npm start",
     "build": "gulp",
     "lint": "esw *.js server config --color",
     "lint:watch": "yarn lint -- --watch",
