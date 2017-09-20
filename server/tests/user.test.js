@@ -1,27 +1,27 @@
-import mongoose from 'mongoose';
-import request from 'supertest-as-promised';
-import httpStatus from 'http-status';
-import chai, { expect } from 'chai';
-import app from '../../index';
+import mongoose from 'mongoose'
+import request from 'supertest-as-promised'
+import httpStatus from 'http-status'
+import chai, { expect } from 'chai'
+import app from '../../index'
 
-chai.config.includeStack = true;
+chai.config.includeStack = true
 
 /**
  * root level hooks
  */
 after((done) => {
   // required because https://github.com/Automattic/mongoose/issues/1251#issuecomment-65793092
-  mongoose.models = {};
-  mongoose.modelSchemas = {};
-  mongoose.connection.close();
-  done();
-});
+  mongoose.models = {}
+  mongoose.modelSchemas = {}
+  mongoose.connection.close()
+  done()
+})
 
 describe('## User APIs', () => {
   let user = {
     username: 'KK123',
     privilege: 'public'
-  };
+  }
 
   describe('# POST /v1/users', () => {
     it('should create a new user', (done) => {
@@ -30,14 +30,14 @@ describe('## User APIs', () => {
         .send(user)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.username).to.equal(user.username);
-          expect(res.body.privilege).to.equal(user.privilege);
-          user = res.body;
-          done();
+          expect(res.body.username).to.equal(user.username)
+          expect(res.body.privilege).to.equal(user.privilege)
+          user = res.body
+          done()
         })
-        .catch(done);
-    });
-  });
+        .catch(done)
+    })
+  })
 
   describe('# GET /v1/users/:userId', () => {
     it('should get user details', (done) => {
@@ -45,40 +45,40 @@ describe('## User APIs', () => {
         .get(`/v1/users/${user._id}`)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.username).to.equal(user.username);
-          expect(res.body.privilege).to.equal(user.privilege);
-          done();
+          expect(res.body.username).to.equal(user.username)
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
         })
-        .catch(done);
-    });
+        .catch(done)
+    })
 
     it('should report error with message - Not found, when user does not exists', (done) => {
       request(app)
         .get('/v1/users/56c787ccc67fc16ccc1a5e92')
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
-          expect(res.body.message).to.equal('Not Found');
-          done();
+          expect(res.body.message).to.equal('Not Found')
+          done()
         })
-        .catch(done);
-    });
-  });
+        .catch(done)
+    })
+  })
 
   describe('# PUT /v1/users/:userId', () => {
     it('should update user details', (done) => {
-      user.username = 'KK';
+      user.username = 'KK'
       request(app)
         .put(`/v1/users/${user._id}`)
         .send(user)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.username).to.equal('KK');
-          expect(res.body.privilege).to.equal(user.privilege);
-          done();
+          expect(res.body.username).to.equal('KK')
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
         })
-        .catch(done);
-    });
-  });
+        .catch(done)
+    })
+  })
 
   describe('# GET /v1/users/', () => {
     it('should get all users', (done) => {
@@ -86,12 +86,12 @@ describe('## User APIs', () => {
         .get('/v1/users')
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body).to.be.an('array');
-          done();
+          expect(res.body).to.be.an('array')
+          done()
         })
-        .catch(done);
-    });
-  });
+        .catch(done)
+    })
+  })
 
   describe('# DELETE /v1/users/', () => {
     it('should delete user', (done) => {
@@ -99,11 +99,11 @@ describe('## User APIs', () => {
         .delete(`/v1/users/${user._id}`)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.username).to.equal('KK');
-          expect(res.body.privilege).to.equal(user.privilege);
-          done();
+          expect(res.body.username).to.equal('KK')
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
         })
-        .catch(done);
-    });
-  });
-});
+        .catch(done)
+    })
+  })
+})

@@ -1,5 +1,6 @@
-import Marker from '../models/marker.model';
-const debug = require('debug')('chronas-api:index');
+import Marker from '../models/marker.model'
+
+const debug = require('debug')('chronas-api:index')
 
 /**
  * Load marker and append to req.
@@ -7,10 +8,10 @@ const debug = require('debug')('chronas-api:index');
 function load(req, res, next, id) {
   Marker.get(id)
     .then((marker) => {
-      req.marker = marker; // eslint-disable-line no-param-reassign
-      return next();
+      req.marker = marker // eslint-disable-line no-param-reassign
+      return next()
     })
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -18,7 +19,7 @@ function load(req, res, next, id) {
  * @returns {Marker}
  */
 function get(req, res) {
-  return res.json(req.marker);
+  return res.json(req.marker)
 }
 
 /**
@@ -35,11 +36,11 @@ function create(req, res, next) {
     layout: req.body.layout,
     modifiedAt: req.body.modifiedAt,
     createdAt: req.body.createdAt
-  });
+  })
 
   marker.save()
     .then(savedMarker => res.json(savedMarker))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -49,16 +50,15 @@ function create(req, res, next) {
  * @returns {Marker}
  */
 function update(req, res, next) {
-
-  const marker = req.marker;
-  if (typeof req.body.name !== "undefined") marker.name = req.body.name;
-  if (typeof req.body.privilegeLevel !== "undefined") marker.privilegeLevel = req.body.privilegeLevel;
-  if (typeof req.body.layout !== "undefined") marker.layout = req.body.layout;
-  marker.modifiedAt = Date.now;
+  const marker = req.marker
+  if (typeof req.body.name !== 'undefined') marker.name = req.body.name
+  if (typeof req.body.privilegeLevel !== 'undefined') marker.privilegeLevel = req.body.privilegeLevel
+  if (typeof req.body.layout !== 'undefined') marker.layout = req.body.layout
+  marker.modifiedAt = Date.now
 
   marker.save()
     .then(savedMarker => res.json(savedMarker))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -68,22 +68,22 @@ function update(req, res, next) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { limit = 50, skip = 0 } = req.query;
+  const { limit = 50, skip = 0 } = req.query
   Marker.list({ limit, skip })
-    .then(markers => {
-      let markersTmp = JSON.parse(JSON.stringify(markers)) || [],
+    .then((markers) => {
+      const markersTmp = JSON.parse(JSON.stringify(markers)) || [],
         markersToList = []
 
       for (let i = 0; i < markersTmp.length; i++) {
         if (markersTmp[i].owner === req.user.username
-          || markersTmp[i].privilegeLevel.indexOf("public") > -1) {
+          || markersTmp[i].privilegeLevel.indexOf('public') > -1) {
           markersToList.push(markersTmp[i])
         }
       }
 
       res.json(markersToList)
     })
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -91,10 +91,10 @@ function list(req, res, next) {
  * @returns {Marker}
  */
 function remove(req, res, next) {
-  const marker = req.marker;
+  const marker = req.marker
   marker.remove()
     .then(deletedMarker => res.json(deletedMarker))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
-export default { load, get, create, update, list, remove };
+export default { load, get, create, update, list, remove }

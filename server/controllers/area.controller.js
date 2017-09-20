@@ -1,4 +1,4 @@
-import Area from '../models/area.model';
+import Area from '../models/area.model'
 
 /**
  * Load area and append to req.
@@ -6,10 +6,10 @@ import Area from '../models/area.model';
 function load(req, res, next, id) {
   Area.get(id)
     .then((area) => {
-      req.area = area; // eslint-disable-line no-param-reassign
-      return next();
+      req.area = area // eslint-disable-line no-param-reassign
+      return next()
     })
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -17,7 +17,7 @@ function load(req, res, next, id) {
  * @returns {Area}
  */
 function get(req, res) {
-  return res.json(req.area);
+  return res.json(req.area)
 }
 
 /**
@@ -30,11 +30,11 @@ function create(req, res, next) {
   const area = new Area({
     year: req.body.year,
     data: req.body.data
-  });
+  })
 
   area.save()
     .then(savedArea => res.json(savedArea))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -44,14 +44,13 @@ function create(req, res, next) {
  * @returns {Area}
  */
 function update(req, res, next) {
-
-  const area = req.area;
-  if (typeof req.body.year !== "undefined") area.year = req.body.year;
-  if (typeof req.body.data !== "undefined") area.data = req.body.data;
+  const area = req.area
+  if (typeof req.body.year !== 'undefined') area.year = req.body.year
+  if (typeof req.body.data !== 'undefined') area.data = req.body.data
 
   area.save()
     .then(savedArea => res.json(savedArea))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -61,22 +60,22 @@ function update(req, res, next) {
  * @returns {Area[]}
  */
 function list(req, res, next) {
-  const { offset = 0, length = 50 } = req.query;
+  const { offset = 0, length = 50 } = req.query
   Area.list({ offset, length })
-    .then(areas => {
-      let areasTmp = JSON.parse(JSON.stringify(areas)) || [],
-        areasToList = []
+    .then((areas) => {
+      const areasTmp = JSON.parse(JSON.stringify(areas)) || []
+      const areasToList = []
 
       for (let i = 0; i < areasTmp.length; i++) {
         if (areasTmp[i].owner === req.user.username
-          || areasTmp[i].privilegeLevel.indexOf("public") > -1) {
+          || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
           areasToList.push(areasTmp[i])
         }
       }
 
       res.json(areasToList)
     })
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
 /**
@@ -84,10 +83,10 @@ function list(req, res, next) {
  * @returns {Area}
  */
 function remove(req, res, next) {
-  const area = req.area;
+  const area = req.area
   area.remove()
     .then(deletedArea => res.json(deletedArea))
-    .catch(e => next(e));
+    .catch(e => next(e))
 }
 
-export default { load, get, create, update, list, remove };
+export default { load, get, create, update, list, remove }

@@ -1,7 +1,7 @@
-import Promise from 'bluebird';
-import mongoose from 'mongoose';
-import httpStatus from 'http-status';
-import APIError from '../helpers/APIError';
+import Promise from 'bluebird'
+import mongoose from 'mongoose'
+import httpStatus from 'http-status'
+import APIError from '../helpers/APIError'
 
 /**
  * Marker Schema
@@ -44,7 +44,7 @@ const MarkerSchema = new mongoose.Schema({
     type: Number,
     default: 1
   }
-});
+})
 
 /**
  * Add your
@@ -57,7 +57,7 @@ const MarkerSchema = new mongoose.Schema({
  * Methods
  */
 MarkerSchema.method({
-});
+})
 
 /**
  * Statics
@@ -73,11 +73,11 @@ MarkerSchema.statics = {
       .exec()
       .then((marker) => {
         if (marker) {
-          return marker;
+          return marker
         }
-        const err = new APIError('No such marker exists!', httpStatus.NOT_FOUND);
-        return Promise.reject(err);
-      });
+        const err = new APIError('No such marker exists!', httpStatus.NOT_FOUND)
+        return Promise.reject(err)
+      })
   },
 
   /**
@@ -89,13 +89,13 @@ MarkerSchema.statics = {
   list({ offset = 0, length = 50 } = {}) {
     return this.find()
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+      .skip(offset)
+      .limit(length)
+      .exec()
   }
-};
+}
 
 /**
  * @typedef Marker
  */
-export default mongoose.model('Marker', MarkerSchema);
+export default mongoose.model('Marker', MarkerSchema)

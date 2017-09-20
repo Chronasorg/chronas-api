@@ -1,30 +1,30 @@
-import mongoose from 'mongoose';
-import util from 'util';
+import mongoose from 'mongoose'
+import util from 'util'
 
 // config should be imported before importing any other file
-import config from './config/config';
-import app from './config/express';
+import config from './config/config'
+import app from './config/express'
 
-const debug = require('debug')('chronas-api:index');
+const debug = require('debug')('chronas-api:index')
 
 // make bluebird default Promise
-Promise = require('bluebird'); // eslint-disable-line no-global-assign
+Promise = require('bluebird') // eslint-disable-line no-global-assign
 
 // plugin bluebird promise in mongoose
-mongoose.Promise = Promise;
+mongoose.Promise = Promise
 
 // connect to mongo db
 const mongoUri = config.mongo.host
-mongoose.connect(mongoUri, { server: { socketOptions: { keepAlive: 1 } } });
+mongoose.connect(mongoUri, { server: { socketOptions: { keepAlive: 1 } } })
 mongoose.connection.on('error', () => {
-  throw new Error(`unable to connect to database: ${mongoUri}`);
-});
+  throw new Error(`unable to connect to database: ${mongoUri}`)
+})
 
 // print mongoose logs in dev env
 if (config.MONGOOSE_DEBUG) {
   mongoose.set('debug', (collectionName, method, query, doc) => {
-    debug(`${collectionName}.${method}`, util.inspect(query, false, 20), doc);
-  });
+    debug(`${collectionName}.${method}`, util.inspect(query, false, 20), doc)
+  })
 }
 
 // module.parent check is required to support mocha watch
@@ -32,8 +32,8 @@ if (config.MONGOOSE_DEBUG) {
 if (!module.parent) {
   // listen on port config.port
   app.listen(config.port, () => {
-    debug(`server started on port ${config.port} (${config.env})`);
-  });
+    debug(`server started on port ${config.port} (${config.env})`)
+  })
 }
 
-export default app;
+export default app

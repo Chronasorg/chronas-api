@@ -1,7 +1,7 @@
-import Promise from 'bluebird';
-import mongoose from 'mongoose';
-import httpStatus from 'http-status';
-import APIError from '../helpers/APIError';
+import Promise from 'bluebird'
+import mongoose from 'mongoose'
+import httpStatus from 'http-status'
+import APIError from '../helpers/APIError'
 
 /**
  * User Schema
@@ -40,7 +40,7 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+})
 
 /**
  * Add your
@@ -53,7 +53,7 @@ const UserSchema = new mongoose.Schema({
  * Methods
  */
 UserSchema.method({
-});
+})
 
 /**
  * Statics
@@ -69,11 +69,11 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
-          return user;
+          return user
         }
-        const err = new APIError('No such user exists!', httpStatus.NOT_FOUND);
-        return Promise.reject(err);
-      });
+        const err = new APIError('No such user exists!', httpStatus.NOT_FOUND)
+        return Promise.reject(err)
+      })
   },
 
   /**
@@ -87,11 +87,11 @@ UserSchema.statics = {
       .sort({ createdAt: -1 })
       .skip(+skip)
       .limit(+limit)
-      .exec();
+      .exec()
   }
-};
+}
 
 /**
  * @typedef User
  */
-export default mongoose.model('User', UserSchema);
+export default mongoose.model('User', UserSchema)

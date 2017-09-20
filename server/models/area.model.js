@@ -1,7 +1,7 @@
-import Promise from 'bluebird';
-import mongoose from 'mongoose';
-import httpStatus from 'http-status';
-import APIError from '../helpers/APIError';
+import Promise from 'bluebird'
+import mongoose from 'mongoose'
+import httpStatus from 'http-status'
+import APIError from '../helpers/APIError'
 
 /**
  * Area Schema
@@ -12,10 +12,10 @@ const AreaSchema = new mongoose.Schema({
     required: true
   },
   data: {
-    type: Mixed,
+    type: mongoose.Schema.Types.Mixed,
     required: true
   },
-});
+})
 
 /**
  * Add your
@@ -28,45 +28,45 @@ const AreaSchema = new mongoose.Schema({
  * Methods
  */
 AreaSchema.method({
-});
+})
 
 /**
  * Statics
  */
 AreaSchema.statics = {
   /**
-   * Get Marker
-   * @param {ObjectId} id - The objectId of Marker.
-   * @returns {Promise<Marker, APIError>}
+   * Get Area
+   * @param {ObjectId} id - The objectId of Area.
+   * @returns {Promise<Area, APIError>}
    */
   get(id) {
     return this.findById(id)
       .exec()
-      .then((marker) => {
-        if (marker) {
-          return marker;
+      .then((area) => {
+        if (area) {
+          return area
         }
-        const err = new APIError('No such marker exists!', httpStatus.NOT_FOUND);
-        return Promise.reject(err);
-      });
+        const err = new APIError('No such area exists!', httpStatus.NOT_FOUND)
+        return Promise.reject(err)
+      })
   },
 
   /**
    * List areas in descending order of 'createdAt' timestamp.
    * @param {number} offset - Number of year to start from.
    * @param {number} length - Limit number of areas to be returned.
-   * @returns {Promise<Marker[]>}
+   * @returns {Promise<Area[]>}
    */
   list({ offset = 0, length = 50 } = {}) {
     return this.find()
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+      .skip(offset)
+      .limit(length)
+      .exec()
   }
-};
+}
 
 /**
- * @typedef Marker
+ * @typedef Area
  */
-export default mongoose.model('Marker', AreaSchema);
+export default mongoose.model('Area', AreaSchema)

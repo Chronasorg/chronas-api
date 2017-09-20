@@ -1,5 +1,9 @@
 {
   "rules": {
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
+    "semi": ["error", "never"],
+    "one-var": "off", // ["warn", "never"],
+    "no-unused-vars": "warn",
     "indent": [
       2,
       2,
