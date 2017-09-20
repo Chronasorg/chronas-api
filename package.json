@@ -9,7 +9,7 @@
     "npm": ">=2.15.11"
   },
   "scripts": {
-    "start": "gulp serve",
+    "start": "cross-env DEBUG=chronas-api:* gulp serve",
     "start:debug": "cross-env DEBUG=chronas-api:* npm start",
     "build": "gulp",
     "lint": "esw *.js server config --color --fix",
@@ -26,8 +26,6 @@
     "url": "git+ssh://git@github.com/daumann/chronas-api.git"
   },
   "dependencies": {
-    "swagger-node-express": "^2.1.3",
-    "minimist": "*",
     "bluebird": "3.5.0",
     "body-parser": "1.18.1",
     "compression": "1.7.0",
