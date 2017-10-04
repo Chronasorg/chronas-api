@@ -3,6 +3,9 @@ import gulpLoadPlugins from 'gulp-load-plugins'
 import path from 'path'
 import del from 'del'
 import runSequence from 'run-sequence'
+import minimist from 'minimist'
+import zip from 'gulp-zip'
+import fs from 'fs'
 
 const plugins = gulpLoadPlugins()
 
@@ -11,6 +14,14 @@ const paths = {
   nonJs: ['./package.json', './.gitignore', './.env'],
   tests: './server/tests/*.js'
 }
+
+var knownOptions = {
+	string: 'packageName',
+	string: 'packagePath',
+	default: {packageName: "Package.zip", packagePath: path.join(__dirname, '_package')}
+}
+
+var options = minimist(process.argv.slice(2), knownOptions);
 
 // Clean up dist and coverage directory
 gulp.task('clean', () =>
@@ -23,6 +34,32 @@ gulp.task('copy', () =>
     .pipe(plugins.newer('dist'))
     .pipe(gulp.dest('dist'))
 )
+
+gulp.task('package', function () {
+  
+    var packagePaths = ['dist/**', 
+            '!**/_package/**', 
+            '!**/typings/**',
+            '!typings', 
+            '!_package', 
+            '!gulpfile.js']
+    
+    //add exclusion patterns for all dev dependencies
+    var packageJSON = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+    var devDeps = packageJSON.devDependencies;
+  
+    for(var propName in devDeps)
+    {
+      var excludePattern1 = "!**/node_modules/" + propName + "/**";
+      var excludePattern2 = "!**/node_modules/" + propName;
+      packagePaths.push(excludePattern1);
+      packagePaths.push(excludePattern2);
+    }
+    
+      return gulp.src(packagePaths)
+          .pipe(zip(options.packageName))
+          .pipe(gulp.dest(options.packagePath));
+  });
 
 // Compile ES6 to ES5 and copy to dist
 gulp.task('babel', () =>

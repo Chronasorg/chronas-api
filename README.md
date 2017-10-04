@@ -28,7 +28,7 @@ It is based on Node.js using ES6 and Express with Code Coverage and JWT Authenti
 
 Clone the repo:
 ```sh
-git clone git@github.com:daumann/chronas-api.git
+git clone https://github.com/daumann/chronas-api.git
 ```
 
 Install dependencies:
