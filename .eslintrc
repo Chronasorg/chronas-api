@@ -1,5 +1,6 @@
 {
   "rules": {
+    "import/no-named-as-default": 0,
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "semi": ["error", "never"],
     "one-var": "off", // ["warn", "never"],

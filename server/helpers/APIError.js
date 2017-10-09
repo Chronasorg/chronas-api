@@ -19,7 +19,7 @@ class ExtendableError extends Error {
  * Class representing an API error.
  * @extends ExtendableError
  */
-class APIError extends ExtendableError {
+export class APIError extends ExtendableError {
   /**
    * Creates an API error.
    * @param {string} message - Error message.
@@ -27,6 +27,22 @@ class APIError extends ExtendableError {
    * @param {boolean} isPublic - Whether the message should be visible to user or not.
    */
   constructor(message, status = httpStatus.INTERNAL_SERVER_ERROR, isPublic = false) {
+    super(message, status, isPublic)
+  }
+}
+
+/**
+ * Class representing an API error.
+ * @extends ExtendableError
+ */
+export class APICustomResponse extends ExtendableError {
+  /**
+   * Creates an API error.
+   * @param {string} message - Response message.
+   * @param {number} status - HTTP status code.
+   * @param {boolean} isPublic - Whether the message should be visible to user or not.
+   */
+  constructor(message, status = httpStatus.INTERNAL_SERVER_ERROR, isPublic = true) {
     super(message, status, isPublic)
   }
 }

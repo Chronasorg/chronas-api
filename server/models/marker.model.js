@@ -89,8 +89,8 @@ MarkerSchema.statics = {
   list({ offset = 0, length = 50 } = {}) {
     return this.find()
       .sort({ createdAt: -1 })
-      .skip(offset)
-      .limit(length)
+      .skip(+offset)
+      .limit(+length)
       .exec()
   }
 }

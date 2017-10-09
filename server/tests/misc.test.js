@@ -50,9 +50,9 @@ describe('## Misc', () => {
         .send({
           privilege: 'public'
         })
-        .expect(httpStatus.BAD_REQUEST)
+        .expect(httpStatus.UNAUTHORIZED)
         .then((res) => {
-          expect(res.body.message).to.equal('"username" is required')
+          expect(res.body.message).to.equal('Unauthorized')
           done()
         })
         .catch(done)

@@ -11,34 +11,44 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  privilege: {
-    type: String,
-    required: true
-  },
   name: {
     type: String,
   },
   education: {
     type: String
   },
-  karma: {
-    type: Number,
-    default: 0
-  },
-  edits: {
-    type: Number,
-    default: 0
-  },
-  comments: {
-    type: Number,
-    default: 0
-  },
   email: {
     type: String
   },
+  privilege: {
+    type: String,
+    default: 'user',
+    required: true
+  },
+  status: {
+    type: String,
+    default: 'inactive',
+    required: true
+  },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    required: true
+  },
+  karma: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  edits: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  comments: {
+    type: Number,
+    default: 0,
+    required: true
   }
 })
 

@@ -20,6 +20,9 @@ if (config.env === 'development') {
   app.use(logger('dev'))
 }
 
+// set high enough limit
+app.use(bodyParser({ limit: '50mb' }))
+
 // parse body params and attache them to req.body
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))

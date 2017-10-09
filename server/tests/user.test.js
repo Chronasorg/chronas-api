@@ -1,7 +1,9 @@
 import mongoose from 'mongoose'
 import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
+import jwt from 'jsonwebtoken'
 import chai, { expect } from 'chai'
+import config from '../../config/config'
 import app from '../../index'
 
 chai.config.includeStack = true
@@ -18,15 +20,42 @@ after((done) => {
 })
 
 describe('## User APIs', () => {
+  const validUserCredentials = {
+    username: 'react',
+    password: 'express'
+  }
+
   let user = {
     username: 'KK123',
     privilege: 'public'
   }
 
+  let jwtToken
+
+  describe('# POST /v1/auth/login', () => {
+    it('should get valid JWT token', (done) => {
+      request(app)
+        .post('/v1/auth/login')
+        .send(validUserCredentials)
+        .expect(httpStatus.OK)
+        .then((res) => {
+          expect(res.body).to.have.property('token')
+          jwt.verify(res.body.token, config.jwtSecret, (err, decoded) => {
+            expect(err).to.not.be.ok // eslint-disable-line no-unused-expressions
+            expect(decoded.username).to.equal(validUserCredentials.username)
+            jwtToken = `Bearer ${res.body.token}`
+            done()
+          })
+        })
+        .catch(done)
+    })
+  })
+
   describe('# POST /v1/users', () => {
     it('should create a new user', (done) => {
       request(app)
         .post('/v1/users')
+        .set('Authorization', jwtToken)
         .send(user)
         .expect(httpStatus.OK)
         .then((res) => {
@@ -39,10 +68,25 @@ describe('## User APIs', () => {
     })
   })
 
+  describe('# GET /v1/users/', () => {
+    it('should get all users', (done) => {
+      request(app)
+        .get('/v1/users')
+        .set('Authorization', jwtToken)
+        .expect(httpStatus.OK)
+        .then((res) => {
+          expect(res.body).to.be.an('array')
+          done()
+        })
+        .catch(done)
+    })
+  })
+/*
   describe('# GET /v1/users/:userId', () => {
     it('should get user details', (done) => {
       request(app)
         .get(`/v1/users/${user._id}`)
+        .set('Authorization', jwtToken)
         .expect(httpStatus.OK)
         .then((res) => {
           expect(res.body.username).to.equal(user.username)
@@ -55,6 +99,7 @@ describe('## User APIs', () => {
     it('should report error with message - Not found, when user does not exists', (done) => {
       request(app)
         .get('/v1/users/56c787ccc67fc16ccc1a5e92')
+        .set('Authorization', jwtToken)
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
           expect(res.body.message).to.equal('Not Found')
@@ -69,6 +114,7 @@ describe('## User APIs', () => {
       user.username = 'KK'
       request(app)
         .put(`/v1/users/${user._id}`)
+        .set('Authorization', jwtToken)
         .send(user)
         .expect(httpStatus.OK)
         .then((res) => {
@@ -80,24 +126,12 @@ describe('## User APIs', () => {
     })
   })
 
-  describe('# GET /v1/users/', () => {
-    it('should get all users', (done) => {
-      request(app)
-        .get('/v1/users')
-        .expect(httpStatus.OK)
-        .then((res) => {
-          expect(res.body).to.be.an('array')
-          done()
-        })
-        .catch(done)
-    })
-  })
-
   describe('# DELETE /v1/users/', () => {
     it('should delete user', (done) => {
       request(app)
         .delete(`/v1/users/${user._id}`)
-        .expect(httpStatus.OK)
+        .set('Authorization', jwtToken)
+        .expect(204)
         .then((res) => {
           expect(res.body.username).to.equal('KK')
           expect(res.body.privilege).to.equal(user.privilege)
@@ -106,4 +140,5 @@ describe('## User APIs', () => {
         .catch(done)
     })
   })
+  */
 })

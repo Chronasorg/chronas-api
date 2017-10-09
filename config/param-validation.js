@@ -4,8 +4,7 @@ export default {
   // POST /v1/users
   createUser: {
     body: {
-      username: Joi.string().required(),
-      privilege: Joi.string().required()
+      username: Joi.string().required()
     }
   },
 

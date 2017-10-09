@@ -1,4 +1,5 @@
 import Marker from '../models/marker.model'
+import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 
 const debug = require('debug')('chronas-api:index')
 
@@ -93,7 +94,7 @@ function list(req, res, next) {
 function remove(req, res, next) {
   const marker = req.marker
   marker.remove()
-    .then(deletedMarker => res.json(deletedMarker))
+    .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
     .catch(e => next(e))
 }
 
