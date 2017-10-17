@@ -20,7 +20,7 @@ function load(req, res, next, id) {
  * @returns {Marker}
  */
 function get(req, res) {
-  return res.json(req.marker)
+  return res.json(req.marker.data)
 }
 
 /**

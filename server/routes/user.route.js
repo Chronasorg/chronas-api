@@ -9,7 +9,8 @@ const router = express.Router() // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/users - Get list of users */
-  .get(expressJwt({ secret: config.jwtSecret }),
+  .get(
+    // expressJwt({ secret: config.jwtSecret }),
     userCtrl.list)
 
   /** POST /v1/users - Create new user */

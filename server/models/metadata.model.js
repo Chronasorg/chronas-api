@@ -47,8 +47,8 @@ MetadataSchema.statics = {
     return this.findById(id)
       .exec()
       .then((metadata) => {
-        if (metadata) {
-          return metadata
+        if (metadata && metadata.data) {
+          return metadata.data
         }
         const err = new APIError('No such metadata exists!', httpStatus.NOT_FOUND)
         return Promise.reject(err)
@@ -67,7 +67,7 @@ MetadataSchema.statics = {
       .skip(+offset)
       .limit(+length)
       .exec()
-      .then(metadata => metadata.map(obj => obj))
+      .then(metadata => metadata.map(obj => obj._id))
   }
 }
 

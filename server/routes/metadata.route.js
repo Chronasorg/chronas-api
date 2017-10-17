@@ -19,7 +19,8 @@ router.route('/')
 
 router.route('/:metadataIds')
   /** GET /v1/metadata/:metadataIds - Get metadata through semicolon delimited ids */
-  .get(expressJwt({ secret: config.jwtSecret }),
+  .get(
+    //expressJwt({ secret: config.jwtSecret }),
     metadataCtrl.get)
 
   /** PUT /v1/metadata/:metadataId - Update metadata */

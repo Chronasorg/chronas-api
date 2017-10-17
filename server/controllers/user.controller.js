@@ -1,4 +1,5 @@
 import User from '../models/user.model'
+import logger from '../../config/winston'
 
 /**
  * Load user and append to req.
@@ -75,6 +76,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const user = req.user
+  logger.info("delete user", user)
   user.remove()
     .then(deletedUser => res.json(deletedUser))
     .catch(e => next(e))
