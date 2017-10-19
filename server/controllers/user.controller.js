@@ -28,16 +28,28 @@ function get(req, res) {
  * @returns {User}
  */
 function create(req, res, next) {
-  const user = new User({
-    username: req.body.username,
-    name: req.body.name,
-    education: req.body.education,
-    email: req.body.email,
-    privilege: req.body.privilege
-  })
+  User.findById(req.body.username)
+    .exec()
+    .then((duplicatedUsername) => {
+      if (duplicatedUsername) {
+        const err = new APIError('This username already exists!', 400)
+        next(err)
+      }
 
-  user.save()
-    .then(savedUser => res.json(savedUser))
+      const user = new User({
+        _id: req.body.username,
+        id: req.body.id,
+        username: req.body.username,
+        name: req.body.name,
+        education: req.body.education,
+        email: req.body.email,
+        privilege: req.body.privilege
+      })
+
+      user.save()
+        .then(savedUser => res.json(savedUser))
+        .catch(e => next(e))
+    })
     .catch(e => next(e))
 }
 
@@ -64,9 +76,20 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { limit = 50, skip = 0 } = req.query
-  User.list({ limit, skip })
-    .then(users => res.json(users))
+  const { start = 0, end = 10, count = 0, sort = "createdAt", order = "asc" } = req.query
+  const limit = end - start
+  User.list({ start, limit, sort, order })
+    .then(users => {
+      if (count) {
+        User.find().count({}).exec().then(userCount => {
+            res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+            res.set('X-Total-Count', userCount)
+            res.json(users)
+          })
+      } else {
+        res.json(users)
+      }
+    })
     .catch(e => next(e))
 }
 
@@ -76,7 +99,6 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const user = req.user
-  logger.info("delete user", user)
   user.remove()
     .then(deletedUser => res.json(deletedUser))
     .catch(e => next(e))

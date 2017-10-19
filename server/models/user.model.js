@@ -7,6 +7,14 @@ import APIError from '../helpers/APIError'
  * User Schema
  */
 const UserSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  id: {
+    type: Number,
+    required: true
+  },
   username: {
     type: String,
     required: true
@@ -92,10 +100,12 @@ UserSchema.statics = {
    * @param {number} limit - Limit number of users to be returned.
    * @returns {Promise<User[]>}
    */
-  list({ skip = 0, limit = 50 } = {}) {
+  list({ start, limit, sort, order } = {}) {
+    const sortObject = {}
+    sortObject[sort] = order.toLowerCase()
     return this.find()
-      .sort({ createdAt: -1 })
-      .skip(+skip)
+      .sort(sortObject)
+      .skip(+start)
       .limit(+limit)
       .exec()
   }

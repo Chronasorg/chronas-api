@@ -29,7 +29,8 @@ router.route('/:userId')
     userCtrl.update)
 
   /** DELETE /v1/users/:userId - Delete user */
-  .delete(expressJwt({ secret: config.jwtSecret }),
+  .delete(
+    // expressJwt({ secret: config.jwtSecret }),
     userCtrl.remove)
 
 /** Load user when API with userId route parameter is hit */

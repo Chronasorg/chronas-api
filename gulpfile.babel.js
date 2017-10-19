@@ -15,13 +15,12 @@ const paths = {
   tests: './server/tests/*.js'
 }
 
-var knownOptions = {
-	string: 'packageName',
-	string: 'packagePath',
-	default: {packageName: "Package.zip", packagePath: path.join(__dirname, '_package')}
+const knownOptions = {
+  string: 'packagePath',
+  default: { packageName: 'Package.zip', packagePath: path.join(__dirname, '_package') }
 }
 
-var options = minimist(process.argv.slice(2), knownOptions);
+const options = minimist(process.argv.slice(2), knownOptions)
 
 // Clean up dist and coverage directory
 gulp.task('clean', () =>
@@ -35,31 +34,29 @@ gulp.task('copy', () =>
     .pipe(gulp.dest('dist'))
 )
 
-gulp.task('package', function () {
-  
-    var packagePaths = ['dist/**', 
-            '!**/_package/**', 
-            '!**/typings/**',
-            '!typings', 
-            '!_package', 
-            '!gulpfile.js']
-    
-    //add exclusion patterns for all dev dependencies
-    var packageJSON = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
-    var devDeps = packageJSON.devDependencies;
-  
-    for(var propName in devDeps)
-    {
-      var excludePattern1 = "!**/node_modules/" + propName + "/**";
-      var excludePattern2 = "!**/node_modules/" + propName;
-      packagePaths.push(excludePattern1);
-      packagePaths.push(excludePattern2);
-    }
-    
-      return gulp.src(packagePaths)
+gulp.task('package', () => {
+  const packagePaths = ['dist/**',
+    '!**/_package/**',
+    '!**/typings/**',
+    '!typings',
+    '!_package',
+    '!gulpfile.js']
+
+    // add exclusion patterns for all dev dependencies
+  const packageJSON = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
+  const devDeps = packageJSON.devDependencies
+
+  for (let i = 0; i < devDeps.length; i++) {
+    const excludePattern1 = `!**/node_modules/${devDeps[i]}/**`
+    const excludePattern2 = `!**/node_modules/${devDeps[i]}`
+    packagePaths.push(excludePattern1)
+    packagePaths.push(excludePattern2)
+  }
+
+  return gulp.src(packagePaths)
           .pipe(zip(options.packageName))
-          .pipe(gulp.dest(options.packagePath));
-  });
+          .pipe(gulp.dest(options.packagePath))
+})
 
 // Compile ES6 to ES5 and copy to dist
 gulp.task('babel', () =>
