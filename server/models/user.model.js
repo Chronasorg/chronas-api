@@ -11,10 +11,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  id: {
-    type: Number,
-    required: true
-  },
   username: {
     type: String,
     required: true

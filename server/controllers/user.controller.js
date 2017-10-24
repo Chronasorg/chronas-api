@@ -1,5 +1,6 @@
 import User from '../models/user.model'
 import logger from '../../config/winston'
+import APIError from '../helpers/APIError'
 
 /**
  * Load user and append to req.
@@ -7,6 +8,7 @@ import logger from '../../config/winston'
 function load(req, res, next, id) {
   User.get(id)
     .then((user) => {
+      logger.info("User.get(id)", user)
       req.user = user // eslint-disable-line no-param-reassign
       return next()
     })
@@ -38,7 +40,6 @@ function create(req, res, next) {
 
       const user = new User({
         _id: req.body.username,
-        id: req.body.id,
         username: req.body.username,
         name: req.body.name,
         education: req.body.education,
@@ -63,6 +64,9 @@ function update(req, res, next) {
   const user = req.user
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.privilege !== 'undefined') user.privilege = req.body.privilege
+  if (typeof req.body.name !== 'undefined') user.name = req.body.name
+  if (typeof req.body.education !== 'undefined') user.education = req.body.education
+  if (typeof req.body.email !== 'undefined') user.email = req.body.email
 
   user.save()
     .then(savedUser => res.json(savedUser))
@@ -76,16 +80,16 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = "createdAt", order = "asc" } = req.query
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc' } = req.query
   const limit = end - start
   User.list({ start, limit, sort, order })
-    .then(users => {
+    .then((users) => {
       if (count) {
-        User.find().count({}).exec().then(userCount => {
-            res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-            res.set('X-Total-Count', userCount)
-            res.json(users)
-          })
+        User.find().count({}).exec().then((userCount) => {
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+          res.set('X-Total-Count', userCount)
+          res.json(users)
+        })
       } else {
         res.json(users)
       }

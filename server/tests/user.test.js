@@ -26,6 +26,7 @@ describe('## User APIs', () => {
   }
 
   let user = {
+    id: 1,
     username: 'KK123',
     privilege: 'public'
   }

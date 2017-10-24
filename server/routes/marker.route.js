@@ -20,7 +20,7 @@ router.route('/')
 router.route('/:markerId')
   /** GET /v1/markers/:markerId - Get marker */
   .get(
-    //expressJwt({ secret: config.jwtSecret }),
+    // expressJwt({ secret: config.jwtSecret }),
     markerCtrl.get)
 
   /** PUT /v1/markers/:markerId - Update marker */

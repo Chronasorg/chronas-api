@@ -10,7 +10,7 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   /** GET /v1/users - Get list of users */
   .get(
-    // expressJwt({ secret: config.jwtSecret }),
+    expressJwt({ secret: config.jwtSecret }),
     userCtrl.list)
 
   /** POST /v1/users - Create new user */
@@ -20,12 +20,14 @@ router.route('/')
 
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
-  .get(expressJwt({ secret: config.jwtSecret }),
+  .get(
+    // expressJwt({ secret: config.jwtSecret }),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */
-  .put(expressJwt({ secret: config.jwtSecret }),
-    validate(paramValidation.updateUser),
+  .put(
+    // expressJwt({secret: config.jwtSecret }),
+    // validate(paramValidation.updateUser),
     userCtrl.update)
 
   /** DELETE /v1/users/:userId - Delete user */

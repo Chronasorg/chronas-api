@@ -33,12 +33,12 @@ describe('## Misc', () => {
   })
 
   describe('# Error Handling', () => {
-    it('should handle mongoose CastError - Cast to ObjectId failed', (done) => {
+    it('should handle 404', (done) => {
       request(app)
         .get('/v1/users/56z787zzz67fc')
-        .expect(httpStatus.INTERNAL_SERVER_ERROR)
+        .expect(httpStatus.NOT_FOUND)
         .then((res) => {
-          expect(res.body.message).to.equal('Internal Server Error')
+          expect(res.body.message).to.equal('Not Found')
           done()
         })
         .catch(done)
