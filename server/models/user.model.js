@@ -15,6 +15,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  password: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
   },
@@ -25,8 +29,8 @@ const UserSchema = new mongoose.Schema({
     type: String
   },
   privilege: {
-    type: String,
-    default: 'user',
+    type: Number,
+    default: 1,
     required: true
   },
   status: {
@@ -96,14 +100,28 @@ UserSchema.statics = {
    * @param {number} limit - Limit number of users to be returned.
    * @returns {Promise<User[]>}
    */
-  list({ start, limit, sort, order } = {}) {
+  list({ start, limit, sort, order, filter } = {}) {
+    const findObject = filter ? saveJSONparse(filter) : {}
     const sortObject = {}
     sortObject[sort] = order.toLowerCase()
-    return this.find()
+
+    if (Object.prototype.hasOwnProperty.call(findObject, 'q')) {
+      findObject.username = new RegExp(findObject.q, 'i')
+      delete findObject.q
+    }
+    return this.find(findObject)
       .sort(sortObject)
       .skip(+start)
       .limit(+limit)
       .exec()
+  }
+}
+
+function saveJSONparse(str) {
+  try {
+    return JSON.parse(str)
+  } catch (e) {
+    return {}
   }
 }
 

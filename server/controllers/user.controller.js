@@ -8,7 +8,6 @@ import APIError from '../helpers/APIError'
 function load(req, res, next, id) {
   User.get(id)
     .then((user) => {
-      logger.info("User.get(id)", user)
       req.user = user // eslint-disable-line no-param-reassign
       return next()
     })
@@ -42,6 +41,7 @@ function create(req, res, next) {
         _id: req.body.username,
         username: req.body.username,
         name: req.body.name,
+        password: req.body.password,
         education: req.body.education,
         email: req.body.email,
         privilege: req.body.privilege
@@ -67,6 +67,7 @@ function update(req, res, next) {
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
+  if (typeof req.body.password !== 'undefined') user.password = req.body.password
 
   user.save()
     .then(savedUser => res.json(savedUser))
@@ -80,9 +81,9 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc' } = req.query
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  User.list({ start, limit, sort, order })
+  User.list({ start, limit, sort, order, filter })
     .then((users) => {
       if (count) {
         User.find().count({}).exec().then((userCount) => {
