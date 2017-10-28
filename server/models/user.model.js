@@ -33,27 +33,12 @@ const UserSchema = new mongoose.Schema({
     default: 1,
     required: true
   },
-  status: {
-    type: String,
-    default: 'inactive',
-    required: true
-  },
   createdAt: {
     type: Date,
     default: Date.now,
     required: true
   },
   karma: {
-    type: Number,
-    default: 0,
-    required: true
-  },
-  edits: {
-    type: Number,
-    default: 0,
-    required: true
-  },
-  comments: {
     type: Number,
     default: 0,
     required: true
@@ -87,6 +72,7 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
+          user.id = '_id' // eslint-disable-line no-param-reassign
           return user
         }
         const err = new APIError('No such user exists!', httpStatus.NOT_FOUND)

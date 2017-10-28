@@ -9,27 +9,27 @@ const router = express.Router() // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/markers - Get list of markers */
-  .get(expressJwt({ secret: config.jwtSecret }),
+  .get(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     markerCtrl.list)
 
   /** POST /v1/markers - Create new marker */
-  .post(expressJwt({ secret: config.jwtSecret }),
+  .post(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.createMarker),
     markerCtrl.create)
 
 router.route('/:markerId')
   /** GET /v1/markers/:markerId - Get marker */
   .get(
-    // expressJwt({ secret: config.jwtSecret }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     markerCtrl.get)
 
   /** PUT /v1/markers/:markerId - Update marker */
-  .put(expressJwt({ secret: config.jwtSecret }),
+  .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.updateMarker),
     markerCtrl.update)
 
   /** DELETE /v1/markers/:markerId - Delete marker */
-  .delete(expressJwt({ secret: config.jwtSecret }),
+  .delete(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     markerCtrl.remove)
 
 /** Load marker when API with markerId route parameter is hit */

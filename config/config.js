@@ -1,4 +1,5 @@
 import Joi from 'joi'
+import logger from './winston'
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 require('dotenv').config()
