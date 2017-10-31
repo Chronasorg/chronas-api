@@ -60,20 +60,29 @@ function update(req, res, next) {
  * @returns {Area[]}
  */
 function list(req, res, next) {
-  const { offset = 0, length = 50 } = req.query
-  Area.list({ offset, length })
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
+  const limit = end - start
+  Area.list({ start, limit, sort, order, filter })
     .then((areas) => {
-      const areasTmp = JSON.parse(JSON.stringify(areas)) || []
-      const areasToList = []
+      if (count) {
+        Area.find().count({}).exec().then((areaCount) => {
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+          res.set('X-Total-Count', areaCount)
+          res.json(areas)
+        })
+      } else {
+        const areasTmp = JSON.parse(JSON.stringify(areas)) || []
+        const areasToList = []
 
-      for (let i = 0; i < areasTmp.length; i++) {
-        if (areasTmp[i].owner === req.user.username
-          || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
-          areasToList.push(areasTmp[i])
+        for (let i = 0; i < areasTmp.length; i++) {
+          if (areasTmp[i].owner === req.user.username
+            || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
+            areasToList.push(areasTmp[i])
+          }
         }
-      }
 
-      res.json(areasToList)
+        res.json(areasToList)
+      }
     })
     .catch(e => next(e))
 }

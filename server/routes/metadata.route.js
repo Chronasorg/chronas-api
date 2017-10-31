@@ -9,18 +9,20 @@ const router = express.Router() // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/metadata - Get list of metadata keys */
-  .get(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     metadataCtrl.list)
 
   /** POST /v1/metadata - Create new metadata */
-  .post(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .post(expressJwt(
+    { secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.createMetadata),
     metadataCtrl.create)
 
 router.route('/:metadataIds')
   /** GET /v1/metadata/:metadataIds - Get metadata through semicolon delimited ids */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     metadataCtrl.get)
 
   /** PUT /v1/metadata/:metadataId - Update metadata */

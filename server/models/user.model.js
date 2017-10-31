@@ -38,6 +38,11 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
+  lastUpdated: {
+    type: Date,
+    default: Date.now,
+    required: true
+  },
   karma: {
     type: Number,
     default: 0,

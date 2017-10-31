@@ -7,17 +7,15 @@ import APIError from '../helpers/APIError'
  * Marker Schema
  */
 const MarkerSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
-    required: true
   },
-  url: {
-    type: String,
-    required: true
-  },
-  coordinates: {
+  geo: {
     type: Array,
-    required: true
   },
   type: {
     type: String,
@@ -25,10 +23,6 @@ const MarkerSchema = new mongoose.Schema({
   },
   subtype: {
     type: String,
-  },
-  year: {
-    type: Number,
-    required: true
   },
   startYear: {
     type: Number,
@@ -38,9 +32,12 @@ const MarkerSchema = new mongoose.Schema({
   },
   date: {
     type: Number, // Epoch
-    required: true
   },
-  karma: {
+  lastUpdated: {
+    type: Date,
+    default: Date.now,
+  },
+  rating: {
     type: Number,
     default: 1
   }

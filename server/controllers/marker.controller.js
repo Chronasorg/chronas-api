@@ -1,6 +1,8 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 
+import logger from '../../config/winston'
+
 const debug = require('debug')('chronas-api:index')
 
 /**
@@ -20,7 +22,7 @@ function load(req, res, next, id) {
  * @returns {Marker}
  */
 function get(req, res) {
-  return res.json(req.marker.data)
+  return res.json(req.marker)
 }
 
 /**
@@ -30,17 +32,31 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next) {
-  const marker = new Marker({
-    name: req.body.name,
-    owner: req.user.username,
-    privilegeLevel: req.body.privilegeLevel,
-    layout: req.body.layout,
-    modifiedAt: req.body.modifiedAt,
-    createdAt: req.body.createdAt
-  })
+  Marker.findById(decodeURIComponent(req.body.wiki))
+    .exec()
+    .then((duplicatedMarker) => {
+      if (duplicatedMarker) {
+        const err = new APIError('A marker with this wiki already exists!', 400)
+        next(err)
+      }
 
-  marker.save()
-    .then(savedMarker => res.json(savedMarker))
+      const marker = new Marker({
+        _id: decodeURIComponent(req.body.wiki),
+        name: req.body.name,
+        geo: req.body.geo,
+        type: req.body.type,
+        subtype: req.body.subtype,
+        startYear: req.body.startYear,
+        endYear: req.body.endYear,
+        date: req.body.date,
+        rating: req.body.rating,
+      })
+      marker.lastUpdated = Date.now()
+
+      marker.save()
+        .then(savedMarker => res.json(savedMarker))
+        .catch(e => next(e))
+    })
     .catch(e => next(e))
 }
 
@@ -53,9 +69,15 @@ function create(req, res, next) {
 function update(req, res, next) {
   const marker = req.marker
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
-  if (typeof req.body.privilegeLevel !== 'undefined') marker.privilegeLevel = req.body.privilegeLevel
-  if (typeof req.body.layout !== 'undefined') marker.layout = req.body.layout
-  marker.modifiedAt = Date.now
+  if (typeof req.body.wiki !== 'undefined') marker["_id"] = req.body.wiki
+  if (typeof req.body.geo !== 'undefined') marker.geo = req.body.geo
+  if (typeof req.body.type !== 'undefined') marker.type = req.body.type
+  if (typeof req.body.subtype !== 'undefined') marker.subtype = req.body.subtype
+  if (typeof req.body.startYear !== 'undefined') marker.startYear = req.body.startYear
+  if (typeof req.body.endYear !== 'undefined') marker.endYear = req.body.endYear
+  if (typeof req.body.date !== 'undefined') marker.date = req.body.date
+  if (typeof req.body.rating !== 'undefined') marker.rating = req.body.rating
+  marker.lastUpdated = Date.now()
 
   marker.save()
     .then(savedMarker => res.json(savedMarker))
@@ -69,20 +91,19 @@ function update(req, res, next) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { limit = 50, skip = 0 } = req.query
-  Marker.list({ limit, skip })
+  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', order = 'asc', filter = '' } = req.query
+  const limit = end - start
+  Marker.list({ start, limit, sort, order, filter })
     .then((markers) => {
-      const markersTmp = JSON.parse(JSON.stringify(markers)) || [],
-        markersToList = []
-
-      for (let i = 0; i < markersTmp.length; i++) {
-        if (markersTmp[i].owner === req.user.username
-          || markersTmp[i].privilegeLevel.indexOf('public') > -1) {
-          markersToList.push(markersTmp[i])
-        }
+      if (count) {
+        Marker.find().count({}).exec().then((markerCount) => {
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+          res.set('X-Total-Count', markerCount)
+          res.json(markers)
+        })
+      } else {
+        res.json(markers)
       }
-
-      res.json(markersToList)
     })
     .catch(e => next(e))
 }

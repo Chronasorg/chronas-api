@@ -9,12 +9,14 @@ const router = express.Router() // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/markers - Get list of markers */
-  .get(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .get(
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     markerCtrl.list)
 
   /** POST /v1/markers - Create new marker */
-  .post(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    validate(paramValidation.createMarker),
+  .post(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // validate(paramValidation.createMarker),
     markerCtrl.create)
 
 router.route('/:markerId')
@@ -25,7 +27,7 @@ router.route('/:markerId')
 
   /** PUT /v1/markers/:markerId - Update marker */
   .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    validate(paramValidation.updateMarker),
+    // validate(paramValidation.updateMarker),
     markerCtrl.update)
 
   /** DELETE /v1/markers/:markerId - Delete marker */

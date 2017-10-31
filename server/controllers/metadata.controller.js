@@ -72,9 +72,20 @@ function update(req, res, next) {
  * @returns {Metadata[]}
  */
 function list(req, res, next) {
-  const { length = 50, offset = 0 } = req.query
-  Metadata.list({ offset, length })
-    .then(metadata => res.json(metadata))
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
+  const limit = end - start
+  Metadata.list({ start, limit, sort, order, filter })
+    .then((metadata) => {
+      if (count) {
+        Metadata.find().count({}).exec().then((metadataCount) => {
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+          res.set('X-Total-Count', metadataCount)
+          res.json(metadata)
+        })
+      } else {
+        res.json(metadata)
+      }
+    })
     .catch(e => next(e))
 }
 
