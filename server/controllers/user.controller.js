@@ -1,5 +1,6 @@
 import User from '../models/user.model'
 import logger from '../../config/winston'
+import APIError from '../helpers/APIError'
 
 /**
  * Load user and append to req.
@@ -18,7 +19,9 @@ function load(req, res, next, id) {
  * @returns {User}
  */
 function get(req, res) {
-  return res.json(req.user)
+  const userPlus = req.user.toObject()
+  userPlus.id = userPlus._id
+  return res.json(userPlus)
 }
 
 /**
@@ -38,9 +41,9 @@ function create(req, res, next) {
 
       const user = new User({
         _id: req.body.username,
-        id: req.body.id,
         username: req.body.username,
         name: req.body.name,
+        password: req.body.password,
         education: req.body.education,
         email: req.body.email,
         privilege: req.body.privilege
@@ -62,7 +65,13 @@ function create(req, res, next) {
 function update(req, res, next) {
   const user = req.user
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
+  if (typeof req.body.name !== 'undefined') user.name = req.body.name
   if (typeof req.body.privilege !== 'undefined') user.privilege = req.body.privilege
+  if (typeof req.body.education !== 'undefined') user.education = req.body.education
+  if (typeof req.body.createdAt !== 'undefined') user.createdAt = req.body.createdAt
+  if (typeof req.body.email !== 'undefined') user.email = req.body.email
+  if (typeof req.body.karma !== 'undefined') user.karma = req.body.karma
+  if (typeof req.body.password !== 'undefined') user.password = req.body.password
 
   user.save()
     .then(savedUser => res.json(savedUser))
@@ -76,16 +85,16 @@ function update(req, res, next) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = "createdAt", order = "asc" } = req.query
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  User.list({ start, limit, sort, order })
-    .then(users => {
+  User.list({ start, limit, sort, order, filter })
+    .then((users) => {
       if (count) {
-        User.find().count({}).exec().then(userCount => {
-            res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-            res.set('X-Total-Count', userCount)
-            res.json(users)
-          })
+        User.find().count({}).exec().then((userCount) => {
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+          res.set('X-Total-Count', userCount)
+          res.json(users)
+        })
       } else {
         res.json(users)
       }
@@ -99,6 +108,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const user = req.user
+  logger.info('userr', user)
   user.remove()
     .then(deletedUser => res.json(deletedUser))
     .catch(e => next(e))

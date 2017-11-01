@@ -10,27 +10,29 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   /** GET /v1/users - Get list of users */
   .get(
-    // expressJwt({ secret: config.jwtSecret }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     userCtrl.list)
 
   /** POST /v1/users - Create new user */
-  .post(expressJwt({ secret: config.jwtSecret }),
+  .post(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.createUser),
     userCtrl.create)
 
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
-  .get(expressJwt({ secret: config.jwtSecret }),
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */
-  .put(expressJwt({ secret: config.jwtSecret }),
-    validate(paramValidation.updateUser),
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // validate(paramValidation.updateUser),
     userCtrl.update)
 
   /** DELETE /v1/users/:userId - Delete user */
   .delete(
-    // expressJwt({ secret: config.jwtSecret }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     userCtrl.remove)
 
 /** Load user when API with userId route parameter is hit */
