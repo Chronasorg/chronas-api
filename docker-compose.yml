@@ -1,5 +1,4 @@
 version: '2'
-
 services:
   chronas-api:
     build:
@@ -19,13 +18,14 @@ services:
       - "4040:4040"
 
     # Set environment variables from this file
-    env_file:
-      - .env
+    #env_file:
+    #  - .env
 
     # Overwrite any env var defined in .env file (if required)
     environment:
       - MONGO_HOST=mongodb://mongo/chronas-api-development
       - DEBUG=chronas-api:*
+      - JWT_SECRET=0a6b944d-d2fb-46fc-a85e-0295c986cd9f
 
     # Link to containers in another service.
     # Links also express dependency between services in the same way as depends_on,
