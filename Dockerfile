@@ -15,12 +15,11 @@ ENV JWT_SECRET=0a6b944d-d2fb-46fc-a85e-0295c986cd9f
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 
-RUN npm install
+RUN npm install --silent
 
 # copy all file from current dir to /app in container
 COPY . /app/
 
-RUN npm start
 # expose port 4040
 EXPOSE 4040
 
