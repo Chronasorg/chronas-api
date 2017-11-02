@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: chronas-api-front
-        image: microsoft/azure-vote-front:redis-v1
+        image: aumanjoa/chronas-api:azure
         ports:
         - containerPort: 4040
         env:
