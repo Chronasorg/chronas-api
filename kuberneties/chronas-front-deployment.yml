@@ -1,0 +1,19 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: chronas-api-front
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: chronas-api-front
+    spec:
+      containers:
+      - name: chronas-api-front
+        image: aumanjoa/chronas-api:azure
+        ports:
+        - containerPort: 4040
+        env:
+        - name: MONGO_HOST
+          value: mongodb://chronas-api-mongodb/chronas-api-development
