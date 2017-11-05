@@ -4,6 +4,6 @@ metadata:
   name: chronas-api-mongodb
 spec:
   ports:
-  - port: 6379
+  - port: 27017
   selector:
     app: chronas-api-mongodb
