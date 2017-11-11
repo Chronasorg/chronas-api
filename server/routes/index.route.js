@@ -1,6 +1,6 @@
+import express from 'express'
 import areaRoutes from './area.route'
 import authRoutes from './auth.route'
-import express from 'express'
 import userRoutes from './user.route'
 import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'

@@ -1,8 +1,10 @@
 {
   "rules": {
+    "max-len": ["error", 200],
     "import/no-named-as-default": 0,
     "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "semi": ["error", "never"],
+    "no-param-reassign" : ["warn"],
     "one-var": "off", // ["warn", "never"],
     "no-unused-vars": "warn",
     "indent": [

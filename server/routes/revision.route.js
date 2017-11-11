@@ -13,11 +13,11 @@ router.route('/')
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     revisionCtrl.list)
 
-  /** POST /v1/revisions - Create new revision */
-  .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    // validate(paramValidation.createMarker),
-    revisionCtrl.create)
+  // /** POST /v1/revisions - Create new revision */
+  // .post(
+  //   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  //   // validate(paramValidation.createMarker),
+  //   revisionCtrl.create)
 
 router.route('/:revisionId')
   /** GET /v1/revisions/:revisionId - Get revision */

@@ -98,4 +98,9 @@ function remove(req, res, next) {
     .catch(e => next(e))
 }
 
-export default { load, get, create, update, list, remove }
+function defineEntity(req, res, next) {
+  req.resource = "areas"
+  next()
+}
+
+export default { load, get, create, update, list, remove, defineEntity }

@@ -108,7 +108,6 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const user = req.user
-  logger.info('userr', user)
   user.remove()
     .then(deletedUser => res.json(deletedUser))
     .catch(e => next(e))

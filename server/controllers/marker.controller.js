@@ -1,7 +1,5 @@
-import Revision from '../models/revision.model'
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import { omit } from 'underscore'
 import logger from '../../config/winston'
 
 const debug = require('debug')('chronas-api:index')
@@ -10,11 +8,9 @@ const debug = require('debug')('chronas-api:index')
  * Load marker and append to req.
  */
 function load(req, res, next, id) {
-  logger.info("look for id", id)
   Marker.get(id)
     .then((marker) => {
-      logger.info("found marker 0000 inside markersmarkersmarker", marker)
-      req.marker = marker // eslint-disable-line no-param-reassign
+      req.entity = marker // eslint-disable-line no-param-reassign
       return next()
     })
     .catch(e => next(e))
@@ -25,7 +21,7 @@ function load(req, res, next, id) {
  * @returns {Marker}
  */
 function get(req, res) {
-  return res.json(req.marker)
+  return res.json(req.entity)
 }
 
 /**
@@ -34,8 +30,9 @@ function get(req, res) {
  * @property {string} req.body.privilege - The privilege of marker.
  * @returns {Marker}
  */
-function create(req, res, next) {
-  Marker.findById(decodeURIComponent(req.body.wiki))
+function create(req, res, next, fromRevision = false) {
+  const markerId = req.body["_id"] || decodeURIComponent(req.body.wiki)
+  Marker.findById(markerId)
     .exec()
     .then((duplicatedMarker) => {
       if (duplicatedMarker) {
@@ -44,7 +41,7 @@ function create(req, res, next) {
       }
 
       const marker = new Marker({
-        _id: decodeURIComponent(req.body.wiki),
+        _id: markerId,
         name: req.body.name,
         geo: req.body.geo,
         type: req.body.type,
@@ -57,10 +54,10 @@ function create(req, res, next) {
       marker.lastUpdated = Date.now()
 
       marker.save()
-        .then(savedMarker => {
-          // TODO: add revision record
-
-
+        .then((savedMarker) => {
+          if (!fromRevision) {
+            res.json(savedMarker)
+          }
         })
         .catch(e => next(e))
     })
@@ -73,42 +70,10 @@ function create(req, res, next) {
  * @property {string} req.body.privilege - The privilege of marker.
  * @returns {Marker}
  */
-function update(req, res, next, addRevertRecord = true) {
-  const marker = req.marker
-
-  if (addRevertRecord) {
-    logger.info("req.body,req.body,req.body,", req.body)
-    logger.info("marker,marker,marker,marker,", marker)
-
-    const username = req.auth.username
-    //TODO: add karma here
-
-    const nexBody = shallowDiff(req.body,marker.toObject())
-    const prevBody = shallowDiff(marker.toObject(),req.body)
-
-    delete nexBody.id
-    delete prevBody.id
-    delete nexBody["_id"]
-    delete prevBody["_id"]
-
-    const revision = new Revision({
-      entityId: marker["_id"],
-      type: "UPDATE",
-      subtype: req.body.subtype,
-      startYear: req.body.startYear,
-      user: username,
-      resource: "markers",
-      nextBody: JSON.stringify(nexBody),
-      prevBody: JSON.stringify(prevBody),
-    })
-
-    // add revision record
-    revision.save()
-      // .then((savedRevision) => res.json(savedRevision))
-  }
+function update(req, res, next, fromRevision = false) {
+  const marker = req.entity
 
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
-  // if (typeof req.body.wiki !== 'undefined') marker._id = req.body.wiki
   if (typeof req.body.geo !== 'undefined') marker.geo = req.body.geo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.subtype !== 'undefined') marker.subtype = req.body.subtype
@@ -117,10 +82,9 @@ function update(req, res, next, addRevertRecord = true) {
   if (typeof req.body.date !== 'undefined') marker.date = req.body.date
   if (typeof req.body.rating !== 'undefined') marker.rating = req.body.rating
   marker.lastUpdated = Date.now()
-
   marker.save()
-    .then(savedMarker => {
-      if (addRevertRecord) {
+    .then((savedMarker) => {
+      if (!fromRevision) {
         res.json(savedMarker)
       }
     })
@@ -155,16 +119,21 @@ function list(req, res, next) {
  * Delete marker.
  * @returns {Marker}
  */
-function remove(req, res, next) {
-  const marker = req.marker
+function remove(req, res, next, fromRevision = false) {
+  const marker = req.entity
   marker.remove()
-    .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
+    .then(deletedMarker => {
+      if (!fromRevision) {
+        res.json(deletedMarker)
+      }
+    })
+    // .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
     .catch(e => next(e))
 }
 
-function shallowDiff(a,b) {
-  return omit(a, function(v, k) {
-    return JSON.stringify(b[k]) ===  JSON.stringify(v);
-  })
+function defineEntity(req, res, next) {
+  req.resource = "markers"
+  next()
 }
-export default { load, get, create, update, list, remove }
+
+export default { defineEntity, load, get, create, update, list, remove }
