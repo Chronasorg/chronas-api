@@ -5,8 +5,10 @@ az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 -
 
 
 #create ukwest - not working
-az group create --name chronas-k8s --location ukwest
-az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys
+az group create --name chronas-k8s-uk --location ukwest
+az aks create --resource-group chronas-k8s-uk --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_DS1_v2
+az group delete --name chronas-k8s-uk --yes
+
 
 
 #get credentials
