@@ -1,6 +1,6 @@
 
 #create westus
-az group create --name chronas-k8s --location westus2
+az group create --name chronas-k8s --location eastus
 az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys
 
 
