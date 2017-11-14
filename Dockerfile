@@ -18,12 +18,6 @@ RUN npm install --production
 # copy all file from current dir to /app in container
 COPY dist /app/
 
-
-
-#RUN npm install --production
-
-RUN ls -al -R
-
 # expose port 80
 EXPOSE 80
 

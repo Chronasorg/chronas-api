@@ -2,6 +2,7 @@
 #create westus
 az group create --name chronas-k8s --location eastus
 az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys
+az aks get-credentials --resource-group=chronas-k8s --name=myK8sCluster
 
 
 #create ukwest - not working
@@ -12,7 +13,6 @@ az group delete --name chronas-k8s-uk --yes
 
 
 #get credentials
-az aks get-credentials --resource-group=chronas-k8s --name=myK8sCluster
 #dashbaord
 az aks browse --resource-group chronas-k8s --name myK8sCluster
 

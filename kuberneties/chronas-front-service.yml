@@ -5,6 +5,6 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 4040
+  - port: 80
   selector:
     app: chronas-api-front
