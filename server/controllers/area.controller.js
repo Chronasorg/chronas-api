@@ -1,4 +1,6 @@
 import Area from '../models/area.model'
+import { pick, keys, isEqual, extendOwn } from 'underscore'
+import logger from '../../config/winston'
 
 /**
  * Load area and append to req.
@@ -6,7 +8,7 @@ import Area from '../models/area.model'
 function load(req, res, next, id) {
   Area.get(id)
     .then((area) => {
-      req.area = area // eslint-disable-line no-param-reassign
+      req.entity = area // eslint-disable-line no-param-reassign
       return next()
     })
     .catch(e => next(e))
@@ -17,7 +19,7 @@ function load(req, res, next, id) {
  * @returns {Area}
  */
 function get(req, res) {
-  return res.json(req.area)
+  return res.json(req.entity)
 }
 
 /**
@@ -37,6 +39,56 @@ function create(req, res, next) {
     .catch(e => next(e))
 }
 
+function updateMany(req, res, next) {
+  const { start, end = start, provinces, nextBody } = req.body
+  const prevBody = {}
+  const trimmedNextBody = {}
+  Area.find({ year: { '$gte': start, '$lte': end }})
+    .sort({ year: 1 })
+    .exec()
+    .then(Areas => {
+
+      const areaPromises = Areas.map(area => {
+        return new Promise((resolve, reject) => {
+          const currYear = area.year
+          provinces.map(province => {
+              if (!isEqual(area.data[province], nextBody)) {
+                if (typeof prevBody[currYear] === "undefined") prevBody[currYear] = {}
+                if (typeof trimmedNextBody[currYear] === "undefined") trimmedNextBody[currYear] = {}
+
+                prevBody[currYear][province] = area.data[province]
+                trimmedNextBody[currYear][province] = nextBody
+                area.data[province] = nextBody
+                area.markModified('data');
+              }
+
+              if (typeof prevBody[currYear] !== "undefined") {
+                // need to update
+                area.save()
+                  .then((ar) => {
+                    resolve()
+                  })
+                  .catch(e => reject(e))
+              } else {
+                resolve()
+              }
+          })
+        })
+      })
+
+      Promise.all(areaPromises).then(() => {
+        // optimize prevBody and add revision record
+        req.body.prevBody = prevBody
+        req.body.nextBody = trimmedNextBody
+
+        next();
+      }, (error) => {
+        next(error)
+      })
+    })
+    .catch(e => next(e))
+}
+
 /**
  * Update existing area
  * @property {string} req.body.areaname - The areaname of area.
@@ -44,7 +96,8 @@ function create(req, res, next) {
  * @returns {Area}
  */
 function update(req, res, next) {
-  const area = req.area
+  const area = req.entity
+
   if (typeof req.body.year !== 'undefined') area.year = req.body.year
   if (typeof req.body.data !== 'undefined') area.data = req.body.data
 
@@ -74,14 +127,14 @@ function list(req, res, next) {
         const areasTmp = JSON.parse(JSON.stringify(areas)) || []
         const areasToList = []
 
-        for (let i = 0; i < areasTmp.length; i++) {
-          if (areasTmp[i].owner === req.user.username
-            || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
-            areasToList.push(areasTmp[i])
-          }
-        }
+        // for (let i = 0; i < areasTmp.length; i++) {
+        //   if (areasTmp[i].owner === req.user.username
+        //     || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
+        //     areasToList.push(areasTmp[i])
+        //   }
+        // }
 
-        res.json(areasToList)
+        res.json(areasTmp)
       }
     })
     .catch(e => next(e))
@@ -92,15 +145,29 @@ function list(req, res, next) {
  * @returns {Area}
  */
 function remove(req, res, next) {
-  const area = req.area
+  const area = req.entity
   area.remove()
     .then(deletedArea => res.json(deletedArea))
     .catch(e => next(e))
 }
 
 function defineEntity(req, res, next) {
-  req.resource = "areas"
+  req.resource = 'areas'
   next()
 }
 
-export default { load, get, create, update, list, remove, defineEntity }
+function getRanges(array) {
+  var ranges = [], rstart, rend;
+  for (var i = 0; i < array.length; i++) {
+    rstart = array[i];
+    rend = rstart;
+    while (array[i + 1] - array[i] == 1) {
+      rend = array[i + 1]; // increment the index if the numbers sequential
+      i++;
+    }
+    ranges.push(rstart == rend ? [rstart] : [rstart,rend]);
+  }
+  return ranges;
+}
+
+export default { load, get, create, update, updateMany, list, remove, defineEntity }

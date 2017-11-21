@@ -63,6 +63,11 @@ AreaSchema.statics = {
       .skip(offset)
       .limit(length)
       .exec()
+      .then(areas => areas.map(obj => {
+        const dataString = JSON.stringify(obj.data).substring(0,200)
+        obj.data = dataString + ((dataString.length === 203) ? "..." : "")
+        return obj
+      }))
   }
 }
 

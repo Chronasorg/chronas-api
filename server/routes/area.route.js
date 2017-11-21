@@ -15,6 +15,13 @@ router.route('/')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     areaCtrl.list)
 
+  /** PUT /v1/areas/ - Update area */
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // validate(paramValidation.updateArea),
+    areaCtrl.updateMany,
+    revisionCtrl.addUpdateManyRevision)
+
   /** POST /v1/areas - Create new area */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
@@ -23,6 +30,7 @@ router.route('/')
     areaCtrl.create)
 
 router.route('/:areaId')
+  .all(areaCtrl.defineEntity)
   /** GET /v1/areas/:areaId - Get area */
   .get(areaCtrl.get)
 

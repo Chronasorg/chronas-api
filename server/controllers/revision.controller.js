@@ -12,9 +12,9 @@ import metadataCtrl from './metadata.controller'
 const debug = require('debug')('chronas-api:index')
 
 const resourceCollection = {
-  "areas": { id: "year", model: Area, controller: areaCtrl },
-  "markers": { id: "wiki", model: Marker, controller: markerCtrl },
-  "metadata": { id: "_id", model: Metadata, controller: metadataCtrl },
+  areas: { id: 'year', model: Area, controller: areaCtrl },
+  markers: { id: 'wiki', model: Marker, controller: markerCtrl },
+  metadata: { id: '_id', model: Metadata, controller: metadataCtrl },
 }
 
 /**
@@ -31,7 +31,7 @@ function load(req, res, next, id) {
 
 function loadEntity(req, res, next) {
   const resource = req.body.resource
-  if (typeof resource !== "undefined") {
+  if (typeof resource !== 'undefined') {
     let entityId
     try {
       entityId = req.body.entityId
@@ -77,7 +77,7 @@ function create(req, res, next) {
       const revision = new Revision({
         type: 'CREATE',
         subtype: req.body.subtype,
-        startYear: req.body.startYear,
+        start: req.body.start,
         user: username,
         resource: req.resource,
       })
@@ -97,10 +97,10 @@ function addCreateRevision(req, res, next) {
 
   const entityId = decodeURIComponent(req.body[resourceCollection[req.resource].id])
   const revision = new Revision({
-    entityId: entityId,
+    entityId,
     type: 'CREATE',
     subtype: req.body.subtype,
-    startYear: req.body.startYear,
+    start: req.body.start,
     user: username,
     resource: req.resource,
     nextBody: JSON.stringify(req.body),
@@ -140,22 +140,39 @@ function addUpdateRevision(req, res, next) {
   const username = req.auth.username
   // TODO: add karma here
 
-  const nexBody = shallowDiff(req.body, entity.toObject())
-  const prevBody = shallowDiff(entity.toObject(), req.body)
+  const nextBody =
+    (req.resource === "areas")
+      ? (entity._id === "MANY")
+        ? req.nextBody
+        : shallowDiff(req.body.data, entity.toObject().data)
+      : shallowDiff(req.body, entity.toObject())
 
-  delete nexBody.id
-  delete prevBody.id
-  delete nexBody._id
-  delete prevBody._id
+  const prevBody =
+    (req.resource === "areas")
+      ? (entity._id === "MANY")
+        ? req.prevBody
+        : shallowDiff(entity.toObject().data, req.body.data)
+      : shallowDiff(entity.toObject(), req.body)
+
+  if (typeof nextBody !== "undefined") {
+    delete nextBody.id
+    delete nextBody._id
+  }
+
+  if (typeof prevBody !== "undefined") {
+    delete prevBody.id
+    delete prevBody._id
+  }
 
   const revision = new Revision({
     entityId: entity._id,
     type: 'UPDATE',
     subtype: req.body.subtype,
-    startYear: req.body.startYear,
+    start: req.body.start,
+    end: req.body.end,
     user: username,
     resource: req.resource,
-    nextBody: JSON.stringify(nexBody),
+    nextBody: JSON.stringify(nextBody),
     prevBody: JSON.stringify(prevBody),
   })
 
@@ -165,6 +182,69 @@ function addUpdateRevision(req, res, next) {
       next()
     })
     .catch(e => next(e))
+}
+
+
+  // function addUpdateRevision(req, res, next) {
+  //     const entity = req.entity
+  //       const username = req.auth.username
+  //       // TODO: add karma here
+  //
+  //         const nexBody = shallowDiff(req.body, entity.toObject())
+  //       const prevBody = shallowDiff(entity.toObject(), req.body)
+  //
+  //       delete nexBody.id
+  //       delete prevBody.id
+  //       delete nexBody._id
+  //       delete prevBody._id
+  //
+  //       const revision = new Revision({
+  //         entityId: entity._id,
+  //         type: 'UPDATE',
+  //         subtype: req.body.subtype,
+  //         startYear: req.body.startYear,
+  //         user: username,
+  //         resource: req.resource,
+  //         nextBody: JSON.stringify(nexBody),
+  //         prevBody: JSON.stringify(prevBody),
+  //       })
+  //
+  //       // add revision record
+  //         revision.save()
+  //       .then(() => {
+  //           next()
+  //         })
+  //       .catch(e => next(e))
+  //   }
+function addUpdateManyRevision(req, res, next) {
+  const username = req.auth.username
+  // TODO: add karma here
+
+  const { prevBody, nextBody } = req.body
+
+  delete nextBody.id
+  delete prevBody.id
+  delete nextBody._id
+  delete prevBody._id
+
+  const revision = new Revision({
+    entityId: 'MANY',
+    type: 'UPDATE',
+    subtype: req.body.subtype,
+    start: req.body.start,
+    end: req.body.end,
+    user: username,
+    resource: req.resource,
+    nextBody: JSON.stringify(nextBody),
+    prevBody: JSON.stringify(prevBody),
+  })
+
+  // add revision record
+  revision.save()
+    .then(() => {
+      res.status(200).send("Areas successfully updated.");
+    })
+    .catch(e => res.status(500).send(e))
 }
 
 /**
@@ -267,4 +347,4 @@ function shallowDiff(a, b) {
   return omit(a, (v, k) => JSON.stringify(b[k]) === JSON.stringify(v))
 }
 
-export default { addUpdateRevision, addCreateRevision, addDeleteRevision, loadEntity, load, get, create, update, list, remove }
+export default { addUpdateRevision, addUpdateManyRevision, addCreateRevision, addDeleteRevision, loadEntity, load, get, create, update, list, remove }

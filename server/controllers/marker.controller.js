@@ -31,7 +31,7 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
-  const markerId = req.body["_id"] || decodeURIComponent(req.body.wiki)
+  const markerId = req.body._id || decodeURIComponent(req.body.wiki)
   Marker.findById(markerId)
     .exec()
     .then((duplicatedMarker) => {
@@ -46,8 +46,8 @@ function create(req, res, next, fromRevision = false) {
         geo: req.body.geo,
         type: req.body.type,
         subtype: req.body.subtype,
-        startYear: req.body.startYear,
-        endYear: req.body.endYear,
+        start: req.body.start,
+        end: req.body.end,
         date: req.body.date,
         rating: req.body.rating,
       })
@@ -77,10 +77,11 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.geo !== 'undefined') marker.geo = req.body.geo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.subtype !== 'undefined') marker.subtype = req.body.subtype
-  if (typeof req.body.startYear !== 'undefined') marker.startYear = req.body.startYear
-  if (typeof req.body.endYear !== 'undefined') marker.endYear = req.body.endYear
+  if (typeof req.body.start !== 'undefined') marker.start = req.body.start
+  if (typeof req.body.end !== 'undefined') marker.end = req.body.end
   if (typeof req.body.date !== 'undefined') marker.date = req.body.date
   if (typeof req.body.rating !== 'undefined') marker.rating = req.body.rating
+
   marker.lastUpdated = Date.now()
   marker.save()
     .then((savedMarker) => {
@@ -122,7 +123,7 @@ function list(req, res, next) {
 function remove(req, res, next, fromRevision = false) {
   const marker = req.entity
   marker.remove()
-    .then(deletedMarker => {
+    .then((deletedMarker) => {
       if (!fromRevision) {
         res.json(deletedMarker)
       }
@@ -132,7 +133,7 @@ function remove(req, res, next, fromRevision = false) {
 }
 
 function defineEntity(req, res, next) {
-  req.resource = "markers"
+  req.resource = 'markers'
   next()
 }
 

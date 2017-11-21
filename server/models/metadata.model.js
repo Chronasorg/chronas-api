@@ -67,7 +67,11 @@ MetadataSchema.statics = {
       .skip(+offset)
       .limit(+length)
       .exec()
-      .then(metadata => metadata.map(obj => obj._id))
+      .then(metadata => metadata.map(obj => {
+        const dataString = JSON.stringify(obj.data).substring(0,200)
+        obj.data = dataString + ((dataString.length === 203) ? "..." : "")
+        return obj
+      }))
   }
 }
 

@@ -24,10 +24,10 @@ const MarkerSchema = new mongoose.Schema({
   subtype: {
     type: String,
   },
-  startYear: {
+  start: {
     type: Number,
   },
-  endYear: {
+  end: {
     type: Number,
   },
   date: {

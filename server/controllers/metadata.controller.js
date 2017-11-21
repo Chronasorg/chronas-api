@@ -101,7 +101,7 @@ function remove(req, res, next) {
 }
 
 function defineEntity(req, res, next) {
-  req.resource = "metadata"
+  req.resource = 'metadata'
   next()
 }
 
