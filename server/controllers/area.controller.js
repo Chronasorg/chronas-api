@@ -1,5 +1,5 @@
-import Area from '../models/area.model'
 import { pick, keys, isEqual, extendOwn } from 'underscore'
+import Area from '../models/area.model'
 import logger from '../../config/winston'
 
 /**
@@ -30,6 +30,7 @@ function get(req, res) {
  */
 function create(req, res, next) {
   const area = new Area({
+    _id: req.body.year,
     year: req.body.year,
     data: req.body.data
   })
@@ -43,50 +44,66 @@ function updateMany(req, res, next) {
   const { start, end = start, provinces, nextBody } = req.body
   const prevBody = {}
   const trimmedNextBody = {}
-  Area.find({ year: { '$gte': start, '$lte': end }})
+  Area.find({ year: { $gte: start, $lte: end } })
     .sort({ year: 1 })
     .exec()
-    .then(Areas => {
+    .then((Areas) => {
+      const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
+        const currYear = area.year
+        provinces.forEach((province) => {
+          if (!isEqual(area.data[province], nextBody)) {
+            if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
+            if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
 
-      const areaPromises = Areas.map(area => {
-        return new Promise((resolve, reject) => {
-          const currYear = area.year
-          provinces.map(province => {
-              if (!isEqual(area.data[province], nextBody)) {
-                if (typeof prevBody[currYear] === "undefined") prevBody[currYear] = {}
-                if (typeof trimmedNextBody[currYear] === "undefined") trimmedNextBody[currYear] = {}
+            prevBody[currYear][province] = area.data[province]
+            trimmedNextBody[currYear][province] = nextBody
+            area.data[province] = nextBody
+            area.markModified('data')
+          }
 
-                prevBody[currYear][province] = area.data[province]
-                trimmedNextBody[currYear][province] = nextBody
-                area.data[province] = nextBody
-                area.markModified('data');
-              }
-
-              if (typeof prevBody[currYear] !== "undefined") {
+          if (typeof prevBody[currYear] !== 'undefined') {
                 // need to update
-                area.save()
+            area.save()
                   .then((ar) => {
                     resolve()
                   })
                   .catch(e => reject(e))
-              } else {
-                resolve()
-              }
-          })
+          } else {
+            resolve()
+          }
         })
-      })
+      }))
 
       Promise.all(areaPromises).then(() => {
         // optimize prevBody and add revision record
-        req.body.prevBody = prevBody
-        req.body.nextBody = trimmedNextBody
+        req.body.prevBody = getRanges(prevBody)
+        req.body.nextBody = getRanges(trimmedNextBody)
 
-        next();
+        next()
       }, (error) => {
         next(error)
       })
     })
     .catch(e => next(e))
+}
+
+function revertSingle(req, res, next, year, newBody) {
+  return new Promise((resolve, reject) => {
+    const provinces = Object.keys(newBody)
+    Area.findOne({ year })
+      .exec()
+      .then((area) => {
+        provinces.forEach((province) => {
+          area.data[province] = newBody[province]
+          area.markModified('data')
+        })
+
+        area.save()
+          .then(() => resolve())
+          .catch(e => reject(e))
+      })
+      .catch(e => reject(e))
+  })
 }
 
 /**
@@ -156,18 +173,26 @@ function defineEntity(req, res, next) {
   next()
 }
 
-function getRanges(array) {
-  var ranges = [], rstart, rend;
-  for (var i = 0; i < array.length; i++) {
-    rstart = array[i];
-    rend = rstart;
-    while (array[i + 1] - array[i] == 1) {
-      rend = array[i + 1]; // increment the index if the numbers sequential
-      i++;
+function getRanges(obj) {
+  const array = Object.keys(obj)
+  const compressedObj = {}
+  const ranges = []
+  let rstart,
+    rend
+  for (let i = 0; i < array.length; i++) {
+    rstart = array[i]
+    rend = rstart
+    while (array[i + 1] - array[i] === 1 && isEqual(obj[array[i + 1]], obj[array[i]])) {
+      rend = array[i + 1] // increment the index if the numbers sequential
+      i++
     }
-    ranges.push(rstart == rend ? [rstart] : [rstart,rend]);
+    if (rstart === rend) {
+      compressedObj[rstart.toString()] = obj[rstart]
+    } else {
+      compressedObj[`${rstart}-${rend}`] = obj[rstart]
+    }
   }
-  return ranges;
+  return compressedObj
 }
 
-export default { load, get, create, update, updateMany, list, remove, defineEntity }
+export default { load, get, create, update, updateMany, list, remove, revertSingle, defineEntity }

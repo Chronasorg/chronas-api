@@ -7,8 +7,12 @@ import APIError from '../helpers/APIError'
  * Area Schema
  */
 const AreaSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
   year: {
-    type: Number,
+    type: String,
     required: true
   },
   data: {
@@ -63,9 +67,9 @@ AreaSchema.statics = {
       .skip(offset)
       .limit(length)
       .exec()
-      .then(areas => areas.map(obj => {
-        const dataString = JSON.stringify(obj.data).substring(0,200)
-        obj.data = dataString + ((dataString.length === 203) ? "..." : "")
+      .then(areas => areas.map((obj) => {
+        const dataString = JSON.stringify(obj.data).substring(0, 200)
+        obj.data = dataString + ((dataString.length === 203) ? '...' : '')
         return obj
       }))
   }

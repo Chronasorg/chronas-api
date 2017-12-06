@@ -6,6 +6,7 @@ import Area from '../models/area.model'
 import Marker from '../models/marker.model'
 import Metadata from '../models/metadata.model'
 import areaCtrl from './area.controller'
+import userCtrl from './user.controller'
 import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
 
@@ -21,33 +22,46 @@ const resourceCollection = {
  * Load revision and append to req.
  */
 function load(req, res, next, id) {
-  Revision.get(id)
+  Revision.findById(id)
     .then((revision) => {
       req.revision = revision // eslint-disable-line no-param-reassign
-      return next()
+      // loadEntity
+      const resource = revision.resource
+      const entityId = revision.entityId
+
+      if (entityId === 'MANY') {
+        next()
+      } else {
+        resourceCollection[resource].model.findById(entityId)
+          .then((entity) => {
+            req.entity = entity // eslint-disable-line no-param-reassign
+            return next()
+          })
+          .catch(e => next(e))
+      }
     })
     .catch(e => next(e))
 }
 
-function loadEntity(req, res, next) {
-  const resource = req.body.resource
-  if (typeof resource !== 'undefined') {
-    let entityId
-    try {
-      entityId = req.body.entityId
-    } catch (err) {
-      next()
-    }
-    resourceCollection[resource].model.get(entityId)
-      .then((entity) => {
-        req.entity = entity // eslint-disable-line no-param-reassign
-        return next()
-      })
-      .catch(e => next())
-  } else {
-    next()
-  }
-}
+// function loadEntity(req, rels, next) {
+//   const resource = req.body.resource
+//   if (typeof resource !== 'undefined') {
+//     let entityId
+//     try {
+//       entityId = req.body.entityId
+//     } catch (err) {
+//       next()
+//     }
+//     resourceCollection[resource].model.get(entityId)
+//       .then((entity) => {
+//         req.entity = entity // eslint-disable-line no-param-reassign
+//         return next()
+//       })
+//       .catch(e => next())
+//   } else {
+//     next()
+//   }
+// }
 
 
 /**
@@ -58,42 +72,9 @@ function get(req, res) {
   return res.json(req.revision)
 }
 
-/**
- * Create new revision
- * @property {string} req.body.name - The revisionname of revision.
- * @property {string} req.body.privilege - The privilege of revision.
- * @returns {Revision}
- */
-function create(req, res, next) {
-  Revision.findById(req.body.entityId)
-    .exec()
-    .then((duplicatedRevision) => {
-      if (duplicatedRevision) {
-        const err = new APIError('A revision with this wiki already exists!', 400)
-        next(err)
-      }
-
-      const username = req.auth.username
-      const revision = new Revision({
-        type: 'CREATE',
-        subtype: req.body.subtype,
-        start: req.body.start,
-        user: username,
-        resource: req.resource,
-      })
-
-      revision.lastUpdated = Date.now()
-
-      revision.save()
-        .then(savedRevision => res.json(savedRevision))
-        .catch(e => next(e))
-    })
-    .catch(e => next(e))
-}
-
 function addCreateRevision(req, res, next) {
   const username = req.auth.username
-  // TODO: add karma here
+  userCtrl.changeKarma(username, 1)
 
   const entityId = decodeURIComponent(req.body[resourceCollection[req.resource].id])
   const revision = new Revision({
@@ -117,7 +98,7 @@ function addCreateRevision(req, res, next) {
 function addDeleteRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  // TODO: add karma here
+  userCtrl.changeKarma(username, 1)
 
   const revision = new Revision({
     entityId: entity._id,
@@ -138,28 +119,28 @@ function addDeleteRevision(req, res, next) {
 function addUpdateRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  // TODO: add karma here
+  userCtrl.changeKarma(username, 1)
 
   const nextBody =
-    (req.resource === "areas")
-      ? (entity._id === "MANY")
+    (req.resource === 'areas')
+      ? (entity._id === 'MANY')
         ? req.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
       : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
-    (req.resource === "areas")
-      ? (entity._id === "MANY")
+    (req.resource === 'areas')
+      ? (entity._id === 'MANY')
         ? req.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
       : shallowDiff(entity.toObject(), req.body)
 
-  if (typeof nextBody !== "undefined") {
+  if (typeof nextBody !== 'undefined') {
     delete nextBody.id
     delete nextBody._id
   }
 
-  if (typeof prevBody !== "undefined") {
+  if (typeof prevBody !== 'undefined') {
     delete prevBody.id
     delete prevBody._id
   }
@@ -184,41 +165,9 @@ function addUpdateRevision(req, res, next) {
     .catch(e => next(e))
 }
 
-
-  // function addUpdateRevision(req, res, next) {
-  //     const entity = req.entity
-  //       const username = req.auth.username
-  //       // TODO: add karma here
-  //
-  //         const nexBody = shallowDiff(req.body, entity.toObject())
-  //       const prevBody = shallowDiff(entity.toObject(), req.body)
-  //
-  //       delete nexBody.id
-  //       delete prevBody.id
-  //       delete nexBody._id
-  //       delete prevBody._id
-  //
-  //       const revision = new Revision({
-  //         entityId: entity._id,
-  //         type: 'UPDATE',
-  //         subtype: req.body.subtype,
-  //         startYear: req.body.startYear,
-  //         user: username,
-  //         resource: req.resource,
-  //         nextBody: JSON.stringify(nexBody),
-  //         prevBody: JSON.stringify(prevBody),
-  //       })
-  //
-  //       // add revision record
-  //         revision.save()
-  //       .then(() => {
-  //           next()
-  //         })
-  //       .catch(e => next(e))
-  //   }
 function addUpdateManyRevision(req, res, next) {
   const username = req.auth.username
-  // TODO: add karma here
+  userCtrl.changeKarma(username, 1)
 
   const { prevBody, nextBody } = req.body
 
@@ -242,7 +191,7 @@ function addUpdateManyRevision(req, res, next) {
   // add revision record
   revision.save()
     .then(() => {
-      res.status(200).send("Areas successfully updated.");
+      res.status(200).send('Areas successfully updated.')
     })
     .catch(e => res.status(500).send(e))
 }
@@ -254,38 +203,65 @@ function addUpdateManyRevision(req, res, next) {
  * @returns {Revision}
  */
 function update(req, res, next) {
+  const username = req.auth.username
   const revision = req.revision // .toObject()
   const resource = revision.resource
 
   switch (revision.type) {
     case 'CREATE':
       if (revision.reverted) {
+        userCtrl.changeKarma(username, 2)
         // post nextBody
-        req.body = JSON.parse(req.body.nextBody)
+        req.body = JSON.parse(revision.nextBody)
         resourceCollection[resource].controller.create(req, res, next, true)
       } else {
+        userCtrl.changeKarma(username, -2)
         // was post, so delete again by id nextBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       }
       break
     case 'UPDATE':
       if (revision.reverted) {
+        userCtrl.changeKarma(username, 2)
       // was updated, so put prevBody
-        req.body = JSON.parse(req.body.nextBody)
-        resourceCollection[resource].controller.update(req, res, next, true)
+        if (revision.entityId === 'MANY') {
+          const unpackedObj = unpackObj(JSON.parse(revision.nextBody))
+          const areaPromises = Object.keys(unpackedObj).map(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
+          Promise.all(areaPromises).then(() => {
+              // res.status(200).send('Areas revision MANY successfully applied.')
+          }, (error) => {
+            res.status(500).send(error)
+          })
+        } else {
+          req.body = JSON.parse(revision.nextBody)
+          resourceCollection[resource].controller.update(req, res, next, true)
+        }
       } else {
-      // update to nextBody
-        req.body = JSON.parse(req.body.prevBody)
-        resourceCollection[resource].controller.update(req, res, next, true)
+        userCtrl.changeKarma(username, -2)
+        // update to nextBody
+        if (revision.entityId === 'MANY') {
+          const unpackedObj = unpackObj(JSON.parse(revision.prevBody))
+          const areaPromises = Object.keys(unpackedObj).forEach(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
+          Promise.all(areaPromises).then(() => {
+            res.status(200).send('Areas revision MANY successfully applied.')
+          }, (error) => {
+            logger.error(error)
+          })
+        } else {
+          req.body = JSON.parse(revision.prevBody)
+          resourceCollection[resource].controller.update(req, res, next, true)
+        }
       }
       break
     case 'DELETE':
       if (revision.reverted) {
+        userCtrl.changeKarma(username, 2)
         // delete by id prevBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       } else {
+        userCtrl.changeKarma(username, -2)
         // was deleted, so post prevBody
-        req.body = JSON.parse(req.body.prevBody)
+        req.body = JSON.parse(revision.prevBody)
         resourceCollection[resource].controller.create(req, res, next, true)
       }
       break
@@ -347,4 +323,16 @@ function shallowDiff(a, b) {
   return omit(a, (v, k) => JSON.stringify(b[k]) === JSON.stringify(v))
 }
 
-export default { addUpdateRevision, addUpdateManyRevision, addCreateRevision, addDeleteRevision, loadEntity, load, get, create, update, list, remove }
+function unpackObj(obj) {
+  const array = Object.keys(obj)
+  const unpackedObj = {}
+  for (let i = 0; i < array.length; i++) {
+    const years = array[i].split('-')
+    for (let j = 0; j < years.length; j++) {
+      unpackedObj[years[j]] = obj[array[i]]
+    }
+  }
+  return unpackedObj
+}
+
+export default { addUpdateRevision, addUpdateManyRevision, addCreateRevision, addDeleteRevision, load, get, update, list, remove }

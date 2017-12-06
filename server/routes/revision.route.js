@@ -36,6 +36,6 @@ router.route('/:revisionId')
 
 /** Load revision when API with revisionId route parameter is hit */
 router.param('revisionId', revisionCtrl.load)
-router.param('revisionId', revisionCtrl.loadEntity)
+// router.param('revisionId', revisionCtrl.loadEntity)
 
 export default router

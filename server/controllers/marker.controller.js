@@ -51,8 +51,8 @@ function create(req, res, next, fromRevision = false) {
         date: req.body.date,
         rating: req.body.rating,
       })
-      marker.lastUpdated = Date.now()
 
+      marker.lastUpdated = Date.now()
       marker.save()
         .then((savedMarker) => {
           if (!fromRevision) {

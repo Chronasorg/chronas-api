@@ -78,6 +78,17 @@ function update(req, res, next) {
     .catch(e => next(e))
 }
 
+function changeKarma(username, karmaDelta) {
+  User.findOne({ username })
+    .exec()
+    .then((user) => {
+      if (typeof user !== 'undefined') {
+        user.karma += karmaDelta
+        user.save()
+      }
+    })
+}
+
 /**
  * Get user list.
  * @property {number} req.query.skip - Number of users to be skipped.
@@ -113,4 +124,4 @@ function remove(req, res, next) {
     .catch(e => next(e))
 }
 
-export default { load, get, create, update, list, remove }
+export default { changeKarma, load, get, create, update, list, remove }

@@ -89,14 +89,12 @@ RevisionSchema.statics = {
       .skip(+offset)
       .limit(+length)
       .exec()
-      .then(revisions => revisions.map(obj => {
-        const nextBodyString = (JSON.stringify(obj.nextBody) || "").substring(0,400)
-        const prevBodyString = (JSON.stringify(obj.prevBody) || "").substring(0,400)
+      .then(revisions => revisions.map((obj) => {
+        const nextBodyString = (JSON.stringify(obj.nextBody) || '').substring(0, 400)
+        const prevBodyString = (JSON.stringify(obj.prevBody) || '').substring(0, 400)
 
-        if (typeof obj.nextBody !== "undefined")
-          obj.nextBody = nextBodyString + ((nextBodyString.length === 403) ? "..." : "")
-        if (typeof obj.prevBody !== "undefined")
-          obj.prevBody = prevBodyString + ((prevBodyString.length === 403) ? "..." : "")
+        if (typeof obj.nextBody !== 'undefined') { obj.nextBody = nextBodyString + ((nextBodyString.length === 403) ? '...' : '') }
+        if (typeof obj.prevBody !== 'undefined') { obj.prevBody = prevBodyString + ((prevBodyString.length === 403) ? '...' : '') }
         return obj
       }))
   }
