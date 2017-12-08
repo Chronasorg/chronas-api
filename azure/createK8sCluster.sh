@@ -1,13 +1,13 @@
 
 #create westeu
-az group create --name chronas-k8s --location westeu
-az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys
+az group create --name chronas-k8s --location westeurope
+az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_D1_v2
 az aks get-credentials --resource-group=chronas-k8s --name=myK8sCluster -f ./myk8sclusterConfig
 
 
 #create ukwest - not working
 az group create --name chronas-k8s-uk --location ukwest
-az aks create --resource-group chronas-k8s-uk --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_DS1_v2
+az aks create --resource-group chronas-k8s-uk --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_D1_v2
 az group delete --name chronas-k8s-uk --yes
 
 
