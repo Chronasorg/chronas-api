@@ -97,7 +97,7 @@ gulp
 2. scp -rp dist/ user@dest:/path
 
 # install production dependencies only
-3. npm start --production
+3. npm install --production
 
 # Use any process manager to start your services
 4. pm2 start dist/index.js
