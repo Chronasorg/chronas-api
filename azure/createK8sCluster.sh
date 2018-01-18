@@ -1,26 +1,25 @@
-
+#!/bin/bash
+resourceGroupName='chronas-k8s1'
+cosmosDbName='chronas-api-test1'
+aksClusterName='chronask8sCluster1'
 #create westeu
-az group create --name chronas-k8s --location westeurope
-az aks create --resource-group chronas-k8s --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_D1_v2
-az aks get-credentials --resource-group=chronas-k8s --name=myK8sCluster -f ./myk8sclusterConfig
+az group create --name $resourceGroupName --location westeurope
+az aks create --resource-group $resourceGroupName --name $aksClusterName --node-count 1 --generate-ssh-keys -s Standard_D1_v2
+az aks get-credentials --resource-group $resourceGroupName --name $aksClusterName
+
+az cosmosdb create \
+	--name $cosmosDbName \
+	--kind MongoDB \
+	--resource-group $resourceGroupName \
+	--max-interval 10 \
+	--max-staleness-prefix 200
+
+az cosmosdb list-connection-strings \
+	--name $cosmosDbName \
+	--resource-group $resourceGroupName 
 
 
-#create ukwest - not working
-az group create --name chronas-k8s-uk --location ukwest
-az aks create --resource-group chronas-k8s-uk --name myK8sCluster --agent-count 1 --generate-ssh-keys -s Standard_D1_v2
-az group delete --name chronas-k8s-uk --yes
-
-
-
-#get credentials
 #dashbaord
-az aks browse --resource-group chronas-k8s --name myK8sCluster
+#az aks browse --resource-group chronas-k8s --name myK8sCluster
 
-
-az group delete --name chronas-k8s --yes
-
-#TODO
-#write mongo db data to disk
-#api port change to 80
-#rework dockerfiles
-#check how to update existing pods
+#az group delete --name 'chronas-k8s-dev' --yes
