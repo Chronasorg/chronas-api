@@ -31,29 +31,54 @@ function get(req, res) {
  * @returns {User}
  */
 function create(req, res, next) {
-  User.findById(req.body.username)
+  console.log('About to create user' + req.body.id || req.body.username)
+  User.findById(req.body.id || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        const err = new APIError('This username already exists!', 400)
-        next(err)
+        console.log('Already exists!' + req.body.id || req.body.username)
+        if (!req.body.thirdParty) {
+          const err = new APIError('This username already exists!', 400)
+          next(err)
+        } else {
+          duplicatedUsername.loginCount += 1
+          return duplicatedUsername.save()
+        }
       }
 
       const user = new User({
-        _id: req.body.username,
+        _id: req.body.id || req.body.username,
+        avatar: req.body.avatar,
+        website: req.body.website,
         username: req.body.username,
         name: req.body.name,
         password: req.body.password,
         education: req.body.education,
         email: req.body.email,
+        authType: req.body.authType || 'chronas',
         privilege: req.body.privilege
       })
 
       user.save()
-        .then(savedUser => res.json(savedUser))
-        .catch(e => next(e))
+        .then((savedUser) => {
+          console.log('Saved' + req.body.id || req.body.username)
+          if (!req.body.thirdParty) {
+            res.json(savedUser)
+          }
+        })
+        .catch((e) => {
+          console.log('Error' + e)
+          if (!req.body.thirdParty) {
+            next(e)
+          }
+        })
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      console.log('Error' + e)
+      if (!req.body.thirdParty) {
+        next(e)
+      }
+    })
 }
 
 /**
@@ -64,6 +89,7 @@ function create(req, res, next) {
  */
 function update(req, res, next) {
   const user = req.user
+  if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
   if (typeof req.body.privilege !== 'undefined') user.privilege = req.body.privilege
@@ -71,6 +97,7 @@ function update(req, res, next) {
   if (typeof req.body.createdAt !== 'undefined') user.createdAt = req.body.createdAt
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
   if (typeof req.body.karma !== 'undefined') user.karma = req.body.karma
+  if (typeof req.body.website !== 'undefined') user.website = req.body.website
   if (typeof req.body.password !== 'undefined') user.password = req.body.password
 
   user.save()

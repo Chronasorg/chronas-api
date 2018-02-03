@@ -26,6 +26,7 @@
     "url": "git+ssh://git@github.com/daumann/chronas-api.git"
   },
   "dependencies": {
+    "bcrypt": "1.0.3",
     "bluebird": "3.5.0",
     "body-parser": "1.18.2",
     "compression": "1.7.0",
@@ -35,6 +36,7 @@
     "dotenv": "^4.0.0",
     "express": "4.15.4",
     "express-jwt": "5.3.0",
+    "express-session": "1.15.6",
     "express-validation": "1.0.2",
     "express-winston": "2.4.0",
     "helmet": "3.8.1",
@@ -44,6 +46,11 @@
     "method-override": "2.3.10",
     "mongoose": "4.11.12",
     "morgan": "1.7.0",
+    "passport": "0.4.0",
+    "passport-facebook": "2.1.1",
+    "passport-github": "1.1.0",
+    "passport-google-oauth": "1.0.0",
+    "passport-twitter": "1.0.4",
     "request": "2.83.0",
     "request-promise": "4.2.2",
     "underscore": "1.8.3",

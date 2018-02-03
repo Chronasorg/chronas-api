@@ -5,6 +5,7 @@ import paramValidation from '../../config/param-validation'
 import metadataCtrl from '../controllers/metadata.controller'
 import revisionCtrl from '../controllers/revision.controller'
 import config from '../../config/config'
+import checkPrivilege from "../helpers/privileges";
 
 const router = express.Router() // eslint-disable-line new-cap
 
@@ -18,6 +19,7 @@ router.route('/')
   /** POST /v1/metadata - Create new metadata */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMetadata),
     metadataCtrl.create)
@@ -29,13 +31,17 @@ router.route('/:metadataId')
     metadataCtrl.get)
 
   /** PUT /v1/metadata/:metadataId - Update metadata */
-  .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addUpdateRevision,
     // validate(paramValidation.updateMetadata),
     metadataCtrl.update)
 
   /** DELETE /v1/metadata/:metadataId - Delete metadata */
-  .delete(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .delete(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addDeleteRevision,
     metadataCtrl.remove)
 

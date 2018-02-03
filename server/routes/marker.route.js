@@ -5,6 +5,7 @@ import paramValidation from '../../config/param-validation'
 import markerCtrl from '../controllers/marker.controller'
 import revisionCtrl from '../controllers/revision.controller'
 import config from '../../config/config'
+import checkPrivilege from '../helpers/privileges'
 
 const router = express.Router() // eslint-disable-line new-cap
 
@@ -18,6 +19,7 @@ router.route('/')
   /** POST /v1/markers - Create new marker */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMarker),
     markerCtrl.create)
@@ -32,12 +34,15 @@ router.route('/:markerId')
   /** PUT /v1/markers/:markerId - Update marker */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     // validate(paramValidation.updateMarker),
     revisionCtrl.addUpdateRevision,
     markerCtrl.update)
 
   /** DELETE /v1/markers/:markerId - Delete marker */
-  .delete(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .delete(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addDeleteRevision,
     markerCtrl.remove)
 
