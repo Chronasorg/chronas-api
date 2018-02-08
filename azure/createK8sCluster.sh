@@ -1,7 +1,7 @@
 #!/bin/bash
-resourceGroupName='chronas-k8s1'
-cosmosDbName='chronas-api-test1'
-aksClusterName='chronask8sCluster1'
+resourceGroupName='chronasDev'
+cosmosDbName='chronasapi'
+aksClusterName='chronasK8sDev'
 #create westeu
 az group create --name $resourceGroupName --location westeurope
 az aks create --resource-group $resourceGroupName --name $aksClusterName --node-count 1 --generate-ssh-keys -s Standard_D1_v2
