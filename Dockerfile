@@ -12,6 +12,9 @@ ENV JWT_SECRET=0a6b944d-d2fb-46fc-a85e-0295c986cd9f
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
+ENV TWITTER_CONSUMER_KEY=placeholder
+ENV TWITTER_CONSUMER_SECRET=placeholder
+ENV TWITTER_CALLBACK_URL=placeholder
 
 RUN npm install --production
 
