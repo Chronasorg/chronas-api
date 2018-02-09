@@ -14,7 +14,7 @@
     "build": "gulp",
     "lint": "esw *.js server config --color --fix",
     "lint:watch": "npm run lint -- --watch",
-    "precommit": "npm run lint && npm test",
+    "precommit": "npm test",
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha --ui bdd --reporter spec --colors --compilers js:babel-core/register server/tests --recursive",
     "test:watch": "npm test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test ./node_modules/.bin/istanbul cover _mocha -- --ui bdd --reporter spec --colors --compilers js:babel-core/register server/tests --recursive",
@@ -26,6 +26,7 @@
     "url": "git+ssh://git@github.com/daumann/chronas-api.git"
   },
   "dependencies": {
+    "applicationinsights": "1.0.1",
     "bcrypt": "1.0.3",
     "bluebird": "3.5.0",
     "body-parser": "1.18.2",
