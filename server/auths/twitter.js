@@ -1,10 +1,10 @@
 import passport from 'passport'
 import { Strategy } from 'passport-twitter'
 import jwt from 'jsonwebtoken'
+import httpStatus from 'http-status'
 import config from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 import APIError from '../helpers/APIError'
-import httpStatus from 'http-status'
 
 const credentials = {
   consumerKey: process.env.TWITTER_CONSUMER_KEY,
