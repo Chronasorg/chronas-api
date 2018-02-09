@@ -18,7 +18,6 @@ router.route('/')
   /** POST /v1/users - Create new user */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
     validate(paramValidation.createUser),
     userCtrl.create)
 

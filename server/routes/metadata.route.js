@@ -5,7 +5,7 @@ import paramValidation from '../../config/param-validation'
 import metadataCtrl from '../controllers/metadata.controller'
 import revisionCtrl from '../controllers/revision.controller'
 import config from '../../config/config'
-import checkPrivilege from "../helpers/privileges";
+import checkPrivilege from '../helpers/privileges'
 
 const router = express.Router() // eslint-disable-line new-cap
 

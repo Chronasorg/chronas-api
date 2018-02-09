@@ -31,19 +31,16 @@ function get(req, res) {
  * @returns {User}
  */
 function create(req, res, next) {
-  console.log('About to create user' + req.body.id || req.body.username)
   User.findById(req.body.id || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        console.log('Already exists!' + req.body.id || req.body.username)
         if (!req.body.thirdParty) {
           const err = new APIError('This username already exists!', 400)
-          next(err)
-        } else {
-          duplicatedUsername.loginCount += 1
-          return duplicatedUsername.save()
+          return next(err)
         }
+        duplicatedUsername.loginCount += 1
+        return duplicatedUsername.save()
       }
 
       const user = new User({
@@ -59,22 +56,19 @@ function create(req, res, next) {
         privilege: req.body.privilege
       })
 
-      user.save()
+      return user.save()
         .then((savedUser) => {
-          console.log('Saved' + req.body.id || req.body.username)
           if (!req.body.thirdParty) {
             res.json(savedUser)
           }
         })
         .catch((e) => {
-          console.log('Error' + e)
           if (!req.body.thirdParty) {
             next(e)
           }
         })
     })
     .catch((e) => {
-      console.log('Error' + e)
       if (!req.body.thirdParty) {
         next(e)
       }
