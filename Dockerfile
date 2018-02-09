@@ -15,7 +15,7 @@ ENV PORT=80
 ENV TWITTER_CONSUMER_KEY=placeholder
 ENV TWITTER_CONSUMER_SECRET=placeholder
 ENV TWITTER_CALLBACK_URL=placeholder
-
+ENV APPINSIGHTS_INSTRUMENTATIONKEY=b4bc70b7-b805-42c1-a3d4-c1e0e8d3af02
 RUN npm install --production
 
 # copy all file from current dir to /app in container
