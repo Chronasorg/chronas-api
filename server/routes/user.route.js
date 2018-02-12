@@ -17,7 +17,6 @@ router.route('/')
 
   /** POST /v1/users - Create new user */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.createUser),
     userCtrl.create)
 
