@@ -14,7 +14,7 @@ const credentials = {
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = '/auth/confirm'
+  let redirect = process.env.CHRONAS_HOST
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -40,10 +40,6 @@ function authenticateUser(req, res, next) {
     console.log('------------------------------------------------------------')
 
     passport.authenticate('facebook', { session: false }, (err, data) => {
-      // console.log(res)
-      // console.log(req)
-      console.log('data is', data)
-      // console.log('err is', err)
       if (err || !data) {
         console.log(`[services.facebook] - Error retrieving Facebook account data - ${JSON.stringify(data)} ${JSON.stringify(err)}`)
         return res.redirect('/signin')
@@ -52,7 +48,6 @@ function authenticateUser(req, res, next) {
       console.log('[services.facebook] - Successfully retrieved Facebook account data, processing...')
       console.log('------------------------------------------------------------')
 
-      console.log('data', data)
       const name = (data.profile && data.profile.displayName) ? data.profile.displayName.split(' ') : []
       //
       const auth = {
@@ -64,7 +59,7 @@ function authenticateUser(req, res, next) {
         email: data.profile.emails && data.profile.emails.length ? (data.profile.emails)[0].value : null,
         website: data.profile._json.blog,
         profileId: data.profile.id,
-        username: data.profile.username || data.profile.username,
+        username: data.profile.displayName || data.profile.id,
         avatar: `https://graph.facebook.com/${data.profile.id}/picture?width=600&height=600`,
         accessToken: data.accessToken,
         refreshToken: data.refreshToken
@@ -76,7 +71,6 @@ function authenticateUser(req, res, next) {
         avatar: auth.avatar,
         email: auth.email,
         username: auth.username,
-        password: auth.accessToken,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
@@ -87,12 +81,8 @@ function authenticateUser(req, res, next) {
       req.session.auth = auth
 
       const token = jwt.sign(auth, config.jwtSecret)
-      return res.json({
-        token,
-        username: auth.username
-      })
 
-      // return res.redirect(redirect);
+      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
     })(req, res, next)
 
     // Perform inital authentication request to Facebook

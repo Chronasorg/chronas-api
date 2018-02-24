@@ -13,7 +13,7 @@ const credentials = {
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = '/auth/confirm'
+  let redirect = process.env.CHRONAS_HOST
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -57,6 +57,7 @@ function authenticateUser(req, res, next) {
         },
         website: data.profile._json.blog,
         profileId: data.profile.id,
+        email: data.profile.email,
         username: data.profile.username,
         avatar: data.profile._json.avatar_url,
         accessToken: data.accessToken,
@@ -69,7 +70,6 @@ function authenticateUser(req, res, next) {
         avatar: auth.avatar,
         email: auth.email,
         username: auth.username,
-        password: auth.accessToken,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
@@ -80,11 +80,8 @@ function authenticateUser(req, res, next) {
       req.session.auth = auth
 
       const token = jwt.sign(auth, config.jwtSecret)
-      return res.json({
-        token,
-        username: auth.username
-      })
 
+      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 

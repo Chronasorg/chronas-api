@@ -14,7 +14,7 @@ const credentials = {
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = '/auth/confirm'
+  let redirect = process.env.CHRONAS_HOST
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -42,9 +42,9 @@ function authenticateUser(req, res, next) {
     passport.authenticate('google', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.google] - Error retrieving Google account data - ${JSON.stringify(err)}`)
-        // return res.redirect('/signin')
+        return res.redirect(process.env.CHRONAS_HOST + '/#/login')
         // const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
-        return next(err)
+        // return next(err)
       }
 
       console.log('[services.google] - Successfully retrieved Google account data, processing...')
@@ -71,7 +71,6 @@ function authenticateUser(req, res, next) {
         avatar: auth.avatar,
         email: auth.email,
         username: auth.username,
-        password: auth.accessToken,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
@@ -82,11 +81,8 @@ function authenticateUser(req, res, next) {
       req.session.auth = auth
 
       const token = jwt.sign(auth, config.jwtSecret)
-      return res.json({
-        token,
-        username: auth.username
-      })
 
+      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 

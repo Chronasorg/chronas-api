@@ -70,7 +70,15 @@ export default {
   // POST /v1/auth/login
   login: {
     body: {
-      username: Joi.string().required(),
+      email: Joi.string().required(),
+      password: Joi.string().required()
+    }
+  },
+
+  // POST /v1/auth/login
+  signup: {
+    body: {
+      email: Joi.string().required(),
       password: Joi.string().required()
     }
   }
