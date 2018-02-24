@@ -20,7 +20,6 @@ const UserSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    required: true
   },
   loginCount: {
     type: Number,
@@ -29,7 +28,6 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
   },
   name: {
     type: String,
@@ -93,14 +91,18 @@ UserSchema.pre('save', function (next) {
   return bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
     if (err) return next(err)
 
-    // hash the password using our new salt
-    return bcrypt.hash(user.password, salt, (err2, hash) => {
-      if (err2) return next(err2)
+    if (typeof user.password !== "undefined") {
+      // hash the password using our new salt
+      return bcrypt.hash(user.password, salt, (err2, hash) => {
+        if (err2) return next(err2)
 
-      // override the cleartext password with the hashed one
-      user.password = hash
+        // override the cleartext password with the hashed one
+        user.password = hash
+        return next()
+      })
+    } else {
       return next()
-    })
+    }
   })
 })
 
