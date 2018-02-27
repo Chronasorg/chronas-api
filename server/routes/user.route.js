@@ -24,20 +24,20 @@ router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilegeOrOwnership(5),
     // validate(paramValidation.updateUser),
     userCtrl.update)
 
   /** DELETE /v1/users/:userId - Delete user */
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.remove)
 
 /** Load user when API with userId route parameter is hit */
