@@ -142,6 +142,7 @@ function changeKarma(username, karmaDelta) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
+
   User.list({ start, limit, sort, order, filter })
     .then((users) => {
       if (count) {
