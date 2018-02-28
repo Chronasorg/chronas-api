@@ -106,14 +106,14 @@ function create(req, res, next) {
  */
 function update(req, res, next) {
   const user = req.user
+  const isAdmin = (req.auth && req.auth.privilege >= 5)
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
-  if (typeof req.body.privilege !== 'undefined') user.privilege = req.body.privilege
+  if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
-  if (typeof req.body.createdAt !== 'undefined') user.createdAt = req.body.createdAt
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
-  if (typeof req.body.karma !== 'undefined') user.karma = req.body.karma
+  if (typeof req.body.karma !== 'undefined' && isAdmin) user.karma = req.body.karma
   if (typeof req.body.website !== 'undefined') user.website = req.body.website
   if (typeof req.body.password !== 'undefined') user.password = req.body.password
 
