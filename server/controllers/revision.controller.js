@@ -126,14 +126,18 @@ function addUpdateRevision(req, res, next) {
       ? (entity._id === 'MANY')
         ? req.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
-      : shallowDiff(req.body, entity.toObject())
+      : (req.resource === 'metadata')
+        ? req.body
+        : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
         ? req.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
-      : shallowDiff(entity.toObject(), req.body)
+      : (req.resource === 'metadata')
+        ? req.prevBody
+        : shallowDiff(entity.toObject(), req.body)
 
   if (typeof nextBody !== 'undefined') {
     delete nextBody.id
