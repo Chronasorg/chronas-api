@@ -35,8 +35,7 @@ router.route('/:areaId')
   .get(areaCtrl.get)
 
   /** PUT /v1/areas/:areaId - Update area */
-  .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateArea),
     revisionCtrl.addUpdateRevision,
     areaCtrl.update)

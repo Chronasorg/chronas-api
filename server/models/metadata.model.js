@@ -18,17 +18,6 @@ const MetadataSchema = new mongoose.Schema({
 })
 
 /**
- * Add your
- * - pre-save hooks
- * - validations
- * - virtuals
- */
-// MetadataSchema.virtual('key').get(function() {
-//   return this._id;
-// });
-
-
-/**
  * Methods
  */
 MetadataSchema.method({
@@ -38,18 +27,18 @@ MetadataSchema.method({
  * Statics
  */
 MetadataSchema.statics = {
-  /**
-   * Get Metadata
-   * @param {key} key - The key of Metadata.
-   * @returns {Promise<Metadata, APIError>}
-   */
-  get(id) {
+  get(id, meth) {
     return this.findById(id)
       .exec()
       .then((metadata) => {
-        if (metadata && metadata.data) {
-          return metadata.data
+        if (metadata) {
+          if (meth === "PUT") {
+            return metadata
+          } else if (metadata.data) {
+            return metadata.data
+          }
         }
+
         const err = new APIError('No such metadata exists!', httpStatus.NOT_FOUND)
         return Promise.reject(err)
       })
