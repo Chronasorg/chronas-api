@@ -5,6 +5,17 @@ import util from 'util'
 import config from './config/config'
 import app from './config/express'
 
+const appInsights = require('applicationinsights')
+appInsights.setup()
+    .setAutoDependencyCorrelation(true)
+    .setAutoCollectRequests(true)
+    .setAutoCollectPerformance(true)
+    .setAutoCollectExceptions(true)
+    .setAutoCollectDependencies(true)
+    .setAutoCollectConsole(true)
+    .setUseDiskRetryCaching(true)
+    .start()
+
 const debug = require('debug')('chronas-api:index')
 
 // make bluebird default Promise

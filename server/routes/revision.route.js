@@ -4,6 +4,7 @@ import expressJwt from 'express-jwt'
 import paramValidation from '../../config/param-validation'
 import revisionCtrl from '../controllers/revision.controller'
 import config from '../../config/config'
+import checkPrivilege from '../helpers/privileges'
 
 const router = express.Router() // eslint-disable-line new-cap
 
@@ -26,12 +27,16 @@ router.route('/:revisionId')
     revisionCtrl.get)
 
   /** PUT /v1/revisions/:revisionId - Update revision */
-  .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     // validate(paramValidation.updateMarker),
     revisionCtrl.update)
 
   /** DELETE /v1/revisions/:revisionId - Delete revision */
-  .delete(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  .delete(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(5),
     revisionCtrl.remove)
 
 /** Load revision when API with revisionId route parameter is hit */

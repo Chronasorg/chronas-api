@@ -5,6 +5,7 @@ import paramValidation from '../../config/param-validation'
 import areaCtrl from '../controllers/area.controller'
 import revisionCtrl from '../controllers/revision.controller'
 import config from '../../config/config'
+import checkPrivilege from '../helpers/privileges'
 
 const router = express.Router() // eslint-disable-line new-cap
 
@@ -18,13 +19,14 @@ router.route('/')
   /** PUT /v1/areas/ - Update area */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    // validate(paramValidation.updateArea),
+    checkPrivilege.checkPrivilege(1),
     areaCtrl.updateMany,
     revisionCtrl.addUpdateManyRevision)
 
   /** POST /v1/areas - Create new area */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(5),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createArea),
     areaCtrl.create)
@@ -35,14 +37,16 @@ router.route('/:areaId')
   .get(areaCtrl.get)
 
   /** PUT /v1/areas/:areaId - Update area */
-  .put(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    // validate(paramValidation.updateArea),
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
     revisionCtrl.addUpdateRevision,
     areaCtrl.update)
 
   /** DELETE /v1/areas/:areaId - Delete area */
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(5),
     revisionCtrl.addDeleteRevision,
     areaCtrl.remove)
 

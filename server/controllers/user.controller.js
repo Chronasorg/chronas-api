@@ -1,6 +1,8 @@
 import User from '../models/user.model'
 import logger from '../../config/winston'
 import APIError from '../helpers/APIError'
+import config from '../../config/config'
+import jwt from 'jsonwebtoken'
 
 /**
  * Load user and append to req.
@@ -31,29 +33,69 @@ function get(req, res) {
  * @returns {User}
  */
 function create(req, res, next) {
-  User.findById(req.body.username)
+  console.log('Attempting to create user')
+  console.log('------------------------------------------------------------')
+
+  User.findById(req.body.id || req.body.email || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        const err = new APIError('This username already exists!', 400)
-        next(err)
+        if (!req.body.thirdParty || req.body.signup) {
+          const err = new APIError('This username/ email already exists!', 400)
+          return next(err)
+        }
+
+        duplicatedUsername.loginCount += 1
+        return duplicatedUsername.save()
       }
 
       const user = new User({
-        _id: req.body.username,
+        _id: req.body.id || req.body.email || req.body.username,
+        avatar: req.body.avatar,
+        website: req.body.website,
         username: req.body.username,
-        name: req.body.name,
+        name: req.body.name || req.body.username || req.body.id,
         password: req.body.password,
         education: req.body.education,
         email: req.body.email,
+        authType: req.body.authType || 'chronas',
         privilege: req.body.privilege
       })
 
-      user.save()
-        .then(savedUser => res.json(savedUser))
-        .catch(e => next(e))
+      return user.save()
+        .then((savedUser) => {
+          if (!req.body.thirdParty && !req.body.signup) {
+            res.json(savedUser)
+          } else if (!req.body.thirdParty) {
+            const token = jwt.sign({
+              id: savedUser._id,
+              username: savedUser.username,
+              lastUpdated: savedUser.lastUpdated,
+              privilege: savedUser.privilege ? savedUser.privilege : 1
+            }, config.jwtSecret)
+            return res.json({
+              token,
+              username: savedUser.username
+            })
+          }
+        })
+        .catch((e) => {
+          console.log('ERROR Attempt to save user', e)
+          console.log('------------------------------------------------------------')
+
+          if (!req.body.thirdParty) {
+            next(e)
+          }
+        })
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      console.log('ERROR Attemp to find user', e)
+      console.log('------------------------------------------------------------')
+
+      if (!req.body.thirdParty) {
+        next(e)
+      }
+    })
 }
 
 /**
@@ -64,13 +106,15 @@ function create(req, res, next) {
  */
 function update(req, res, next) {
   const user = req.user
+  const isAdmin = (req.auth && req.auth.privilege >= 5)
+  if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
-  if (typeof req.body.privilege !== 'undefined') user.privilege = req.body.privilege
+  if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
-  if (typeof req.body.createdAt !== 'undefined') user.createdAt = req.body.createdAt
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
-  if (typeof req.body.karma !== 'undefined') user.karma = req.body.karma
+  if (typeof req.body.karma !== 'undefined' && isAdmin) user.karma = req.body.karma
+  if (typeof req.body.website !== 'undefined') user.website = req.body.website
   if (typeof req.body.password !== 'undefined') user.password = req.body.password
 
   user.save()
@@ -98,6 +142,7 @@ function changeKarma(username, karmaDelta) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
+
   User.list({ start, limit, sort, order, filter })
     .then((users) => {
       if (count) {
