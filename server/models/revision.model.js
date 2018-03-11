@@ -19,7 +19,10 @@ const RevisionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  resource: { // Marker, AREA, ..., (TRANSACTION <- dangerous, later?)
+  subEntityId: { // accessId used for metadata
+    type: String,
+  },
+  resource: { // Marker, AREA, ...
     type: String,
     required: true
   },
