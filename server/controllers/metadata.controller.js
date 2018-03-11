@@ -6,9 +6,9 @@ import { APICustomResponse, APIError } from '../../server/helpers/APIError'
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
-  Metadata.get(id)
+  Metadata.get(id, true)
     .then((metadata) => {
-      req.metadata = metadata // eslint-disable-line no-param-reassign
+      req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
     .catch(e => next(e))
@@ -19,7 +19,7 @@ function load(req, res, next, id) {
  * @returns {Metadata}
  */
 function get(req, res) {
-  return res.json(req.metadata)
+  return res.json(req.entity)
 }
 
 /**
@@ -56,13 +56,26 @@ function create(req, res, next) {
  * @returns {Metadata}
  */
 function update(req, res, next) {
-  const metadata = req.metadata
+  const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
 
   metadata.save()
     .then(savedMetadata => res.json(savedMetadata))
     .catch(e => next(e))
+}
+
+function updateSingle(req, res, next, fromRevision = false) {
+  const metadata = req.entity
+  const subEntityId = req.body.subEntityId
+  const nextBody = req.body.nextBody
+
+  req.body.prevBody = metadata.data[subEntityId]
+  metadata.data[subEntityId] = nextBody
+  metadata.markModified('data')
+  metadata.save()
+    .then(() => { if (!fromRevision) next() })
+    .catch(e => { if (!fromRevision) next(e) })
 }
 
 /**
@@ -74,7 +87,8 @@ function update(req, res, next) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  Metadata.list({ start, limit, sort, order, filter })
+  const fList = req.query.f || false
+  Metadata.list({ start, limit, sort, order, filter, fList })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
@@ -93,10 +107,14 @@ function list(req, res, next) {
  * Delete metadata.
  * @returns {Metadata}
  */
-function remove(req, res, next) {
-  const metadata = req.metadata
+function remove(req, res, next, fromRevision = false) {
+  const metadata = req.entity
   metadata.remove()
-    .then(() => next(new APICustomResponse('Metadata deleted successfully', 204, true)))
+    .then((deletedMarker) => {
+      if (!fromRevision) {
+        res.json(deletedMarker)
+      }
+    })
     .catch(e => next(e))
 }
 
@@ -105,4 +123,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { load, get, create, update, list, remove, defineEntity }
+export default { defineEntity, load, get, create, update, updateSingle, list, remove }
