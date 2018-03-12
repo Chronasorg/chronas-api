@@ -63,7 +63,17 @@ export default {
       dataSchema: Joi.string()
     },
     params: {
-      areaId: Joi.string().hex().required()
+      areaId: Joi.string().required()
+    }
+  },
+
+  updateSingle: {
+    body: {
+      subEntityId: Joi.string().required(),
+      nextBody: Joi.array().required()
+    },
+    params: {
+      metadataId: Joi.string().required()
     }
   },
 

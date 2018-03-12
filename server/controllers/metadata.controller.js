@@ -6,9 +6,9 @@ import logger from '../../config/winston'
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
-  Metadata.get(id,req.method)
+  Metadata.get(id, true)
     .then((metadata) => {
-      req.metadata = metadata // eslint-disable-line no-param-reassign
+      req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
     .catch(e => next(e))
@@ -19,7 +19,7 @@ function load(req, res, next, id) {
  * @returns {Metadata}
  */
 function get(req, res) {
-  return res.json(req.metadata)
+  return res.json(req.entity)
 }
 
 /**
@@ -86,93 +86,26 @@ function createNodeOne(metadata, req, res, next) {
  * @returns {Metadata}
  */
 function update(req, res, next) {
-  if (req.params.metadataId === "items") {
-    if (typeof req.body.childValue !== 'undefined') {
-      updateNodeOne(req, res, next)
-    } else if (typeof req.body.childArrayValue !== 'undefined') {
-      updateNodeTwo(req, res, next)
-    }
-  } else {
-    const metadata = req.metadata
-    if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
-    if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
-
-    metadata.save()
-      .then(savedMetadata => res.json(savedMetadata))
-      .catch(e => next(e))
-  }
-}
-
-function updateNodeOne(req, res, next) {
-  // metadata is items object
-  const metadata = req.metadata
-  const parentId = req.body.parentId
-  const childId = req.body.childId
-  const childValue = req.body.childValue
-
-  if (typeof parentId !== 'undefined' &&
-    typeof childId !== 'undefined' &&
-    typeof metadata.data[parentId] !== 'undefined' &&
-    typeof childValue !== 'undefined'){
-    metadata.data[parentId][childId] = childValue
-    metadata.markModified('data')
-  }
+  const metadata = req.entity
+  if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
+  if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
 
   metadata.save()
     .then(savedMetadata => res.json(savedMetadata))
     .catch(e => next(e))
 }
 
-function updateNodeTwo(req, res, next) {
-  // metadata is items object
-  const metadata = req.metadata
-  const parentId = req.body.parentId
-  const childId = req.body.childId
-  const childArrayValue = req.body.childArrayValue
+function updateSingle(req, res, next, fromRevision = false) {
+  const metadata = req.entity
+  const subEntityId = req.body.subEntityId
+  const nextBody = req.body.nextBody
 
-  if (typeof parentId !== 'undefined' &&
-    typeof childId !== 'undefined' &&
-    typeof metadata.data[parentId] !== 'undefined' &&
-    typeof childArrayValue === 'object') {
-    if (typeof metadata.data[parentId][childId] !== 'undefined') {
-      childArrayValue.forEach((arrayItem, index) => {
-        if (typeof arrayItem !== 'undefined' && arrayItem !== null) {
-          metadata.data[parentId][childId][index] = arrayItem
-          metadata.markModified('data')
-        }
-      })
-    } else {
-      metadata.data[parentId][childId] = childArrayValue
-      metadata.markModified('data')
-    }
-  }
-
+  req.body.prevBody = metadata.data[subEntityId]
+  metadata.data[subEntityId] = nextBody
+  metadata.markModified('data')
   metadata.save()
-    .then(savedMetadata => res.json(savedMetadata))
-    .catch(e => next(e))
-}
-
-function deleteNodeOne(req, res, next) {
-  // metadata is items object
-  const metadata = req.metadata
-  const parentId = req.body.parentId
-  const childId = req.body.childId
-  const childValue = req.body.childValue
-  const childArrayValue = req.body.childArrayValue
-
-  if (typeof parentId !== 'undefined' &&
-    typeof childId !== 'undefined' &&
-    typeof metadata.data[parentId] !== 'undefined' &&
-    typeof childValue === 'undefined' &&
-    typeof childArrayValue === 'undefined'){
-
-    delete metadata.data[parentId][childId]
-    metadata.markModified('data')
-  }
-
-  metadata.save()
-    .then(savedMetadata => res.json(savedMetadata))
-    .catch(e => next(e))
+    .then(() => { if (!fromRevision) next() })
+    .catch(e => { if (!fromRevision) next(e) })
 }
 
 /**
@@ -184,7 +117,8 @@ function deleteNodeOne(req, res, next) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  Metadata.list({ start, limit, sort, order, filter })
+  const fList = req.query.f || false
+  Metadata.list({ start, limit, sort, order, filter, fList })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
@@ -203,10 +137,14 @@ function list(req, res, next) {
  * Delete metadata.
  * @returns {Metadata}
  */
-function remove(req, res, next) {
-  const metadata = req.metadata
+function remove(req, res, next, fromRevision = false) {
+  const metadata = req.entity
   metadata.remove()
-    .then(() => next(new APICustomResponse('Metadata deleted successfully', 204, true)))
+    .then((deletedMarker) => {
+      if (!fromRevision) {
+        res.json(deletedMarker)
+      }
+    })
     .catch(e => next(e))
 }
 // TODO: add revision for add delete update of nested items
@@ -221,4 +159,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { load, get, create, update, list, remove, defineEntity }
+export default { defineEntity, load, get, create, update, updateSingle, list, remove }
