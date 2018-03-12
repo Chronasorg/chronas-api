@@ -1,6 +1,5 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import logger from '../../config/winston'
 
 const debug = require('debug')('chronas-api:index')
 
@@ -31,6 +30,7 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
+
   const markerId = req.body._id || decodeURIComponent(req.body.wiki)
   Marker.findById(markerId)
     .exec()

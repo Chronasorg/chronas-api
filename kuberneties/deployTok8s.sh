@@ -2,6 +2,6 @@
 
 #kubectl create -f mongo-deployment.yml
 #kubectl create -f mongo-service.yml
-kubectl create -f chronas-map.yml
-kubectl create -f chronas-front-deployment.yml
-kubectl create -f chronas-front-service.yml
+kubectl apply -f chronas-map.yml
+kubectl apply -f chronas-front-deployment.yml
+kubectl apply -f chronas-front-service.yml

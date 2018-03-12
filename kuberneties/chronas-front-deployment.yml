@@ -11,9 +11,11 @@ spec:
     spec:
       containers:
       - name: chronas-api-front
-        image: aumanjoa/chronas-api:180
+        image: aumanjoa/chronas-api:214
         ports:
         - containerPort: 80
         env:
         - name: MONGO_HOST
           value: mongodb://chronas-api-mongodb/chronas-api-development
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          value: placeholder
