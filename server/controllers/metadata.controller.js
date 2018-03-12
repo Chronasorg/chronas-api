@@ -1,6 +1,6 @@
 import Metadata from '../models/metadata.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-
+import logger from '../../config/winston'
 
 /**
  * Load metadata and append to req.
@@ -31,21 +31,51 @@ function get(req, res) {
 function create(req, res, next) {
   Metadata.findById(req.body._id)
     .exec()
-    .then((duplicatedMetadata) => {
-      if (duplicatedMetadata) {
+    .then((foundMetadata) => {
+      if (foundMetadata && !req.body.parentId) {
         const err = new APIError('This id already exists!', 400)
         next(err)
       }
+      else if (foundMetadata && req.body.parentId) {
+        createNodeOne(foundMetadata, req, res, next)
+      }
+      else {
+        const metadata = new Metadata({
+          _id: req.body._id,
+          data: req.body.data,
+        })
 
-      const metadata = new Metadata({
-        _id: req.body._id,
-        data: req.body.data,
-      })
-
-      metadata.save({ checkKeys: false })
-        .then(savedMetadata => res.json(savedMetadata))
-        .catch(e => next(e))
+        metadata.save({ checkKeys: false })
+          .then(savedMetadata => res.json(savedMetadata))
+          .catch(e => next(e))
+      }
     })
+    .catch(e => next(e))
+}
+
+function createNodeOne(metadata, req, res, next) {
+  const parentId = req.body.parentId
+  const childId = req.body.childId
+  const childValue = req.body.childValue
+
+  if (typeof metadata.data[parentId] !== 'undefined' &&
+    typeof metadata.data[parentId][childId] !== 'undefined') {
+    res.status(400).send("This entity already exists.")
+  }
+
+  if (typeof parentId !== 'undefined' &&
+    typeof childId !== 'undefined' &&
+    typeof metadata.data[parentId] !== 'undefined' &&
+    typeof metadata.data[parentId][childId] === 'undefined' &&
+    typeof childValue !== 'undefined') {
+    metadata.data[parentId][childId] = childValue
+    metadata.markModified('data')
+  }
+
+  logger.warn("createNodeOne(metadata.data[parentId][childId]",metadata.data[parentId][childId])
+
+  metadata.save()
+    .then(savedMetadata => res.json({}))
     .catch(e => next(e))
 }
 
@@ -117,6 +147,12 @@ function remove(req, res, next, fromRevision = false) {
     })
     .catch(e => next(e))
 }
+// TODO: add revision for add delete update of nested items
+// { "_id": "items", "parentId": "relPlus", "childId": "c1halcedonism", "childValue": [
+//   "C1atholicism",
+//   "rgb(204,204,0)",
+//   "History_of_the_Catholic_Church"
+// ] }
 
 function defineEntity(req, res, next) {
   req.resource = 'metadata'

@@ -99,6 +99,7 @@ function addDeleteRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
   userCtrl.changeKarma(username, 1)
+
   const revision = new Revision({
     entityId: entity._id,
     type: 'DELETE',
@@ -125,14 +126,18 @@ function addUpdateRevision(req, res, next) {
       ? (entity._id === 'MANY')
         ? req.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
-      : shallowDiff(req.body, entity.toObject())
+      : (req.resource === 'metadata')
+        ? req.body
+        : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
         ? req.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
-      : shallowDiff(entity.toObject(), req.body)
+      : (req.resource === 'metadata')
+        ? req.prevBody
+        : shallowDiff(entity.toObject(), req.body)
 
   if (typeof nextBody !== 'undefined') {
     delete nextBody.id
@@ -310,6 +315,11 @@ function update(req, res, next) {
       next()
       break
   }
+
+  //        prev  next
+  //  POST        X
+  //  PUT   X     X
+  // DELETE X
 
   revision.lastUpdated = Date.now()
   revision.reverted = !revision.reverted

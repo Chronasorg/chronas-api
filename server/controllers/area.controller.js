@@ -41,7 +41,14 @@ function create(req, res, next) {
 }
 
 function updateMany(req, res, next) {
-  const { start, end = start, provinces, nextBody } = req.body
+  const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body
+  const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
+  nextBody[0] = ruler
+  nextBody[1] = culture
+  nextBody[2] = religion
+  nextBody[3] = capital
+  nextBody[4] = population
+
   const prevBody = {}
   const trimmedNextBody = {}
   Area.find({ year: { $gte: start, $lte: end } })
@@ -50,17 +57,20 @@ function updateMany(req, res, next) {
     .then((Areas) => {
       const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
         const currYear = area.year
-        provinces.forEach((province) => {
-          if (!isEqual(area.data[province], nextBody)) {
-            if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
-            if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
+        provinces.split(",").forEach((province) => {
+          nextBody.forEach((singleValue,index) => {
+            if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
+              if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
+              if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = []
+              if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
+              if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = []
 
-            prevBody[currYear][province] = area.data[province]
-            trimmedNextBody[currYear][province] = nextBody
-            area.data[province] = nextBody
-            area.markModified('data')
-          }
-
+              prevBody[currYear][province][index] = area.data[province][index]
+              trimmedNextBody[currYear][province][index] = nextBody[index]
+              area.data[province][index] = nextBody[index]
+              area.markModified('data')
+            }
+          })
           if (typeof prevBody[currYear] !== 'undefined') {
                 // need to update
             area.save()
@@ -94,10 +104,14 @@ function revertSingle(req, res, next, year, newBody) {
       .exec()
       .then((area) => {
         provinces.forEach((province) => {
-          area.data[province] = newBody[province]
-          area.markModified('data')
+          const provinceValues = newBody[province]
+          provinceValues.forEach((singleValue,index) => {
+            if (typeof newBody[province][index] !== "undefined" && area.data[province][index] !== newBody[province][index]) {
+              area.data[province][index] = newBody[province][index]
+              area.markModified('data')
+            }
+          })
         })
-
         area.save()
           .then(() => resolve())
           .catch(e => reject(e))
