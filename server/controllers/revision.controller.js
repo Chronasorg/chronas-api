@@ -169,6 +169,40 @@ function addUpdateRevision(req, res, next) {
     .catch(e => next(e))
 }
 
+function addUpdateSingleRevision(req, res, next) {
+  const entity = req.entity
+  const username = req.auth.username
+  userCtrl.changeKarma(username, 1)
+
+  const { prevBody, nextBody } = req.body
+
+  if (typeof nextBody !== 'undefined') {
+    delete nextBody.id
+    delete nextBody._id
+  }
+
+  if (typeof prevBody !== 'undefined') {
+    delete prevBody.id
+    delete prevBody._id
+  }
+
+  const revision = new Revision({
+    entityId: entity._id,
+    type: 'UPDATE',
+    subEntityId: req.body.subEntityId,
+    user: username,
+    resource: req.resource,
+    nextBody: JSON.stringify(nextBody),
+    prevBody: JSON.stringify(prevBody),
+  })
+
+  revision.save()
+    .then(() => {
+      res.status(200).send('Metadata successfully updated.')
+    })
+    .catch(e => res.status(500).send(e))
+}
+
 function addUpdateManyRevision(req, res, next) {
   const username = req.auth.username
   userCtrl.changeKarma(username, 1)
@@ -236,6 +270,10 @@ function update(req, res, next) {
           }, (error) => {
             res.status(500).send(error)
           })
+        } else if (revision.subEntityId && revision.resource === 'metadata') {
+          req.body.nextBody = JSON.parse(revision.nextBody)
+          req.body.subEntityId = revision.subEntityId
+          resourceCollection[resource].controller.updateSingle(req, res, next, true)
         } else {
           req.body = JSON.parse(revision.nextBody)
           resourceCollection[resource].controller.update(req, res, next, true)
@@ -251,6 +289,10 @@ function update(req, res, next) {
           }, (error) => {
             logger.error(error)
           })
+        } else if (revision.subEntityId && revision.resource === 'metadata') {
+          req.body.nextBody = JSON.parse(revision.prevBody)
+          req.body.subEntityId = revision.subEntityId
+          resourceCollection[resource].controller.updateSingle(req, res, next, true)
         } else {
           req.body = JSON.parse(revision.prevBody)
           resourceCollection[resource].controller.update(req, res, next, true)
@@ -339,4 +381,4 @@ function unpackObj(obj) {
   return unpackedObj
 }
 
-export default { addUpdateRevision, addUpdateManyRevision, addCreateRevision, addDeleteRevision, load, get, update, list, remove }
+export default { addUpdateRevision, addUpdateSingleRevision, addUpdateManyRevision, addCreateRevision, addDeleteRevision, load, get, update, list, remove }
