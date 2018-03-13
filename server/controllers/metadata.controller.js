@@ -100,8 +100,15 @@ function updateSingle(req, res, next, fromRevision = false) {
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
 
-  req.body.prevBody = metadata.data[subEntityId]
-  metadata.data[subEntityId] = nextBody
+  req.body.prevBody = metadata.data[subEntityId] || -1
+
+  if (nextBody === -1) {
+    // remove attribute again
+    delete metadata.data[subEntityId]
+  } else {
+    metadata.data[subEntityId] = nextBody
+  }
+
   metadata.markModified('data')
   metadata.save()
     .then(() => { if (!fromRevision) next() })
