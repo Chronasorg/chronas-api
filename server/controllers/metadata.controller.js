@@ -6,7 +6,7 @@ import logger from '../../config/winston'
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
-  Metadata.get(id, true)
+  Metadata.get(id, req.method)
     .then((metadata) => {
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
