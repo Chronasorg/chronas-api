@@ -6,7 +6,7 @@ import logger from '../../config/winston'
  * Load area and append to req.
  */
 function load(req, res, next, id) {
-  Area.get(id)
+  Area.get(id, req.method)
     .then((area) => {
       req.entity = area // eslint-disable-line no-param-reassign
       return next()

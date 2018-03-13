@@ -36,10 +36,10 @@ MetadataSchema.statics = {
     return this.findById(id)
       .exec()
       .then((metadata) => {
-        if (method === "PUT") {
-          return metadata
-        } else if (metadata.data) {
+        if (metadata.data && method === "GET") {
           return metadata.data
+        } else if (metadata) {
+          return metadata
         }
         const err = new APIError('No such metadata exists!', httpStatus.NOT_FOUND)
         return Promise.reject(err)
@@ -58,9 +58,10 @@ MetadataSchema.statics = {
       return this.find({
         '_id': { $in: resourceArray } })
         .exec()
-        .then(metadata => metadata.map((obj) => {
-          return { [obj['_id']]: obj.data }
-        }))
+        .then(metadata => metadata.reduce((obj, item) => {
+          obj[item._id] = item.data
+          return obj
+        }, {}))
     } else {
           return this.find()
             .sort({ _id: 1 })

@@ -13,7 +13,6 @@ router.route('/')
   .all(metadataCtrl.defineEntity)
   /** GET /v1/metadata - Get list of metadata keys */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     metadataCtrl.list)
 
   /** POST /v1/metadata - Create new metadata */

@@ -43,11 +43,13 @@ AreaSchema.statics = {
    * @param {ObjectId} id - The objectId of Area.
    * @returns {Promise<Area, APIError>}
    */
-  get(id) {
+  get(id, method = '') {
     return this.findById(id)
       .exec()
       .then((area) => {
-        if (area) {
+        if (area && area.data && method === "GET") {
+          return area.data
+        } else if (area) {
           return area
         }
         const err = new APIError('No such area exists!', httpStatus.NOT_FOUND)
