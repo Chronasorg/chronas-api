@@ -43,6 +43,7 @@ function create(req, res, next) {
 function updateMany(req, res, next) {
   const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body
   const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
+
   nextBody[0] = ruler
   nextBody[1] = culture
   nextBody[2] = religion
@@ -57,7 +58,7 @@ function updateMany(req, res, next) {
     .then((Areas) => {
       const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
         const currYear = area.year
-        provinces.split(",").forEach((province) => {
+        provinces.forEach((province) => {
           nextBody.forEach((singleValue,index) => {
             if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
               if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
