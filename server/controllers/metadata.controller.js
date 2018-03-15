@@ -72,8 +72,6 @@ function createNodeOne(metadata, req, res, next) {
     metadata.markModified('data')
   }
 
-  logger.warn("createNodeOne(metadata.data[parentId][childId]",metadata.data[parentId][childId])
-
   metadata.save()
     .then(savedMetadata => res.json({}))
     .catch(e => next(e))
