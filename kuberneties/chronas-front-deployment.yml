@@ -20,6 +20,11 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: MONGO_HOST
+        - name: CHRONAS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: CHRONAS_HOST              
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
