@@ -11,16 +11,13 @@ WORKDIR /app
 # if there are changes in package.json
 ADD dist/package.json /app/
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 ENV JWT_SECRET=0a6b944d-d2fb-46fc-a85e-0295c986cd9f
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
-ENV TWITTER_CONSUMER_KEY=placeholder
-ENV TWITTER_CONSUMER_SECRET=placeholder
-ENV TWITTER_CALLBACK_URL=placeholder
-ENV APPINSIGHTS_INSTRUMENTATIONKEY=b4bc70b7-b805-42c1-a3d4-c1e0e8d3af02
+
 RUN npm install --production --silent
 
 # copy all file from current dir to /app in container
