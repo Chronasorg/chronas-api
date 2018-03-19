@@ -66,7 +66,7 @@ const UserSchema = new mongoose.Schema({
   website: {
     type: String
   },
-})
+}, { versionKey: false })
 
 /**
  * Add your

@@ -15,7 +15,7 @@ const MetadataSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     required: true
   },
-})
+}, { versionKey: false })
 
 /**
  * Methods

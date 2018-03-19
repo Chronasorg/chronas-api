@@ -14,34 +14,21 @@ const MarkerSchema = new mongoose.Schema({
   name: {
     type: String,
   },
-  geo: {
+  coo: {
     type: Array,
   },
   type: {
     type: String,
     required: true
   },
-  subtype: {
-    type: String,
-  },
-  start: {
-    type: Number,
-  },
-  end: {
-    type: Number,
-  },
-  date: {
+  year: {
     type: Number, // Epoch
   },
-  lastUpdated: {
-    type: Date,
-    default: Date.now,
-  },
-  rating: {
-    type: Number,
-    default: 1
+  wiki: {
+    type: String,
+    required: true
   }
-})
+}, { versionKey: false })
 
 /**
  * Add your
@@ -83,12 +70,64 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 50 } = {}) {
-    return this.find()
-      .sort({ createdAt: -1 })
-      .skip(+offset)
-      .limit(+length)
-      .exec()
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false } = {}) {
+    if (year) {
+      // geojson endpoint hit
+      console.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+      console.debug(delta, year, typeArray)
+      console.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+      if (typeArray) {
+        const types = typeArray.split(',')
+        return this.find({
+          'type': { $in: types },
+          'age': { $gt: (year-delta), $lt:  (year+delta) },
+        })
+        .sort({ createdAt: -1 })
+          .skip(+offset)
+          .limit(+length)
+          .exec().map( (feature) => {
+            return {
+              "properties": {
+                "n": feature.name,
+                "w": feature.wiki,
+                "y": feature.year,
+                "t": feature.type,
+              },
+              "geometry": {
+                "coordinates": feature.coo,
+                "type": "Point"
+              },
+              "type": "Feature"
+            }})
+      } else {
+        return this.find({
+          year: { $gt: (year-delta), $lt:  (year+delta) },
+        })
+        .sort({ createdAt: -1 })
+        .skip(+offset)
+        .limit(+length)
+        .exec().map( (feature) => {
+          return {
+            "properties": {
+              "n": feature.name,
+              "w": feature.wiki,
+              "y": feature.year,
+              "t": feature.type,
+            },
+            "geometry": {
+              "coordinates": feature.coo,
+              "type": "Point"
+            },
+            "type": "Feature"
+          }})
+      }
+    } else {
+      return this.find()
+        .sort({ createdAt: -1 })
+        .skip(+offset)
+        .limit(+length)
+        .exec()
+    }
   }
 }
 
