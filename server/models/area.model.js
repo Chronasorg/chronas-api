@@ -19,7 +19,7 @@ const AreaSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     required: true
   },
-})
+}, { versionKey: false })
 
 /**
  * Add your

@@ -1,8 +1,6 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 
-const debug = require('debug')('chronas-api:index')
-
 /**
  * Load marker and append to req.
  */
@@ -43,16 +41,12 @@ function create(req, res, next, fromRevision = false) {
       const marker = new Marker({
         _id: markerId,
         name: req.body.name,
-        geo: req.body.geo,
+        wiki: req.body.wiki,
+        coo: req.body.coo,
         type: req.body.type,
-        subtype: req.body.subtype,
-        start: req.body.start,
-        end: req.body.end,
-        date: req.body.date,
-        rating: req.body.rating,
+        year: req.body.year,
       })
 
-      marker.lastUpdated = Date.now()
       marker.save()
         .then((savedMarker) => {
           if (!fromRevision) {
@@ -74,15 +68,11 @@ function update(req, res, next, fromRevision = false) {
   const marker = req.entity
 
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
-  if (typeof req.body.geo !== 'undefined') marker.geo = req.body.geo
+  if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
-  if (typeof req.body.subtype !== 'undefined') marker.subtype = req.body.subtype
-  if (typeof req.body.start !== 'undefined') marker.start = req.body.start
-  if (typeof req.body.end !== 'undefined') marker.end = req.body.end
-  if (typeof req.body.date !== 'undefined') marker.date = req.body.date
-  if (typeof req.body.rating !== 'undefined') marker.rating = req.body.rating
+  if (typeof req.body.year !== 'undefined') marker.year = req.body.year
+  if (typeof req.body.wiki !== 'undefined') marker.name = req.body.wiki
 
-  marker.lastUpdated = Date.now()
   marker.save()
     .then((savedMarker) => {
       if (!fromRevision) {
@@ -99,9 +89,12 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', order = 'asc', filter = '' } = req.query
+  const { start = 0, end = 10, count = 0, sort = 'name', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  Marker.list({ start, limit, sort, order, filter })
+  const typeArray = req.query.types || false
+  const year = +req.query.year || false
+  const delta = +req.query.delta || 10
+  Marker.list({ start, limit, sort, order, filter, delta, year, typeArray })
     .then((markers) => {
       if (count) {
         Marker.find().count({}).exec().then((markerCount) => {
