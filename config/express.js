@@ -19,6 +19,21 @@ import APIError from '../server/helpers/APIError'
 
 const app = express()
 
+const appInsights = require('applicationinsights')
+appInsights.setup()
+    .setAutoDependencyCorrelation(true)
+    .setAutoCollectRequests(true)
+    .setAutoCollectPerformance(true)
+    .setAutoCollectExceptions(true)
+    .setAutoCollectDependencies(true)
+    .setAutoCollectConsole(true)
+    .setUseDiskRetryCaching(true)
+    .start();
+    
+
+
+
+
 if (config.env === 'development') {
   app.use(logger('dev'))
 }
@@ -127,12 +142,15 @@ if (config.env !== 'test') {
   }))
 }
 
+
 // error handler, send stacktrace only during development
-app.use((err, req, res, next) => // eslint-disable-line no-unused-vars
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  let client = appInsights.defaultClient;
+  appInsights.client.trackException(err.message, err)
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' ? err.stack : {}
   })
-)
+})
 
 export default app
