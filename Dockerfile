@@ -13,7 +13,6 @@ ADD dist/package.json /app/
 
 ENV NODE_ENV=development
 
-ENV JWT_SECRET=0a6b944d-d2fb-46fc-a85e-0295c986cd9f
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
