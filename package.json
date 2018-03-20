@@ -4,10 +4,6 @@
   "description": "This API provides authentication and CRUD operations for data used by the Chronas application",
   "main": "index.js",
   "private": false,
-  "engines": {
-    "node": "6.10.0",
-    "npm": "3.10.10"
-  },
   "scripts": {
     "start": "cross-env DEBUG=chronas-api:* gulp serve",
     "start:debug": "cross-env DEBUG=chronas-api:* npm start",
