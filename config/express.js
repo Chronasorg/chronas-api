@@ -145,8 +145,7 @@ if (config.env !== 'test') {
 
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  let client = appInsights.defaultClient;
-  appInsights.client.trackException(err.message, err)
+  appInsights.defaultClient.trackException({exception: err})
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' ? err.stack : {}
