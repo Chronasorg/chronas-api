@@ -28,7 +28,6 @@ router.route('/:markerId')
   .all(markerCtrl.defineEntity)
   /** GET /v1/markers/:markerId - Get marker */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     markerCtrl.get)
 
   /** PUT /v1/markers/:markerId - Update marker */
