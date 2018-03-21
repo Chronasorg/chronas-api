@@ -73,14 +73,11 @@ MarkerSchema.statics = {
   list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false } = {}) {
     if (year) {
       // geojson endpoint hit
-      console.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-      console.debug(delta, year, typeArray)
-      console.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       if (typeArray) {
         const types = typeArray.split(',')
         return this.find({
           'type': { $in: types },
-          'age': { $gt: (year-delta), $lt:  (year+delta) },
+          'year': { $gt: (year-delta), $lt: (year+delta) },
         })
         .sort({ createdAt: -1 })
           .skip(+offset)
