@@ -11,6 +11,12 @@ const MetadataSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  type: {
+    type: String,
+    default: 'g',
+    required: true,
+    index: true
+  },
   data: {
     type: mongoose.Schema.Types.Mixed,
     required: true
@@ -32,8 +38,11 @@ MetadataSchema.statics = {
    * @param {key} key - The key of Metadata.
    * @returns {Promise<Metadata, APIError>}
    */
-  get(id, method = '') {
-    return this.findById(id)
+  get(id, type = 'g', method = '') {
+    return this.find({
+      "_id": id,
+      "type": type
+    })
       .exec()
       .then((metadata) => {
         if (metadata.data && method === "GET") {
