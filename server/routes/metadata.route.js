@@ -12,8 +12,7 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   .all(metadataCtrl.defineEntity)
   /** GET /v1/metadata - Get list of metadata keys */
-  .get(
-    metadataCtrl.list)
+  .get(metadataCtrl.list)
 
   /** POST /v1/metadata - Create new metadata */
   .post(

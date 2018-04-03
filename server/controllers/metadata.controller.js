@@ -6,7 +6,7 @@ import logger from '../../config/winston'
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
-  Metadata.get(id, req.method)
+  Metadata.get(id, req.query.type, req.method)
     .then((metadata) => {
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
@@ -43,6 +43,7 @@ function create(req, res, next) {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
+          type: req.body.type,
         })
 
         metadata.save({ checkKeys: false })
@@ -87,6 +88,7 @@ function update(req, res, next) {
   const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
+  if (typeof req.body.type !== 'undefined') metadata.type = req.body.type
 
   metadata.save()
     .then(savedMetadata => res.json(savedMetadata))
