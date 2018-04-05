@@ -43,7 +43,10 @@ function create(req, res, next) {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
+          linked: req.body.linked,
           type: req.body.type,
+          subtype: req.body.subtype,
+          year: req.body.year,
         })
 
         metadata.save({ checkKeys: false })

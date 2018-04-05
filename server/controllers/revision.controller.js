@@ -73,6 +73,11 @@ function get(req, res) {
 }
 
 function addCreateRevision(req, res, next) {
+  if (req.query.r === 'false') {
+    next()
+    return
+  }
+
   const username = req.auth.username
   userCtrl.changeKarma(username, 1)
 
