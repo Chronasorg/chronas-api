@@ -17,7 +17,7 @@ router.route('/')
   /** POST /v1/metadata - Create new metadata */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    // checkPrivilege.checkPrivilege(5),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMetadata),
     metadataCtrl.create)

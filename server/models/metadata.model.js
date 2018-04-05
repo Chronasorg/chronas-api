@@ -17,6 +17,16 @@ const MetadataSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  linked: {
+    type: String,
+  },
+  subtype: {
+    type: String,
+  },
+  year: {
+    type: Number,
+    index: true
+  },
   data: {
     type: mongoose.Schema.Types.Mixed,
     required: true
