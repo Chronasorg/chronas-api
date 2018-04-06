@@ -8,6 +8,7 @@ import logger from '../../config/winston'
 function load(req, res, next, id) {
   Metadata.get(id, req.method)
     .then((metadata) => {
+      console.debug('loading ', metadata)
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
@@ -43,6 +44,10 @@ function create(req, res, next) {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
+          linked: req.body.linked,
+          type: req.body.type,
+          subtype: req.body.subtype,
+          year: req.body.year,
         })
 
         metadata.save({ checkKeys: false })
@@ -87,6 +92,11 @@ function update(req, res, next) {
   const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
+  if (typeof req.body.type !== 'undefined') metadata.type = req.body.type
+  if (typeof req.body.subtype !== 'undefined') metadata.subtype = req.body.subtype
+  if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
+  if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
+  if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
 
   metadata.save()
     .then(savedMetadata => res.json(savedMetadata))
@@ -123,7 +133,12 @@ function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
   const fList = req.query.f || false
-  Metadata.list({ start, limit, sort, order, filter, fList })
+  const type = req.query.type || false
+  const subtype = req.query.subtype || false
+  const year = +req.query.year || false
+  const delta = +req.query.delta || 10
+
+  Metadata.list({ start, limit, sort, order, filter, fList, type, subtype, year, delta })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
@@ -152,12 +167,6 @@ function remove(req, res, next, fromRevision = false) {
     })
     .catch(e => next(e))
 }
-// TODO: add revision for add delete update of nested items
-// { "_id": "items", "parentId": "relPlus", "childId": "c1halcedonism", "childValue": [
-//   "C1atholicism",
-//   "rgb(204,204,0)",
-//   "History_of_the_Catholic_Church"
-// ] }
 
 function defineEntity(req, res, next) {
   req.resource = 'metadata'

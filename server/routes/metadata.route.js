@@ -12,13 +12,12 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   .all(metadataCtrl.defineEntity)
   /** GET /v1/metadata - Get list of metadata keys */
-  .get(
-    metadataCtrl.list)
+  .get(metadataCtrl.list)
 
   /** POST /v1/metadata - Create new metadata */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMetadata),
     metadataCtrl.create)
@@ -27,6 +26,7 @@ router.route('/:metadataId')
   .all(metadataCtrl.defineEntity)
   /** GET /v1/metadata/:metadataIds - Get metadata through semicolon delimited ids */
   .get(
+    // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     metadataCtrl.get)
 
@@ -34,14 +34,14 @@ router.route('/:metadataId')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
-    checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
 
   /** DELETE /v1/metadata/:metadataId - Delete metadata */
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     revisionCtrl.addDeleteRevision,
     metadataCtrl.remove)
 

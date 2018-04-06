@@ -76,55 +76,51 @@ MarkerSchema.statics = {
       if (typeArray) {
         const types = typeArray.split(',')
         return this.find({
-          'type': { $in: types },
-          'year': { $gt: (year-delta), $lt: (year+delta) },
+          type: { $in: types },
+          year: { $gt: (year - delta), $lt: (year + delta) },
         })
         .sort({ createdAt: -1 })
           .skip(+offset)
           .limit(+length)
-          .exec().map( (feature) => {
-            return {
-              "properties": {
-                "n": feature.name,
-                "w": feature.wiki,
-                "y": feature.year,
-                "t": feature.type,
-              },
-              "geometry": {
-                "coordinates": feature.coo,
-                "type": "Point"
-              },
-              "type": "Feature"
-            }})
-      } else {
-        return this.find({
-          year: { $gt: (year-delta), $lt:  (year+delta) },
-        })
+          .exec().map(feature => ({
+            properties: {
+              n: feature.name,
+              w: feature.wiki,
+              y: feature.year,
+              t: feature.type,
+            },
+            geometry: {
+              coordinates: feature.coo,
+              type: 'Point'
+            },
+            type: 'Feature'
+          }))
+      }
+      return this.find({
+        year: { $gt: (year - delta), $lt: (year + delta) },
+      })
         .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
-        .exec().map( (feature) => {
-          return {
-            "properties": {
-              "n": feature.name,
-              "w": feature.wiki,
-              "y": feature.year,
-              "t": feature.type,
-            },
-            "geometry": {
-              "coordinates": feature.coo,
-              "type": "Point"
-            },
-            "type": "Feature"
-          }})
-      }
-    } else {
-      return this.find()
+        .exec().map(feature => ({
+          properties: {
+            n: feature.name,
+            w: feature.wiki,
+            y: feature.year,
+            t: feature.type,
+          },
+          geometry: {
+            coordinates: feature.coo,
+            type: 'Point'
+          },
+          type: 'Feature'
+        }))
+    }
+    return this.find()
         .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
         .exec()
-    }
   }
 }
 
