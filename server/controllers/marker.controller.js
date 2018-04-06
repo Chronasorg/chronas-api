@@ -94,6 +94,7 @@ function list(req, res, next) {
   const typeArray = req.query.types || false
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
+
   Marker.list({ start, limit, sort, order, filter, delta, year, typeArray })
     .then((markers) => {
       if (count) {
