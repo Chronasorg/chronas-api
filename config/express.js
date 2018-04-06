@@ -19,6 +19,12 @@ import APIError from '../server/helpers/APIError'
 
 const app = express()
 
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./swagger.yaml');
+ 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 const appInsights = require('applicationinsights')
 appInsights.setup()
     .setAutoDependencyCorrelation(true)
