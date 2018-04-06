@@ -15,6 +15,19 @@ function checkPrivilege(threshold) {
   }
 }
 
+function checkPrivilegeForTypes(threshold, typesBlocked) {
+  return function (req, res, next) {
+    const typeToChecked = req.body.type || ((req.entity || {})[0] || {}).type
+
+    if (typesBlocked.indexOf(typeToChecked) === -1 || (req && req.auth && req.auth.privilege >= threshold)) {
+      next()
+    } else {
+      const err = new APIError('Unauthorized. Your profile does not have sufficient privileges to access this resource.', 401)
+      next(err)
+    }
+  }
+}
+
 // only proceed if the token belongs to the user or the user has admin privileges
 
 function checkPrivilegeOrOwnership(threshold) {
@@ -28,4 +41,4 @@ function checkPrivilegeOrOwnership(threshold) {
   }
 }
 
-export default { checkPrivilege, checkPrivilegeOrOwnership }
+export default { checkPrivilege, checkPrivilegeForTypes, checkPrivilegeOrOwnership }
