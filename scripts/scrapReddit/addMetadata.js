@@ -11,24 +11,20 @@ const properties = {
 
 const itemList = []
 
-let csvToJson = require('convert-csv-to-json')
-let json = csvToJson.fieldDelimiter(',').getJsonFromCsv(csvFilePath)
+const csvToJson = require('convert-csv-to-json')
+const json = csvToJson.fieldDelimiter(',').getJsonFromCsv(csvFilePath)
 
-for(let i=0; i<json.length;i++){
-  console.log(json[i]);
+for (let i = 0; i < json.length; i++) {
+  console.log(json[i])
 }
 
 const subtypeMapping = {
-  "ArtefactPorn": "artefacts",
-  "museum": "artefacts",
-  "HistoryPorn": "misc",
-  "BattlePaintings": "battle",
-  "papertowns": "cities"
+  ArtefactPorn: 'artefacts',
+  museum: 'artefacts',
+  HistoryPorn: 'misc',
+  BattlePaintings: 'battles',
+  papertowns: 'cities'
 }
-//
-// for (let i = 0; i <= 2000; i++) {
-//   itemList.push(i.toString())
-// }
 
 json.reduce(
   (p, x) => p.then(_ => postItem(x)),
@@ -65,6 +61,6 @@ postItem = itemObj => new Promise((resolve, reject) => {
       }
     })
 })
-  .catch((err) => {
-    resolve()
-  })
+.catch((err) => {
+  resolve()
+})
