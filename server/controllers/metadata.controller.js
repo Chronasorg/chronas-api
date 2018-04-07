@@ -138,7 +138,7 @@ function list(req, res, next) {
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
 
-  Metadata.list({ start, limit, sort, order, filter, fList, type, subtype, year, delta })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
