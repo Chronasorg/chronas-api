@@ -16,14 +16,26 @@ paths:
       summary: Gets some metadata
       description: Get list of metadata keys.
       parameters:
-       - name: offset
+       - name: f
          in: query
-         description: Number of metadata to be skipped
+         description: comma sepperated list of filter
+         type: string
+       - name: type
+         in: query
+         description: type
+         type: string
+       - name: subtype
+         in: query
+         description: subtype
+         type: string
+       - name: year
+         in: query
+         description: year YYYY ?
          type: integer
-       - name: length
+       - name: delta
          in: query
-         description: Limit number of metadata to be returned
-         type: integer      
+         description: delta
+         type: integer         
       responses:
         200:
           description: A list of Metadata keys
