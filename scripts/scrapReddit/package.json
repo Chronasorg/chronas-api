@@ -1,0 +1,15 @@
+{
+  "name": "scrapreddit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "addMetadata.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "convert-csv-to-json": "0.0.13",
+    "node-fetch": "^2.1.2"
+  }
+}
