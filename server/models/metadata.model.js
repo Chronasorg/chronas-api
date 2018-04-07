@@ -50,11 +50,11 @@ MetadataSchema.statics = {
    */
   get(id, method = '') {
     return this.find({
-      "_id": id
+      _id: id
     })
       .exec()
       .then((metadata) => {
-        if (metadata.data && method === "GET") {
+        if (metadata.data && method === 'GET') {
           return metadata.data
         } else if (metadata) {
           return metadata
@@ -70,22 +70,22 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ offset = 0, length = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false } = {}) {
     if (fList) {
       const resourceArray = fList.split(',')
       return this.find({
-        '_id': { $in: resourceArray } })
+        _id: { $in: resourceArray } })
         .exec()
         .then(metadata => metadata.reduce((obj, item) => {
           obj[item._id] = item.data
           return obj
         }, {}))
     } else if (type || subtype || year) {
-      console.debug(type,subtype,year)
+      console.debug(type, subtype, year)
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
-        type: type,
-        subtype: subtype,
+        type,
+        subtype,
       }
 
       if (!type) delete searchQuery.type
@@ -93,22 +93,21 @@ MetadataSchema.statics = {
       if (!year) delete searchQuery.year
 
       return this.find(searchQuery)
+        .skip(+start)
+        .limit(+end)
         .exec()
-        .then(metadata => metadata.map((item) => {
-          return item
-        }))
-    } else {
-      return this.find()
+        .then(metadata => metadata.map(item => item))
+    }
+    return this.find()
         .sort({ _id: 1 })
-        .skip(+offset)
-        .limit(+length)
+        .skip(+start)
+        .limit(+end)
         .exec()
         .then(metadata => metadata.map((obj) => {
           const dataString = JSON.stringify(obj.data).substring(0, 200)
           obj.data = dataString + ((dataString.length === 203) ? '...' : '')
           return obj
         }))
-    }
   }
 }
 
