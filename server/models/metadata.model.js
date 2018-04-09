@@ -27,6 +27,10 @@ const MetadataSchema = new mongoose.Schema({
     type: Number,
     index: true
   },
+  score: {
+    type: Number,
+    default: 0,
+  },
   data: {
     type: mongoose.Schema.Types.Mixed,
     required: true
@@ -49,7 +53,7 @@ MetadataSchema.statics = {
    * @returns {Promise<Metadata, APIError>}
    */
   get(id, method = '') {
-    return this.find({
+    return this.findOne({
       _id: id
     })
       .exec()
