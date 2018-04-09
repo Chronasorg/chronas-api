@@ -19,7 +19,8 @@ paths:
        - name: f
          in: query
          description: comma sepperated list of filter
-         type: string
+         type: array
+         collectionFormat: csv
        - name: type
          in: query
          description: type
