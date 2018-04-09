@@ -35,7 +35,7 @@ router.route('/:metadataId')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
-    revisionCtrl.addUpdateRevision,
+    // revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
 
   /** DELETE /v1/metadata/:metadataId - Delete metadata */

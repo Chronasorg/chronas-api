@@ -29,9 +29,9 @@ function myRec(iter, after) {
       const title = item.data.title
       const year = (title.match(/[0-9]+/g) || {})[0]
       const source = `http://reddit.com${item.data.permalink}`
+      const score = Math.round((item.data.score / process.argv[3]) * 100)
 
-      stream.write(`${'i'},${process.argv[2]},${year},${title},${urlImage},${source}\n`, () => {
-      })
+      stream.write(`${'i'},${process.argv[2]},${year},${title},${urlImage},${source},${score}\n`, () => { })
     })
 
     if (iter < 801) {

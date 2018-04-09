@@ -8,7 +8,6 @@ import logger from '../../config/winston'
 function load(req, res, next, id) {
   Metadata.get(id, req.method)
     .then((metadata) => {
-      console.debug('loading ', metadata)
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
@@ -97,6 +96,7 @@ function update(req, res, next) {
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
   if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
+  if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
 
   metadata.save()
     .then(savedMetadata => res.json(savedMetadata))
