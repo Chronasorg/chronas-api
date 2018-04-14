@@ -1,6 +1,7 @@
 import Metadata from '../models/metadata.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 import logger from '../../config/winston'
+import userCtrl from './user.controller'
 
 /**
  * Load metadata and append to req.
@@ -35,11 +36,9 @@ function create(req, res, next) {
       if (foundMetadata && !req.body.parentId) {
         const err = new APIError('This id already exists!', 400)
         next(err)
-      }
-      else if (foundMetadata && req.body.parentId) {
+      } else if (foundMetadata && req.body.parentId) {
         createNodeOne(foundMetadata, req, res, next)
-      }
-      else {
+      } else {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
@@ -64,7 +63,7 @@ function createNodeOne(metadata, req, res, next) {
 
   if (typeof metadata.data[parentId] !== 'undefined' &&
     typeof metadata.data[parentId][childId] !== 'undefined') {
-    res.status(400).send("This entity already exists.")
+    res.status(400).send('This entity already exists.')
   }
 
   if (typeof parentId !== 'undefined' &&
@@ -103,6 +102,21 @@ function update(req, res, next) {
     .catch(e => next(e))
 }
 
+function vote(delta) {
+  return (req, res, next) => {
+    const username = req.auth.username
+    const metadata = req.entity
+    metadata.score += delta
+
+    metadata.save()
+      .then((savedMetadata) => {
+        userCtrl.changePoints(username, 'voted', 1)
+        res.json(savedMetadata)
+      })
+      .catch(e => next(e))
+  }
+}
+
 function updateSingle(req, res, next, fromRevision = false) {
   const metadata = req.entity
   const subEntityId = req.body.subEntityId
@@ -120,7 +134,7 @@ function updateSingle(req, res, next, fromRevision = false) {
   metadata.markModified('data')
   metadata.save()
     .then(() => { if (!fromRevision) next() })
-    .catch(e => { if (!fromRevision) next(e) })
+    .catch((e) => { if (!fromRevision) next(e) })
 }
 
 /**
@@ -173,4 +187,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { defineEntity, load, get, create, update, updateSingle, list, remove }
+export default { defineEntity, load, get, create, update, updateSingle, list, remove, vote }
