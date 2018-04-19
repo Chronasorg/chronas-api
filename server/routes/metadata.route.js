@@ -35,7 +35,7 @@ router.route('/:metadataId')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
-    // revisionCtrl.addUpdateRevision,
+    revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
 
   /** DELETE /v1/metadata/:metadataId - Delete metadata */
@@ -60,8 +60,10 @@ router.route('/:metadataId/upvote')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    (req, res, next) => {
+      if (req.headers && req.headers.authorization) expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' })
+      next()
+    },
     metadataCtrl.vote(1)
   )
 
@@ -69,8 +71,10 @@ router.route('/:metadataId/downvote')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    (req, res, next) => {
+      if (req.headers && req.headers.authorization) expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' })
+      next()
+    },
     metadataCtrl.vote(-1)
   )
 /** Load metadata when API with metadataId route parameter is hit */

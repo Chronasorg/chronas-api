@@ -42,7 +42,7 @@ function create(req, res, next) {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
-          linked: req.body.linked,
+          wiki: req.body.wiki,
           type: req.body.type,
           subtype: req.body.subtype,
           year: req.body.year,
@@ -93,7 +93,7 @@ function update(req, res, next) {
   if (typeof req.body.type !== 'undefined') metadata.type = req.body.type
   if (typeof req.body.subtype !== 'undefined') metadata.subtype = req.body.subtype
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
-  if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
+  if (typeof req.body.wiki !== 'undefined') metadata.wiki = req.body.wiki
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
   if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
 
@@ -104,13 +104,13 @@ function update(req, res, next) {
 
 function vote(delta) {
   return (req, res, next) => {
-    const username = req.auth.username
+    const username = (req.auth || {}).username
     const metadata = req.entity
     metadata.score += delta
 
     metadata.save()
       .then((savedMetadata) => {
-        userCtrl.changePoints(username, 'voted', 1)
+        if (username) userCtrl.changePoints(username, 'voted', 1)
         res.json(savedMetadata)
       })
       .catch(e => next(e))
