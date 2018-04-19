@@ -17,7 +17,7 @@ const MetadataSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  linked: {
+  wiki: {
     type: String,
   },
   subtype: {
