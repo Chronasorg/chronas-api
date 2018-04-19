@@ -131,18 +131,14 @@ function addUpdateRevision(req, res, next) {
       ? (entity._id === 'MANY')
         ? req.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
-      : (req.resource === 'metadata')
-        ? req.body
-        : shallowDiff(req.body, entity.toObject())
+      : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
         ? req.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
-      : (req.resource === 'metadata')
-        ? req.prevBody
-        : shallowDiff(entity.toObject(), req.body)
+      : shallowDiff(entity.toObject(), req.body)
 
   if (typeof nextBody !== 'undefined') {
     delete nextBody.id
@@ -210,7 +206,7 @@ function addUpdateSingleRevision(req, res, next) {
 
 function addUpdateManyRevision(req, res, next) {
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "updated", 1)
 
   const { prevBody, nextBody } = req.body
 

@@ -86,7 +86,7 @@ function createNodeOne(metadata, req, res, next) {
  * @property {string} req.body.data - The data of metadata.
  * @returns {Metadata}
  */
-function update(req, res, next) {
+function update(req, res, next, fromRevision = false) {
   const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
@@ -98,8 +98,8 @@ function update(req, res, next) {
   if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
 
   metadata.save()
-    .then(savedMetadata => res.json(savedMetadata))
-    .catch(e => next(e))
+    .then((savedMetadata) => { if (!fromRevision) res.json(savedMetadata) })
+    .catch((e) => { if (!fromRevision) next(e) })
 }
 
 function vote(delta) {
