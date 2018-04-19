@@ -9,8 +9,29 @@ schemes:
   - http
 host: api-dev.chronas.org
 basePath: /v1
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
 
 paths:
+  /auth:
+    post:
+      summary: Returns jwt token if valid username and password is provided
+      description: Returns jwt token if valid username and password is provided
+      parameters:
+        -name: email
+          in: body
+          description: The email of the user
+        -name: password
+          in: body
+          description: The password of the user
+        responses:
+          200:
+          
+
+      
   /metadata:
     get:
       summary: Gets some metadata
@@ -21,6 +42,8 @@ paths:
          description: comma sepperated list of filter
          type: array
          collectionFormat: csv
+         items:
+          type: string
        - name: type
          in: query
          description: type
