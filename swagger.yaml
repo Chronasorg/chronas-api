@@ -19,18 +19,21 @@ paths:
   /auth:
     post:
       summary: Returns jwt token if valid username and password is provided
-      description: Returns jwt token if valid username and password is provided
       parameters:
-        -name: email
+        - name: auth
           in: body
-          description: The email of the user
-        -name: password
-          in: body
-          description: The password of the user
-        responses:
-          200:
-          
-
+          description: The email and username you want to authenticate
+          schema:
+            required:
+              - password
+            properties:
+              password:
+                type: string
+              email:
+                type: string
+      responses:
+        200:
+          description: Returns a valid
       
   /metadata:
     get:
@@ -73,3 +76,4 @@ paths:
                   type: string
                 type:
                   type: string
+    
