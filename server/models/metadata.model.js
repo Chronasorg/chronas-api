@@ -74,7 +74,7 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false } = {}) {
     if (fList) {
       const resourceArray = fList.split(',')
       return this.find({
@@ -84,8 +84,7 @@ MetadataSchema.statics = {
           obj[item._id] = item.data
           return obj
         }, {}))
-    } else if (type || subtype || year) {
-      console.debug(type, subtype, year)
+    } else if (type || subtype || year || wiki) {
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
@@ -96,16 +95,19 @@ MetadataSchema.statics = {
       if (!subtype) delete searchQuery.subtype
       if (!year) delete searchQuery.year
 
+      if (wiki) searchQuery.wiki = wiki
+
       return this.find(searchQuery)
         .skip(+start)
         .limit(+end)
+        .sort({ score: 'desc' })
         .exec()
         .then(metadata => metadata.map(item => item))
     }
     return this.find()
-        .sort({ _id: 1 })
         .skip(+start)
         .limit(+end)
+        .sort({ score: 'desc' })
         .exec()
         .then(metadata => metadata.map((obj) => {
           const dataString = JSON.stringify(obj.data).substring(0, 200)

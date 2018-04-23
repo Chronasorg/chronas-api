@@ -31,7 +31,7 @@ function get(req, res) {
 function create(req, res, next) {
   const area = new Area({
     _id: req.body.year,
-    year: req.body.year,
+    year: +req.body.year,
     data: req.body.data
   })
 
@@ -57,7 +57,7 @@ function updateMany(req, res, next) {
     .exec()
     .then((Areas) => {
       const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
-        const currYear = area.year
+        const currYear = +area.year
         provinces.forEach((province) => {
           nextBody.forEach((singleValue,index) => {
             if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
@@ -130,7 +130,7 @@ function revertSingle(req, res, next, year, newBody) {
 function update(req, res, next) {
   const area = req.entity
 
-  if (typeof req.body.year !== 'undefined') area.year = req.body.year
+  if (typeof req.body.year !== 'undefined') area.year = +req.body.year
   if (typeof req.body.data !== 'undefined') area.data = req.body.data
 
   area.save()

@@ -151,8 +151,9 @@ function list(req, res, next) {
   const subtype = req.query.subtype || false
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
+  const wiki = req.query.wiki || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
