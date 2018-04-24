@@ -14,27 +14,46 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
+    
+produces:
+  - application/json    
 
 paths:
-  /auth:
-    post:
-      summary: Returns jwt token if valid username and password is provided
-      parameters:
-        - name: auth
-          in: body
-          description: The email and username you want to authenticate
-          schema:
-            required:
-              - password
-            properties:
-              password:
-                type: string
-              email:
-                type: string
-      responses:
-        200:
-          description: Returns a valid
-      
+  /auth/login:
+      post:
+        summary: Returns jwt token if valid username and password is provided
+        parameters:
+          - name: auth
+            in: body
+            description: The email and username you want to authenticate
+            schema:
+              required:
+                - password
+                - email
+              properties:
+                password:
+                  type: string
+                email:
+                  type: string
+        responses:
+          200:
+            description: Returns a valid token
+            schema:
+              items:
+                properties:
+                  token:
+                    type: string
+                  username:
+                    type: string
+          401:
+            description: Returns a valid token
+            schema:
+               $ref: '#/components/schemas/errorResponse'
+          400:
+            description: Bad request
+            schema:
+               $ref: '#/components/schemas/errorResponse'                  
+        
   /metadata:
     get:
       summary: Gets some metadata
@@ -76,4 +95,13 @@ paths:
                   type: string
                 type:
                   type: string
+                                    
+  components:
+    schemas:
+      errorResponse:
+          properties:
+            message:
+              type: string
+            stack:
+              type: string                 
     
