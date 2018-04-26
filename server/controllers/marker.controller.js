@@ -28,7 +28,6 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
-
   const markerId = req.body._id || decodeURIComponent(req.body.wiki)
   Marker.findById(markerId)
     .exec()

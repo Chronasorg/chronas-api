@@ -1,6 +1,7 @@
 import Metadata from '../models/metadata.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 import logger from '../../config/winston'
+import userCtrl from './user.controller'
 
 /**
  * Load metadata and append to req.
@@ -8,7 +9,6 @@ import logger from '../../config/winston'
 function load(req, res, next, id) {
   Metadata.get(id, req.method)
     .then((metadata) => {
-      console.debug('loading ', metadata)
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
@@ -36,15 +36,13 @@ function create(req, res, next) {
       if (foundMetadata && !req.body.parentId) {
         const err = new APIError('This id already exists!', 400)
         next(err)
-      }
-      else if (foundMetadata && req.body.parentId) {
+      } else if (foundMetadata && req.body.parentId) {
         createNodeOne(foundMetadata, req, res, next)
-      }
-      else {
+      } else {
         const metadata = new Metadata({
           _id: req.body._id,
           data: req.body.data,
-          linked: req.body.linked,
+          wiki: req.body.wiki,
           type: req.body.type,
           subtype: req.body.subtype,
           year: req.body.year,
@@ -65,7 +63,7 @@ function createNodeOne(metadata, req, res, next) {
 
   if (typeof metadata.data[parentId] !== 'undefined' &&
     typeof metadata.data[parentId][childId] !== 'undefined') {
-    res.status(400).send("This entity already exists.")
+    res.status(400).send('This entity already exists.')
   }
 
   if (typeof parentId !== 'undefined' &&
@@ -88,19 +86,35 @@ function createNodeOne(metadata, req, res, next) {
  * @property {string} req.body.data - The data of metadata.
  * @returns {Metadata}
  */
-function update(req, res, next) {
+function update(req, res, next, fromRevision = false) {
   const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
   if (typeof req.body.type !== 'undefined') metadata.type = req.body.type
   if (typeof req.body.subtype !== 'undefined') metadata.subtype = req.body.subtype
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
-  if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
+  if (typeof req.body.wiki !== 'undefined') metadata.wiki = req.body.wiki
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
+  if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
 
   metadata.save()
-    .then(savedMetadata => res.json(savedMetadata))
-    .catch(e => next(e))
+    .then((savedMetadata) => { if (!fromRevision) res.json(savedMetadata) })
+    .catch((e) => { if (!fromRevision) next(e) })
+}
+
+function vote(delta) {
+  return (req, res, next) => {
+    const username = (req.auth || {}).username
+    const metadata = req.entity
+    metadata.score += delta
+
+    metadata.save()
+      .then((savedMetadata) => {
+        if (username) userCtrl.changePoints(username, 'voted', 1)
+        res.json(savedMetadata)
+      })
+      .catch(e => next(e))
+  }
 }
 
 function updateSingle(req, res, next, fromRevision = false) {
@@ -120,7 +134,7 @@ function updateSingle(req, res, next, fromRevision = false) {
   metadata.markModified('data')
   metadata.save()
     .then(() => { if (!fromRevision) next() })
-    .catch(e => { if (!fromRevision) next(e) })
+    .catch((e) => { if (!fromRevision) next(e) })
 }
 
 /**
@@ -137,8 +151,9 @@ function list(req, res, next) {
   const subtype = req.query.subtype || false
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
+  const wiki = req.query.wiki || false
 
-  Metadata.list({ start, limit, sort, order, filter, fList, type, subtype, year, delta })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
@@ -173,4 +188,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { defineEntity, load, get, create, update, updateSingle, list, remove }
+export default { defineEntity, load, get, create, update, updateSingle, list, remove, vote }

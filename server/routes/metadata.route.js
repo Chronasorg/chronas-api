@@ -56,6 +56,27 @@ router.route('/:metadataId/single')
     revisionCtrl.addUpdateSingleRevision
     )
 
+router.route('/:metadataId/upvote')
+  .all(metadataCtrl.defineEntity)
+  /** PUT /v1/metadata/:metadataId - Update metadata */
+  .put(
+    (req, res, next) => {
+      if (req.headers && req.headers.authorization) expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' })
+      next()
+    },
+    metadataCtrl.vote(1)
+  )
+
+router.route('/:metadataId/downvote')
+  .all(metadataCtrl.defineEntity)
+  /** PUT /v1/metadata/:metadataId - Update metadata */
+  .put(
+    (req, res, next) => {
+      if (req.headers && req.headers.authorization) expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' })
+      next()
+    },
+    metadataCtrl.vote(-1)
+  )
 /** Load metadata when API with metadataId route parameter is hit */
 router.param('metadataId', metadataCtrl.load)
 
