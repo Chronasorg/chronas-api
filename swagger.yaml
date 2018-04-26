@@ -95,12 +95,10 @@ paths:
                 type:
                   type: string
                   
-components:
-  schemas:
-    errorResponse:
-        properties:
-          message:
-            type: string
-          stack:
-            type: string                 
-  
+definitions:
+  errorResponse:
+      properties:
+        message:
+          type: string
+        stack:
+          type: string                 
