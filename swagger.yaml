@@ -39,7 +39,6 @@ paths:
           200:
             description: Returns a valid token
             schema:
-              items:
                 properties:
                   token:
                     type: string
@@ -48,11 +47,11 @@ paths:
           401:
             description: Returns a valid token
             schema:
-               $ref: '#/components/schemas/errorResponse'
+               $ref: '#/definitions/errorResponse'
           400:
             description: Bad request
             schema:
-               $ref: '#/components/schemas/errorResponse'                  
+               $ref: '#/definitions/errorResponse'                  
         
   /metadata:
     get:
@@ -95,13 +94,13 @@ paths:
                   type: string
                 type:
                   type: string
-                                    
-  components:
-    schemas:
-      errorResponse:
-          properties:
-            message:
-              type: string
-            stack:
-              type: string                 
-    
+                  
+components:
+  schemas:
+    errorResponse:
+        properties:
+          message:
+            type: string
+          stack:
+            type: string                 
+  
