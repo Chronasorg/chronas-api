@@ -58,7 +58,32 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
-  karma: {
+  count_voted: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  count_deleted: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  count_updated: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  count_reverted: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  count_created: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  count_mistakes: {
     type: Number,
     default: 0,
     required: true

@@ -122,12 +122,12 @@ function update(req, res, next) {
     .catch(e => next(e))
 }
 
-function changeKarma(username, karmaDelta) {
+function changePoints(username, type, delta = 1) {
   User.findOne({ username })
     .exec()
     .then((user) => {
       if (typeof user !== 'undefined') {
-        user.karma += karmaDelta
+        user["count_" + type] += delta
         user.save()
       }
     })
@@ -169,4 +169,4 @@ function remove(req, res, next) {
     .catch(e => next(e))
 }
 
-export default { changeKarma, load, get, create, update, list, remove }
+export default { changePoints, load, get, create, update, list, remove }

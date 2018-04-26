@@ -79,7 +79,7 @@ function addCreateRevision(req, res, next) {
   }
 
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "created", 1)
 
   const entityId = decodeURIComponent(req.body[resourceCollection[req.resource].id])
   const revision = new Revision({
@@ -103,7 +103,7 @@ function addCreateRevision(req, res, next) {
 function addDeleteRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "deleted", 1)
 
   const revision = new Revision({
     entityId: entity._id,
@@ -124,25 +124,21 @@ function addDeleteRevision(req, res, next) {
 function addUpdateRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "updated", 1)
 
   const nextBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
         ? req.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
-      : (req.resource === 'metadata')
-        ? req.body
-        : shallowDiff(req.body, entity.toObject())
+      : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
         ? req.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
-      : (req.resource === 'metadata')
-        ? req.prevBody
-        : shallowDiff(entity.toObject(), req.body)
+      : shallowDiff(entity.toObject(), req.body)
 
   if (typeof nextBody !== 'undefined') {
     delete nextBody.id
@@ -177,7 +173,7 @@ function addUpdateRevision(req, res, next) {
 function addUpdateSingleRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "updated", 1)
 
   const { prevBody, nextBody } = req.body
 
@@ -210,7 +206,7 @@ function addUpdateSingleRevision(req, res, next) {
 
 function addUpdateManyRevision(req, res, next) {
   const username = req.auth.username
-  userCtrl.changeKarma(username, 1)
+  userCtrl.changePoints(username, "updated", 1)
 
   const { prevBody, nextBody } = req.body
 
@@ -246,26 +242,28 @@ function addUpdateManyRevision(req, res, next) {
  * @returns {Revision}
  */
 function update(req, res, next) {
-  const username = req.auth.username
   const revision = req.revision // .toObject()
   const resource = revision.resource
+  const username = req.auth.username
+  const usernameAuthor = revision.user
 
+  userCtrl.changePoints(username, "reverted", 1)
   switch (revision.type) {
     case 'CREATE':
       if (revision.reverted) {
-        userCtrl.changeKarma(username, 2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
         // post nextBody
         req.body = JSON.parse(revision.nextBody)
         resourceCollection[resource].controller.create(req, res, next, true)
       } else {
-        userCtrl.changeKarma(username, -2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
         // was post, so delete again by id nextBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       }
       break
     case 'UPDATE':
       if (revision.reverted) {
-        userCtrl.changeKarma(username, 2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
       // was updated, so put prevBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.nextBody))
@@ -284,7 +282,7 @@ function update(req, res, next) {
           resourceCollection[resource].controller.update(req, res, next, true)
         }
       } else {
-        userCtrl.changeKarma(username, -2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
         // update to nextBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.prevBody))
@@ -306,11 +304,11 @@ function update(req, res, next) {
       break
     case 'DELETE':
       if (revision.reverted) {
-        userCtrl.changeKarma(username, 2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
         // delete by id prevBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       } else {
-        userCtrl.changeKarma(username, -2)
+        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
         // was deleted, so post prevBody
         req.body = JSON.parse(revision.prevBody)
         resourceCollection[resource].controller.create(req, res, next, true)
