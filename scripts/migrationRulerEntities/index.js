@@ -7,38 +7,32 @@ const properties = {
 
 const rulList = []
 
-
-fetch(properties.oldChronasApiHost + '1')
+fetch(`${properties.oldChronasApiHost}1`)
   .then(response => response.text())
   .then((response) => {
-      const oldPlus = JSON.parse(response).rulPlus
-      const rulKeys = Object.keys(oldPlus)
+    const oldPlus = JSON.parse(response).rulPlus
+    const rulKeys = Object.keys(oldPlus)
 
-      rulKeys.forEach((rulKey) => {
-        console.debug(rulKey)
-        rulList.push([rulKey, oldPlus[rulKey][3] || false])
-      })
+    rulKeys.forEach((rulKey) => {
+      rulList.push([rulKey, oldPlus[rulKey][3] || false])
+    })
 
-      rulList.reduce(
-        (p, x) => p.then(_ => {
-          console.debug(x[0], x[1])
-          postRulPlus(x[0], x[1])
+    rulList.reduce(
+        (p, x) => p.then((_) => {
+          return postRulPlus(x[0], x[1])
         }),
         Promise.resolve()
       )
-    })
+  })
 
 postRulPlus = (rulKey, rulOldKey) => new Promise((resolve, reject) => {
-  if (!rulOldKey) resolve()
-  console.debug(properties.oldChronasApiHost + '26' + rulOldKey)
-  fetch(properties.oldChronasApiHost + '26' + rulOldKey)
+  fetch(`${properties.oldChronasApiHost}26${rulOldKey}`)
     .then(response => response.text())
     .then((responseTest) => {
-      console.debug(responseTest)
-      const ruler = JSON.parse(responseTest)
 
-      console.debug('got ' + rulOldKey)
-      return fetch(properties.chronasApiHost + '/metadata/a_ruler_' + rulKey, {
+      console.debug("got")
+      const ruler = JSON.parse(responseTest)
+      return fetch(`${properties.chronasApiHost}/metadata/a_ruler_${rulKey}`, {
         method: 'PUT',
         body: JSON.stringify({
           data: { ruler }
@@ -50,18 +44,18 @@ postRulPlus = (rulKey, rulOldKey) => new Promise((resolve, reject) => {
       })
           .then((response) => {
             if (response.status < 200 || response.status >= 300) {
-              console.log('ruler failed ' + rulKey, response.statusText)
+              console.log(`ruler failed ${rulKey}`, response.statusText)
               resolve()
             } else {
-              console.log('ruler success ' + rulKey)
+              console.log(`ruler success ${rulKey}`)
               resolve()
             }
           })
     })
-})
-.catch((err) => {
-  resolve()
+    .catch((err) => {
+      resolve()
+    })
 })
 
 
-// http://chronas.org/en/app/datalayer/901082/
+// http://chronas.org/en/app/datalayer/26700
