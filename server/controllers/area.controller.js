@@ -1,6 +1,13 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore'
 import Area from '../models/area.model'
-import logger from '../../config/winston'
+import Metadata from '../models/metadata.model'
+
+const dimAccessor = {
+  ruler: 0,
+  culture: 1,
+  religion: 2,
+  religionGeneral: 2
+}
 
 /**
  * Load area and append to req.
@@ -40,6 +47,227 @@ function create(req, res, next) {
     .catch(e => next(e))
 }
 
+function aggregateProvinces(req, res, next) {
+  const province = req.query.province || false
+  // TODO: allow for aggregation of single provinces upon change
+
+  Metadata.findById('religion')
+    .exec()
+    .then((religion) => {
+      const religionMap = religion.data
+      const aggregatedData = {}
+      const prevData = {}
+
+      const areaStream = Area
+        .find()
+        .sort({ year: 1 })
+        .cursor()
+
+      let setUp = false
+
+      areaStream.on('data', (area) => {
+        const currData = area.data
+        const currYear = area.year
+
+        if (!setUp) {
+          Object.keys(currData).forEach((currProv) => {
+            aggregatedData[currProv] = {
+              ruler: [],
+              religion: [],
+              religionGeneral: [],
+              culture: [],
+              capital: [],
+            }
+            prevData[currProv] = {
+              ruler: '',
+              religion: '',
+              religionGeneral: '',
+              culture: '',
+              capital: '',
+              population: ''
+            }
+          })
+          setUp = true
+        }
+
+        Object.keys(currData).forEach((currProv) => {
+          // console.debug(currProv,currYear,aggregatedData[currProv],prevData[currProv])
+          if (typeof aggregatedData[currProv] === 'undefined') return
+          const currProvData = currData[currProv]
+          if (currProvData[0] !== prevData[currProv].ruler) {
+            aggregatedData[currProv].ruler.push({ [currYear]: currProvData[0] })
+            prevData[currProv].ruler = currProvData[0]
+          }
+          if (currProvData[1] !== prevData[currProv].culture) {
+            aggregatedData[currProv].culture.push({ [currYear]: currProvData[1] })
+            prevData[currProv].culture = currProvData[1]
+          }
+          if (currProvData[2] !== prevData[currProv].religion) {
+            aggregatedData[currProv].religion.push({ [currYear]: currProvData[2] })
+            prevData[currProv].religion = currProvData[2]
+            if (prevData[currProv].religionGeneral !== religionMap[currProvData[2]][3]) {
+              aggregatedData[currProv].religionGeneral.push({ [currYear]: religionMap[currProvData[2]][3] })
+              prevData[currProv].religionGeneral = religionMap[currProvData[2]][3]
+            }
+          }
+          if (currProvData[3] !== prevData[currProv].capital) {
+            aggregatedData[currProv].capital.push({ [currYear]: currProvData[3] })
+            prevData[currProv].capital = currProvData[3]
+          }
+          if (currYear % 100 === 0) {
+            aggregatedData[currProv].population.push({ [currYear]: currProvData[4] })
+          }
+        })
+      }).on('error', (e) => {
+        res.status(500).send(e)
+      }).on('close', () => {
+        // the stream is closed
+
+        Object.keys(aggregatedData).forEach((currProv) => {
+          if (province && currProv.toLowerCase() !== province.toLowerCase()) return
+
+          const metadataId = 'ap_' + currProv.toLowerCase()
+          Metadata.findById(metadataId)
+            .exec()
+            .then((foundMetadataEntity) => {
+              if (foundMetadataEntity) {
+                // already exists -> update
+                foundMetadataEntity.data = aggregatedData[currProv]
+                foundMetadataEntity.save()
+              } else {
+                // does not exist -> create
+                const metadata = new Metadata({
+                  _id: metadataId,
+                  data: aggregatedData[currProv],
+                  type: 'ap'
+                })
+
+                metadata.save({ checkKeys: false })
+                  .then(() => Promise.resolve())
+              }
+            })
+            .catch(e => res.status(500).send(e))
+        })
+        res.send('OK')
+      })
+    })
+    .catch(e => res.status(500).send(e))
+}
+
+function aggregateDimension(req, res, next) {
+  const dimension = req.query.dimension || false
+  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) res.status(400).send('No valid dimension specified.')
+
+  Metadata.findById((dimension === 'religionGeneral') ? 'religion' : dimension)
+    .exec()
+    .then((dimensionMetaRes) => {
+      const dimensionMeta = dimensionMetaRes.data
+      const dimEntityList = (dimension === 'religionGeneral')
+        ? Object.values(dimensionMeta).map(entity => entity[3]).filter((el, i, a) => i === a.indexOf(el))
+        : Object.keys(dimensionMeta)
+
+      const aggregatedData = {}
+      const prevData = {}
+      const dimIndex = dimAccessor[dimension]
+
+      const areaStream = Area
+        .find()
+        .sort({ year: 1 })
+        .cursor()
+
+      let setUp = false
+
+      areaStream.on('data', (area) => {
+        const currData = area.data
+        const currYear = area.year
+
+        let popTotal = 0
+
+        if (!setUp) {
+          dimEntityList.forEach((currDimEntity) => {
+            aggregatedData[currDimEntity] = []
+            prevData[currDimEntity] = {
+              provCount: 0,
+              popCount: 0,
+              popShare: 0
+            }
+          })
+          setUp = true
+        }
+
+        const currYearAggregates = {}
+        dimEntityList.forEach((currDimEntity) => {
+          currYearAggregates[currDimEntity] = {
+            provCount: 0,
+            popCount: 0
+          }
+        })
+
+        Object.values(currData).forEach((currProvData) => {
+          const currProvDim = (dimension === 'religionGeneral') ? (dimensionMeta[currProvData[dimIndex]] || {})[3] : currProvData[dimIndex]
+          const currProvPop = (isNaN(currProvData[4]) ? 0 : currProvData[4])
+
+          popTotal += +currProvPop
+
+          if (currYearAggregates[currProvDim]) {
+            currYearAggregates[currProvDim] = {
+              provCount: currYearAggregates[currProvDim].provCount + 1,
+              popCount: currYearAggregates[currProvDim].popCount + currProvPop
+            }
+          }
+        })
+
+        Object.keys(currYearAggregates).forEach((currDimEntity) => {
+          if (typeof aggregatedData[currDimEntity] === 'undefined') return
+          const currValue = currYearAggregates[currDimEntity]
+          const currpopShare = currValue.popCount / popTotal * 100
+          const prevDataValue = prevData[currDimEntity]
+
+          if (prevDataValue.provCount !== currValue.provCount) {
+            // add provCount entry
+            prevData[currDimEntity].provCount = currValue.provCount
+            prevData[currDimEntity].popShare = currpopShare
+            prevData[currDimEntity].popCount = currValue.popCount
+
+            aggregatedData[currDimEntity].push({ [currYear]: [currValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] })
+          }
+        })
+        // popTotal
+      }).on('error', (e) => {
+        res.status(500).send(e)
+      }).on('close', () => {
+        // the stream is closed
+
+        Object.keys(aggregatedData).forEach((currDimEntity) => {
+
+          const metadataId = 'a_' + dimension + '_' + currDimEntity
+          Metadata.findById(metadataId)
+            .exec()
+            .then((foundMetadataEntity) => {
+              if (foundMetadataEntity) {
+                // already exists -> update
+                foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] }
+                foundMetadataEntity.save()
+              } else {
+                // does not exist -> create
+                const metadata = new Metadata({
+                  _id: metadataId,
+                  data: {  influence: aggregatedData[currDimEntity] },
+                  type: 'a_' + dimension
+                })
+
+                metadata.save({ checkKeys: false })
+                  .then(() => Promise.resolve())
+              }
+            })
+            .catch(e => res.status(500).send(e))
+        })
+        res.send('OK')
+      })
+    })
+    .catch(e => res.status(500).send(e))
+}
+
 function updateMany(req, res, next) {
   const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body
   const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
@@ -59,7 +287,7 @@ function updateMany(req, res, next) {
       const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
         const currYear = +area.year
         provinces.forEach((province) => {
-          nextBody.forEach((singleValue,index) => {
+          nextBody.forEach((singleValue, index) => {
             if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
               if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
               if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = []
@@ -106,8 +334,8 @@ function revertSingle(req, res, next, year, newBody) {
       .then((area) => {
         provinces.forEach((province) => {
           const provinceValues = newBody[province]
-          provinceValues.forEach((singleValue,index) => {
-            if (typeof newBody[province][index] !== "undefined" && area.data[province][index] !== newBody[province][index]) {
+          provinceValues.forEach((singleValue, index) => {
+            if (typeof newBody[province][index] !== 'undefined' && area.data[province][index] !== newBody[province][index]) {
               area.data[province][index] = newBody[province][index]
               area.markModified('data')
             }
@@ -210,4 +438,4 @@ function getRanges(obj) {
   return compressedObj
 }
 
-export default { load, get, create, update, updateMany, list, remove, revertSingle, defineEntity }
+export default { aggregateProvinces, aggregateDimension, load, get, create, update, updateMany, list, remove, revertSingle, defineEntity }

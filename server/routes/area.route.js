@@ -31,6 +31,18 @@ router.route('/')
     // validate(paramValidation.createArea),
     areaCtrl.create)
 
+router.route('/aggregateProvinces')
+  /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
+  .get(
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    areaCtrl.aggregateProvinces)
+
+router.route('/aggregateDimension')
+/** GET /v1/areas/aggregateDimension - Aggregate all years by selected dimension (ruler, religion, religionGeneral or culture) */
+  .get(
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    areaCtrl.aggregateDimension)
+
 router.route('/:areaId')
   .all(areaCtrl.defineEntity)
   /** GET /v1/areas/:areaId - Get area */
@@ -49,6 +61,7 @@ router.route('/:areaId')
     checkPrivilege.checkPrivilege(5),
     revisionCtrl.addDeleteRevision,
     areaCtrl.remove)
+
 
 /** Load area when API with areaId route parameter is hit */
 router.param('areaId', areaCtrl.load)
