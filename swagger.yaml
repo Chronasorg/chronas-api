@@ -27,14 +27,33 @@ paths:
             in: body
             description: The email and username you want to authenticate
             schema:
-              required:
-                - password
-                - email
-              properties:
-                password:
-                  type: string
-                email:
-                  type: string
+               $ref: '#/definitions/authSchema'
+        responses:
+          200:
+            description: Returns a valid token
+            schema:
+                properties:
+                  token:
+                    type: string
+                  username:
+                    type: string
+          401:
+            description: Returns a valid token
+            schema:
+             $ref: '#/definitions/errorResponse'
+          400:
+            description: Bad request
+            schema:
+               $ref: '#/definitions/errorResponse'    
+  /auth/signup:
+      post:
+        summary: Returns jwt token and registers user if email not duplicate
+        parameters:
+          - name: auth
+            in: body
+            description: The email and username you want to signup with
+            schema:
+             $ref: '#/definitions/authSchema'
         responses:
           200:
             description: Returns a valid token
@@ -49,9 +68,10 @@ paths:
             schema:
                $ref: '#/definitions/errorResponse'
           400:
-            description: Bad request
+            description: Bad request - If param is missing or email already exist
             schema:
-               $ref: '#/definitions/errorResponse'                  
+               $ref: '#/definitions/errorResponse'                 
+               
         
   /metadata:
     get:
@@ -97,8 +117,17 @@ paths:
                   
 definitions:
   errorResponse:
-      properties:
-        message:
-          type: string
-        stack:
-          type: string                 
+    properties:
+      message:
+        type: string
+      stack:
+        type: string      
+  authSchema:
+    required:
+      - password
+      - email
+    properties:
+      password:
+        type: string
+      email:
+        type: string      
