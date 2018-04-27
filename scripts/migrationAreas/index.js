@@ -11,7 +11,7 @@ const properties = {
 
 const yearList = []
 
-for (let i = 192; i <= 1000; i++) {
+for (let i = 1886; i <= 1886; i++) {
   yearList.push(i.toString())
 }
 
