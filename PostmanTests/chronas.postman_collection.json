@@ -94,6 +94,174 @@
 			"response": []
 		},
 		{
+			"name": "/auth/login/twitter",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "aasdfffff@web.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdf",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/auth/login/twitter",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"auth",
+						"login",
+						"twitter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/login/facebook",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "aasdfffff@web.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdf",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/auth/login/facebook",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"auth",
+						"login",
+						"facebook"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/login/github",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "aasdfffff@web.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdf",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/auth/login/github",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"auth",
+						"login",
+						"github"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/login/google",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "email",
+							"value": "aasdfffff@web.de",
+							"description": "",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "asdf",
+							"description": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/auth/login/google",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"auth",
+						"login",
+						"google"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/metadata",
 			"request": {
 				"auth": {

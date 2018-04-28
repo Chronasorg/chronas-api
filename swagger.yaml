@@ -38,7 +38,7 @@ paths:
                   username:
                     type: string
           401:
-            description: Returns a valid token
+            description: Unauthorized if email or password not match
             schema:
              $ref: '#/definitions/errorResponse'
           400:
@@ -64,7 +64,7 @@ paths:
                   username:
                     type: string
           401:
-            description: Returns a valid token
+            description: Unauthorized 
             schema:
                $ref: '#/definitions/errorResponse'
           400:
@@ -72,7 +72,42 @@ paths:
             schema:
                $ref: '#/definitions/errorResponse'                 
                
-        
+  /auth/login/twitter:
+    get:
+      summary: Returns token if twitter auth was successful
+      description: Returns token if twitter auth was successful
+      responses:
+        200:
+          description: Redirects to twitter login
+        401:
+          description: Twitter Auth was not succesufll
+  /auth/login/facebook:
+    get:
+      summary: Returns token if facebook auth was successful
+      description: Returns token if facebook auth was successful
+      responses:
+        200:
+          description: Redirects to facebook login
+        401:
+          description: Facebook Auth was not succesufll
+  /auth/login/github:
+    get:
+      summary: Returns token if github auth was successful
+      description: Returns token if github auth was successful
+      responses:
+        200:
+          description: Redirects to github login
+        401:
+          description: Github Auth was not succesufll    
+  /auth/login/google:
+    get:
+      summary: Returns token if google auth was successful
+      description: Returns token if google auth was successful
+      responses:
+        200:
+          description: Redirects to google login
+        401:
+          description: google Auth was not succesufll              
   /metadata:
     get:
       summary: Gets some metadata
