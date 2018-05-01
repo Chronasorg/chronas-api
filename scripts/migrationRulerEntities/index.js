@@ -29,13 +29,14 @@ postRulPlus = (rulKey, rulOldKey) => new Promise((resolve, reject) => {
   fetch(`${properties.oldChronasApiHost}26${rulOldKey}`)
     .then(response => response.text())
     .then((responseTest) => {
-
-      console.debug("got")
+      const rulerArr = []
       const ruler = JSON.parse(responseTest)
+      Object.keys(ruler).sort((a,b) => {return +a - +b}).forEach((key) => { rulerArr.push({ [key]: ruler[key]}) })
+
       return fetch(`${properties.chronasApiHost}/metadata/a_ruler_${rulKey}`, {
         method: 'PUT',
         body: JSON.stringify({
-          data: { ruler }
+          data: { ruler: rulerArr }
         }),
         headers: {
           'Content-Type': 'application/json',
