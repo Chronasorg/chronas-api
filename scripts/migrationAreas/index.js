@@ -11,7 +11,7 @@ const properties = {
 
 const yearList = []
 
-for (let i = 1886; i <= 1886; i++) {
+for (let i = 1348; i <= 2000; i++) {
   yearList.push(i.toString())
 }
 
@@ -29,7 +29,7 @@ queryYear = yearId => new Promise((resolve, reject) => {
 
         const areaGeojson = JSON.parse(responseTest)
         const cleanedAreaGeojson = {}
-        Object.keys(areaGeojson).forEach(province => { cleanedAreaGeojson[province.replace(/\./g, '')] = areaGeojson[province] })
+        Object.keys(areaGeojson).forEach((province) => { cleanedAreaGeojson[province.replace(/\./g, '')] = areaGeojson[province] })
 
         return fetch(`${properties.chronasApiHost}/areas`, {
           method: 'POST',
@@ -45,10 +45,10 @@ queryYear = yearId => new Promise((resolve, reject) => {
         })
             .then((response) => {
               if (response.status < 200 || response.status >= 300) {
-                console.log('area failed ' + yearId, response.statusText)
+                console.log(`area failed ${yearId}`, response.statusText)
                 resolve()
               } else {
-                console.log('area success ' + yearId)
+                console.log(`area success ${yearId}`)
                 resolve()
               }
             })
