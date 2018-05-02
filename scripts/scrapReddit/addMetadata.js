@@ -60,7 +60,8 @@ postItem = itemObj => new Promise((resolve, reject) => {
         resolve()
       }
     })
-})
-.catch((err) => {
-  resolve()
+    .catch((err) => {
+      resolve()
+    })
+
 })

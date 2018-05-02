@@ -77,6 +77,7 @@ function aggregateProvinces(req, res, next) {
               religionGeneral: [],
               culture: [],
               capital: [],
+              population: [],
             }
             prevData[currProv] = {
               ruler: '',
@@ -94,6 +95,7 @@ function aggregateProvinces(req, res, next) {
           // console.debug(currProv,currYear,aggregatedData[currProv],prevData[currProv])
           if (typeof aggregatedData[currProv] === 'undefined') return
           const currProvData = currData[currProv]
+          if (typeof currProvData === 'undefined' || currProvData === null) return;
           if (currProvData[0] !== prevData[currProv].ruler) {
             aggregatedData[currProv].ruler.push({ [currYear]: currProvData[0] })
             prevData[currProv].ruler = currProvData[0]
@@ -105,7 +107,7 @@ function aggregateProvinces(req, res, next) {
           if (currProvData[2] !== prevData[currProv].religion) {
             aggregatedData[currProv].religion.push({ [currYear]: currProvData[2] })
             prevData[currProv].religion = currProvData[2]
-            if (prevData[currProv].religionGeneral !== religionMap[currProvData[2]][3]) {
+            if (religionMap[currProvData[2]] && prevData[currProv].religionGeneral !== religionMap[currProvData[2]][3]) {
               aggregatedData[currProv].religionGeneral.push({ [currYear]: religionMap[currProvData[2]][3] })
               prevData[currProv].religionGeneral = religionMap[currProvData[2]][3]
             }
@@ -204,6 +206,7 @@ function aggregateDimension(req, res, next) {
         })
 
         Object.values(currData).forEach((currProvData) => {
+          if (typeof currProvData === "undefined" || currProvData === null) return
           const currProvDim = (dimension === 'religionGeneral') ? (dimensionMeta[currProvData[dimIndex]] || {})[3] : currProvData[dimIndex]
           const currProvPop = (isNaN(currProvData[4]) ? 0 : currProvData[4])
 
