@@ -1,0 +1,168 @@
+swagger: "2.0"
+
+info:
+  version: 0.1.0
+  title: Chronas API
+  description: This API provides authentication and CRUD operations for data used by the Chronas application. It is based on Node.js using ES6 and Express with Code Coverage and JWT Authentication. It implies an underlying MongoDB.
+
+schemes:
+  - http
+host: api-dev.chronas.org
+basePath: /v1
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+    
+produces:
+  - application/json    
+
+paths:
+  /auth/login:
+      post:
+        summary: Returns jwt token if valid username and password is provided
+        parameters:
+          - name: auth
+            in: body
+            description: The email and username you want to authenticate
+            schema:
+               $ref: '#/definitions/authSchema'
+        responses:
+          200:
+            description: Returns a valid token
+            schema:
+                properties:
+                  token:
+                    type: string
+                  username:
+                    type: string
+          401:
+            description: Unauthorized if email or password not match
+            schema:
+             $ref: '#/definitions/errorResponse'
+          400:
+            description: Bad request
+            schema:
+               $ref: '#/definitions/errorResponse'    
+  /auth/signup:
+      post:
+        summary: Returns jwt token and registers user if email not duplicate
+        parameters:
+          - name: auth
+            in: body
+            description: The email and username you want to signup with
+            schema:
+             $ref: '#/definitions/authSchema'
+        responses:
+          200:
+            description: Returns a valid token
+            schema:
+                properties:
+                  token:
+                    type: string
+                  username:
+                    type: string
+          401:
+            description: Unauthorized 
+            schema:
+               $ref: '#/definitions/errorResponse'
+          400:
+            description: Bad request - If param is missing or email already exist
+            schema:
+               $ref: '#/definitions/errorResponse'                 
+               
+  /auth/login/twitter:
+    get:
+      summary: Returns token if twitter auth was successful
+      description: Returns token if twitter auth was successful
+      responses:
+        200:
+          description: Redirects to twitter login
+        401:
+          description: Twitter Auth was not succesufll
+  /auth/login/facebook:
+    get:
+      summary: Returns token if facebook auth was successful
+      description: Returns token if facebook auth was successful
+      responses:
+        200:
+          description: Redirects to facebook login
+        401:
+          description: Facebook Auth was not succesufll
+  /auth/login/github:
+    get:
+      summary: Returns token if github auth was successful
+      description: Returns token if github auth was successful
+      responses:
+        200:
+          description: Redirects to github login
+        401:
+          description: Github Auth was not succesufll    
+  /auth/login/google:
+    get:
+      summary: Returns token if google auth was successful
+      description: Returns token if google auth was successful
+      responses:
+        200:
+          description: Redirects to google login
+        401:
+          description: google Auth was not succesufll              
+  /metadata:
+    get:
+      summary: Gets some metadata
+      description: Get list of metadata keys.
+      parameters:
+       - name: f
+         in: query
+         description: comma sepperated list of filter
+         type: array
+         collectionFormat: csv
+         items:
+          type: string
+       - name: type
+         in: query
+         description: type
+         type: string
+       - name: subtype
+         in: query
+         description: subtype
+         type: string
+       - name: year
+         in: query
+         description: year YYYY ?
+         type: integer
+       - name: delta
+         in: query
+         description: delta
+         type: integer         
+      responses:
+        200:
+          description: A list of Metadata keys
+          schema:
+            type: array
+            items:
+              properties:
+                _id:
+                  type: string
+                data:
+                  type: string
+                type:
+                  type: string
+                  
+definitions:
+  errorResponse:
+    properties:
+      message:
+        type: string
+      stack:
+        type: string      
+  authSchema:
+    required:
+      - password
+      - email
+    properties:
+      password:
+        type: string
+      email:
+        type: string      
