@@ -27,6 +27,10 @@ const MetadataSchema = new mongoose.Schema({
     type: Number,
     index: true
   },
+  linked: {
+    type: Array,
+    default: [],
+  },
   score: {
     type: Number,
     default: 0,
@@ -59,7 +63,7 @@ MetadataSchema.statics = {
       .exec()
       .then((metadata) => {
         if (metadata.data && method === 'GET') {
-          return metadata.data
+          return metadata
         } else if (metadata) {
           return metadata
         }
