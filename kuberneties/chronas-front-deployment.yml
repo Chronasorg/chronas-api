@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: chronas-api-front
 spec:
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
