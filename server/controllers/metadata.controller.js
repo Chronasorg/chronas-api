@@ -96,6 +96,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.wiki !== 'undefined') metadata.wiki = req.body.wiki
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
   if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
+  if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
 
   metadata.save()
     .then((savedMetadata) => { if (!fromRevision) res.json(savedMetadata) })
