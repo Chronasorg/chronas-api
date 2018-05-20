@@ -40,8 +40,8 @@ function create(req, res, next, fromRevision = false) {
       const marker = new Marker({
         _id: markerId,
         name: req.body.name,
-        wiki: req.body.wiki,
         coo: req.body.coo,
+        linked: req.body.linked,
         type: req.body.type,
         year: req.body.year,
       })
@@ -70,7 +70,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
-  if (typeof req.body.wiki !== 'undefined') marker.name = req.body.wiki
+  if (typeof req.body.linked !== 'undefined') marker.linked = req.body.linked
 
   marker.save()
     .then((savedMarker) => {
@@ -88,13 +88,15 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'name', order = 'asc', filter = '' } = req.query
-  const limit = end - start
+  const { start = 0, end = 500, count = 0, sort = 'name', order = 'asc', filter = '' } = req.query
+  const length = +end - +start
   const typeArray = req.query.types || false
+  const wikiArray = req.query.wikis || false
+  const linked = req.query.linked || false
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
 
-  Marker.list({ start, limit, sort, order, filter, delta, year, typeArray })
+  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, linked })
     .then((markers) => {
       if (count) {
         Marker.find().count({}).exec().then((markerCount) => {

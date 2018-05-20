@@ -21,12 +21,12 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  linked: {
+    type: Array,
+    default: [],
+  },
   year: {
     type: Number, // Epoch
-  },
-  wiki: {
-    type: String,
-    required: true
   }
 }, { versionKey: false })
 
@@ -70,44 +70,41 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false } = {}) {
-    if (year) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, linked = false } = {}) {
+    if (year || typeArray || wikiArray || linked) {
       // geojson endpoint hit
+      const mongoSearchQuery = {}
+
+      if (year) {
+        mongoSearchQuery.year = { $gt: (year - delta), $lt: (year + delta) }
+      }
+
       if (typeArray) {
         const types = typeArray.split(',')
-        return this.find({
-          type: { $in: types },
-          year: { $gt: (year - delta), $lt: (year + delta) },
-        })
-        .sort({ createdAt: -1 })
-          .skip(+offset)
-          .limit(+length)
-          .exec().map(feature => ({
-            properties: {
-              n: feature.name,
-              w: feature.wiki,
-              y: feature.year,
-              t: feature.type,
-            },
-            geometry: {
-              coordinates: feature.coo,
-              type: 'Point'
-            },
-            type: 'Feature'
-          }))
+        mongoSearchQuery.type = { $in: types }
       }
-      return this.find({
-        year: { $gt: (year - delta), $lt: (year + delta) },
-      })
+
+      if (wikiArray) {
+        const wikis = wikiArray.split(',')
+        mongoSearchQuery._id = { $in: wikis }
+      }
+
+      if (linked) {
+        mongoSearchQuery.linked = { $eq: linked }
+      }
+
+      return this.find(mongoSearchQuery)
         .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
-        .exec().map(feature => ({
+        .exec()
+        .map(feature => ({
           properties: {
             n: feature.name,
-            w: feature.wiki,
+            w: feature._id,
             y: feature.year,
             t: feature.type,
+            l: feature.linked,
           },
           geometry: {
             coordinates: feature.coo,

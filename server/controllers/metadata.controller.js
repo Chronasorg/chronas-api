@@ -44,6 +44,7 @@ function create(req, res, next) {
           data: req.body.data,
           wiki: req.body.wiki,
           type: req.body.type,
+          linked: req.body.linked,
           subtype: req.body.subtype,
           year: req.body.year,
         })
