@@ -34,7 +34,7 @@ router.route('/:metadataId')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
-    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
 

@@ -51,9 +51,9 @@ MetadataSchema.method({
  * Statics
  */
 MetadataSchema.statics = {
-  /**
+  /**.np
    * Get Metadata
-   * @param {key} key - The key of Metadata.
+   * Metadata.
    * @returns {Promise<Metadata, APIError>}
    */
   get(id, method = '') {
