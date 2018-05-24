@@ -204,7 +204,10 @@ goOn = (rulAcc, imageArray, resolve, reject) => {
       fetch("https://commons.wikimedia.org/w/api.php?action=query&titles=" + img + "&prop=imageinfo&&iiprop=url&iiurlwidth=100&format=json")
         .then(response => response.json())
         .then((rulerMetadata) => {
-          const thumbUrl = Object.values(rulerMetadata.query.pages)[0].imageinfo[0].thumburl
+          let thumbUrl = Object.values(rulerMetadata.query.pages)[0].imageinfo[0].thumburl
+          const startUrl = thumbUrl.indexOf("commons/thumb/") + "commons/thumb/".length
+          const endUrl = thumbUrl.substr(52).lastIndexOf("/") + startUrl -1
+          thumbUrl = thumbUrl.substring(startUrl, endUrl)
           originalMeta.data[rulAcc] = [originalMeta.data[rulAcc], thumbUrl]
           console.debug(rulAcc + " -> " + originalMeta.data[rulAcc])
           resolve()
