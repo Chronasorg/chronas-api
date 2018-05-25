@@ -198,7 +198,7 @@ goOn = (rulAcc, imageArray, resolve, reject) => {
           const endUrl = thumbUrl.substr(52).lastIndexOf("/") + startUrl -1
           thumbUrl = thumbUrl.substring(startUrl, endUrl)
 
-          originalMeta.data[rulAcc][3] = thumbUrl)
+          originalMeta.data[rulAcc][3] = thumbUrl
           console.debug(rulAcc + " -> " + originalMeta.data[rulAcc][3])
           resolve()
         })
