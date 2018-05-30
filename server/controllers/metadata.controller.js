@@ -44,7 +44,7 @@ function create(req, res, next) {
           data: req.body.data,
           wiki: req.body.wiki,
           type: req.body.type,
-          linked: req.body.linked,
+          partOf: req.body.partOf,
           subtype: req.body.subtype,
           year: req.body.year,
         })
@@ -97,7 +97,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.wiki !== 'undefined') metadata.wiki = req.body.wiki
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
   if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
-  if (typeof req.body.linked !== 'undefined') metadata.linked = req.body.linked
+  if (typeof req.body.partOf !== 'undefined') metadata.partOf = req.body.partOf
 
   metadata.save()
     .then((savedMetadata) => { if (!fromRevision) res.json(savedMetadata) })
@@ -154,8 +154,9 @@ function list(req, res, next) {
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
   const wiki = req.query.wiki || false
+  const search = req.query.search || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search })
     .then((metadata) => {
       if (count) {
         Metadata.find().count({}).exec().then((metadataCount) => {
