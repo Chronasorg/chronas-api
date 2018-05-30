@@ -21,7 +21,7 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  linked: {
+  partOf: {
     type: Array,
     default: [],
   },
@@ -70,8 +70,8 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, linked = false } = {}) {
-    if (year || typeArray || wikiArray || linked) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, partOf = false, search = false } = {}) {
+    if (year || typeArray || wikiArray || partOf || search) {
       // geojson endpoint hit
       const mongoSearchQuery = {}
 
@@ -89,8 +89,12 @@ MarkerSchema.statics = {
         mongoSearchQuery._id = { $in: wikis }
       }
 
-      if (linked) {
-        mongoSearchQuery.linked = { $eq: linked }
+      if (partOf) {
+        mongoSearchQuery.partOf = { $eq: partOf }
+      }
+
+      if (search) {
+        mongoSearchQuery._id = new RegExp(search, 'i')
       }
 
       return this.find(mongoSearchQuery)
@@ -98,20 +102,26 @@ MarkerSchema.statics = {
         .skip(+offset)
         .limit(+length)
         .exec()
-        .map(feature => ({
-          properties: {
-            n: feature.name,
-            w: feature._id,
-            y: feature.year,
-            t: feature.type,
-            l: feature.linked,
-          },
-          geometry: {
-            coordinates: feature.coo,
-            type: 'Point'
-          },
-          type: 'Feature'
-        }))
+        .then((markers) => {
+          if (search) {
+            return markers.map(item => item._id)
+          } else {
+            return markers.map(feature => ({
+              properties: {
+                n: feature.name,
+                w: feature._id,
+                y: feature.year,
+                t: feature.type,
+                p: feature.partOf,
+              },
+              geometry: {
+                coordinates: feature.coo,
+                type: 'Point'
+              },
+              type: 'Feature'
+            }))
+          }
+        })
     }
     return this.find()
         .sort({ createdAt: -1 })
