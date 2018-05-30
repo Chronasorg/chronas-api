@@ -30,7 +30,7 @@ const MetadataSchema = new mongoose.Schema({
     type: Number,
     index: true
   },
-  linked: {
+  partOf: {
     type: Array,
     default: [],
   },
@@ -81,7 +81,7 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false } = {}) {
     if (fList) {
       const resourceArray = fList.split(',')
       return this.find({
@@ -91,14 +91,17 @@ MetadataSchema.statics = {
           obj[item._id] = item.data
           return obj
         }, {}))
-    } else if (type || subtype || year || wiki) {
+    }
+    else if (type || subtype || year || wiki || search) {
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
         subtype,
+        _id: new RegExp(search, 'i')
       }
 
       if (!type) delete searchQuery.type
+      if (!search) delete searchQuery._id
       if (!subtype) delete searchQuery.subtype
       if (!year) delete searchQuery.year
 
@@ -109,7 +112,13 @@ MetadataSchema.statics = {
         .limit(+end)
         .sort({ score: 'desc' })
         .exec()
-        .then(metadata => metadata.map(item => item))
+        .then((metadata) => {
+          if (search) {
+            return metadata.map(item => item._id)
+          } else {
+            return metadata.map(item => item)
+          }
+        })
     }
     return this.find()
         .skip(+start)
