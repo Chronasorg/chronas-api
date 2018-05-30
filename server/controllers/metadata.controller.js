@@ -90,6 +90,7 @@ function createNodeOne(metadata, req, res, next) {
 function update(req, res, next, fromRevision = false) {
   const metadata = req.entity
   if (typeof req.body._id !== 'undefined') metadata._id = req.body._id
+  if (typeof req.body.coo !== 'undefined') metadata.coo = req.body.coo
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data
   if (typeof req.body.type !== 'undefined') metadata.type = req.body.type
   if (typeof req.body.subtype !== 'undefined') metadata.subtype = req.body.subtype
