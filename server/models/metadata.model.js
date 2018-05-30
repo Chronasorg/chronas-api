@@ -11,6 +11,9 @@ const MetadataSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  coo: {
+    type: Array,
+  },
   type: {
     type: String,
     default: 'g',
