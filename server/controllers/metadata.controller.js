@@ -1,7 +1,16 @@
 import Metadata from '../models/metadata.model'
+import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 import logger from '../../config/winston'
 import userCtrl from './user.controller'
+import revisionCtrl from './revision.controller'
+
+const linkedTypeAccessor = {
+  "m": 0,
+  "markers": 0,
+  "me": 1,
+  "metadata": 1
+}
 
 /**
  * Load metadata and append to req.
@@ -44,7 +53,6 @@ function create(req, res, next) {
           data: req.body.data,
           wiki: req.body.wiki,
           type: req.body.type,
-          partOf: req.body.partOf,
           subtype: req.body.subtype,
           year: req.body.year,
         })
@@ -55,6 +63,14 @@ function create(req, res, next) {
       }
     })
     .catch(e => next(e))
+}
+
+function addConnection(req, res, next) {
+
+}
+
+function removeConnection(req, res, next) {
+
 }
 
 function createNodeOne(metadata, req, res, next) {
@@ -98,7 +114,6 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.wiki !== 'undefined') metadata.wiki = req.body.wiki
   if (typeof req.body.year !== 'undefined') metadata.year = req.body.year
   if (typeof req.body.score !== 'undefined') metadata.score = req.body.score
-  if (typeof req.body.partOf !== 'undefined') metadata.partOf = req.body.partOf
 
   metadata.save()
     .then((savedMetadata) => { if (!fromRevision) res.json(savedMetadata) })
@@ -125,6 +140,8 @@ function updateSingle(req, res, next, fromRevision = false) {
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
 
+  console.debug("metadata.data[subEntityId]", metadata.data[subEntityId])
+  console.debug("nextBody", nextBody)
   req.body.prevBody = metadata.data[subEntityId] || -1
 
   if (nextBody === -1) {
@@ -138,6 +155,104 @@ function updateSingle(req, res, next, fromRevision = false) {
   metadata.save()
     .then(() => { if (!fromRevision) next() })
     .catch((e) => { if (!fromRevision) next(e) })
+}
+
+function updateLink(addLink) {
+  return (req, res, next) => {
+    const linkedItemType1 = req.body.linkedItemType1
+    const linkedItemType2 = req.body.linkedItemType2
+    const linkedItemKey1 = req.body.linkedItemKey1
+    const linkedItemKey2 = req.body.linkedItemKey2
+
+    if (!linkedItemType1 ||
+      !linkedItemType2 ||
+      (linkedItemType1 !== "m" && linkedItemType1 !== "me") ||
+      (linkedItemType2 !== "m" && linkedItemType2 !== "me")) {
+      return res.status(400).send('linkedItemType1 and linkedItemType2 in body must either be "m" or "me"')
+    }
+
+    const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
+    const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
+
+    const newNextBody1 = (prevValue1) ? prevValue1 : [
+      [],
+      [],
+    ]
+
+    const newNextBody2 = (prevValue2) ? prevValue2 : [
+      [],
+      [],
+    ]
+
+    if (addLink) {
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push(linkedItemKey2)
+      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push(linkedItemKey1)
+    }
+    else {
+      newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el !== linkedItemKey2)
+      newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el !== linkedItemKey1)
+    }
+
+    req.body.nextBody = newNextBody1
+    req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
+    updateSingle(req, res, next, true)
+    revisionCtrl.addUpdateSingleRevision(req, res, next, false)
+
+
+    req.body.nextBody = newNextBody2
+    req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
+    updateSingle(req, res, next, true)
+    revisionCtrl.addUpdateSingleRevision(req, res, next)
+  }
+}
+
+function getLinked(req, res, next) {
+  console.debug(req.query)
+  const sourceItem = req.query.source || false
+
+  if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.')
+
+  const linkedItems = req.entity.data[sourceItem]
+
+  const mongoSearchQueryMarker = { _id: { $in: linkedItems[0] } }
+  const mongoSearchQueryMetadata = { _id: { $in: linkedItems[1] } }
+
+
+  Metadata.find(mongoSearchQueryMetadata)
+    .exec()
+    .then((metadata) => {
+      Marker.find(mongoSearchQueryMarker)
+        .exec()
+        .then((markers) => {
+
+          return res.json(markers.map(feature => ({
+            properties: {
+              n: feature.name,
+              w: feature._id,
+              y: feature.year,
+              t: feature.type,
+            },
+            geometry: {
+              coordinates: feature.coo,
+              type: 'Point'
+            },
+            type: 'Feature'
+          })).concat(metadata.map(feature => ({
+            properties: {
+              n: (feature.data || {}).title || feature._id,
+              w: feature._id,
+              y: feature.year,
+              t: feature.subtype || feature.type,
+            },
+            geometry: {
+              coordinates: feature.coo,
+              type: 'Point'
+            },
+            type: 'Feature'
+          }))))
+        })
+    })
+
 }
 
 /**
@@ -192,4 +307,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { defineEntity, load, get, create, update, updateSingle, list, remove, vote }
+export default { defineEntity, getLinked, load, get, updateLink, create, update, updateSingle, list, remove, vote }

@@ -109,7 +109,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
           return fetch("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + pId_partOf + "&format=json&props=sitelinks|claims")
             .then(response => response.json())
             .then((resValue) => {
-              epicObjectToPost.data.partOf = ((resValue.entities[pId_partOf].sitelinks || {}).enwiki || {}).title
+              epicObjectToPost.data.partOf = ((resValue.entities[pId_partOf].sitelinks || {}).enwiki || {}).title // TODO: this must be links
               resolve()
             })
             .catch((err) => {

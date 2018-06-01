@@ -77,6 +77,18 @@ export default {
     }
   },
 
+  updateLink: {
+    body: {
+      linkedItemKey1: Joi.string().required(),
+      linkedItemKey2: Joi.string().required(),
+      linkedItemType1: Joi.string().required(),
+      linkedItemType2: Joi.string().required()
+    },
+    params: {
+      metadataId: Joi.string().required()
+    }
+  },
+
   // POST /v1/auth/login
   login: {
     body: {

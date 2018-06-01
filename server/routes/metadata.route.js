@@ -56,6 +56,33 @@ router.route('/:metadataId/single')
     revisionCtrl.addUpdateSingleRevision
     )
 
+router.route('/:metadataId/getLinked')
+  .all(metadataCtrl.defineEntity)
+  /** PUT /v1/metadata/:metadataId - Update metadata */
+  .get(
+    metadataCtrl.getLinked
+  )
+
+router.route('/:metadataId/addLink')
+  .all(metadataCtrl.defineEntity)
+  /** PUT /v1/metadata/:metadataId - Update metadata */
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    validate(paramValidation.updateLink),
+    checkPrivilege.checkPrivilege(1),
+    metadataCtrl.updateLink(true)
+  )
+
+router.route('/:metadataId/removeLink')
+  .all(metadataCtrl.defineEntity)
+  /** PUT /v1/metadata/:metadataId - Update metadata */
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    validate(paramValidation.updateLink),
+    checkPrivilege.checkPrivilege(1),
+    metadataCtrl.updateLink(false)
+  )
+
 router.route('/:metadataId/upvote')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */

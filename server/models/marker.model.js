@@ -21,10 +21,6 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  partOf: {
-    type: Array,
-    default: [],
-  },
   year: {
     type: Number, // Epoch
   }
@@ -70,8 +66,8 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, partOf = false, search = false } = {}) {
-    if (year || typeArray || wikiArray || partOf || search) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, search = false } = {}) {
+    if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
       const mongoSearchQuery = {}
 
@@ -86,11 +82,10 @@ MarkerSchema.statics = {
 
       if (wikiArray) {
         const wikis = wikiArray.split(',')
-        mongoSearchQuery._id = { $in: wikis }
-      }
 
-      if (partOf) {
-        mongoSearchQuery.partOf = { $eq: partOf }
+        const markerWikis = [] //wikiArray.split(',')
+        const metadataWikis = [] //wikiArray.split(',')
+        mongoSearchQuery._id = { $in: wikis }
       }
 
       if (search) {
@@ -112,7 +107,6 @@ MarkerSchema.statics = {
                 w: feature._id,
                 y: feature.year,
                 t: feature.type,
-                p: feature.partOf,
               },
               geometry: {
                 coordinates: feature.coo,

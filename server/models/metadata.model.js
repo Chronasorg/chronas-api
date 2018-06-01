@@ -13,6 +13,7 @@ const MetadataSchema = new mongoose.Schema({
   },
   coo: {
     type: Array,
+    required: false
   },
   type: {
     type: String,
@@ -29,10 +30,6 @@ const MetadataSchema = new mongoose.Schema({
   year: {
     type: Number,
     index: true
-  },
-  partOf: {
-    type: Array,
-    default: [],
   },
   score: {
     type: Number,

@@ -129,14 +129,14 @@ function addUpdateRevision(req, res, next) {
   const nextBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
-        ? req.nextBody
+        ? req.body.nextBody
         : shallowDiff(req.body.data, entity.toObject().data)
       : shallowDiff(req.body, entity.toObject())
 
   const prevBody =
     (req.resource === 'areas')
       ? (entity._id === 'MANY')
-        ? req.prevBody
+        ? req.body.prevBody
         : shallowDiff(entity.toObject().data, req.body.data)
       : shallowDiff(entity.toObject(), req.body)
 
@@ -170,7 +170,7 @@ function addUpdateRevision(req, res, next) {
     .catch(e => next(e))
 }
 
-function addUpdateSingleRevision(req, res, next) {
+function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
   const entity = req.entity
   const username = req.auth.username
   userCtrl.changePoints(username, "updated", 1)
@@ -199,9 +199,11 @@ function addUpdateSingleRevision(req, res, next) {
 
   revision.save()
     .then(() => {
-      res.status(200).send('Metadata successfully updated.')
+      if (shouldReturn) res.status(200).send('Metadata successfully updated.')
     })
-    .catch(e => res.status(500).send(e))
+    .catch(e => {
+      if (shouldReturn) res.status(500).send(e)
+    })
 }
 
 function addUpdateManyRevision(req, res, next) {
@@ -340,8 +342,7 @@ function update(req, res, next) {
  */
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'lastUpdated', order = 'asc', filter = '' } = req.query
-  const limit = end - start
-  Revision.list({ start, limit, sort, order, filter })
+  Revision.list({ start, end, sort, order, filter })
     .then((revisions) => {
       if (count) {
         Revision.find().count({}).exec().then((revisionCount) => {
