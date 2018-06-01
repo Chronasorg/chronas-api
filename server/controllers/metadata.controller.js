@@ -164,12 +164,14 @@ function updateLink(addLink) {
     const linkedItemKey1 = req.body.linkedItemKey1
     const linkedItemKey2 = req.body.linkedItemKey2
 
-    if (!linkedItemType1 ||
-      !linkedItemType2 ||
-      (linkedItemType1 !== "m" && linkedItemType1 !== "me") ||
-      (linkedItemType2 !== "m" && linkedItemType2 !== "me")) {
-      return res.status(400).send('linkedItemType1 and linkedItemType2 in body must either be "m" or "me"')
-    }
+    // if (!linkedItemType1 ||
+    //   !linkedItemType2 ||
+    //   (linkedItemType1 !== "m" && linkedItemType1 !== "me") ||
+    //   (linkedItemType2 !== "m" && linkedItemType2 !== "me") ||
+    //   (linkedItemType1 !== "markers" && linkedItemType1 !== "metadata") ||
+    //   (linkedItemType2 !== "markers" && linkedItemType2 !== "metadata")) {
+    //   return res.status(400).send('linkedItemType1 and linkedItemType2 in body must either be "m", "me", "markers", "metadata"')
+    // }
 
     const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
     const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
