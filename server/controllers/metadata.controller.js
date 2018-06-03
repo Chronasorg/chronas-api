@@ -209,12 +209,18 @@ function updateLink(addLink) {
 }
 
 function getLinked(req, res, next) {
-  console.debug(req.query)
   const sourceItem = req.query.source || false
 
   if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.')
 
-  const linkedItems = req.entity.data[sourceItem]
+  const linkedItems = req.entity.data[sourceItem] || false
+
+  if (!linkedItems) {
+    res.json({
+      map: [],
+      media: []
+    })
+  }
 
   const mongoSearchQueryMarker = { _id: { $in: linkedItems[0] } }
   const mongoSearchQueryMetadata = { _id: { $in: linkedItems[1] } }
@@ -226,8 +232,7 @@ function getLinked(req, res, next) {
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
-
-          return res.json(markers.map(feature => ({
+          const map = markers.map(feature => ({
             properties: {
               n: feature.name,
               w: feature._id,
@@ -239,7 +244,7 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          })).concat(metadata.map(feature => ({
+          })).concat(metadata.filter(feature => (feature.coo && feature.coo.length > 0 && feature.year)).map(feature => ({
             properties: {
               n: (feature.data || {}).title || feature._id,
               w: feature._id,
@@ -251,10 +256,14 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          }))))
+          })))
+
+          return res.json({
+            map,
+            media: metadata
+          })
         })
     })
-
 }
 
 /**
