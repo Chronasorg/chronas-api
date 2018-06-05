@@ -90,11 +90,12 @@ function list(req, res, next) {
   const length = +end - +start
   const typeArray = req.query.types || false
   const wikiArray = req.query.wikis || false
+  const format = req.query.format || false
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
   const search = req.query.search || false
 
-  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search })
+  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search, format })
     .then((markers) => {
       if (count) {
         Marker.find().count({}).exec().then((markerCount) => {

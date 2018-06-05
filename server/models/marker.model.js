@@ -66,7 +66,7 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, search = false } = {}) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false } = {}) {
     if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
       const mongoSearchQuery = {}
@@ -82,9 +82,6 @@ MarkerSchema.statics = {
 
       if (wikiArray) {
         const wikis = wikiArray.split(',')
-
-        const markerWikis = [] //wikiArray.split(',')
-        const metadataWikis = [] //wikiArray.split(',')
         mongoSearchQuery._id = { $in: wikis }
       }
 
@@ -100,7 +97,7 @@ MarkerSchema.statics = {
         .then((markers) => {
           if (search) {
             return markers.map(item => item._id)
-          } else {
+          } else if (format && format.toLowerCase() === 'geojson') {
             return markers.map(feature => ({
               properties: {
                 n: feature.name,
@@ -114,6 +111,8 @@ MarkerSchema.statics = {
               },
               type: 'Feature'
             }))
+          } else {
+            return markers
           }
         })
     }
