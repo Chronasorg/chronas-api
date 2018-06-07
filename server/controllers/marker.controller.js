@@ -98,7 +98,7 @@ function list(req, res, next) {
   Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search, format })
     .then((markers) => {
       if (count) {
-        Marker.find().count({}).exec().then((markerCount) => {
+        Marker.count().exec().then((markerCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
           res.set('X-Total-Count', markerCount)
           res.json(markers)

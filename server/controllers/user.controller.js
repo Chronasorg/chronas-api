@@ -123,10 +123,12 @@ function update(req, res, next) {
 }
 
 function changePoints(username, type, delta = 1) {
+  console.debug("!!!!!!!!!",username, type, delta)
   User.findOne({ username })
     .exec()
     .then((user) => {
       if (typeof user !== 'undefined') {
+        user["karma"] += delta
         user["count_" + type] += delta
         user.save()
       }
@@ -142,20 +144,55 @@ function changePoints(username, type, delta = 1) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
+  const highscoreCount = req.query.top || false
+  const countOnly = req.query.countOnly || false
 
-  User.list({ start, limit, sort, order, filter })
-    .then((users) => {
-      if (count) {
-        User.find().count({}).exec().then((userCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-          res.set('X-Total-Count', userCount)
+  if (highscoreCount !== false) {
+    User.find()
+      .sort({ karma: -1 })
+      .limit(+highscoreCount)
+      .exec()
+      .then((users) => {
+        res.json(users.map((u) => {
+          return {
+            name: u.name,
+            username: u.username,
+            karma: u.karma,
+            count_mistakes: u.count_mistakes,
+            count_created:  u.count_created,
+            count_reverted:  u.count_reverted,
+            count_updated:  u.count_updated,
+            count_deleted:  u.count_deleted,
+            count_voted:  u.count_voted,
+            lastUpdated:  u.lastUpdated,
+            createdAt:  u.createdAt,
+            loginCount:  u.loginCount,
+          }
+        }))
+      })
+  } else if (countOnly !== false) {
+    User.count()
+      .exec()
+      .then((userCount) => {
+        res.json({ total: userCount })
+      })
+  } else {
+    User.list({ start, limit, sort, order, filter })
+      .then((users) => {
+        if (count) {
+          User.count()
+            .exec()
+            .then((userCount) => {
+              res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+              res.set('X-Total-Count', userCount)
+              res.json(users)
+            })
+        } else {
           res.json(users)
-        })
-      } else {
-        res.json(users)
-      }
-    })
-    .catch(e => next(e))
+        }
+      })
+      .catch(e => next(e))
+  }
 }
 
 /**

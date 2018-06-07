@@ -12,7 +12,7 @@ router.route('/')
   /** GET /v1/users - Get list of users */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(5),
+    // checkPrivilege.checkPrivilege(5),
     userCtrl.list)
 
   /** POST /v1/users - Create new user */
