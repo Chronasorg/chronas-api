@@ -381,7 +381,7 @@ function list(req, res, next) {
   Area.list({ start, limit, sort, order, filter })
     .then((areas) => {
       if (count) {
-        Area.find().count({}).exec().then((areaCount) => {
+        Area.count().exec().then((areaCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
           res.set('X-Total-Count', areaCount)
           res.json(areas)

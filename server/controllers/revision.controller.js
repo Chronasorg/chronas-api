@@ -345,7 +345,7 @@ function list(req, res, next) {
   Revision.list({ start, end, sort, order, filter })
     .then((revisions) => {
       if (count) {
-        Revision.find().count({}).exec().then((revisionCount) => {
+        Revision.count().exec().then((revisionCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
           res.set('X-Total-Count', revisionCount)
           res.json(revisions)

@@ -21,6 +21,11 @@ const UserSchema = new mongoose.Schema({
   username: {
     type: String,
   },
+  karma: {
+    type: Number,
+    default: 0,
+    required: true
+  },
   loginCount: {
     type: Number,
     default: 1,
