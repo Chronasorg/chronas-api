@@ -21,8 +21,7 @@ const passportConfig = (app) => {
   })
 
   passport.deserializeUser((id, done) => {
-    getUser(id).then(
-      (user) => { done(null, user) },
+    getUser(id).then(      (user) => { done(null, user) },
       (error) => { done(error) }
     )
   })
