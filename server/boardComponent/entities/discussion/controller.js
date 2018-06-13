@@ -90,7 +90,6 @@ const toggleFavorite = (discussion_id, user_id) => {
             matched = i;
           }
         }
-
         if (matched === null) {
           discussion.favorites.push(user_id);
         } else {
@@ -99,6 +98,7 @@ const toggleFavorite = (discussion_id, user_id) => {
             ...discussion.favorites.slice(matched + 1, discussion.favorites.length),
           ];
         }
+
 
         discussion.save((error, updatedDiscussion) => {
           if (error) { console.log(error); reject(error); }

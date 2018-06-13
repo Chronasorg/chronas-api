@@ -10,7 +10,6 @@ const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL
 
 // controllers
 const getUser = require('./entities/user/controller').getUser
-const signInViaGithub = require('./entities/user/controller').signInViaGithub
 
 /**
  * passport configuration
@@ -34,12 +33,6 @@ const passportConfig = (app) => {
       callbackURL: GITHUB_CALLBACK_URL,
       scope: 'user:email',
     },
-    (accessToken, refreshToken, gitProfile, done) => {
-      signInViaGithub(gitProfile).then(
-        (user) => { console.log('got the user'); done(null, user) },
-        (error) => { console.log('something error occurs'); done(error) }
-      )
-    }
   ))
 }
 

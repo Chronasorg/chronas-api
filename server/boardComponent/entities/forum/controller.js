@@ -7,6 +7,7 @@ const Discussion = require('../discussion/model');
 // controllers
 const getAllOpinions = require('../opinion/controller').getAllOpinions;
 const getUser = require('../user/controller').getUser;
+const mongoose = require('mongoose')
 
 /**
  * get all forums list
@@ -48,6 +49,7 @@ const getDiscussions = (forum_id, pinned, sorting_method='date') => {
       if (error) { console.error(error); reject(error); }
       else if (!discussions) reject(null);
       else {
+        console.debug(discussions)
         // attach opinion count to each discussion
         asyncEach(discussions, (eachDiscussion, callback) => {
           // add opinion count

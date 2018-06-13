@@ -7,14 +7,14 @@ const discussionSchema = mongoose.Schema({
   forum_id: mongoose.Schema.ObjectId,
   forum: { type: mongoose.Schema.ObjectId, ref: 'forum' },
   discussion_slug: String,
-  user_id: mongoose.Schema.ObjectId,
-  user: { type: mongoose.Schema.ObjectId, ref: 'user' },
+  user_id: String,
+  user: { type: String, ref: 'User' },
   date: Date,
   title: String,
   content: Object,
   favorites: Array,
   tags: Array,
   pinned: Boolean,
-});
+}, { usePushEach: true })
 
-module.exports = mongoose.model('discussion', discussionSchema);
+module.exports = mongoose.model('discussion', discussionSchema)

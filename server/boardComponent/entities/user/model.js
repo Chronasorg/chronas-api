@@ -19,6 +19,6 @@ const userSchema = mongoose.Schema({
     followers: Number,
     following: Number,
   },
-});
+}, { usePushEach: true });
 
 module.exports = mongoose.model('user', userSchema);
