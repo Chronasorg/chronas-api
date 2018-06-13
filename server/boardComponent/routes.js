@@ -13,11 +13,6 @@ const express = require('express')
 
 const router = express.Router() // eslint-disable-line new-cap
 
-// serve api endpoint
-router.route('/').get((req, res) => {
-  res.send('Hello from API endpoint')
-})
-
 // mount user routes at /users
 router.use('/user', userRoutes)
 

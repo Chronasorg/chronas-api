@@ -1,5 +1,7 @@
 // controllers
 import express from 'express'
+import config from "../../../../config/config";
+import expressJwt from 'express-jwt'
 
 const getAdminDashInfo = require('./controller').getAdminDashInfo;
 const createForum = require('./controller').createForum;
@@ -14,7 +16,9 @@ const deleteDiscussion = require('./controller').deleteDiscussion;
 const router = express.Router() // eslint-disable-line
 
   // get all info for admin dashboard
-  router.route('/admin_dashboard_info').get( (req, res) => {
+  router.route('/admin_dashboard_info').get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    (req, res) => {
       getAdminDashInfo().then(
         (data) => { res.send(data); },
         (error) => { res.send(error); }
@@ -22,7 +26,9 @@ const router = express.Router() // eslint-disable-line
   });
 
   // create a forum
-  router.route('/create_forum').post( (req, res) => {
+  router.route('/create_forum').post(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    (req, res) => {
       const {
         title,
         slug,
@@ -35,24 +41,10 @@ const router = express.Router() // eslint-disable-line
   });
 
   // delete a forum
-  router.route('/delete_forum').post( (req, res) => {
+  router.route('/delete_forum').post(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    (req, res) => {
       deleteForum(req.body).then(
-        (data) => { res.send(data); },
-        (error) => { res.send(error); }
-      );
-  });
-
-  // delete an user
-  router.route('/delete_user').post( (req, res) => {
-      deleteUser(req.body).then(
-        (data) => { res.send(data); },
-        (error) => { res.send(error); }
-      );
-  });
-
-  // delete a forum
-  router.route('/delete_user').post( (req, res) => {
-      deleteDiscussion(req.body).then(
         (data) => { res.send(data); },
         (error) => { res.send(error); }
       );
