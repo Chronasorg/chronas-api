@@ -50,6 +50,7 @@ function create(req, res, next) {
       } else {
         const metadata = new Metadata({
           _id: req.body._id,
+          coo: req.body.coo,
           data: req.body.data,
           wiki: req.body.wiki,
           type: req.body.type,
