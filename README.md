@@ -135,3 +135,8 @@ docker build -t chronas-api .
 
 docker run -p80:80 chronas-api
 ```
+
+Initialize metadata/links object with:
+``
+{"_id":"links","data":{"undefined":[[],[]]},"score":0,"type":"g","coo":[]}
+``

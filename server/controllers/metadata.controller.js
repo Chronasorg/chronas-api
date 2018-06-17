@@ -151,7 +151,7 @@ function updateSingle(req, res, next, fromRevision = false) {
   } else {
     metadata.data[subEntityId] = nextBody
   }
-
+  console.debug("metadata.data", metadata.data)
   metadata.markModified('data')
   metadata.save()
     .then(() => { if (!fromRevision) next() })
@@ -177,12 +177,12 @@ function updateLink(addLink) {
     const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
     const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
 
-    const newNextBody1 = (prevValue1) ? prevValue1 : [
+    let newNextBody1 = (prevValue1) ? prevValue1 : [
       [],
       [],
     ]
 
-    const newNextBody2 = (prevValue2) ? prevValue2 : [
+    let newNextBody2 = (prevValue2) ? prevValue2 : [
       [],
       [],
     ]
@@ -194,10 +194,14 @@ function updateLink(addLink) {
     else {
       newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el !== linkedItemKey2)
       newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el !== linkedItemKey1)
+
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0 ) newNextBody1 = -1
+      if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0 ) newNextBody2 = -1
     }
 
     req.body.nextBody = newNextBody1
     req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
+    console.debug(req.body)
     updateSingle(req, res, next, true)
     revisionCtrl.addUpdateSingleRevision(req, res, next, false)
 
@@ -235,10 +239,12 @@ function getLinked(req, res, next) {
         .then((markers) => {
           const map = markers.map(feature => ({
             properties: {
-              n: feature.name,
+              n: (feature.data || {}).title || feature.name,
               w: feature._id,
               y: feature.year,
               t: feature.type,
+              f: (feature.data || {}).geojson,
+              c: (feature.data || {}).content,
             },
             geometry: {
               coordinates: feature.coo,
@@ -250,6 +256,8 @@ function getLinked(req, res, next) {
               n: (feature.data || {}).title || feature._id,
               w: feature._id,
               y: feature.year,
+              f: (feature.data || {}).geojson,
+              c: (feature.data || {}).content,
               t: feature.subtype || feature.type,
             },
             geometry: {
