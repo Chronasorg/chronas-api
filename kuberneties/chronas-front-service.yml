@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: chronas-api-front
+  name: chronas-api-front-http
 spec:
-  type: LoadBalancer
+  type: NodePort
   ports:
   - port: 80
   selector:
