@@ -155,6 +155,7 @@ function list(req, res, next) {
       .then((users) => {
         res.json(users.map((u) => {
           return {
+            avatar: u.avatar,
             name: u.name,
             username: u.username,
             karma: u.karma,
