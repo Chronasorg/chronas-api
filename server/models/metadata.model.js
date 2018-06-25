@@ -26,6 +26,7 @@ const MetadataSchema = new mongoose.Schema({
   },
   subtype: {
     type: String,
+    required: true
   },
   year: {
     type: Number,
@@ -90,10 +91,13 @@ MetadataSchema.statics = {
         }, {}))
     }
     else if (type || subtype || year || wiki || search) {
+
+      const subtypes = (subtype) ? subtype.split(',') : ''
+
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
-        subtype,
+        subtype: { $in: subtypes },
         _id: new RegExp(search, 'i')
       }
 
@@ -104,12 +108,17 @@ MetadataSchema.statics = {
 
       if (wiki) searchQuery.wiki = wiki
 
+
+      console.debug('subtypes', subtype, searchQuery)
+
       return this.find(searchQuery)
         .skip(+start)
         .limit(+end)
         .sort({ score: 'desc' })
         .exec()
         .then((metadata) => {
+
+          console.debug('metadatametadatametadatametadatametadatametadatametadata', metadata)
           if (search) {
             return metadata.map(item => item._id)
           } else {
