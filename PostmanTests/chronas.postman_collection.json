@@ -7,6 +7,19 @@
 	"item": [
 		{
 			"name": "/auth/login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "fcb063c4-5f4e-4729-9392-5c67a3298128",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.globals.set(\"token\", data.token);"
+						]
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
@@ -67,7 +80,7 @@
 					"urlencoded": [
 						{
 							"key": "email",
-							"value": "aasdfffff@web.de",
+							"value": "aasdffff@web.de",
 							"description": "",
 							"type": "text"
 						},
@@ -96,6 +109,16 @@
 		{
 			"name": "/auth/login/twitter",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -138,6 +161,16 @@
 		{
 			"name": "/auth/login/facebook",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -180,6 +213,16 @@
 		{
 			"name": "/auth/login/github",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -222,6 +265,16 @@
 		{
 			"name": "/auth/login/google",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -269,7 +322,7 @@
 					"bearer": [
 						{
 							"key": "token",
-							"value": "",
+							"value": "{{token}}",
 							"type": "string"
 						}
 					]
@@ -302,6 +355,16 @@
 		{
 			"name": "metadata-post",
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "POST",
 				"header": [
 					{
@@ -311,7 +374,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"_id\":\"aui55511\",\n\t\"data\":\"auisData55311\"\n}"
+					"raw": "{\n\t\"_id\":\"aui555121\",\n\t\"data\":\"auisData55311\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/metadata/",
