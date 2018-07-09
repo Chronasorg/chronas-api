@@ -50,7 +50,7 @@ router.route('/:metadataId/single')
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    validate(paramValidation.updateSingle),
+    // validate(paramValidation.updateSingle),
     checkPrivilege.checkPrivilege(1),
     metadataCtrl.updateSingle,
     revisionCtrl.addUpdateSingleRevision

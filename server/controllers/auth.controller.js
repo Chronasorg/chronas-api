@@ -34,6 +34,10 @@ function login(req, res, next) {
             lastUpdated: user.lastUpdated,
             privilege: user.privilege ? user.privilege : 1
           }, config.jwtSecret)
+
+          user.loginCount += 1
+          user.save()
+
           return res.json({
             token,
             username: user.username

@@ -25,8 +25,7 @@ const MetadataSchema = new mongoose.Schema({
     type: String,
   },
   subtype: {
-    type: String,
-    required: true
+    type: String
   },
   year: {
     type: Number,
@@ -118,7 +117,6 @@ MetadataSchema.statics = {
         .exec()
         .then((metadata) => {
 
-          console.debug('metadatametadatametadatametadatametadatametadatametadata', metadata)
           if (search) {
             return metadata.map(item => item._id)
           } else {
