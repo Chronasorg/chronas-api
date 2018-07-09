@@ -2,7 +2,9 @@ import Promise from 'bluebird'
 import mongoose from 'mongoose'
 import httpStatus from 'http-status'
 import APIError from '../helpers/APIError'
+import Metadata from './metadata.model'
 
+const METAtypes = ['cities']
 /**
  * Marker Schema
  */
@@ -75,8 +77,9 @@ MarkerSchema.statics = {
         mongoSearchQuery.year = { $gt: (year - delta), $lt: (year + delta) }
       }
 
+      let types = false
       if (typeArray) {
-        const types = typeArray.split(',')
+        types = typeArray.split(',')
         mongoSearchQuery.type = { $in: types }
       }
 
@@ -90,37 +93,65 @@ MarkerSchema.statics = {
       }
 
       return this.find(mongoSearchQuery)
-        .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
         .exec()
         .then((markers) => {
-          if (search) {
-            return markers.map(item => item._id)
-          } else if (format && format.toLowerCase() === 'geojson') {
-            return markers.map(feature => ({
-              properties: {
-                n: feature.name,
-                w: feature._id,
-                y: feature.year,
-                t: feature.type,
-              },
-              geometry: {
-                coordinates: feature.coo,
-                type: 'Point'
-              },
-              type: 'Feature'
-            }))
-          } else {
-            return markers
-          }
+          const optionalMetadata = new Promise((resolve, reject) => {
+            const subtypes = []
+            if (!types) resolve([])
+            types.forEach(t => {
+                const isMeta = (METAtypes.indexOf(t) > -1)
+                if (isMeta) subtypes.push(t)
+            })
+
+            if (subtypes.length === 0) resolve([])
+
+            const searchQuery = {
+              year: { $gt: (year - delta), $lt: (year + delta) },
+              type: "i",
+              coo: { $exists: true, $ne: [] },
+              subtype: { $in: subtypes }
+            }
+            Metadata.find(searchQuery)
+              .skip(+offset)
+              .limit(+length)
+              .exec()
+              .then((metadata) => {
+                resolve(metadata.map(item => item))
+              })
+              .catch(() => resolve([]))
+          })
+
+          return optionalMetadata.then((metaRes) => {
+            const markersPlus = markers.concat(metaRes)
+            if (search) {
+              return markersPlus.map(item => item._id)
+            } else if (format && format.toLowerCase() === 'geojson') {
+              return markersPlus.map(feature => ({
+                properties: {
+                  n: feature.name,
+                  w: feature._id,
+                  y: feature.year,
+                  t: feature.type,
+                },
+                geometry: {
+                  coordinates: feature.coo,
+                  type: 'Point'
+                },
+                type: 'Feature'
+              }))
+            }
+            return markersPlus
+          })
         })
-    }
-    return this.find()
+    } else {
+      return this.find()
         .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
         .exec()
+    }
   }
 }
 

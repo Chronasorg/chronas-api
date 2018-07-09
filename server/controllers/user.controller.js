@@ -123,13 +123,23 @@ function update(req, res, next) {
 }
 
 function changePoints(username, type, delta = 1) {
-  console.debug("!!!!!!!!!",username, type, delta)
   User.findOne({ username })
     .exec()
     .then((user) => {
       if (typeof user !== 'undefined') {
         user["karma"] += delta
         user["count_" + type] += delta
+        user.save()
+      }
+    })
+}
+
+function incrementLoginCount(username) {
+  User.findOne({ username })
+    .exec()
+    .then((user) => {
+      if (typeof user !== 'undefined') {
+        user.loginCount += 1
         user.save()
       }
     })
@@ -207,4 +217,4 @@ function remove(req, res, next) {
     .catch(e => next(e))
 }
 
-export default { changePoints, load, get, create, update, list, remove }
+export default { changePoints, incrementLoginCount, load, get, create, update, list, remove }
