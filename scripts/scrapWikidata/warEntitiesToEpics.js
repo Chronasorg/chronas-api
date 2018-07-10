@@ -62,8 +62,9 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
 
 
 
+      const epicId = "e_" + enWiki.replace(/ /g, "_")
       const epicObjectToPost = {
-        "_id": "e_" + enWiki.replace(/ /g, "_"),
+        "_id": epicId,
         "data": {
           "title": enWiki,
           "wiki": enWiki.replace(/ /g, "_"),
@@ -109,7 +110,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
           return fetch("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + pId_partOf + "&format=json&props=sitelinks|claims")
             .then(response => response.json())
             .then((resValue) => {
-              epicObjectToPost.data.partOf = ((resValue.entities[pId_partOf].sitelinks || {}).enwiki || {}).title // TODO: this must be links
+              epicObjectToPost.data.partOf = ((resValue.entities[pId_partOf].sitelinks || {}).enwiki || {}).title // TODO: ADDLINK this with epicId
               resolve()
             })
             .catch((err) => {
@@ -149,6 +150,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
                   Object.values(rulerObject[rulerKey])[2] !== ' ' &&
                   Object.values(rulerObject[rulerKey])[2] !== '' && ((participantWiki.indexOf(Object.values(rulerObject[rulerKey])[0]) > -1) || (participantWiki.indexOf(Object.values(rulerObject[rulerKey])[2]) > -1))) {
                   participant = rulerKey
+                  // TODO: ADDLINK this with epicId
                 }
               })
               epicObjectToPost.data.participants.push([participant])
@@ -173,7 +175,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
                 .then(response => response.json())
                 .then((resValueType) => {
                   let contentSubtype = (((resValueType.entities[ppId_instanceOf] || {}).labels || {}).en || {}).value
-                  epicObjectToPost.linked.push(enwiki.replace(/ /g, "_"))
+                  epicObjectToPost.linked.push(enwiki.replace(/ /g, "_"))  // TODO: ADDLINK this with epicId
                   epicObjectToPost.data.content.push({
                     "wiki": enwiki.replace(/ /g, "_"),
                     "type": contentSubtype,
@@ -226,32 +228,6 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
       resolve()
     })
 })
-
-
-goOn = (rulAcc, imageArray, resolve, reject) => {
-  for (let img of imageArray) {
-    const imgLower = img.toLowerCase()
-    if (imgLower.indexOf(".svg") > -1 || imgLower.indexOf(".jpg") > -1 || imgLower.indexOf(".jpeg") > -1 || imgLower.indexOf(".png") > -1 ) {
-      // TODO: get right resolution
-      fetch("https://commons.wikimedia.org/w/api.php?action=query&titles=" + img + "&prop=imageinfo&&iiprop=url&iiurlwidth=100&format=json")
-        .then(response => response.json())
-        .then((rulerMetadata) => {
-          let thumbUrl = Object.values(rulerMetadata.query.pages)[0].imageinfo[0].thumburl
-          const startUrl = thumbUrl.indexOf("commons/thumb/") + "commons/thumb/".length
-          const endUrl = thumbUrl.substr(52).lastIndexOf("/") + startUrl -1
-          thumbUrl = thumbUrl.substring(startUrl, endUrl)
-
-          originalMeta.data[rulAcc][3] = thumbUrl
-          console.debug(rulAcc + " -> " + originalMeta.data[rulAcc][3])
-          resolve()
-        })
-        .catch((err) => {
-          resolve()
-        })
-      break
-    }
-  }
-}
 
 // example output
 /*
