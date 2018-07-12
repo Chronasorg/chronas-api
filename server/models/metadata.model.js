@@ -100,12 +100,14 @@ MetadataSchema.statics = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
         subtype: { $in: subtypes },
-        name: new RegExp(search, 'i'),
-        _id: new RegExp(search, 'i')
+        $or: [
+          {'_id': new RegExp(search, 'i')},
+          {'name': new RegExp(search, 'i')}
+        ]
       }
 
       if (!type) delete searchQuery.type
-      if (!search) delete searchQuery._id
+      if (!search) delete searchQuery.$or
       if (!subtype) delete searchQuery.subtype
       if (!year) delete searchQuery.year
 

@@ -191,8 +191,8 @@ function updateLink(addLink) {
     ]
 
     if (addLink) {
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
-      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
+      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
     }
     else {
       newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el[0] !== linkedItemKey2)
@@ -248,9 +248,11 @@ function getLinked(req, res, next) {
 
   // TODO: links collection should be cached!
 
+  console.debug(mongoSearchQueryMetadata,mongoSearchQueryMarker)
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
     .then((metadata) => {
+      console.debug('!!!!!!!!!metadata!', metadata)
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
