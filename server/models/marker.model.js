@@ -89,8 +89,10 @@ MarkerSchema.statics = {
       }
 
       if (search) {
-        mongoSearchQuery._id = new RegExp(search, 'i')
-        mongoSearchQuery.name = new RegExp(search, 'i')
+        mongoSearchQuery.$or = [
+          {'_id':new RegExp(search, 'i')},
+          {'name':new RegExp(search, 'i')}
+        ]
       }
 
       return this.find(mongoSearchQuery)
