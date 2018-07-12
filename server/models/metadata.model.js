@@ -11,6 +11,9 @@ const MetadataSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  name: {
+    type: String,
+  },
   coo: {
     type: Array,
     required: false
@@ -97,6 +100,7 @@ MetadataSchema.statics = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
         subtype: { $in: subtypes },
+        name: new RegExp(search, 'i'),
         _id: new RegExp(search, 'i')
       }
 

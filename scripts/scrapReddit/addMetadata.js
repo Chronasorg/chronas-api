@@ -41,8 +41,8 @@ postItem = itemObj => new Promise((resolve, reject) => {
       type: itemObj.type,
       subtype: subtypeMapping[itemObj.subtype],
       year: itemObj.year,
+      name: itemObj.title,
       data: {
-        title: itemObj.title,
         source: itemObj.source,
       },
     }),

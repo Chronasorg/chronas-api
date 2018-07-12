@@ -164,6 +164,8 @@ function updateLink(addLink) {
     const linkedItemType2 = req.body.linkedItemType2
     const linkedItemKey1 = req.body.linkedItemKey1
     const linkedItemKey2 = req.body.linkedItemKey2
+    const type1 = req.body.type1
+    const type2 = req.body.type2
 
     // if (!linkedItemType1 ||
     //   !linkedItemType2 ||
@@ -174,6 +176,7 @@ function updateLink(addLink) {
     //   return res.status(400).send('linkedItemType1 and linkedItemType2 in body must either be "m", "me", "markers", "metadata"')
     // }
 
+    // is either 0:mykey (for markers) and 1:mykey (for metadata)
     const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
     const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
 
@@ -188,12 +191,12 @@ function updateLink(addLink) {
     ]
 
     if (addLink) {
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push(linkedItemKey2)
-      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push(linkedItemKey1)
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
+      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
     }
     else {
-      newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el !== linkedItemKey2)
-      newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el !== linkedItemKey1)
+      newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el[0] !== linkedItemKey2)
+      newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el[0] !== linkedItemKey1)
 
       if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0 ) newNextBody1 = -1
       if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0 ) newNextBody2 = -1
@@ -201,7 +204,6 @@ function updateLink(addLink) {
 
     req.body.nextBody = newNextBody1
     req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
-    console.debug(req.body)
     updateSingle(req, res, next, true)
     revisionCtrl.addUpdateSingleRevision(req, res, next, false)
 
@@ -216,20 +218,35 @@ function updateLink(addLink) {
 function getLinked(req, res, next) {
   const sourceItem = req.query.source || false
 
+  const MAPIDS = ['a', 'b']
+  const MEDIAIDS = ['e', 'b']
+
   if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.')
 
   const linkedItems = req.entity.data[sourceItem] || false
-
-  if (!linkedItems) {
-    res.json({
-      map: [],
-      media: []
-    })
+  const resObj = {
+    map: [],
+    media: []
   }
 
-  const mongoSearchQueryMarker = { _id: { $in: linkedItems[0] } }
-  const mongoSearchQueryMetadata = { _id: { $in: linkedItems[1] } }
+  if (!linkedItems) {
+    res.json(resObj)
+  }
 
+  const idTypeObj = {}
+  const markerIdList = linkedItems[0].map((el) => {
+    idTypeObj[el[0]] = el[1]
+    return el[0]
+  })
+  const metadataIdList = linkedItems[1].map((el) => {
+    idTypeObj[el[0]] = el[1]
+    return el[0]
+  })
+
+  const mongoSearchQueryMarker = { _id: { $in: markerIdList } }
+  const mongoSearchQueryMetadata = { _id: { $in: metadataIdList } }
+
+  // TODO: links collection should be cached!
 
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
@@ -237,24 +254,26 @@ function getLinked(req, res, next) {
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
-          const map = markers.map(feature => ({
+          const fullList = markers.map(feature => ({
             properties: {
-              n: (feature.data || {}).title || feature.name,
+              n: feature.name || (feature.data || {}).title || feature.name,
               w: feature._id,
               y: feature.year,
               t: feature.type,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
+              s: feature.score,
             },
             geometry: {
               coordinates: feature.coo,
               type: 'Point'
             },
             type: 'Feature'
-          })).concat(metadata.filter(feature => (feature.coo && feature.coo.length > 0 && feature.year)).map(feature => ({
+          })).concat(metadata.map(feature => ({
             properties: {
-              n: (feature.data || {}).title || feature._id,
-              w: feature._id,
+              n: feature.name || (feature.data || {}).title || feature._id,
+              w: feature._id || feature.wiki,
+              s: (feature.data || {}).source,
               y: feature.year,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
@@ -267,10 +286,15 @@ function getLinked(req, res, next) {
             type: 'Feature'
           })))
 
-          return res.json({
-            map,
-            media: metadata
+          fullList.forEach((el) => {
+            if (MAPIDS.includes(idTypeObj[el.properties.w])) {
+              resObj.map.push(el)
+            }
+            if (MEDIAIDS.includes(idTypeObj[el.properties.w])) {
+              resObj.media.push(el)
+            }
           })
+          return res.json(resObj)
         })
     })
 }
