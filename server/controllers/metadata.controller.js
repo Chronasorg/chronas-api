@@ -252,7 +252,6 @@ function getLinked(req, res, next) {
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
     .then((metadata) => {
-      console.debug('!!!!!!!!!metadata!', metadata)
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
@@ -265,6 +264,7 @@ function getLinked(req, res, next) {
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
               s: feature.score,
+              ct: 'marker'
             },
             geometry: {
               coordinates: feature.coo,
@@ -280,6 +280,7 @@ function getLinked(req, res, next) {
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
               t: feature.subtype || feature.type,
+              ct: 'metadata'
             },
             geometry: {
               coordinates: feature.coo,
@@ -296,6 +297,7 @@ function getLinked(req, res, next) {
               resObj.media.push(el)
             }
           })
+
           return res.json(resObj)
         })
     })

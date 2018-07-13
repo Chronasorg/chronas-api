@@ -133,7 +133,7 @@ MarkerSchema.statics = {
             } else if (format && format.toLowerCase() === 'geojson') {
               return markersPlus.map(feature => ({
                 properties: {
-                  n: feature.name,
+                  n: feature.mongod,
                   w: feature._id,
                   y: feature.year,
                   t: feature.type,
