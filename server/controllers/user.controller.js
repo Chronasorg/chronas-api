@@ -170,6 +170,7 @@ function list(req, res, next) {
             username: u.username,
             karma: u.karma,
             count_mistakes: u.count_mistakes,
+            count_linked: u.count_linked,
             count_created:  u.count_created,
             count_reverted:  u.count_reverted,
             count_updated:  u.count_updated,
