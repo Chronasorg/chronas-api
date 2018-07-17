@@ -12,6 +12,30 @@ const linkedTypeAccessor = {
   "metadata": 1
 }
 
+const nameAccByAEtype = {
+  'ruler': 0,
+  'culture': 0,
+  'capital': 0,
+  'religion': 0,
+  'religionGeneral': 0,
+}
+
+const wikiAccByAEtype = {
+  'ruler': 2,
+  'culture': 2,
+  'capital': 0,
+  'religion': 2,
+  'religionGeneral': 2,
+}
+
+const iconAccByAEtype = {
+  'ruler': 3,
+  'culture': 3,
+  'capital': 1,
+  'religion': 4,
+  'religionGeneral': 3,
+}
+
 /**
  * Load metadata and append to req.
  */
@@ -141,8 +165,6 @@ function updateSingle(req, res, next, fromRevision = false) {
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
 
-  console.debug("metadata.data[subEntityId]", metadata.data[subEntityId])
-  console.debug("nextBody", nextBody)
   req.body.prevBody = metadata.data[subEntityId] || -1
 
   if (nextBody === -1) {
@@ -151,7 +173,6 @@ function updateSingle(req, res, next, fromRevision = false) {
   } else {
     metadata.data[subEntityId] = nextBody
   }
-  console.debug("metadata.data", metadata.data)
   metadata.markModified('data')
   metadata.save()
     .then(() => { if (!fromRevision) next() })
@@ -166,17 +187,6 @@ function updateLink(addLink) {
     const linkedItemKey2 = req.body.linkedItemKey2
     const type1 = req.body.type1
     const type2 = req.body.type2
-
-    // if (!linkedItemType1 ||
-    //   !linkedItemType2 ||
-    //   (linkedItemType1 !== "m" && linkedItemType1 !== "me") ||
-    //   (linkedItemType2 !== "m" && linkedItemType2 !== "me") ||
-    //   (linkedItemType1 !== "markers" && linkedItemType1 !== "metadata") ||
-    //   (linkedItemType2 !== "markers" && linkedItemType2 !== "metadata")) {
-    //   return res.status(400).send('linkedItemType1 and linkedItemType2 in body must either be "m", "me", "markers", "metadata"')
-    // }
-
-    // is either 0:mykey (for markers) and 1:mykey (for metadata)
     const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
     const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
 
@@ -238,20 +248,49 @@ function getLinked(req, res, next) {
     idTypeObj[el[0]] = el[1]
     return el[0]
   })
+
+  //ae|ruler|BYZ
+  const metadataAeList = linkedItems[1].filter((el) => {
+    return (el[0].indexOf('ae|') > -1)
+  }).map((el) => {
+    idTypeObj[el[0]] = el[1]
+    const aeArr = el[0].split('|')
+    return aeArr
+  }) || []
+
   const metadataIdList = linkedItems[1].map((el) => {
     idTypeObj[el[0]] = el[1]
     return el[0]
   })
 
   const mongoSearchQueryMarker = { _id: { $in: markerIdList } }
-  const mongoSearchQueryMetadata = { _id: { $in: metadataIdList } }
+  const mongoSearchQueryMetadata = { _id: { $in: metadataIdList.concat(metadataAeList.map(el => el[1])) } }
 
   // TODO: links collection should be cached!
 
-  console.debug(mongoSearchQueryMetadata,mongoSearchQueryMarker)
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
-    .then((metadata) => {
+    .then((metadataPre) => {
+      const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id))
+      const aeEntities = []
+
+      metadataAeList.forEach((el) => {
+        const metaData = metadataPre.find((mEl) => mEl._id === el[1]).data[el[2]]
+        aeEntities.push({
+          properties: {
+            n: metaData[nameAccByAEtype[el[1]]],
+            w: metaData[wikiAccByAEtype[el[1]]],
+            t: el[0] + '|' + el[1],
+            i: metaData[iconAccByAEtype[el[1]]],
+            aeId: el.join('|'),
+            ct: 'area'
+          },
+          geometry: {
+          },
+          type: 'Feature'
+        })
+      })
+
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
@@ -287,13 +326,31 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          })))
+          }))).concat(metadata.map(feature => ({
+            properties: {
+              n: feature.name || (feature.data || {}).title || feature._id,
+              w: feature._id || feature.wiki,
+              s: (feature.data || {}).source,
+              y: feature.year,
+              f: (feature.data || {}).geojson,
+              c: (feature.data || {}).content,
+              t: feature.subtype || feature.type,
+              ct: 'metadata'
+            },
+            geometry: {
+              coordinates: feature.coo,
+              type: 'Point'
+            },
+            type: 'Feature'
+          }))).concat(aeEntities)
 
+          console.debug(fullList)
           fullList.forEach((el) => {
-            if (MAPIDS.includes(idTypeObj[el.properties.w])) {
+            console.debug(idTypeObj, el.properties.aeId || el.properties.w)
+            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
               resObj.map.push(el)
             }
-            if (MEDIAIDS.includes(idTypeObj[el.properties.w])) {
+            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
               resObj.media.push(el)
             }
           })

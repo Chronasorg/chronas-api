@@ -94,8 +94,9 @@ function list(req, res, next) {
   const year = +req.query.year || false
   const delta = +req.query.delta || 10
   const search = req.query.search || false
+  const both = req.query.both || false
 
-  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search, format })
+  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {

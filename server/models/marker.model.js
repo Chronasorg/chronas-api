@@ -68,7 +68,7 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false } = {}) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, both = false } = {}) {
     if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
       const mongoSearchQuery = {}
@@ -100,36 +100,82 @@ MarkerSchema.statics = {
         .limit(+length)
         .exec()
         .then((markers) => {
+          const metaAreaAddition = []
           const optionalMetadata = new Promise((resolve, reject) => {
             const subtypes = []
-            if (!types) resolve([])
-            types.forEach(t => {
+            if (!both && !types) resolve([])
+            if (!both) {
+              types.forEach(t => {
                 const isMeta = (METAtypes.indexOf(t) > -1)
                 if (isMeta) subtypes.push(t)
-            })
-
-            if (subtypes.length === 0) resolve([])
-
-            const searchQuery = {
-              year: { $gt: (year - delta), $lt: (year + delta) },
-              type: "i",
-              coo: { $exists: true, $ne: [] },
-              subtype: { $in: subtypes }
+              })
             }
+
+            if (!both && subtypes.length === 0) resolve([])
+
+            let searchQuery = { }
+
+            if (both) {
+              searchQuery.$or = [
+                {'_id':new RegExp(search, 'i')},
+                {'name':new RegExp(search, 'i')},
+                {'data.title':new RegExp(search, 'i')}
+              ]
+            } else {
+              searchQuery = {
+                year: { $gt: (year - delta), $lt: (year + delta) },
+                type: "i",
+                coo: { $exists: true, $ne: [] },
+                subtype: { $in: subtypes }
+              }
+            }
+
             Metadata.find(searchQuery)
               .skip(+offset)
               .limit(+length)
               .exec()
               .then((metadata) => {
-                resolve(metadata.map(item => item))
+                if (both) {
+                  const areaMetaIds = ['ruler', 'culture', 'capital', 'religion', 'religionGeneral']
+                  Metadata.find({_id: { $in: areaMetaIds }})
+                    .exec()
+                    .then((areaMeta) => {
+                      const lowerSearch = search.toLowerCase()
+                      areaMeta.forEach((aM) => {
+                        let addCounter = 0
+                        const currId = aM._id
+                        const oIds = Object.keys(aM.data)
+                        const oValues = Object.values(aM.data)
+                        for (const [index, eO] of oValues.entries()) {
+                          if (eO[0] && eO[0].toLowerCase().indexOf(lowerSearch) > -1) {
+                            addCounter++
+                            metaAreaAddition.push([oIds[index], eO[0], 'ae|' + currId])
+                          }
+                          if (addCounter > 2) break
+                        }
+                      })
+                      resolve(metadata)
+                    })
+                } else {
+                  resolve(metadata)
+                }
               })
               .catch(() => resolve([]))
           })
 
           return optionalMetadata.then((metaRes) => {
-            const markersPlus = markers.concat(metaRes)
+            const markersPlus = markers.map((item) => {
+              item.subtype = item.type
+              item.type = 'w'
+              return item
+            }).concat(metaRes)
             if (search) {
-              return markersPlus.map(item => item._id)
+              if (both) {
+                const forbiddenTypes = ['g', 'a_', 'ap']
+                return markersPlus.filter(item => !forbiddenTypes.includes((item.subtype || item.type).substr(0,2))).map(item => [item._id, (item.data || {}).title || item.name, item.type + '|' + item.subtype]).concat(metaAreaAddition)
+              } else {
+                return markersPlus.map(item => item._id)
+              }
             } else if (format && format.toLowerCase() === 'geojson') {
               return markersPlus.map(feature => ({
                 properties: {
