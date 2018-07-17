@@ -29,21 +29,3 @@ spec:
         backend:
           serviceName: chronas-api
           servicePort: 80    
----
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: Certificate
-metadata:
-  name: https-api-crt
-spec:
-  secretName: https-api-crt
-  dnsNames:
-  - api-dev.chronas.org
-  acme:
-    config:
-    - http01:
-        ingressClass: nginx
-      domains:
-      - api-dev.chronas.org
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer          
