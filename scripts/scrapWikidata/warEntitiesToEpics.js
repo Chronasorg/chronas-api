@@ -76,7 +76,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
           ]
         },
         "wiki": enWiki.replace(/ /g, "_"),
-        "subtype": "",
+        "subtype": "war",
         "year": pId_start,
         "score": 0,
         "linked": [
