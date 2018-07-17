@@ -160,6 +160,9 @@ function updateSingle(req, res, next, fromRevision = false) {
 
 function updateLink(addLink) {
   return (req, res, next) => {
+    const username = req.auth.username
+    userCtrl.changePoints(username, "linked", 1)
+
     const linkedItemType1 = req.body.linkedItemType1
     const linkedItemType2 = req.body.linkedItemType2
     const linkedItemKey1 = req.body.linkedItemKey1
@@ -229,6 +232,7 @@ function getLinked(req, res, next) {
     media: []
   }
 
+  console.debug(linkedItems)
   if (!linkedItems) {
     res.json(resObj)
   }
@@ -248,7 +252,6 @@ function getLinked(req, res, next) {
 
   // TODO: links collection should be cached!
 
-  console.debug(mongoSearchQueryMetadata,mongoSearchQueryMarker)
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
     .then((metadata) => {

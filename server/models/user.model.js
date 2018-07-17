@@ -63,6 +63,11 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
+  count_linked: {
+    type: Number,
+    default: 0,
+    required: true
+  },
   count_voted: {
     type: Number,
     default: 0,
