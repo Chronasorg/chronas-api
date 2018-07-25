@@ -46,6 +46,7 @@ const getDiscussion = (discussion_slug, discussion_id) => {
  */
 const createDiscussion = (discussion) => {
   return new Promise((resolve, reject) => {
+    console.debug("discussiondiscussiondiscussiondiscussion",discussion)
     const newDiscussion = new Discussion({
       forum_id: discussion.forumId,
       forum: discussion.forumId,
@@ -54,6 +55,7 @@ const createDiscussion = (discussion) => {
       discussion_slug: generateDiscussionSlug(discussion.title),
       date: new Date(),
       title: discussion.title,
+      qa_id: discussion.qa_id,
       content: discussion.content,
       favorites: [],
       tags: discussion.tags,

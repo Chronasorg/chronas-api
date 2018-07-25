@@ -1,6 +1,8 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore'
 import Area from '../models/area.model'
 import Metadata from '../models/metadata.model'
+import config from "../../config/config";
+import httpStatus from "http-status";
 
 const dimAccessor = {
   ruler: 0,
@@ -18,7 +20,12 @@ function load(req, res, next, id) {
       req.entity = area // eslint-disable-line no-param-reassign
       return next()
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      res.status(e.status).json({
+        message: e.isPublic ? e.message : httpStatus[e.status],
+        stack: config.env === 'development' ? e.stack : {}
+      })
+    })
 }
 
 /**

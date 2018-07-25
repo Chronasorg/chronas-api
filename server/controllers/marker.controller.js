@@ -1,5 +1,7 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
+import config from "../../config/config";
+import httpStatus from "http-status";
 
 /**
  * Load marker and append to req.
@@ -10,7 +12,12 @@ function load(req, res, next, id) {
       req.entity = marker // eslint-disable-line no-param-reassign
       return next()
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      res.status(e.status).json({
+        message: e.isPublic ? e.message : httpStatus[e.status],
+        stack: config.env === 'development' ? e.stack : {}
+      })
+    })
 }
 
 /**

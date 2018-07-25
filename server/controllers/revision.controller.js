@@ -9,6 +9,8 @@ import areaCtrl from './area.controller'
 import userCtrl from './user.controller'
 import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
+import config from "../../config/config";
+import httpStatus from "http-status";
 
 const debug = require('debug')('chronas-api:index')
 
@@ -37,7 +39,12 @@ function load(req, res, next, id) {
             req.entity = entity // eslint-disable-line no-param-reassign
             return next()
           })
-          .catch(e => next(e))
+          .catch((e) => {
+            res.status(e.status).json({
+              message: e.isPublic ? e.message : httpStatus[e.status],
+              stack: config.env === 'development' ? e.stack : {}
+            })
+          })
       }
     })
     .catch(e => next(e))

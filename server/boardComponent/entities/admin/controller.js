@@ -1,4 +1,6 @@
-const waterfall = require('async/waterfall');
+import mongoose from 'mongoose'
+
+const waterfall = require('async/waterfall')
 
 // models
 const Discussion = require('../discussion/model');
@@ -65,10 +67,16 @@ const createForum = ({ forum_name, forum_slug }) => {
       else if (forum) { reject({ alreadyExists: true }); }
       else {
         // forum does not exists, so create a new one
-        const newForum = new Forum({
+        const forumObj = {
           forum_slug,
           forum_name,
-        });
+        }
+
+        // if (forum_slug === 'questions') {
+        //   forumObj._id = forum_slug
+        // }
+
+        const newForum = new Forum(forumObj)
 
         newForum.save((error) => {
           if (error) { console.log(error); reject({ created: false }); }

@@ -23,6 +23,9 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  subtype: {
+    type: String,
+  },
   year: {
     type: Number, // Epoch
   }
@@ -165,7 +168,7 @@ MarkerSchema.statics = {
 
           return optionalMetadata.then((metaRes) => {
             const markersPlus = markers.map((item) => {
-              item.subtype = item.type
+              if (!item.subtype) item.subtype = item.type
               item.type = 'w'
               return item
             }).concat(metaRes)

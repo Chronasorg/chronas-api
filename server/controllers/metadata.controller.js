@@ -4,6 +4,8 @@ import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 import logger from '../../config/winston'
 import userCtrl from './user.controller'
 import revisionCtrl from './revision.controller'
+import config from "../../config/config";
+import httpStatus from "http-status";
 
 const linkedTypeAccessor = {
   "m": 0,
@@ -45,7 +47,12 @@ function load(req, res, next, id) {
       req.entity = metadata // eslint-disable-line no-param-reassign
       return next()
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      res.status(e.status).json({
+        message: e.isPublic ? e.message : httpStatus[e.status],
+        stack: config.env === 'development' ? e.stack : {}
+      })
+    })
 }
 
 /**
@@ -242,7 +249,6 @@ function getLinked(req, res, next) {
     media: []
   }
 
-  console.debug(linkedItems)
   if (!linkedItems) {
     res.json(resObj)
   }
@@ -315,22 +321,6 @@ function getLinked(req, res, next) {
             },
             type: 'Feature'
           })).concat(metadata.map(feature => ({
-            properties: {
-              n: feature.name || (feature.data || {}).title || feature._id,
-              w: feature._id || feature.wiki,
-              s: (feature.data || {}).source,
-              y: feature.year,
-              f: (feature.data || {}).geojson,
-              c: (feature.data || {}).content,
-              t: feature.subtype || feature.type,
-              ct: 'metadata'
-            },
-            geometry: {
-              coordinates: feature.coo,
-              type: 'Point'
-            },
-            type: 'Feature'
-          }))).concat(metadata.map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature._id,
               w: feature._id || feature.wiki,
