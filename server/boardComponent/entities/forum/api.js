@@ -22,20 +22,20 @@ router.route('/').get(
 })
 
   // get discussions of a forum
-router.route('/:forum_id/discussions').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+router.route('/:forum_slug/discussions').get(
+  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  getDiscussions(req.params.forum_id, false, req.query.sorting_method).then(
+  getDiscussions(req.params.forum_slug, false, req.query.sorting_method, req.query.q).then(
       (result) => { res.send(result) },
       (error) => { res.send([]) }
     )
 })
 
   // get pinned discussions of a forum
-router.route('/:forum_id/pinned_discussions').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+router.route('/:forum_slug/pinned_discussions').get(
+  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  getDiscussions(req.params.forum_id, true).then(
+  getDiscussions(req.params.forum_slug, true).then(
       (result) => { res.send(result) },
       (error) => { res.send([]) }
     )

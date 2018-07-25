@@ -22,7 +22,7 @@ const getAllOpinions = (discussion_id) => {
 
 /**
  * create an opinion regarding a discussion
- * @param  {ObjectId} forum_id
+ * @param  {ObjectId} forum_slug
  * @param  {ObjectId} discussion_id
  * @param  {ObjectId} user_id
  * @param  {Object} content

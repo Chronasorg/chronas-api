@@ -11,6 +11,7 @@ const discussionSchema = mongoose.Schema({
   user: { type: String, ref: 'User' },
   date: Date,
   title: String,
+  qa_id: { type: String, default: '!na' },
   content: Object,
   favorites: Array,
   tags: Array,

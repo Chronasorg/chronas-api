@@ -3,6 +3,7 @@ import logger from '../../config/winston'
 import APIError from '../helpers/APIError'
 import config from '../../config/config'
 import jwt from 'jsonwebtoken'
+import httpStatus from "http-status";
 
 /**
  * Load user and append to req.
@@ -13,7 +14,12 @@ function load(req, res, next, id) {
       req.user = user // eslint-disable-line no-param-reassign
       return next()
     })
-    .catch(e => next(e))
+    .catch((e) => {
+      res.status(e.status).json({
+        message: e.isPublic ? e.message : httpStatus[e.status],
+        stack: config.env === 'development' ? e.stack : {}
+      })
+    })
 }
 
 /**
