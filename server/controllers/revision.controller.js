@@ -40,7 +40,7 @@ function load(req, res, next, id) {
             return next()
           })
           .catch((e) => {
-            res.status(e.status).json({
+            return res.status(httpStatus.NOT_FOUND).json({
               message: e.isPublic ? e.message : httpStatus[e.status],
               stack: config.env === 'development' ? e.stack : {}
             })
@@ -206,10 +206,10 @@ function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
 
   revision.save()
     .then(() => {
-      if (shouldReturn) res.status(200).send('Metadata successfully updated.')
+      if (shouldReturn) return res.status(200).send('Metadata successfully updated.')
     })
     .catch(e => {
-      if (shouldReturn) res.status(500).send(e)
+      if (shouldReturn) return res.status(500).send(e)
     })
 }
 
@@ -280,7 +280,7 @@ function update(req, res, next) {
           Promise.all(areaPromises).then(() => {
               // res.status(200).send('Areas revision MANY successfully applied.')
           }, (error) => {
-            res.status(500).send(error)
+            return res.status(500).send(error)
           })
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.nextBody)
@@ -297,7 +297,7 @@ function update(req, res, next) {
           const unpackedObj = unpackObj(JSON.parse(revision.prevBody))
           const areaPromises = Object.keys(unpackedObj).forEach(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
           Promise.all(areaPromises).then(() => {
-            res.status(200).send('Areas revision MANY successfully applied.')
+            return res.status(200).send('Areas revision MANY successfully applied.')
           }, (error) => {
             logger.error(error)
           })
