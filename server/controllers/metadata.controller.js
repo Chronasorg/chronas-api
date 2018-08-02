@@ -48,7 +48,7 @@ function load(req, res, next, id) {
       return next()
     })
     .catch((e) => {
-      res.status(e.status).json({
+      res.status(httpStatus.NOT_FOUND).json({
         message: e.isPublic ? e.message : httpStatus[e.status],
         stack: config.env === 'development' ? e.stack : {}
       })
@@ -250,7 +250,7 @@ function getLinked(req, res, next) {
   }
 
   if (!linkedItems) {
-    res.json(resObj)
+    return res.json(resObj)
   }
 
   const idTypeObj = {}
@@ -259,7 +259,6 @@ function getLinked(req, res, next) {
     return el[0]
   })
 
-  //ae|ruler|BYZ
   const metadataAeList = linkedItems[1].filter((el) => {
     return (el[0].indexOf('ae|') > -1)
   }).map((el) => {
@@ -277,11 +276,10 @@ function getLinked(req, res, next) {
   const mongoSearchQueryMetadata = { _id: { $in: metadataIdList.concat(metadataAeList.map(el => el[1])) } }
 
   // TODO: links collection should be cached!
-
   Metadata.find(mongoSearchQueryMetadata)
     .exec()
     .then((metadataPre) => {
-      const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id))
+      const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || []
       const aeEntities = []
 
       metadataAeList.forEach((el) => {
@@ -304,7 +302,7 @@ function getLinked(req, res, next) {
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
-          const fullList = markers.map(feature => ({
+          const fullList = (markers || []).map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature.name,
               w: feature._id,
