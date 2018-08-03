@@ -13,21 +13,24 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  type: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
   },
   coo: {
     type: Array,
   },
-  type: {
-    type: String,
-    required: true
-  },
   subtype: {
-    type: String,
+    type: String
   },
   year: {
-    type: Number, // Epoch
+    type: Number,
+  },
+  end: {
+    type: Number,
   }
 }, { versionKey: false })
 
