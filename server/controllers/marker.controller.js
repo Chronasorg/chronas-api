@@ -50,6 +50,7 @@ function create(req, res, next, fromRevision = false) {
         coo: req.body.coo,
         type: req.body.type,
         year: req.body.year,
+        end: req.body.end,
       })
 
       marker.save()
@@ -76,6 +77,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
+  if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
   marker.save()
     .then((savedMarker) => {
@@ -93,17 +95,19 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 500, count = 0, sort = 'name', order = 'asc', filter = '' } = req.query
-  const length = +end - +start
+  const { offset = 0, count = 500, sort = 'name', order = 'asc', filter = '' } = req.query
+  const length = +count
   const typeArray = req.query.types || false
   const wikiArray = req.query.wikis || false
   const format = req.query.format || false
   const year = +req.query.year || false
+  const end = +req.query.year || false
   const delta = +req.query.delta || 10
   const search = req.query.search || false
   const both = req.query.both || false
+  const start = offset
 
-  Marker.list({ start, length, sort, order, filter, delta, year, typeArray, wikiArray, search, both, format })
+  Marker.list({ start, length, sort, order, filter, delta, year, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {
