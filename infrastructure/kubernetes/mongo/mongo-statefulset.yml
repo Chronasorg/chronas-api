@@ -10,6 +10,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+#mongodb://mongo-0.mongo,mongo-1.mongo:27017/chronas-api\_?
+#https://kubernetes.io/blog/2017/01/running-mongodb-on-kubernetes-with-statefulsets/
+
 ---
 apiVersion: v1
 kind: Service
