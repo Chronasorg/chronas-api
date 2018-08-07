@@ -3,3 +3,4 @@ kubectl create clusterrolebinding tiller-binding --clusterrole=cluster-admin --s
 helm init --service-account tiller
 helm install --name my-release stable/cert-manager --set rbac.create=false
 kubectl create -f letsencryp-clusterissuer-prod.yaml
+kubectl create -f chronas-api-certificate.yml
