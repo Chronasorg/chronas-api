@@ -16,6 +16,11 @@ bash $PWD/kubernetes/cert-manager/installCertManager.sh
 echo 'provision mongodb'
 kubectl apply -f $PWD/kubernetes/mongo/mongo-statefulset.yml
 
+echo 'check if secretes exist'
+kubectl get secrets
+
+
+
 #az cosmosdb create \
 #        --name $cosmosDbName \
 #        --kind MongoDB \
