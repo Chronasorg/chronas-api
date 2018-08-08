@@ -99,7 +99,6 @@ function aggregateProvinces(req, res, next) {
         }
 
         Object.keys(currData).forEach((currProv) => {
-          // console.debug(currProv,currYear,aggregatedData[currProv],prevData[currProv])
           if (typeof aggregatedData[currProv] === 'undefined') return
           const currProvData = currData[currProv]
           if (typeof currProvData === 'undefined' || currProvData === null) return;
@@ -165,7 +164,7 @@ function aggregateProvinces(req, res, next) {
 
 function aggregateDimension(req, res, next) {
   const dimension = req.query.dimension || false
-  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) res.status(400).send('No valid dimension specified.')
+  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.')
 
   Metadata.findById((dimension === 'religionGeneral') ? 'religion' : dimension)
     .exec()

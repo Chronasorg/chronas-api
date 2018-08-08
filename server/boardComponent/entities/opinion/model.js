@@ -11,6 +11,10 @@ const opinionSchema = mongoose.Schema({
   user_id: String,
   user: { type: String, ref: 'User' },
   date: Date,
+  score: {
+    type: Number,
+    default: 0,
+  },
   content: Object,
 }, { usePushEach: true });
 
