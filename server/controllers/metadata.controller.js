@@ -336,9 +336,7 @@ function getLinked(req, res, next) {
             type: 'Feature'
           }))).concat(aeEntities)
 
-          console.debug(fullList)
           fullList.forEach((el) => {
-            console.debug(idTypeObj, el.properties.aeId || el.properties.w)
             if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
               resObj.map.push(el)
             }

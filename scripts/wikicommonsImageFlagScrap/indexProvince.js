@@ -14,19 +14,13 @@ fetch(`${properties.chronasApiHost}/metadata/province`)
     const rulValues = Object.keys(rulerMetadata.data)
 
     rulValues.forEach((rul) => {
-      console.debug( rulerMetadata.data[rul] )
       if (rulerMetadata.data[rul]) {
         rulList.push([rul, rul])
       }
     })
     rulList.push(['!done','!done'])
-
-
-    console.debug("!!! rulList.length " + rulList.length)
     rulList.reduce(
         (p, x) => p.then((_) => {
-
-          console.debug("done")
           return postRulPlus(x[0], x[1])
         }),
         Promise.resolve()
@@ -209,7 +203,6 @@ goOn = (rulAcc, imageArray, resolve, reject) => {
           const endUrl = thumbUrl.substr(52).lastIndexOf("/") + startUrl -1
           thumbUrl = thumbUrl.substring(startUrl, endUrl)
           originalMeta.data[rulAcc] = [originalMeta.data[rulAcc], thumbUrl]
-          console.debug(rulAcc + " -> " + originalMeta.data[rulAcc])
           resolve()
         })
         .catch((err) => {

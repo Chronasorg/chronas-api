@@ -46,7 +46,6 @@ const getDiscussion = (discussion_slug, discussion_id) => {
  */
 const createDiscussion = (discussion) => {
   return new Promise((resolve, reject) => {
-    console.debug("discussiondiscussiondiscussiondiscussion",discussion)
     const newDiscussion = new Discussion({
       forum_id: discussion.forumId,
       forum: discussion.forumId,

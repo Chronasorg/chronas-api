@@ -4,6 +4,7 @@ import config from "../../../../config/config";
 import expressJwt from 'express-jwt'
 
 const getAllOpinions = require('./controller').getAllOpinions
+const voteOpinion = require('./controller').voteOpinion
 const createOpinion = require('./controller').createOpinion
 const deleteOpinion = require('./controller').deleteOpinion
 
@@ -24,6 +25,19 @@ router.route('/newOpinion').post(
   // } else {
   //   res.send({ authenticated: false })
   // }
+})
+
+// vote an opinion
+router.route('/voteOpinion/:opinion_id').put(
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  (req, res) => {
+    // if (req.user) {
+    const voteDelta = +req.query.delta || 0
+    voteOpinion(req, res, req.params.opinion_id, ((voteDelta > -3 && voteDelta < 3) ? voteDelta : 0)).then(
+      (result) => { res.send({ voted: true }) },
+      (error) => { res.send({ voted: false }) }
+    )
+    // }
 })
 
   // remove an opinion

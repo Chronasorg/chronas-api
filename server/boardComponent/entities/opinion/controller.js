@@ -1,4 +1,6 @@
 // models
+import userCtrl from "../../../controllers/user.controller";
+
 const Opinion = require('./model');
 
 /**
@@ -67,9 +69,32 @@ const deleteOpinion = (opinion_id) => {
   });
 };
 
+const voteOpinion = (req, res, opinion_id, delta = 0) => {
+  return new Promise((resolve, reject) => {
+    const username = (req.auth || {}).username
+    Opinion
+      .findOne({ _id: opinion_id })
+      .exec()
+      .then((opinion) => {
+        if (username === opinion.user) {
+          reject('Cannot vote on own opinion.')
+        }
+        opinion.score += delta
+        opinion.save()
+          .then((savedOpinion) => {
+            if (username) userCtrl.changePoints(username, 'voted', 1)
+            resolve(savedOpinion)
+          })
+          .catch(e => reject(e))
+      })
+      .catch(e => reject(e))
+  });
+};
+
 module.exports = {
   getAllOpinions,
   createOpinion,
   updateOpinion,
+  voteOpinion,
   deleteOpinion,
 };

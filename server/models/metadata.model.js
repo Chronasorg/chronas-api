@@ -113,9 +113,6 @@ MetadataSchema.statics = {
 
       if (wiki) searchQuery.wiki = wiki
 
-
-      console.debug('subtypes', subtype, searchQuery)
-
       return this.find(searchQuery)
         .skip(+start)
         .limit(+end)

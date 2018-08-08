@@ -31,19 +31,13 @@ fetch(`${properties.chronasApiHost}/metadata/ruler`)
     const rulValues = Object.keys(rulerMetadata.data)
 
     rulValues.forEach((rul) => {
-      console.debug( rulerMetadata.data[rul][0] )
       if (rulerMetadata.data[rul]) {
         rulList.push([rul, rulerMetadata.data[rul][0]])
       }
     })
     rulList.push(['!done','!done'])
-
-
-    console.debug("!!! rulList.length " + rulList.length)
     rulList.reduce(
         (p, x) => p.then((_) => {
-
-          console.debug("done")
           return postRulPlus(x[0], x[1])
         }),
         Promise.resolve()
@@ -199,7 +193,6 @@ goOn = (rulAcc, imageArray, resolve, reject) => {
           thumbUrl = thumbUrl.substring(startUrl, endUrl)
 
           originalMeta.data[rulAcc][3] = thumbUrl
-          console.debug(rulAcc + " -> " + originalMeta.data[rulAcc][3])
           resolve()
         })
         .catch((err) => {

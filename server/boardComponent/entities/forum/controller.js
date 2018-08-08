@@ -45,8 +45,6 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
         if (qEntity) searchObj.qa_id = qEntity
         else searchObj.forum_id = forumFound._id
 
-        console.debug("searchObjsearchObj", searchObj)
-
         Discussion
         .find(searchObj)
         .sort(sortWith)
