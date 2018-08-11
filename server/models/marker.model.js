@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import httpStatus from 'http-status'
 import APIError from '../helpers/APIError'
 import Metadata from './metadata.model'
+import Area from "./area.model";
 
 const METAtypes = ['cities']
 /**
@@ -74,7 +75,7 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, both = false } = {}) {
+  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, includeMarkers = true, both = false } = {}) {
     if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
       const mongoSearchQuery = {}
@@ -101,10 +102,24 @@ MarkerSchema.statics = {
         ]
       }
 
-      return this.find(mongoSearchQuery)
-        .skip(+offset)
-        .limit(+length)
-        .exec()
+      if (!includeMarkers) {
+        mongoSearchQuery.type = { $in: [] }
+        delete mongoSearchQuery.$or
+      }
+
+      const optionalMarkerQuery = new Promise((resolve, reject) => {
+        if (includeMarkers) {
+          this.find(mongoSearchQuery)
+            .skip(+offset)
+            .limit(+length)
+            .exec()
+            .then((markers) => { resolve(markers) })
+        } else {
+          resolve([])
+        }
+      })
+
+      return optionalMarkerQuery
         .then((markers) => {
           const metaAreaAddition = []
           const optionalMetadata = new Promise((resolve, reject) => {
