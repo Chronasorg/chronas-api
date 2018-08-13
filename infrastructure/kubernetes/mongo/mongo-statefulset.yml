@@ -54,6 +54,7 @@ spec:
     metadata:
       labels:
         role: mongo
+        environment: test
     spec:
       terminationGracePeriodSeconds: 10
       containers:
@@ -63,6 +64,8 @@ spec:
             - mongod
             - "--replSet"
             - rs0
+            - "--bind_ip"
+            - 0.0.0.0            
             - "--smallfiles"
             - "--noprealloc"
           ports:
