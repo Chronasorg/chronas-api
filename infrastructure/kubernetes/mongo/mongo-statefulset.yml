@@ -11,8 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#mongodb://mongo-0.mongo,mongo-1.mongo:27017/chronas-api\_?
+#mongodb://mongo-0.mongo,mongo-1.mongo:27017/chronas-api_?
 #https://kubernetes.io/blog/2017/01/running-mongodb-on-kubernetes-with-statefulsets/
+
+
 
 
 ---
