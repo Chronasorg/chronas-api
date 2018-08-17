@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2a422d2c-c350-c2cc-e2c0-8d95aae227cd",
+		"_postman_id": "1eec4ad2-522b-44ab-be50-c4547ca9fe63",
 		"name": "chronas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,16 +11,31 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "fcb063c4-5f4e-4729-9392-5c67a3298128",
+						"id": "7685d0e1-d10a-433e-8540-1305a00d2a00",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody);",
-							"pm.globals.set(\"token\", data.token);"
+							"pm.globals.set(\"token\", data.token);",
+							"",
+							"",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response should contain token and username and should not be empty\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.token).to.not.be.empty;",
+							"    pm.expect(jsonData.username).to.not.be.empty;",
+							"});"
 						]
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [
 					{
@@ -40,13 +55,11 @@
 						{
 							"key": "password",
 							"value": "postman123",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "email",
 							"value": "postman@aui.de",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -81,13 +94,11 @@
 						{
 							"key": "email",
 							"value": "aasdffff@web.de",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "password",
 							"value": "asdf",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -107,7 +118,29 @@
 			"response": []
 		},
 		{
-			"name": "/auth/login/twitter",
+			"name": "/metadata",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "64f7b683-4ef4-4943-b898-120824e08c4b",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('data');",
+							"    pm.expect(jsonData[0]).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -123,6 +156,90 @@
 				"header": [
 					{
 						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "metadata-post",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b9572bf1-32d8-4bc6-b013-81eaa51777d7",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should tell that this id already exist\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.stack).to.have.string('This id already exists');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"_id\":\"testDataId\",\n\t\"data\":\"testData\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/auth/login/twitter",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
 						"value": "application/x-www-form-urlencoded"
 					}
 				],
@@ -132,13 +249,11 @@
 						{
 							"key": "email",
 							"value": "aasdfffff@web.de",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "password",
 							"value": "asdf",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -160,16 +275,23 @@
 		},
 		{
 			"name": "/auth/login/facebook",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a5e2ddfd-e39c-4eb7-99f0-59fbaa82df42",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						]
+					}
+				}
+			],
 			"request": {
 				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
+					"type": "noauth"
 				},
 				"method": "GET",
 				"header": [
@@ -184,13 +306,11 @@
 						{
 							"key": "email",
 							"value": "aasdfffff@web.de",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "password",
 							"value": "asdf",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -236,13 +356,11 @@
 						{
 							"key": "email",
 							"value": "aasdfffff@web.de",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "password",
 							"value": "asdf",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -288,13 +406,11 @@
 						{
 							"key": "email",
 							"value": "aasdfffff@web.de",
-							"description": "",
 							"type": "text"
 						},
 						{
 							"key": "password",
 							"value": "asdf",
-							"description": "",
 							"type": "text"
 						}
 					]
@@ -309,82 +425,6 @@
 						"auth",
 						"login",
 						"google"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/metadata",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/metadata/",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"metadata",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "metadata-post",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"_id\":\"aui555121\",\n\t\"data\":\"auisData55311\"\n}"
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/metadata/",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"metadata",
-						""
 					]
 				}
 			},
