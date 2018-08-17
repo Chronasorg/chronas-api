@@ -211,8 +211,26 @@ function updateLink(addLink) {
     ]
 
     if (addLink) {
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
-      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
+        newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
+      } else if (type2 === 'b') {
+        newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => {
+          if (el[0] === linkedItemKey2) {
+            el[1] = 'b'
+          }
+          return el
+        })
+      }
+      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) {
+        newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
+      }  else if (type1 === 'b') {
+        newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => {
+          if (el[0] === linkedItemKey1) {
+            el[1] = 'b'
+          }
+          return el
+        })
+      }
     }
     else {
       newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el[0] !== linkedItemKey2)
