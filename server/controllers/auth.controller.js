@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
 import Moniker from 'moniker'
 import APIError from '../helpers/APIError'
-import config from '../../config/config'
+import { config } from '../../config/config'
 import User from '../models/user.model'
 import userCtrl from '../controllers/user.controller'
 

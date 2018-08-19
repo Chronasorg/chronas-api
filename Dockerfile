@@ -11,7 +11,7 @@ WORKDIR /app
 # if there are changes in package.json
 ADD dist/package.json /app/
 
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017

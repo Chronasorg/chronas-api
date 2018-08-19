@@ -2,6 +2,10 @@ import Promise from 'bluebird'
 import mongoose from 'mongoose'
 import httpStatus from 'http-status'
 import APIError from '../helpers/APIError'
+import { cache } from '../../config/config'
+
+// const MAXCACHEDIMAGES = 2
+const CACHETTL = 1000 * 60 * 60 * 24 * 7 // 1 week
 
 /**
  * Metadata Schema
@@ -83,12 +87,29 @@ MetadataSchema.statics = {
    */
   list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false } = {}) {
     if (fList) {
+      const cachedInit = cache.get('init')
+      if (cachedInit) {
+        console.debug('returning saved')
+        return new Promise((resolve) => { resolve(cachedInit) })
+      }
+
       const resourceArray = fList.split(',')
-      return this.find({
-        _id: { $in: resourceArray } })
+      const findObject = {
+        _id: { $in: resourceArray }
+      }
+
+      if (type) {
+        findObject.type = type
+      }
+      if (subtype) {
+        findObject.type = subtype
+      }
+
+      return this.find(findObject)
         .exec()
         .then(metadata => metadata.reduce((obj, item) => {
           obj[item._id] = item.data
+          cache.put('init', obj, CACHETTL)
           return obj
         }, {}))
     }

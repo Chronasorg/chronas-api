@@ -1,7 +1,7 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore'
 import Area from '../models/area.model'
 import Metadata from '../models/metadata.model'
-import config from "../../config/config";
+import { config } from "../../config/config";
 import httpStatus from "http-status";
 
 const dimAccessor = {

@@ -9,7 +9,7 @@ import areaCtrl from './area.controller'
 import userCtrl from './user.controller'
 import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
-import config from "../../config/config";
+import {cache, config} from "../../config/config";
 import httpStatus from "http-status";
 
 const debug = require('debug')('chronas-api:index')
@@ -36,6 +36,14 @@ function load(req, res, next, id) {
       } else {
         resourceCollection[resource].model.findById(entityId)
           .then((entity) => {
+            if (resource === "metadata" && initItemsAndLinksToRefresh.includes(entityId)) {
+              if (id === 'links') {
+                cache.del('links')
+              } else {
+                cache.del('init')
+              }
+            }
+
             req.entity = entity // eslint-disable-line no-param-reassign
             return next()
           })
@@ -49,26 +57,6 @@ function load(req, res, next, id) {
     })
     .catch(e => next(e))
 }
-
-// function loadEntity(req, rels, next) {
-//   const resource = req.body.resource
-//   if (typeof resource !== 'undefined') {
-//     let entityId
-//     try {
-//       entityId = req.body.entityId
-//     } catch (err) {
-//       next()
-//     }
-//     resourceCollection[resource].model.get(entityId)
-//       .then((entity) => {
-//         req.entity = entity // eslint-disable-line no-param-reassign
-//         return next()
-//       })
-//       .catch(e => next())
-//   } else {
-//     next()
-//   }
-// }
 
 
 /**
@@ -255,6 +243,10 @@ function update(req, res, next) {
   const resource = revision.resource
   const username = req.auth.username
   const usernameAuthor = revision.user
+
+  if (resource === "metadata") {
+
+  }
 
   userCtrl.changePoints(username, "reverted", 1)
   switch (revision.type) {

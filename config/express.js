@@ -14,16 +14,16 @@ import { Strategy } from 'passport-twitter'
 
 import winstonInstance from './winston'
 import routes from '../server/routes/index.route'
-import config from './config'
+import { config } from './config'
 import APIError from '../server/helpers/APIError'
 
 const app = express()
 
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
-const swaggerDocument = YAML.load('./swagger.yaml');
- 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const swaggerUi = require('swagger-ui-express')
+const YAML = require('yamljs')
+const swaggerDocument = YAML.load('./swagger.yaml')
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 const appInsights = require('applicationinsights')
 appInsights.setup()
@@ -34,11 +34,7 @@ appInsights.setup()
     .setAutoCollectDependencies(true)
     .setAutoCollectConsole(true)
     .setUseDiskRetryCaching(true)
-    .start();
-    
-
-
-
+    .start()
 
 if (config.env === 'development') {
   app.use(logger('dev'))
@@ -106,7 +102,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 
-// enable detailed API logging in dev env
+// // enable detailed API logging in dev env
 if (config.env === 'development') {
   expressWinston.requestWhitelist.push('body')
   expressWinston.responseWhitelist.push('body')
@@ -151,7 +147,7 @@ if (config.env !== 'test') {
 
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  appInsights.defaultClient.trackException({exception: err})
+  // appInsights.defaultClient.trackException({exception: err})
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' ? err.stack : {}

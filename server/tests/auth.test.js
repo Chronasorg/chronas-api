@@ -3,7 +3,7 @@
 // import jwt from 'jsonwebtoken'
 // import chai, { expect } from 'chai'
 // import app from '../../index'
-// import config from '../../config/config'
+// import { config } from '../../config/config'
 //
 // chai.config.includeStack = true
 //
