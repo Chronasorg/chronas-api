@@ -1,7 +1,7 @@
 import passport from 'passport'
 import { OAuth2Strategy } from 'passport-google-oauth'
 import jwt from 'jsonwebtoken'
-import config from '../../config/config'
+import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 
 const credentials = {

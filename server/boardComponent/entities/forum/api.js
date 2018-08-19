@@ -1,6 +1,6 @@
 // forum controllers
 import express from 'express'
-import config from "../../../../config/config";
+import { config } from "../../../../config/config";
 import expressJwt from 'express-jwt'
 
 const getAllForums = require('./controller').getAllForums

@@ -1,7 +1,7 @@
 import User from '../models/user.model'
 import logger from '../../config/winston'
 import APIError from '../helpers/APIError'
-import config from '../../config/config'
+import { config } from '../../config/config'
 import jwt from 'jsonwebtoken'
 import httpStatus from "http-status";
 

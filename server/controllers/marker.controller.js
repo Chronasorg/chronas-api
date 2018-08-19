@@ -1,6 +1,6 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import config from "../../config/config";
+import { config } from "../../config/config";
 import httpStatus from "http-status";
 
 /**

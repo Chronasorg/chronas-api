@@ -4,8 +4,9 @@ import { APICustomResponse, APIError } from '../../server/helpers/APIError'
 import logger from '../../config/winston'
 import userCtrl from './user.controller'
 import revisionCtrl from './revision.controller'
-import config from "../../config/config";
+import { config, cache, initItemsAndLinksToRefresh } from "../../config/config";
 import httpStatus from "http-status";
+import Promise from "bluebird";
 
 const linkedTypeAccessor = {
   "m": 0,
@@ -42,6 +43,22 @@ const iconAccByAEtype = {
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
+  if (req.method === "PUT" && initItemsAndLinksToRefresh.includes(id)) {
+    if (id === 'links') {
+      cache.del('links')
+    } else {
+      cache.del('init')
+    }
+  }
+
+  if (req.method === "GET" && id === "links") {
+    const cachedLinks = cache.get('links')
+    if (cachedLinks) {
+      req.entity = cachedLinks
+      return next()
+    }
+  }
+
   Metadata.get(id, req.method)
     .then((metadata) => {
       req.entity = metadata // eslint-disable-line no-param-reassign
@@ -95,14 +112,6 @@ function create(req, res, next) {
       }
     })
     .catch(e => next(e))
-}
-
-function addConnection(req, res, next) {
-
-}
-
-function removeConnection(req, res, next) {
-
 }
 
 function createNodeOne(metadata, req, res, next) {

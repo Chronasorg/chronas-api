@@ -1,4 +1,5 @@
 import Joi from 'joi'
+export const cache = require('memory-cache')
 import logger from './winston'
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
@@ -31,7 +32,9 @@ if (error) {
   throw new Error(`Config validation error: ${error.message}`)
 }
 
-const config = {
+export const initItemsAndLinksToRefresh = ['provinces', 'links', 'ruler', 'culture', 'religion', 'capital', 'province', 'religionGeneral']
+
+export const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
   mongooseDebug: envVars.MONGOOSE_DEBUG,
@@ -41,5 +44,3 @@ const config = {
     port: envVars.MONGO_PORT
   }
 }
-
-export default config
