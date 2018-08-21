@@ -107,16 +107,17 @@ MetadataSchema.statics = {
 
       return this.find(findObject)
         .exec()
-        .then(metadata => metadata.reduce((obj, item) => {
-          obj[item._id] = item.data
-          cache.put('init', obj, CACHETTL)
-          return obj
-        }, {}))
+        .then(metadata => {
+          const completeRes = metadata.reduce((obj, item) => {
+            obj[item._id] = item.data
+            return obj
+          }, {})
+          cache.put('init', completeRes, CACHETTL)
+          return completeRes
+        })
     }
     else if (type || subtype || year || wiki || search) {
-
       const subtypes = (subtype) ? subtype.split(',') : ''
-
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
