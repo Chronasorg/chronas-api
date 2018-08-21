@@ -30,6 +30,7 @@ function login(req, res, next) {
           }
           const token = jwt.sign({
             id: user._id,
+            avatar: user.avatar,
             username: user.username,
             lastUpdated: user.lastUpdated,
             privilege: user.privilege ? user.privilege : 1
