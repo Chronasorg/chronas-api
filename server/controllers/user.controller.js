@@ -75,6 +75,7 @@ function create(req, res, next) {
           } else if (!req.body.thirdParty) {
             const token = jwt.sign({
               id: savedUser._id,
+              avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
               privilege: savedUser.privilege ? savedUser.privilege : 1
