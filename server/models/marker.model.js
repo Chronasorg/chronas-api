@@ -21,6 +21,9 @@ const MarkerSchema = new mongoose.Schema({
   name: {
     type: String,
   },
+  capital: {
+    type: mongoose.Schema.Types.Mixed,
+  },
   coo: {
     type: Array,
   },
