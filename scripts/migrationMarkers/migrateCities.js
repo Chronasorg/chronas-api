@@ -3,6 +3,27 @@ const fetch = require('node-fetch')
 const markerId = '30'
 const typeId = 'cities'
 
+// http://chronas.org/en/app/datalayer/301082/
+
+// no dots in fields! - dot -> \u002E
+
+const allMarkers = [//  21 for bc, (or ++)
+  ["events", 20, undefined /* b,si */], // battles and sieges (properties._storage_options.iconUrl === (/static/i/b0.png || /static/i/b1.png || /static/i/b2.png)  ---  (properties._storage_options.iconUrl === (/static/i/s0.png || /static/i/s1.png || /static/i/s2.png)  --- if  properties.age === 0
+  ["cities", 30, 'c'], // noage
+  ["castles", 40, 'ca'],
+  ["art", 50, 'ar'], // artefact
+  // ["areaInfo", 60, 'ai'],
+  // ["unc", 70, 'ai'],
+  ["mil", 80, 'm'],
+  ["pol", 90, 'p'],
+  ["sci", 12, 's'],
+  ["rel", 14, 'r'],
+  ["uncP", 16, 'op'],
+  ["exp", 18, 'e'],
+  ["arti", 22, 'a'],
+  ["ath", 24, 'at'],
+]
+
 
 const properties = {
   oldChronasApiHost: 'http://chronas.org/en/app/datalayer/',
