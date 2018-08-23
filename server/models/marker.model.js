@@ -5,7 +5,7 @@ import APIError from '../helpers/APIError'
 import Metadata from './metadata.model'
 import Area from "./area.model";
 
-const METAtypes = ['cities']
+const METAtypes = ['c']
 /**
  * Marker Schema
  */
