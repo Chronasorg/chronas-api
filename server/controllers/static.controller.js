@@ -1,4 +1,3 @@
-import 'babel-polyfill'
 import { pick, keys, isEqual, extendOwn } from 'underscore'
 const puppeteer = require('puppeteer')
 import { cache } from '../../config/config'

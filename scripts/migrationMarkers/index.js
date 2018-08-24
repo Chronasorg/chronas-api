@@ -14,14 +14,14 @@ const allMarkers = [//  21 for bc, (or ++)
   ["art", 50, 'ar'], // artefact
   // ["areaInfo", 60, 'p', 'ai'],
   // ["unc", 70, 'p', 'ai'],
-  ["mil", 80, 'p', 'm'],
-  ["pol", 90, 'p', 'p'],
-  ["sci", 12, 'p', 's'],
-  ["rel", 14, 'p', 'r'],
-  ["uncP", 16, 'p', 'op'],
-  ["exp", 18, 'p', 'e'],
-  ["arti", 22, 'p', 'a'],
-  ["ath", 24, 'p', 'at'],
+  ["mil", 80, 'm'],
+  ["pol", 90, 'p'],
+  ["sci", 12, 's'],
+  ["rel", 14, 'r'],
+  ["uncP", 16, 'op'],
+  ["exp", 18, 'e'],
+  ["arti", 22, 'a'],
+  ["ath", 24, 'at'],
 ]
 
 const added = []
@@ -32,9 +32,9 @@ const properties = {
 
 const yearList = []
 
-for (let j = 7; j < allMarkers.length; j++) {
+for (let j = 3; j < allMarkers.length; j++) {
   for (let i = 0; i <= 2000; i++) {
-    if (j === 7 && i === 0) i = 1950
+    // if (j === 7 && i === 0) i = 1950
     console.debug(j + "---" + i)
     yearList.push([i.toString(), j])
   }
@@ -102,12 +102,12 @@ queryYear = (yearId, markerIndex) => new Promise((resolve, reject) => {
                   name: feature.properties.name,
                   coo: (feature.geometry.coordinates || []).map(el => Math.round(el * 100) / 100),
                   type: allMarkers[markerIndex][2],
-                  subtype: allMarkers[markerIndex][3],
+                  // subtype: allMarkers[markerIndex][3],
                   year,
                   wiki: wikiURL,
                 }
 
-                if (!allMarkers[markerIndex][3]) delete bodyToPost.subtype
+                // if (!allMarkers[markerIndex][3]) delete bodyToPost.subtype
 
                 return fetch(`${properties.chronasApiHost}/markers`, {
                   method: 'POST',
