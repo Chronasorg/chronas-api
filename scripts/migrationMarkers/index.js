@@ -32,10 +32,10 @@ const properties = {
 
 const yearList = []
 
-for (let j = 3; j < allMarkers.length; j++) {
+for (let j = 0; j < allMarkers.length; j++) {
   for (let i = 0; i <= 2000; i++) {
     // if (j === 7 && i === 0) i = 1950
-    console.debug(j + "---" + i)
+    // console.debug(j + "---" + i)
     yearList.push([i.toString(), j])
   }
 }
