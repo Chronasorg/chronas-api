@@ -145,9 +145,20 @@ if (config.env !== 'test') {
 }
 
 
+function removeStackTraces ( envelope, context ) {
+ 
+  console.log(envelope);
+  console.log(context);
+  
+  return true;
+}
+
+appInsights.defaultClient.addTelemetryProcessor(removeStackTraces);
+
+
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  // appInsights.defaultClient.trackException({exception: err})
+  appInsights.defaultClient.trackException({exception: err})
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' ? err.stack : {}
