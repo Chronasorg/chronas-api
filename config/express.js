@@ -102,6 +102,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 
+
 // // enable detailed API logging in dev env
 if (config.env === 'development') {
   expressWinston.requestWhitelist.push('body')
@@ -147,11 +148,15 @@ if (config.env !== 'test') {
 
 function removeStackTraces ( envelope, context ) {
  
-  console.log(envelope);
-  console.log(context);
-  
+  var data = envelope.data.baseData;  
+  if (data.url && data.url.includes("health") )
+  {
+      return false;
+  }
+
   return true;
 }
+
 
 appInsights.defaultClient.addTelemetryProcessor(removeStackTraces);
 
