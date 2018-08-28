@@ -18,7 +18,7 @@ spec:
           httpGet:
             path: /v1/health
             port: 80
-          initialDelaySeconds: 15
+          initialDelaySeconds: 35
           timeoutSeconds: 1
           periodSeconds: 15
         readinessProbe:
