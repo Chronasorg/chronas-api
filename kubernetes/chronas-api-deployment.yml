@@ -14,6 +14,20 @@ spec:
         image: aumanjoa/chronas-api:214
         ports:
         - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /v1/health
+            port: 80
+          initialDelaySeconds: 35
+          timeoutSeconds: 1
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /v1/health
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 15  
         env:
         - name: MONGO_HOST
           valueFrom:
