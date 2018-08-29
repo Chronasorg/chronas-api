@@ -10,9 +10,9 @@
     "build": "gulp",
     "lint": "esw *.js server config --color --fix",
     "lint:watch": "npm run lint -- --watch",
-    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha --require server/tests/helpers.js --ui bdd --reporter spec --colors --compilers js:babel-core/register server/tests --recursive ",
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha --require server/tests/helpers.js --reporter spec --colors --compilers js:babel-core/register server/tests --recursive ",
     "test:watch": "npm test -- --watch",
-    "test:coverage": "cross-env NODE_ENV=test ./node_modules/.bin/istanbul cover _mocha -- --ui bdd --reporter spec --colors --compilers js:babel-core/register server/tests --recursive",
+    "test:coverage": "cross-env NODE_ENV=test ./node_modules/.bin/istanbul cover _mocha -- --require server/tests/helpers.js --reporter spec --colors --compilers js:babel-core/register server/tests --recursive",
     "test:check-coverage": "npm test:coverage && istanbul check-coverage",
     "report-coverage": "coveralls < ./coverage/lcov.info"
   },
