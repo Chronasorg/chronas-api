@@ -6,20 +6,16 @@ import mongoUnit from 'mongo-unit'
 
 // https://www.toptal.com/nodejs/integration-and-e2e-tests-nodejs-mongodb
 
-
-
 chai.config.includeStack = true
 
 describe('## Misc', () => {
 
   const testMongoUrl = process.env.MONGO_HOST
-  const testData = require('./fixtures/testData.json')
+  const testData = require('./fixtures/testData.json')  
 
-  beforeEach(() => mongoUnit.initDb(testMongoUrl, testData))
-  afterEach(() => mongoUnit.drop())
- 
-  
-  describe('# GET /v1/health', () => {
+  before(() => mongoUnit.initDb(testMongoUrl, testData))
+  after(() => mongoUnit.drop())
+
     it('should return OK', (done) => {
       request(app)
         .get('/v1/health')
@@ -30,9 +26,7 @@ describe('## Misc', () => {
         })
         .catch(done)
     })
-  })
 
-  describe('# GET /v1/404', () => {
     it('should return 404 status', (done) => {
       request(app)
         .get('/v1/404')
@@ -43,9 +37,6 @@ describe('## Misc', () => {
         })
         .catch(done)
     })
-  })
-
-  describe('# Error Handling', () => {
 
     it('should handle 404', (done) => {
       request(app)
@@ -71,5 +62,4 @@ describe('## Misc', () => {
         })
         .catch(done)
     })
-  })
 })
