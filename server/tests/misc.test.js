@@ -3,6 +3,17 @@ import httpStatus from 'http-status'
 import chai, { expect } from 'chai'
 import app from '../../index'
 
+const prepare = require('mocha-prepare')
+const mongoUnit = require('mongo-unit')
+
+
+prepare(done => mongoUnit.start()
+ .then(testMongoUrl => {
+   process.env.MONGO_HOST = testMongoUrl
+   done()
+ }))
+
+
 chai.config.includeStack = true
 
 describe('## Misc', () => {
@@ -33,6 +44,16 @@ describe('## Misc', () => {
   })
 
   describe('# Error Handling', () => {
+    //const mongoUnit = require('../../index')
+    const testMongoUrl = process.env.MONGO_HOST
+    const testData = require('./fixtures/testData.json')
+    console.log(testMongoUrl)
+    console.log(testData)
+
+    beforeEach(() => mongoUnit.initDb(testMongoUrl, testData))
+    afterEach(() => mongoUnit.drop())
+ 
+
     it('should handle 404', (done) => {
       request(app)
         .get('/v1/users/56z787zzz67fc')
