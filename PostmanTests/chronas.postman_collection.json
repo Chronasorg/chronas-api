@@ -262,6 +262,195 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "/users - should create a User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "314cf22e-909f-4a12-b418-bb73d642c03d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/users{id}- should update a User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7b1ec122-bb27-4053-816d-21b6c9ba024b",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/testUser",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"testUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/users{id}- should return a saved user Copy Copy Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e26856bb-4a1f-41b0-8c05-def1952a7e66",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/testUser",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"testUser"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
