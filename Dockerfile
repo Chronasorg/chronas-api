@@ -12,10 +12,10 @@ ENV PORT=80
 # only copy package.json initially so that `RUN npm start` layer is recreated only
 # if there are changes in package.json
 ADD package.json .
-RUN npm install
+RUN npm install --silent
 # copy all file from current dir to /app in container
 COPY . .
-RUN npm run build
+RUN npm run build --silent
 
 
 # final stage for running the app
