@@ -1,5 +1,5 @@
 # take default image of node boron i.e  node 6.x
-FROM node:9
+FROM node:10
 
 # create app directory in container
 RUN mkdir -p /app
