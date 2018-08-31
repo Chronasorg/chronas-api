@@ -3,6 +3,7 @@ import httpStatus from 'http-status'
 import chai, { expect } from 'chai'
 import app from '../../..'
 import mongoUnit from 'mongo-unit'
+import { config } from '../../../config/config'
 import jwt from 'jsonwebtoken'
 
 chai.config.includeStack = true
@@ -21,8 +22,9 @@ describe('## User APIs', () => {
   }
 
   let user = {
-    username: 'KK123',
-    privilege: 10
+    _id : "test@test.de",
+    username: 'doubtful-throne',
+    privilege: 1
   }
 
   let jwtToken
@@ -35,12 +37,8 @@ describe('## User APIs', () => {
         .expect(httpStatus.OK)
         .then((res) => {
           expect(res.body).to.have.property('token')
-          jwt.verify(res.body.token, config.jwtSecret, (err, decoded) => {
-            expect(err).to.not.be.ok // eslint-disable-line no-unused-expressions
-            expect(decoded.username).to.equal(validUserCredentials.username)
-            jwtToken = `Bearer ${res.body.token}`
-            done()
-          })
+          jwtToken = `Bearer ${res.body.token}`
+          done()
         })
         .catch(done)
     })
@@ -113,4 +111,63 @@ describe('## User APIs', () => {
       })
       .catch(done)
   })
+
+  describe('# GET /v1/users/:userId', () => {
+    it('should get user details', (done) => {
+      request(app)
+        .get(`/v1/users/${user._id}`)
+        .set('Authorization', jwtToken)
+        .expect(httpStatus.OK)
+        .then((res) => {
+          expect(res.body.username).to.equal(user.username)
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
+        })
+        .catch(done)
+    })  
+    
+    it('should report error with message - Not found, when user does not exists', (done) => {
+      request(app)
+        .get('/v1/users/56c787ccc67fc16ccc1a5e92')
+        .set('Authorization', jwtToken)
+        .expect(httpStatus.NOT_FOUND)
+        .then((res) => {
+          expect(res.body.message).to.equal('Not Found')
+          done()
+        })
+        .catch(done)
+    })
+  })    
+
+  describe('# PUT /v1/users/:userId', () => {
+    it('should update user details', (done) => {
+      user.username = 'KK'
+      request(app)
+        .put(`/v1/users/${user._id}`)
+        .set('Authorization', jwtToken)
+        .send(user)
+        .expect(httpStatus.OK)
+        .then((res) => {
+          expect(res.body.username).to.equal('KK')
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
+        })
+        .catch(done)
+    })
+  })
+
+  describe('# DELETE /v1/users/', () => {
+    it('should delete user', (done) => {
+      request(app)
+        .delete(`/v1/users/${user._id}`)
+        .set('Authorization', jwtToken)
+        .expect(200)
+        .then((res) => {
+          expect(res.body.username).to.equal('KK')
+          expect(res.body.privilege).to.equal(user.privilege)
+          done()
+        })
+        .catch(done)
+    })
+  })  
 })
