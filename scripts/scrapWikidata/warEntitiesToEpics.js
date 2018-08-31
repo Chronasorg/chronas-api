@@ -76,7 +76,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
           ]
         },
         "wiki": enWiki.replace(/ /g, "_"),
-        "subtype": "war",
+        "subtype": "w",
         "year": pId_start,
         "score": 0,
         "linked": [
@@ -95,7 +95,7 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
             .then(response => response.json())
             .then((resValue) => {
               epicObjectToPost.subtype = (((resValue.entities[pId_instanceOf] || {}).labels || {}).en || {}).value
-              if (epicObjectToPost.subtype !== "battle" && epicObjectToPost.subtype !== "siege" && epicObjectToPost.subtype !== "war") epicObjectToPost.subtype = "war"
+              if (epicObjectToPost.subtype !== "battle" && epicObjectToPost.subtype !== "siege" && epicObjectToPost.subtype !== "w") epicObjectToPost.subtype = "w"
               resolve()
             })
             .catch((err) => {
@@ -120,14 +120,14 @@ postRulPlus = (qElId) => new Promise((resolve, reject) => {
       )
 
       if (pId_locationCoordinates) {
-        epicObjectToPost.data.location = pId_locationCoordinates
+        epicObjectToPost.coo = pId_locationCoordinates
       } else if (pId_location) {
         areaPromises.push(
           new Promise((resolve, reject) => {
             fetch("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + pId_location + "&format=json")
               .then(response => response.json())
               .then((resValue) => {
-                epicObjectToPost.data.location = (((resValue.entities[pId_location] || {}).labels || {}).en || {}).value
+                epicObjectToPost.coo = (((resValue.entities[pId_location] || {}).labels || {}).en || {}).value
                 resolve()
               })
               .catch((err) => {
