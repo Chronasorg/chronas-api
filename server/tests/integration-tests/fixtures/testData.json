@@ -1,9 +1,24 @@
 {
-    "tasks": [
-    {
-      "name": "test",
-      "started": "2017-08-28T16:07:38.268Z",
-      "completed": false
+    "users": [
+      {
+        "_id" : "test@test.de",
+        "username" : "doubtful-throne",
+        "name" : "doubtful-throne",
+        "password" : "$2b$10$fQArL3PolKBwaZAw6mp33.YMOuDb7PyIDx3Adq2X2OeqX5dGqgM9O",
+        "email" : "test@test.de",
+        "count_mistakes" : 0,
+        "count_created" : 0,
+        "count_reverted" : 0,
+        "count_updated" : 0,
+        "count_deleted" : 0,
+        "count_voted" : 0,
+        "count_linked" : 0,
+        "lastUpdated" : "2018-08-31T11:19:00.867Z",
+        "createdAt" : "2018-08-31T11:19:00.867Z",
+        "privilege" : 1,
+        "authType" : "chronas",
+        "loginCount" : 1,
+        "karma" : 0
     }
   ]
  }
