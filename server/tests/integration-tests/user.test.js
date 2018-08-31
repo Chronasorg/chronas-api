@@ -3,8 +3,6 @@ import httpStatus from 'http-status'
 import chai, { expect } from 'chai'
 import app from '../../..'
 import mongoUnit from 'mongo-unit'
-import { config } from '../../../config/config'
-import jwt from 'jsonwebtoken'
 
 chai.config.includeStack = true
 
