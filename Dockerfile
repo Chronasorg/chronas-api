@@ -1,29 +1,32 @@
-# take default image of node boron i.e  node 6.x
-FROM node:10
-
-# create app directory in container
-RUN mkdir -p /app
+# initial stage for building the project
+FROM node:10 as builder
 
 # set /app directory as default working directory
 WORKDIR /app
 
-# only copy package.json initially so that `RUN npm start` layer is recreated only
-# if there are changes in package.json
-ADD dist/package.json /app/
-
 ENV NODE_ENV=development
-
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
 
+# only copy package.json initially so that `RUN npm start` layer is recreated only
+# if there are changes in package.json
+ADD package.json .
+RUN npm install
+# copy all file from current dir to /app in container
+COPY . .
+RUN npm run build
+
+WORKDIR /app/dist
 RUN npm install --production --silent
 
-# copy all file from current dir to /app in container
-COPY dist /app/
+# final stage for running the app
+FROM node:10-alpine
+# set /app directory as default working directory
+WORKDIR /app
 
-# expose port 4040
+COPY --from=builder /app/dist /app/
+# expose port 80
 EXPOSE 80
-
 # cmd to start service
 CMD [ "node", "index.js" ]
