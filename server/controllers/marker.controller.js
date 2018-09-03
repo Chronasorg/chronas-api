@@ -78,6 +78,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
+  if (typeof req.body.wiki !== 'undefined') marker.wiki = req.body.wiki
 
   marker.save()
     .then((savedMarker) => {
