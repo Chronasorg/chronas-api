@@ -1,24 +1,48 @@
 {
-    "users": [
-      {
-        "_id" : "test@test.de",
-        "username" : "doubtful-throne",
-        "name" : "doubtful-throne",
-        "password" : "$2b$10$fQArL3PolKBwaZAw6mp33.YMOuDb7PyIDx3Adq2X2OeqX5dGqgM9O",
-        "email" : "test@test.de",
-        "count_mistakes" : 0,
-        "count_created" : 0,
-        "count_reverted" : 0,
-        "count_updated" : 0,
-        "count_deleted" : 0,
-        "count_voted" : 0,
-        "count_linked" : 0,
-        "lastUpdated" : "2018-08-31T11:19:00.867Z",
-        "createdAt" : "2018-08-31T11:19:00.867Z",
-        "privilege" : 1,
-        "authType" : "chronas",
-        "loginCount" : 1,
-        "karma" : 0
+  "users": [
+    {
+      "_id": "test@test.de",
+      "username": "doubtful-throne",
+      "name": "doubtful-throne",
+      "password": "$2b$10$fQArL3PolKBwaZAw6mp33.YMOuDb7PyIDx3Adq2X2OeqX5dGqgM9O",
+      "email": "test@test.de",
+      "count_mistakes": 0,
+      "count_created": 0,
+      "count_reverted": 0,
+      "count_updated": 0,
+      "count_deleted": 0,
+      "count_voted": 0,
+      "count_linked": 0,
+      "lastUpdated": "2018-08-31T11:19:00.867Z",
+      "createdAt": "2018-08-31T11:19:00.867Z",
+      "privilege": 1,
+      "authType": "chronas",
+      "loginCount": 1,
+      "karma": 0
+    }
+  ],
+  "markers": [
+    {
+      "_id": "Gaius Caesar",
+      "name": "Gaius Caesar",
+      "wiki": "Gaius%20Caesar",
+      "type": "politician",
+      "year": -20,
+      "coo": [
+        12.5,
+        41.9
+      ]
+    },
+    {
+      "_id": "Mamurra",
+      "name": "Mamurra",
+      "wiki": "Mamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
     }
   ]
- }
+}
