@@ -43,6 +43,17 @@
         13.616666666667,
         41.266666666667
       ]
-    }
+    },
+    {
+      "_id": "deleteMamurra",
+      "name": "deleteMamurra",
+      "wiki": "deleteMamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
+    }    
   ]
 }

@@ -129,7 +129,7 @@ describe('## Marker APIs', () => {
       })
 
       it('should update a marker', (done) => {
-        updateMarker.wiki = 'aui'
+        updateMarker.type = 'aui'
         console.log(updateMarker)
         request(app)
           .put(`/v1/markers/${updateMarker._id}`)
@@ -139,11 +139,41 @@ describe('## Marker APIs', () => {
           .then((res) => {
             console.log(res.body)
             expect(res.body._id).to.equal(updateMarker._id)
-            expect(res.body.wiki).to.equal('aui')
+            expect(res.body.type).to.equal('aui')
+            done()
+          })
+          .catch(done)
+      })
+    })
+
+    describe('# delete /v1/markers', () => {
+
+      it('should fail to delete markers because of wrong token', (done) => {
+        request(app)
+          .delete('/v1/markers/Mamurra')
+          .set('Authorization', 'Bearer inValidToken')
+          .expect(httpStatus.UNAUTHORIZED)
+          .then((res) => {
+            expect(res.body.message).to.equal('Unauthorized')
+            done()
+          })
+          .catch(done)
+      })
+
+      it('should delete a marker', (done) => {
+        request(app)
+          .delete('/v1/markers/deleteMamurra')
+          .set('Authorization', jwtToken)
+          .expect(httpStatus.OK)
+          .then((res) => {
+            expect(res.body._id).to.equal('deleteMamurra')
+            expect(res.body.type).to.equal('politician')
             done()
           })
           .catch(done)
       })
     })
   })
+
+
 })
