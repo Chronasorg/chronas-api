@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "50e576dd-6f94-4f65-ad31-9214e495a778",
+		"_postman_id": "dc95d903-5a77-4517-8922-a8c311c335cd",
 		"name": "chronas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -132,6 +132,242 @@
 					"path": [
 						"v1",
 						"metadata",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata{id}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5b2144a8-1df5-4ed2-b3c2-f5ab7d249db6",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/culture",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"culture"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata{id} upvote",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "83f42a75-2309-46d2-9a65-512b1a95110d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/culture/upvote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"culture",
+						"upvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata{id} downvote",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "83f42a75-2309-46d2-9a65-512b1a95110d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/culture/downvote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"culture",
+						"downvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('wiki');",
+							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers",
 						""
 					]
 				}
@@ -390,7 +626,7 @@
 			"response": []
 		},
 		{
-			"name": "/users{id}- should return a saved user Copy Copy Copy",
+			"name": "/users{id}- should delete a user",
 			"event": [
 				{
 					"listen": "test",
@@ -447,6 +683,123 @@
 						"v1",
 						"users",
 						"testUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/markers{id}- should update a marker",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b17a88f5-e08a-48e1-9a9b-b0474cd85478",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('type');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('year');",
+							"    pm.expect(jsonData._id).to.eql(\"testMarker\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\n        \"_id\": \"testMarker\",\n        \"name\": \"testMarker\",\n        \"wiki\": \"testMarker\",\n        \"type\": \"politician\",\n        \"year\": -91,\n        \"coo\": [\n            13.616666666667,\n            41.266666666667\n        ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers/testMarker",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers",
+						"testMarker"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('wiki');",
+							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers",
+						""
 					]
 				}
 			},
