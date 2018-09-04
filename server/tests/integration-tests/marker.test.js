@@ -130,14 +130,13 @@ describe('## Marker APIs', () => {
 
       it('should update a marker', (done) => {
         updateMarker.type = 'aui'
-        console.log(updateMarker)
+        
         request(app)
           .put(`/v1/markers/${updateMarker._id}`)
           .set('Authorization', jwtToken)
           .send(updateMarker)
           .expect(httpStatus.OK)
           .then((res) => {
-            console.log(res.body)
             expect(res.body._id).to.equal(updateMarker._id)
             expect(res.body.type).to.equal('aui')
             done()
