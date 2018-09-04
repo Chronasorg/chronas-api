@@ -15,11 +15,146 @@
       "count_linked": 0,
       "lastUpdated": "2018-08-31T11:19:00.867Z",
       "createdAt": "2018-08-31T11:19:00.867Z",
-      "privilege": 1,
+      "privilege": 99,
       "authType": "chronas",
       "loginCount": 1,
       "karma": 0
     }
+  ],
+  "metadatas": [
+    {
+      "_id" : "culture",
+      "data" : {
+          "sapmi" : [ 
+              "sapmi", 
+              "rgb(157,51,167)", 
+              "SÃ¡pmi"
+          ],
+          "samoyed" : [ 
+              "samoyed", 
+              "rgb(220,220,103)", 
+              "Samoyedic peoples"
+          ],
+          "yakut" : [ 
+              "yakut", 
+              "rgb(100,94,155)", 
+              "Yakuts"
+          ],
+          "yukagyr" : [ 
+              "yukagyr", 
+              "rgb(145,70,130)", 
+              ""
+          ],
+          "kamchatkan" : [ 
+              "kamchatkan", 
+              "rgb(73,152,76)", 
+              "Chukotko-Kamchatkan languages"
+          ],
+          "norwegian" : [ 
+              "norwegian", 
+              "rgb(73,150,76)", 
+              "Norwegians"
+          ],
+          "inuit" : [ 
+              "inuit", 
+              "rgb(117,195,138)", 
+              "Inuit"
+          ],
+          "karelian" : [ 
+              "karelian", 
+              "rgb(130,167,71)", 
+              "Karelians"
+          ],
+          "swedish" : [ 
+              "swedish", 
+              "rgb(181,0,20)", 
+              "Swedes"
+          ],
+          "finnish" : [ 
+              "finnish", 
+              "rgb(40,110,140)", 
+              "Finns"
+          ],
+          "tungus" : [ 
+              "tungus", 
+              "rgb(178,103,5)", 
+              "Mishan"
+          ],
+          "uralic" : [ 
+              "uralic", 
+              "rgb(200,200,20)", 
+              "Finno-Ugric peoples"
+          ],
+          "aleutian" : [ 
+              "aleutian", 
+              "rgb(135,144,180)", 
+              "Aleut language"
+          ],
+          "athabascan" : [ 
+              "athabascan", 
+              "rgb(205,94,60)", 
+              "Smith River Rancheria"
+          ],
+          "ostyaki" : [ 
+              "ostyaki", 
+              "rgb(,,)", 
+              ""
+          ],
+          "haida" : [ 
+              "haida", 
+              "rgb(144,176,103)", 
+              "Haida people"
+          ],
+          "ingrian" : [ 
+              "ingrian", 
+              "rgb(111,112,164)", 
+              "Ingrian Finns"
+          ],
+          "cree" : [ 
+              "cree", 
+              "rgb(130,160,190)", 
+              "Cree"
+          ],
+          "volga_finnic" : [ 
+              "Volga Finnic", 
+              "rgb(201,197,124)", 
+              "Mari"
+          ],
+          "estonian" : [ 
+              "estonian", 
+              "rgb(198,158,109)", 
+              "Estonians"
+          ],
+          "buryat" : [ 
+              "buryat", 
+              "rgb(166,68,72)", 
+              "Buryats"
+          ],
+          "siberian" : [ 
+              "siberian", 
+              "rgb(76,141,58)", 
+              "Siberian Yupik people"
+          ],
+          "latvian" : [ 
+              "latvian", 
+              "rgb(212,211,151)", 
+              "Latvians"
+          ],
+          "russian" : [ 
+              "russian", 
+              "rgb(145,30,75)", 
+              "Russians"
+          ],
+          "pictish" : [ 
+              "pictish", 
+              "rgb(121,10,65)", 
+              "Galam Cennalath"
+          ]
+      },
+      "__v" : 0,
+      "coo" : [],
+      "type" : "g"
+  }
   ],
   "markers": [
     {
@@ -54,6 +189,6 @@
         13.616666666667,
         41.266666666667
       ]
-    }    
+    }
   ]
 }
