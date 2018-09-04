@@ -45,6 +45,7 @@ describe('## Metadata APIs', () => {
     },
     __v: 1,
     coo: [],
+    score: 0,
     type: "g"
   }
 
@@ -148,6 +149,42 @@ describe('## Metadata APIs', () => {
           .catch(done)
       })
     })
+
+    describe('# upvote /v1/metadata', () => {
+
+      it('should update a metadat value', (done) => {
+        request(app)
+          .put(`/v1/metadata/${updateMetadata._id}/upvote`)
+          .set('Authorization', jwtToken)
+          .expect(httpStatus.OK)
+          .then((res) => {
+            expect(res.body._id).to.equal(updateMetadata._id)
+            expect(res.body.score).to.equal(1)
+            done()
+          })
+          .catch(done)
+      })
+    })
+
+
+    describe('# downvote /v1/metadata', () => {
+
+      it('should update a metadat value', (done) => {
+        request(app)
+          .put(`/v1/metadata/${updateMetadata._id}/downvote`)
+          .set('Authorization', jwtToken)
+          .expect(httpStatus.OK)
+          .then((res) => {
+            expect(res.body._id).to.equal(updateMetadata._id)
+            expect(res.body.score).to.equal(0)
+            done()
+          })
+          .catch(done)
+      })
+    })
+
+
+
 
     describe('# delete /v1/metadata', () => {
 
