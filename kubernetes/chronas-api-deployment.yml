@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: chronas-api
-        image: aumanjoa/chronas-api:214
+        image: aumanjoa/chronas-api:#{buildId}#
         ports:
         - containerPort: 80
         livenessProbe:
