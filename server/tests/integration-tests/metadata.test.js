@@ -167,6 +167,19 @@ describe('## Metadata APIs', () => {
     })
 
 
+    describe('# getLinked /v1/metadata/:id/getLinked', () => {
+      it('should get bad request because source is not set', (done) => {
+        request(app)
+          .get(`/v1/metadata/culture/getLinked`)
+          .expect(httpStatus.BAD_REQUEST)
+          .then((res) => {
+            done()
+          })
+          .catch(done)
+      })
+    })    
+
+
     describe('# downvote /v1/metadata', () => {
 
       it('should update a metadat value', (done) => {
