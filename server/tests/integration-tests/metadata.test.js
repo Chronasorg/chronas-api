@@ -20,7 +20,7 @@ describe('## Metadata APIs', () => {
   }
 
   let metadata = {
-    _id: "religion",
+    _id: "religionNew",
     data: "{\"south_arabian\":[\"South Arabian\",\"rgb(153,26,51)\",\"Arabian_mythology\",\"Paganism\"],\"ashurism\":[\"Ashurism\",\"rgb(230,230,230)\",\"Ancient_Mesopotamian_religion\",\"Paganism\"],\"african\":[\"African\",\"rgb(204,5",
     __v: 0,
     score: 0,
