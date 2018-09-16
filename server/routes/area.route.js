@@ -1,7 +1,5 @@
 import express from 'express'
 import expressJwt from 'express-jwt'
-import validate from 'express-validation'
-import paramValidation from '../../config/param-validation'
 import areaCtrl from '../controllers/area.controller'
 import revisionCtrl from '../controllers/revision.controller'
 import { config } from '../../config/config'
