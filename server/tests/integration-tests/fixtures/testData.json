@@ -154,6 +154,323 @@
       "__v": 0,
       "coo": [],
       "type": "g"
+    },
+    {
+      "_id": "religion",
+      "data": {
+        "undefined": [
+          "undefined",
+          "rgb(191,191,191)",
+          "",
+          "na"
+        ],
+        "chalcedonism": [
+          "Chalcedonism",
+          "rgb(191,166,0)",
+          "Chalcedonian_Christianity",
+          "Christianity"
+        ],
+        "catholic": [
+          "Catholicism",
+          "rgb(204,204,0)",
+          "History_of_the_Catholic_Church",
+          "Christianity"
+        ],
+        "protestant": [
+          "Protestantism",
+          "rgb(0,0,178)",
+          "History_of_Protestantism",
+          "Christianity"
+        ],
+        "reformed": [
+          "Calvinism",
+          "rgb(76,76,230)",
+          "History_of_Calvinism",
+          "Christianity"
+        ],
+        "orthodox": [
+          "Orthodox",
+          "rgb(178,128,0)",
+          "History_of_the_Orthodox_Church",
+          "Christianity"
+        ],
+        "coptic": [
+          "Coptic",
+          "rgb(178,128,128)",
+          "Coptic_history",
+          "Christianity"
+        ],
+        "nestorian": [
+          "Nestorianism",
+          "rgb(153,153,0)",
+          "Nestorianism",
+          "Christianity"
+        ],
+        "arianism": [
+          "Arianism",
+          "rgb(102,102,0)",
+          "Arianism",
+          "Christianity"
+        ],
+        "sunni": [
+          "Sunni",
+          "rgb(0,153,0)",
+          "Sunni_Islam",
+          "Islam"
+        ],
+        "shiite": [
+          "Shia",
+          "rgb(0,245,0)",
+          "Shia_Islam",
+          "Islam"
+        ],
+        "ibadi": [
+          "Ibadi",
+          "rgb(0,102,0)",
+          "Ibadi",
+          "Islam"
+        ],
+        "buddhism": [
+          "Buddhism",
+          "rgb(204,76,0)",
+          "History_of_Buddhism",
+          "Buddhism"
+        ],
+        "hinduism": [
+          "Hinduism",
+          "rgb(0,204,204)",
+          "History_of_Hinduism",
+          "Hinduism"
+        ],
+        "sikhism": [
+          "Sikhism",
+          "rgb(204,153,51)",
+          "History_of_Sikhism",
+          "Other Dharmic"
+        ],
+        "jainism": [
+          "Jainism",
+          "rgb(128,230,230)",
+          "History_of_Jainism",
+          "Other Dharmic"
+        ],
+        "zunism": [
+          "Zunbils",
+          "rgb(230,230,153)",
+          "Zunbils",
+          "Paganism"
+        ],
+        "confucianism": [
+          "Confucianism",
+          "rgb(204,0,230)",
+          "Confucianism",
+          "Eastern"
+        ],
+        "shinto": [
+          "Shinto",
+          "rgb(204,0,0)",
+          "Shinto",
+          "Eastern"
+        ],
+        "animism": [
+          "Animism",
+          "rgb(128,0,0)",
+          "Animism",
+          "Paganism"
+        ],
+        "shamanism": [
+          "Shamanism",
+          "rgb(128,76,76)",
+          "shamanism",
+          "shamanism"
+        ],
+        "hellenism": [
+          "Hellenism",
+          "rgb(102,0,76)",
+          "Hellenistic_religion",
+          "Polytheism"
+        ],
+        "zamolxism": [
+          "Zamolxism",
+          "rgb(0,0,102)",
+          "Zalmoxis",
+          "Polytheism"
+        ],
+        "nabataean": [
+          "Nabataean",
+          "rgb(76,76,76)",
+          "Nabataeans",
+          "Polytheism"
+        ],
+        "zoroastrianism": [
+          "Zoroastrianism",
+          "rgb(153,153,76)",
+          "Zoroastrianism",
+          "iranian"
+        ],
+        "manichaeism": [
+          "Manichaeism",
+          "rgb(102,230,102)",
+          "Manichaeism",
+          "iranian"
+        ],
+        "jewish": [
+          "Judaism",
+          "rgb(76,153,230)",
+          "Jewish_history",
+          "Judaism"
+        ],
+        "secularism": [
+          "Secularism",
+          "rgb(0,0,0)",
+          "Secularism",
+          "Secularism"
+        ],
+        "totemism": [
+          "Totemism",
+          "rgb(153,102,0)",
+          "totemism",
+          "Totemism"
+        ],
+        "mesoamerican_religion": [
+          "Mesoamerican Religion",
+          "rgb(115,115,64)",
+          "Mesoamerican_religion",
+          "shamanism"
+        ],
+        "south_american": [
+          "South American",
+          "rgb(102,0,0)",
+          "Culture_of_South_America",
+          "shamanism"
+        ],
+        "nahuatl": [
+          "Nahuatl",
+          "rgb(64,115,64)",
+          "Aztec_religion",
+          "shamanism"
+        ],
+        "inti": [
+          "Inti",
+          "rgb(64,115,115)",
+          "Inti",
+          "shamanism"
+        ],
+        "druidism": [
+          "Druidism",
+          "rgb(102,230,26)",
+          "Celtic_polytheism",
+          "Paganism"
+        ],
+        "romuva": [
+          "Romuva",
+          "rgb(153,102,76)",
+          "Romuva_(religion)",
+          "Paganism"
+        ],
+        "slavic": [
+          "Slavic",
+          "rgb(51,128,178)",
+          "Slavic_mythology",
+          "Paganism"
+        ],
+        "suomenusko": [
+          "Suomenusko",
+          "rgb(128,102,0)",
+          "Finnish_paganism",
+          "Paganism"
+        ],
+        "norse_pagan_reformed": [
+          "Norse Pagan",
+          "rgb(128,128,128)",
+          "Norse_religion",
+          "Paganism"
+        ],
+        "germanic": [
+          "Germanic",
+          "rgb(191,191,191)",
+          "Germanic_mythology",
+          "Paganism"
+        ],
+        "tengri": [
+          "Tengrism",
+          "rgb(0,51,204)",
+          "Tengrism",
+          "Shamanism"
+        ],
+        "egyptian": [
+          "Egyptian",
+          "rgb(230,230,76)",
+          "Ancient_Egyptian_religion",
+          "Paganism"
+        ],
+        "african": [
+          "African",
+          "rgb(204,51,0)",
+          "Traditional_African_religion",
+          "Shamanism"
+        ],
+        "ashurism": [
+          "Ashurism",
+          "rgb(230,230,230)",
+          "Ancient_Mesopotamian_religion",
+          "Paganism"
+        ],
+        "south_arabian": [
+          "South Arabian",
+          "rgb(153,26,51)",
+          "Arabian_mythology",
+          "Paganism"
+        ]
+      },
+      "__v": 0,
+      "score": 0,
+      "type": "g",
+      "coo": []
+    }
+  ],
+  "areas": [
+    {
+      "_id": "1000",
+      "year": 1000,
+      "data": {
+        "Mentawai": [
+          "SWE",
+          "swedish",
+          "redo",
+          "Stockholm",
+          1000
+        ],
+        "Belitung": [
+          "GBR",
+          "sumatran",
+          "sunni",
+          "Bangka",
+          1000
+        ]
+      },
+      "__v": 0
+    },
+    {
+      "_id": "1001",
+      "year": 1001,
+      "data": {
+        "Lingga": [
+          "undefined",
+          "malayan",
+          "sunni",
+          "Lingga",
+          1000
+        ],
+        "Sogn": [
+          "DAN",
+          "norwegian",
+          "protestant",
+          "Sogndal",
+          15240
+        ]
+      },
+      "__v": 0
     }
   ],
   "markers": [

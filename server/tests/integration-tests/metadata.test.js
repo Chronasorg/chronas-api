@@ -20,7 +20,7 @@ describe('## Metadata APIs', () => {
   }
 
   let metadata = {
-    _id: "religion",
+    _id: "religionNew",
     data: "{\"south_arabian\":[\"South Arabian\",\"rgb(153,26,51)\",\"Arabian_mythology\",\"Paganism\"],\"ashurism\":[\"Ashurism\",\"rgb(230,230,230)\",\"Ancient_Mesopotamian_religion\",\"Paganism\"],\"african\":[\"African\",\"rgb(204,5",
     __v: 0,
     score: 0,
@@ -165,6 +165,19 @@ describe('## Metadata APIs', () => {
           .catch(done)
       })
     })
+
+
+    describe('# getLinked /v1/metadata/:id/getLinked', () => {
+      it('should get bad request because source is not set', (done) => {
+        request(app)
+          .get(`/v1/metadata/culture/getLinked`)
+          .expect(httpStatus.BAD_REQUEST)
+          .then((res) => {
+            done()
+          })
+          .catch(done)
+      })
+    })    
 
 
     describe('# downvote /v1/metadata', () => {
