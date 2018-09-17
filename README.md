@@ -1,4 +1,4 @@
-[![Build Status](https://joausandbox.visualstudio.com/_apis/public/build/definitions/2b7f7236-ef4a-4ee5-9164-a7cb0ad72964/19/badge)](https://joausandbox.visualstudio.com/chronas/_build/index?definitionId=19)
+[![Build Status](https://dev.azure.com/chronas/chronas/_apis/build/status/Chronasorg.chronas-api)](https://dev.azure.com/chronas/chronas/_build/latest?definitionId=1)
 
 
 
