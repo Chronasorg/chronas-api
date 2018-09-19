@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "1eec4ad2-522b-44ab-be50-c4547ca9fe63",
+		"_postman_id": "6cb69e47-91f8-46f9-b6f3-19795a0344b8",
 		"name": "chronas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -79,45 +79,6 @@
 			"response": []
 		},
 		{
-			"name": "/auth/signup",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/x-www-form-urlencoded"
-					}
-				],
-				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "email",
-							"value": "aasdffff@web.de",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdf",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/auth/signup",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"auth",
-						"signup"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "/metadata",
 			"event": [
 				{
@@ -178,18 +139,501 @@
 			"response": []
 		},
 		{
-			"name": "metadata-post",
+			"name": "/metadata{id}",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
-						"id": "b9572bf1-32d8-4bc6-b013-81eaa51777d7",
+						"id": "5b2144a8-1df5-4ed2-b3c2-f5ab7d249db6",
 						"type": "text/javascript",
 						"exec": [
-							"pm.test(\"Response should tell that this id already exist\", function () {",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
 							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.stack).to.have.string('This id already exists');",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
 							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/religion",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"religion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/areas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "eb44d6df-66ff-41b8-8445-89bf0473e389",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('data');",
+							"    pm.expect(jsonData[0]).to.have.property('year');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/areas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"areas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/areas{id}",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a68b4089-fc17-4a1f-bda1-e77c353bb5bb",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/areas/1000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"areas",
+						"1000"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata{id} upvote",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "83f42a75-2309-46d2-9a65-512b1a95110d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/culture/upvote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"culture",
+						"upvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata{id} downvote",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "83f42a75-2309-46d2-9a65-512b1a95110d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('_id');",
+							"    pm.expect(jsonData).to.have.property('data');",
+							"    pm.expect(jsonData).to.have.property('score');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/culture/downvote",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"culture",
+						"downvote"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('wiki');",
+							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/users - get a list of users",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a29c66f8-a2a6-4399-a552-d1db0a7ae7c4",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should have a list of users\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData[0]).to.have.property('username');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('privilege');",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/users{id}- should return a saved user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "abdb51e7-f4d2-4e2e-b7b5-9a9924b3e368",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"postman@aui.de\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/postman@aui.de",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"postman@aui.de"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/users - should create a User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "314cf22e-909f-4a12-b418-bb73d642c03d",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
 						]
 					}
 				}
@@ -214,16 +658,16 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"_id\":\"testDataId\",\n\t\"data\":\"testData\"\n}"
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/metadata/",
+					"raw": "{{baseUrl}}/v1/users/",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
-						"metadata",
+						"users",
 						""
 					]
 				}
@@ -231,59 +675,214 @@
 			"response": []
 		},
 		{
-			"name": "/auth/login/twitter",
+			"name": "/users{id}- should update a User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7b1ec122-bb27-4053-816d-21b6c9ba024b",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
 			"request": {
 				"auth": {
-					"type": "noauth"
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/x-www-form-urlencoded"
-					}
-				],
-				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
+					"type": "bearer",
+					"bearer": [
 						{
-							"key": "email",
-							"value": "aasdfffff@web.de",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdf",
-							"type": "text"
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
 						}
 					]
 				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
+				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/auth/login/twitter",
+					"raw": "{{baseUrl}}/v1/users/testUser",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
-						"auth",
-						"login",
-						"twitter"
+						"users",
+						"testUser"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "/auth/login/facebook",
+			"name": "/users{id}- should delete a user",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
-						"id": "a5e2ddfd-e39c-4eb7-99f0-59fbaa82df42",
+						"id": "e26856bb-4a1f-41b0-8c05-def1952a7e66",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('username');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('privilege');",
+							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/users/testUser",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"testUser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/markers{id}- should update a marker",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b17a88f5-e08a-48e1-9a9b-b0474cd85478",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Response should contain a valid user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.expect(jsonData).to.have.property('type');",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData).to.have.property('year');",
+							"    pm.expect(jsonData._id).to.eql(\"testMarker\");",
+							"    ",
+							"});",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\n        \"_id\": \"testMarker\",\n        \"name\": \"testMarker\",\n        \"wiki\": \"testMarker\",\n        \"type\": \"politician\",\n        \"year\": -91,\n        \"coo\": [\n            13.616666666667,\n            41.266666666667\n        ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers/testMarker",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers",
+						"testMarker"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('wiki');",
+							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
 							"});"
 						]
 					}
@@ -297,134 +896,22 @@
 				"header": [
 					{
 						"key": "Content-Type",
-						"value": "application/x-www-form-urlencoded"
+						"value": "application/json"
 					}
 				],
 				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "email",
-							"value": "aasdfffff@web.de",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdf",
-							"type": "text"
-						}
-					]
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/auth/login/facebook",
+					"raw": "{{baseUrl}}/v1/markers/",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
-						"auth",
-						"login",
-						"facebook"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/auth/login/github",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/x-www-form-urlencoded"
-					}
-				],
-				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "email",
-							"value": "aasdfffff@web.de",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdf",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/auth/login/github",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"auth",
-						"login",
-						"github"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/auth/login/google",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/x-www-form-urlencoded"
-					}
-				],
-				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "email",
-							"value": "aasdfffff@web.de",
-							"type": "text"
-						},
-						{
-							"key": "password",
-							"value": "asdf",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/auth/login/google",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"auth",
-						"login",
-						"google"
+						"markers",
+						""
 					]
 				}
 			},

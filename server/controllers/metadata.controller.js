@@ -1,12 +1,9 @@
 import Metadata from '../models/metadata.model'
 import Marker from '../models/marker.model'
-import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import logger from '../../config/winston'
 import userCtrl from './user.controller'
 import revisionCtrl from './revision.controller'
 import { config, cache, initItemsAndLinksToRefresh } from "../../config/config";
 import httpStatus from "http-status";
-import Promise from "bluebird";
 
 const linkedTypeAccessor = {
   "m": 0,
@@ -385,7 +382,6 @@ function getLinked(req, res, next) {
  */
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
-  const limit = end - start
   const fList = req.query.f || false
   const type = req.query.type || false
   const subtype = req.query.subtype || false

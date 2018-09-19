@@ -1,9 +1,511 @@
 {
-    "tasks": [
+  "users": [
     {
-      "name": "test",
-      "started": "2017-08-28T16:07:38.268Z",
-      "completed": false
+      "_id": "test@test.de",
+      "username": "doubtful-throne",
+      "name": "doubtful-throne",
+      "password": "$2b$10$fQArL3PolKBwaZAw6mp33.YMOuDb7PyIDx3Adq2X2OeqX5dGqgM9O",
+      "email": "test@test.de",
+      "count_mistakes": 0,
+      "count_created": 0,
+      "count_reverted": 0,
+      "count_updated": 0,
+      "count_deleted": 0,
+      "count_voted": 0,
+      "count_linked": 0,
+      "lastUpdated": "2018-08-31T11:19:00.867Z",
+      "createdAt": "2018-08-31T11:19:00.867Z",
+      "privilege": 99,
+      "authType": "chronas",
+      "loginCount": 1,
+      "karma": 0
+    }
+  ],
+  "metadatas": [
+    {
+      "_id": "culture",
+      "data": {
+        "sapmi": [
+          "sapmi",
+          "rgb(157,51,167)",
+          "SÃ¡pmi"
+        ],
+        "samoyed": [
+          "samoyed",
+          "rgb(220,220,103)",
+          "Samoyedic peoples"
+        ],
+        "yakut": [
+          "yakut",
+          "rgb(100,94,155)",
+          "Yakuts"
+        ],
+        "yukagyr": [
+          "yukagyr",
+          "rgb(145,70,130)",
+          ""
+        ],
+        "kamchatkan": [
+          "kamchatkan",
+          "rgb(73,152,76)",
+          "Chukotko-Kamchatkan languages"
+        ],
+        "norwegian": [
+          "norwegian",
+          "rgb(73,150,76)",
+          "Norwegians"
+        ],
+        "inuit": [
+          "inuit",
+          "rgb(117,195,138)",
+          "Inuit"
+        ],
+        "karelian": [
+          "karelian",
+          "rgb(130,167,71)",
+          "Karelians"
+        ],
+        "swedish": [
+          "swedish",
+          "rgb(181,0,20)",
+          "Swedes"
+        ],
+        "finnish": [
+          "finnish",
+          "rgb(40,110,140)",
+          "Finns"
+        ],
+        "tungus": [
+          "tungus",
+          "rgb(178,103,5)",
+          "Mishan"
+        ],
+        "uralic": [
+          "uralic",
+          "rgb(200,200,20)",
+          "Finno-Ugric peoples"
+        ],
+        "aleutian": [
+          "aleutian",
+          "rgb(135,144,180)",
+          "Aleut language"
+        ],
+        "athabascan": [
+          "athabascan",
+          "rgb(205,94,60)",
+          "Smith River Rancheria"
+        ],
+        "ostyaki": [
+          "ostyaki",
+          "rgb(,,)",
+          ""
+        ],
+        "haida": [
+          "haida",
+          "rgb(144,176,103)",
+          "Haida people"
+        ],
+        "ingrian": [
+          "ingrian",
+          "rgb(111,112,164)",
+          "Ingrian Finns"
+        ],
+        "cree": [
+          "cree",
+          "rgb(130,160,190)",
+          "Cree"
+        ],
+        "volga_finnic": [
+          "Volga Finnic",
+          "rgb(201,197,124)",
+          "Mari"
+        ],
+        "estonian": [
+          "estonian",
+          "rgb(198,158,109)",
+          "Estonians"
+        ],
+        "buryat": [
+          "buryat",
+          "rgb(166,68,72)",
+          "Buryats"
+        ],
+        "siberian": [
+          "siberian",
+          "rgb(76,141,58)",
+          "Siberian Yupik people"
+        ],
+        "latvian": [
+          "latvian",
+          "rgb(212,211,151)",
+          "Latvians"
+        ],
+        "russian": [
+          "russian",
+          "rgb(145,30,75)",
+          "Russians"
+        ],
+        "pictish": [
+          "pictish",
+          "rgb(121,10,65)",
+          "Galam Cennalath"
+        ]
+      },
+      "__v": 0,
+      "coo": [],
+      "type": "g"
+    },
+    {
+      "_id": "religion",
+      "data": {
+        "undefined": [
+          "undefined",
+          "rgb(191,191,191)",
+          "",
+          "na"
+        ],
+        "chalcedonism": [
+          "Chalcedonism",
+          "rgb(191,166,0)",
+          "Chalcedonian_Christianity",
+          "Christianity"
+        ],
+        "catholic": [
+          "Catholicism",
+          "rgb(204,204,0)",
+          "History_of_the_Catholic_Church",
+          "Christianity"
+        ],
+        "protestant": [
+          "Protestantism",
+          "rgb(0,0,178)",
+          "History_of_Protestantism",
+          "Christianity"
+        ],
+        "reformed": [
+          "Calvinism",
+          "rgb(76,76,230)",
+          "History_of_Calvinism",
+          "Christianity"
+        ],
+        "orthodox": [
+          "Orthodox",
+          "rgb(178,128,0)",
+          "History_of_the_Orthodox_Church",
+          "Christianity"
+        ],
+        "coptic": [
+          "Coptic",
+          "rgb(178,128,128)",
+          "Coptic_history",
+          "Christianity"
+        ],
+        "nestorian": [
+          "Nestorianism",
+          "rgb(153,153,0)",
+          "Nestorianism",
+          "Christianity"
+        ],
+        "arianism": [
+          "Arianism",
+          "rgb(102,102,0)",
+          "Arianism",
+          "Christianity"
+        ],
+        "sunni": [
+          "Sunni",
+          "rgb(0,153,0)",
+          "Sunni_Islam",
+          "Islam"
+        ],
+        "shiite": [
+          "Shia",
+          "rgb(0,245,0)",
+          "Shia_Islam",
+          "Islam"
+        ],
+        "ibadi": [
+          "Ibadi",
+          "rgb(0,102,0)",
+          "Ibadi",
+          "Islam"
+        ],
+        "buddhism": [
+          "Buddhism",
+          "rgb(204,76,0)",
+          "History_of_Buddhism",
+          "Buddhism"
+        ],
+        "hinduism": [
+          "Hinduism",
+          "rgb(0,204,204)",
+          "History_of_Hinduism",
+          "Hinduism"
+        ],
+        "sikhism": [
+          "Sikhism",
+          "rgb(204,153,51)",
+          "History_of_Sikhism",
+          "Other Dharmic"
+        ],
+        "jainism": [
+          "Jainism",
+          "rgb(128,230,230)",
+          "History_of_Jainism",
+          "Other Dharmic"
+        ],
+        "zunism": [
+          "Zunbils",
+          "rgb(230,230,153)",
+          "Zunbils",
+          "Paganism"
+        ],
+        "confucianism": [
+          "Confucianism",
+          "rgb(204,0,230)",
+          "Confucianism",
+          "Eastern"
+        ],
+        "shinto": [
+          "Shinto",
+          "rgb(204,0,0)",
+          "Shinto",
+          "Eastern"
+        ],
+        "animism": [
+          "Animism",
+          "rgb(128,0,0)",
+          "Animism",
+          "Paganism"
+        ],
+        "shamanism": [
+          "Shamanism",
+          "rgb(128,76,76)",
+          "shamanism",
+          "shamanism"
+        ],
+        "hellenism": [
+          "Hellenism",
+          "rgb(102,0,76)",
+          "Hellenistic_religion",
+          "Polytheism"
+        ],
+        "zamolxism": [
+          "Zamolxism",
+          "rgb(0,0,102)",
+          "Zalmoxis",
+          "Polytheism"
+        ],
+        "nabataean": [
+          "Nabataean",
+          "rgb(76,76,76)",
+          "Nabataeans",
+          "Polytheism"
+        ],
+        "zoroastrianism": [
+          "Zoroastrianism",
+          "rgb(153,153,76)",
+          "Zoroastrianism",
+          "iranian"
+        ],
+        "manichaeism": [
+          "Manichaeism",
+          "rgb(102,230,102)",
+          "Manichaeism",
+          "iranian"
+        ],
+        "jewish": [
+          "Judaism",
+          "rgb(76,153,230)",
+          "Jewish_history",
+          "Judaism"
+        ],
+        "secularism": [
+          "Secularism",
+          "rgb(0,0,0)",
+          "Secularism",
+          "Secularism"
+        ],
+        "totemism": [
+          "Totemism",
+          "rgb(153,102,0)",
+          "totemism",
+          "Totemism"
+        ],
+        "mesoamerican_religion": [
+          "Mesoamerican Religion",
+          "rgb(115,115,64)",
+          "Mesoamerican_religion",
+          "shamanism"
+        ],
+        "south_american": [
+          "South American",
+          "rgb(102,0,0)",
+          "Culture_of_South_America",
+          "shamanism"
+        ],
+        "nahuatl": [
+          "Nahuatl",
+          "rgb(64,115,64)",
+          "Aztec_religion",
+          "shamanism"
+        ],
+        "inti": [
+          "Inti",
+          "rgb(64,115,115)",
+          "Inti",
+          "shamanism"
+        ],
+        "druidism": [
+          "Druidism",
+          "rgb(102,230,26)",
+          "Celtic_polytheism",
+          "Paganism"
+        ],
+        "romuva": [
+          "Romuva",
+          "rgb(153,102,76)",
+          "Romuva_(religion)",
+          "Paganism"
+        ],
+        "slavic": [
+          "Slavic",
+          "rgb(51,128,178)",
+          "Slavic_mythology",
+          "Paganism"
+        ],
+        "suomenusko": [
+          "Suomenusko",
+          "rgb(128,102,0)",
+          "Finnish_paganism",
+          "Paganism"
+        ],
+        "norse_pagan_reformed": [
+          "Norse Pagan",
+          "rgb(128,128,128)",
+          "Norse_religion",
+          "Paganism"
+        ],
+        "germanic": [
+          "Germanic",
+          "rgb(191,191,191)",
+          "Germanic_mythology",
+          "Paganism"
+        ],
+        "tengri": [
+          "Tengrism",
+          "rgb(0,51,204)",
+          "Tengrism",
+          "Shamanism"
+        ],
+        "egyptian": [
+          "Egyptian",
+          "rgb(230,230,76)",
+          "Ancient_Egyptian_religion",
+          "Paganism"
+        ],
+        "african": [
+          "African",
+          "rgb(204,51,0)",
+          "Traditional_African_religion",
+          "Shamanism"
+        ],
+        "ashurism": [
+          "Ashurism",
+          "rgb(230,230,230)",
+          "Ancient_Mesopotamian_religion",
+          "Paganism"
+        ],
+        "south_arabian": [
+          "South Arabian",
+          "rgb(153,26,51)",
+          "Arabian_mythology",
+          "Paganism"
+        ]
+      },
+      "__v": 0,
+      "score": 0,
+      "type": "g",
+      "coo": []
+    }
+  ],
+  "areas": [
+    {
+      "_id": "1000",
+      "year": 1000,
+      "data": {
+        "Mentawai": [
+          "SWE",
+          "swedish",
+          "redo",
+          "Stockholm",
+          1000
+        ],
+        "Belitung": [
+          "GBR",
+          "sumatran",
+          "sunni",
+          "Bangka",
+          1000
+        ]
+      },
+      "__v": 0
+    },
+    {
+      "_id": "1001",
+      "year": 1001,
+      "data": {
+        "Lingga": [
+          "undefined",
+          "malayan",
+          "sunni",
+          "Lingga",
+          1000
+        ],
+        "Sogn": [
+          "DAN",
+          "norwegian",
+          "protestant",
+          "Sogndal",
+          15240
+        ]
+      },
+      "__v": 0
+    }
+  ],
+  "markers": [
+    {
+      "_id": "Gaius Caesar",
+      "name": "Gaius Caesar",
+      "wiki": "Gaius%20Caesar",
+      "type": "politician",
+      "year": -20,
+      "coo": [
+        12.5,
+        41.9
+      ]
+    },
+    {
+      "_id": "Mamurra",
+      "name": "Mamurra",
+      "wiki": "Mamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
+    },
+    {
+      "_id": "deleteMamurra",
+      "name": "deleteMamurra",
+      "wiki": "deleteMamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
     }
   ]
- }
+}

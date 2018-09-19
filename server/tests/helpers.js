@@ -1,6 +1,8 @@
 const prepare = require('mocha-prepare')
 const mongoUnit = require('mongo-unit')
 
+// https://www.toptal.com/nodejs/integration-and-e2e-tests-nodejs-mongodb
+
 prepare(done => mongoUnit.start()
  .then(testMongoUrl => {
    process.env.MONGO_HOST = testMongoUrl

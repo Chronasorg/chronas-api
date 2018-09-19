@@ -11,21 +11,21 @@ spec:
     spec:
       containers:
       - name: chronas-api
-        image: aumanjoa/chronas-api:214
+        image: aumanjoa/chronas-api:#{buildId}#
         ports:
         - containerPort: 80
         livenessProbe:
           httpGet:
             path: /v1/health
             port: 80
-          initialDelaySeconds: 35
+          initialDelaySeconds: 55
           timeoutSeconds: 1
           periodSeconds: 15
         readinessProbe:
           httpGet:
             path: /v1/health
             port: 80
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           timeoutSeconds: 1
           periodSeconds: 15  
         env:
