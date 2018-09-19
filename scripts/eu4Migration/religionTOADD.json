@@ -1,0 +1,345 @@
+{
+  "pagan_group": [
+    "Pagan group",
+    "rgb(220,220,220)",
+    "Deutsche_Heidnische_Front",
+    "pagan_group ",
+    "/images/icons/ruler/c_pagan_group.png"
+  ],
+  "religious_schools": [
+    "Religious schools",
+    "rgb(152,175,131)",
+    "Religious_school",
+    "religious_schools ",
+    "/images/icons/ruler/c_religious_schools.png"
+  ],
+  "mesopotamian_religion": [
+    "Mesopotamian religion",
+    "rgb(227,162,94)",
+    "Ancient_Mesopotamian_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_mesopotamian_religion.png"
+  ],
+  "arab_religion": [
+    "Arab religion",
+    "rgb(151,51,55)",
+    "Crossroads_to_Islam",
+    "religious_schools ",
+    "/images/icons/ruler/c_arab_religion.png"
+  ],
+  "punic_religion": [
+    "Punic religion",
+    "rgb(2,141,193)",
+    "Religion_in_Carthage",
+    "religious_schools ",
+    "/images/icons/ruler/c_punic_religion.png"
+  ],
+  "egyptian_religion": [
+    "Egyptian religion",
+    "rgb(193,180,66)",
+    "Egyptian_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_egyptian_religion.png"
+  ],
+  "east_african": [
+    "East african",
+    "rgb(220,116,197)",
+    "East_African",
+    "religious_schools ",
+    "/images/icons/ruler/c_east_african.png"
+  ],
+  "roman_religion": [
+    "Roman religion",
+    "rgb(200,200,120)",
+    "Religion_in_ancient_Rome",
+    "religious_schools ",
+    "/images/icons/ruler/c_roman_religion.png"
+  ],
+  "etruscan_religion": [
+    "Etruscan religion",
+    "rgb(189,179,159)",
+    "Etruscan_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_etruscan_religion.png"
+  ],
+  "greek_religion": [
+    "Greek religion",
+    "rgb(163,40,25)",
+    "Greek_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_greek_religion.png"
+  ],
+  "cybele": [
+    "Cybele",
+    "rgb(72,99,77)",
+    "Cybele",
+    "religious_schools ",
+    "/images/icons/ruler/c_cybele.png"
+  ],
+  "germanic_religion": [
+    "Germanic religion",
+    "rgb(39,125,143)",
+    "Germanic_religion_(aboriginal)",
+    "religious_schools ",
+    "/images/icons/ruler/c_germanic_religion.png"
+  ],
+  "celtic_religion": [
+    "Celtic religion",
+    "rgb(129,187,48)",
+    "Celtic_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_celtic_religion.png"
+  ],
+  "iberian_religion": [
+    "Iberian religion",
+    "rgb(231,224,107)",
+    "Lady_of_Elche",
+    "religious_schools ",
+    "/images/icons/ruler/c_iberian_religion.png"
+  ],
+  "nuragic_religion": [
+    "Nuragic religion",
+    "rgb(222,184,135)",
+    "Nuragic_civilization",
+    "religious_schools ",
+    "/images/icons/ruler/c_nuragic_religion.png"
+  ],
+  "armenian_religion": [
+    "Armenian religion",
+    "rgb(52,142,55)",
+    "Armenian_religion_in_Cyprus",
+    "religious_schools ",
+    "/images/icons/ruler/c_armenian_religion.png"
+  ],
+  "skneli": [
+    "Skneli",
+    "rgb(46,96,44)",
+    "Georgian_mythology",
+    "religious_schools ",
+    "/images/icons/ruler/c_skneli.png"
+  ],
+  "scythian_religion": [
+    "Scythian religion",
+    "rgb(126,180,154)",
+    "Scythian_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_scythian_religion.png"
+  ],
+  "sarmatian": [
+    "Sarmatian",
+    "rgb(211,95,73)",
+    "Sarmatians",
+    "religious_schools ",
+    "/images/icons/ruler/c_sarmatian.png"
+  ],
+  "illyrian_religion": [
+    "Illyrian religion",
+    "rgb(104,137,52)",
+    "Illyrian_mythology",
+    "religious_schools ",
+    "/images/icons/ruler/c_illyrian_religion.png"
+  ],
+  "thracian": [
+    "Thracian",
+    "rgb(94,117,55)",
+    "Thracians",
+    "religious_schools ",
+    "/images/icons/ruler/c_thracian.png"
+  ],
+  "dacian_religion": [
+    "Dacian religion",
+    "rgb(39,108,140)",
+    "Reconstructionism",
+    "religious_schools ",
+    "/images/icons/ruler/c_dacian_religion.png"
+  ],
+  "luwian_religion": [
+    "Luwian religion",
+    "rgb(61,155,32)",
+    "Luwian_religion",
+    "religious_schools ",
+    "/images/icons/ruler/c_luwian_religion.png"
+  ],
+  "slavic_religion": [
+    "Slavic religion",
+    "rgb(81,78,78)",
+    "Slavic_paganism",
+    "religious_schools ",
+    "/images/icons/ruler/c_slavic_religion.png"
+  ],
+  "baltic_religion": [
+    "Baltic religion",
+    "rgb(43,121,188)",
+    "Balts",
+    "religious_schools ",
+    "/images/icons/ruler/c_baltic_religion.png"
+  ],
+  "finno_ugric_religion": [
+    "Finno ugric_religion",
+    "rgb(48,193,241)",
+    "Karsikko",
+    "religious_schools ",
+    "/images/icons/ruler/c_finno_ugric_religion.png"
+  ],
+  "elamite_religion": [
+    "Elamite religion",
+    "rgb(60,152,70)",
+    "Elam",
+    "religious_schools ",
+    "/images/icons/ruler/c_elamite_religion.png"
+  ],
+  "jewish_group": [
+    "Jewish group",
+    "rgb(175,134,73)",
+    "Totnes_Reform_Jewish_Group",
+    "jewish_group ",
+    "/images/icons/ruler/c_jewish_group.png"
+  ],
+  "jewish": [
+    "Jewish",
+    "rgb(165,111,80)",
+    "Jews",
+    "jewish_group ",
+    "/images/icons/ruler/c_jewish.png"
+  ],
+  "samaritan": [
+    "Samaritan",
+    "rgb(160,166,167)",
+    "Samaritans",
+    "jewish_group ",
+    "/images/icons/ruler/c_samaritan.png"
+  ],
+  "christian": [
+    "Christian",
+    "rgb(165,167,29)",
+    "Christianity",
+    "jewish_group ",
+    "/images/icons/ruler/c_christian.png"
+  ],
+  "persian_group": [
+    "Persian group",
+    "rgb(238,191,4)",
+    "Sistani_Persian_people",
+    "persian_group ",
+    "/images/icons/ruler/c_persian_group.png"
+  ],
+  "zurvanism": [
+    "Zurvanism",
+    "rgb(220,220,180)",
+    "Zurvanism",
+    "persian_group ",
+    "/images/icons/ruler/c_zurvanism.png"
+  ],
+  "zoroastrianism": [
+    "Zoroastrianism",
+    "rgb(138,193,231)",
+    "Zoroastrianism",
+    "persian_group ",
+    "/images/icons/ruler/c_zoroastrianism.png"
+  ],
+  "mitraism": [
+    "Mitraism",
+    "rgb(48,49,121)",
+    "Mithraism",
+    "persian_group ",
+    "/images/icons/ruler/c_mitraism.png"
+  ],
+  "brahmin_group": [
+    "Brahmin group",
+    "rgb(225,225,190)",
+    "Modh",
+    "brahmin_group ",
+    "/images/icons/ruler/c_brahmin_group.png"
+  ],
+  "brahmin": [
+    "Brahmin",
+    "rgb(255,198,191)",
+    "Brahmin",
+    "brahmin_group ",
+    "/images/icons/ruler/c_brahmin.png"
+  ],
+  "sramana": [
+    "Sramana",
+    "rgb(252,233,58)",
+    "Śramaṇa",
+    "brahmin_group ",
+    "/images/icons/ruler/c_sramana.png"
+  ],
+  "dravidian": [
+    "Dravidian",
+    "rgb(233,88,88)",
+    "Dravidian_languages",
+    "brahmin_group ",
+    "/images/icons/ruler/c_dravidian.png"
+  ],
+  "jain": [
+    "Jain",
+    "rgb(238,242,138)",
+    "Jainism",
+    "brahmin_group ",
+    "/images/icons/ruler/c_jain.png"
+  ],
+  "buddhism": [
+    "Buddhism",
+    "rgb(107,80,160)",
+    "Buddhism",
+    "brahmin_group ",
+    "/images/icons/ruler/c_buddhism.png"
+  ],
+  "ajivika": [
+    "Ajivika",
+    "rgb(21,191,16)",
+    "Ājīvika",
+    "brahmin_group ",
+    "/images/icons/ruler/c_ajivika.png"
+  ],
+  "eastern_religions": [
+    "Eastern religions",
+    "rgb(153,138,161)",
+    "Eastern_religions",
+    "eastern_religions ",
+    "/images/icons/ruler/c_eastern_religions.png"
+  ],
+  "chinese_religion": [
+    "Chinese religion",
+    "rgb(10,76,65)",
+    "Chinese_religion",
+    "eastern_religions ",
+    "/images/icons/ruler/c_chinese_religion.png"
+  ],
+  "muism": [
+    "Muism",
+    "rgb(220,220,237)",
+    "Korean_shamanism",
+    "eastern_religions ",
+    "/images/icons/ruler/c_muism.png"
+  ],
+  "southern_mythology": [
+    "Southern mythology",
+    "rgb(43,146,144)",
+    "History_of_Tallahassee,_Florida",
+    "eastern_religions ",
+    "/images/icons/ruler/c_southern_mythology.png"
+  ],
+  "tengri": [
+    "Tengri",
+    "rgb(25,0,150)",
+    "Tengri",
+    "eastern_religions ",
+    "/images/icons/ruler/c_tengri.png"
+  ],
+  "bon_religion": [
+    "Bon religion",
+    "rgb(148,149,21)",
+    "Bon",
+    "eastern_religions ",
+    "/images/icons/ruler/c_bon_religion.png"
+  ],
+  "wuism": [
+    "Wuism",
+    "rgb(149,109,189)",
+    "Chinese_shamanism",
+    "eastern_religions ",
+    "/images/icons/ruler/c_wuism.png"
+  ]
+}
