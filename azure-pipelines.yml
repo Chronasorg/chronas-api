@@ -1,149 +1,20 @@
-queue:
-  name: Hosted Linux Preview
-  demands: 
-  - npm
-  - java
+# Build Docker image for this app using Azure Pipelines
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker?view=vsts
+pool:
+  vmImage: 'Ubuntu 16.04'
+  
+variables:
+  imageName: 'nodejssample:$(Build.BuildId)'
+  # define two more variables dockerId and dockerPassword in the build pipeline in UI
 
 steps:
-- task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@1
-  displayName: 'Prepare analysis on SonarCloud'
-  inputs:
-    SonarCloud: aumanjoa
-
-    organization: 'aumanjoa-github'
-
-    scannerMode: CLI
-
-    configMode: manual
-
-    cliProjectKey: 'chronas-api'
-
-    cliProjectName: 'Chronas API'
-
-    cliProjectVersion: '$(Build.BuildId)'
-
-    cliSources: server
-
-    extraProperties: |
-     # Additional properties that will be passed to the scanner, 
-     # Put one key=value per line, example:
-     # sonar.exclusions=**/*.bin
-     sonar.tests=server
-     sonar.coverage.exclusions=**/tests/**
-     sonar.test.inclusions=**/tests/**
-     sonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-
 - task: NodeTool@0
   displayName: 'Use Node 10.x'
   inputs:
     versionSpec: 10.x
 
-
-- task: Npm@1
-  displayName: 'npm custom'
-  inputs:
-    command: custom
-
-    verbose: false
-
-    customCommand: 'cache verify  '
-
-
-- task: Npm@1
-  displayName: 'npm install'
-  inputs:
-    verbose: false
-
-
-- task: Npm@1
-  displayName: 'npm build'
-  inputs:
-    command: custom
-
-    verbose: false
-
-    customCommand: 'run build'
-
-
-- task: Npm@1
-  displayName: 'npm install in build'
-  inputs:
-    command: custom
-
-    workingDir: dist
-
-    verbose: false
-
-    customCommand: 'install --production'
-
-
-- task: Npm@1
-  displayName: 'npm test'
-  inputs:
-    command: custom
-
-    verbose: false
-
-    customCommand: test
-
-
-- task: Npm@1
-  displayName: 'npm custom'
-  inputs:
-    command: custom
-
-    verbose: false
-
-    customCommand: 'run test:coverage'
-
-
-- task: SonarSource.sonarcloud.ce096e50-6155-4de8-8800-4221aaeed4a1.SonarCloudAnalyze@1
-  displayName: 'Run Code Analysis'
-
-
-- task: Docker@0
-  displayName: 'Build an image'
-  inputs:
-    containerregistrytype: 'Container Registry'
-
-    dockerRegistryConnection: 'DockerHub AumanJoa'
-
-    imageName: 'aumanjoa/chronas-api:$(Build.BuildId)'
-
-    includeLatestTag: true
-
-
-- task: Docker@0
-  displayName: 'Push an image'
-  inputs:
-    containerregistrytype: 'Container Registry'
-
-    dockerRegistryConnection: 'DockerHub AumanJoa'
-
-    action: 'Push an image'
-
-    imageName: 'aumanjoa/chronas-api:$(Build.BuildId)'
-
-    includeLatestTag: true
-
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: k8s'
-  inputs:
-    PathtoPublish: kubernetes
-
-    ArtifactName: k8s
-
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: postmanTests'
-  inputs:
-    PathtoPublish: PostmanTests
-
-    ArtifactName: postmanTests
-
-
-- task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
-  displayName: 'Publish Quality Gate Result'
-
+- script: |
+    npm install
+    npm test
+    npm run test:coverage
+    npm build    
