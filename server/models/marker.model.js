@@ -3,7 +3,6 @@ import mongoose from 'mongoose'
 import httpStatus from 'http-status'
 import APIError from '../helpers/APIError'
 import Metadata from './metadata.model'
-import Area from "./area.model";
 
 const METAtypes = ['c']
 /**
@@ -22,19 +21,26 @@ const MarkerSchema = new mongoose.Schema({
     type: String,
   },
   capital: {
-    type: mongoose.Schema.Types.Mixed,
+    type: Array,
+    default: undefined
   },
   coo: {
-    type: Array,
+    type: [Number], // long lat
+    default: undefined,
+    validate: v => typeof v === 'undefined' || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
   },
   subtype: {
     type: String
   },
   year: {
     type: Number,
+    min: -2000,
+    max: 2000,
   },
   end: {
     type: Number,
+    min: -2000,
+    max: 2000,
   }
 }, { versionKey: false })
 
@@ -91,6 +97,7 @@ MarkerSchema.statics = {
       if (typeArray) {
         types = typeArray.split(',')
         mongoSearchQuery.type = { $in: types }
+        mongoSearchQuery.coo = { $exists: true }
       }
 
       if (wikiArray) {
@@ -100,8 +107,8 @@ MarkerSchema.statics = {
 
       if (search) {
         mongoSearchQuery.$or = [
-          {'_id':new RegExp(search, 'i')},
-          {'name':new RegExp(search, 'i')}
+          { _id: new RegExp(search, 'i') },
+          { name: new RegExp(search, 'i') }
         ]
       }
 
@@ -129,7 +136,7 @@ MarkerSchema.statics = {
             const subtypes = []
             if (!both && !types) resolve([])
             if (!both) {
-              types.forEach(t => {
+              types.forEach((t) => {
                 const isMeta = (METAtypes.indexOf(t) > -1)
                 if (isMeta) subtypes.push(t)
               })
@@ -141,15 +148,15 @@ MarkerSchema.statics = {
 
             if (both) {
               searchQuery.$or = [
-                {'_id':new RegExp(search, 'i')},
-                {'name':new RegExp(search, 'i')},
-                {'data.title':new RegExp(search, 'i')}
+                { _id: new RegExp(search, 'i') },
+                { name: new RegExp(search, 'i') },
+                { 'data.title': new RegExp(search, 'i') }
               ]
             } else {
               searchQuery = {
                 year: { $gt: (year - delta), $lt: (year + delta) },
-                type: "i",
-                coo: { $exists: true, $ne: [] },
+                type: 'i',
+                // coo: { $exists: true, $ne: [] },
                 subtype: { $in: subtypes }
               }
             }
@@ -161,7 +168,7 @@ MarkerSchema.statics = {
               .then((metadata) => {
                 if (both) {
                   const areaMetaIds = ['ruler', 'culture', 'capital', 'religion', 'religionGeneral']
-                  Metadata.find({_id: { $in: areaMetaIds }})
+                  Metadata.find({ _id: { $in: areaMetaIds } })
                     .exec()
                     .then((areaMeta) => {
                       const lowerSearch = search.toLowerCase()
@@ -173,7 +180,7 @@ MarkerSchema.statics = {
                         for (const [index, eO] of oValues.entries()) {
                           if (eO[0] && eO[0].toLowerCase().indexOf(lowerSearch) > -1) {
                             addCounter++
-                            metaAreaAddition.push([oIds[index], eO[0], 'ae|' + currId])
+                            metaAreaAddition.push([oIds[index], eO[0], `ae|${currId}`])
                           }
                           if (addCounter > 2) break
                         }
@@ -196,10 +203,9 @@ MarkerSchema.statics = {
             if (search) {
               if (both) {
                 const forbiddenTypes = ['g', 'a_', 'ap']
-                return markersPlus.filter(item => !forbiddenTypes.includes((item.subtype || item.type).substr(0,2))).map(item => [item._id, (item.data || {}).title || item.name, item.type + '|' + item.subtype]).concat(metaAreaAddition)
-              } else {
-                return markersPlus.map(item => item._id)
+                return markersPlus.filter(item => !forbiddenTypes.includes((item.subtype || item.type).substr(0, 2))).map(item => [item._id, (item.data || {}).title || item.name, `${item.type}|${item.subtype}`]).concat(metaAreaAddition)
               }
+              return markersPlus.map(item => item._id)
             } else if (format && format.toLowerCase() === 'geojson') {
               return markersPlus.map(feature => ({
                 properties: {
@@ -218,13 +224,12 @@ MarkerSchema.statics = {
             return markersPlus
           })
         })
-    } else {
-      return this.find()
+    }
+    return this.find()
         .sort({ createdAt: -1 })
         .skip(+offset)
         .limit(+length)
         .exec()
-    }
   }
 }
 

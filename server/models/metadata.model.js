@@ -19,8 +19,10 @@ const MetadataSchema = new mongoose.Schema({
     type: String,
   },
   coo: {
-    type: Array,
-    required: false
+    type: [Number],
+    required: false,
+    default: undefined,
+    validate: v => typeof v === 'undefined' || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
   },
   type: {
     type: String,
