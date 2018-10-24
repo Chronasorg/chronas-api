@@ -1,32 +1,38 @@
 #https://blog.hasura.io/an-exhaustive-guide-to-writing-dockerfiles-for-node-js-web-apps-bbee6bd2f3c4
-
-
-# take default image of node boron i.e  node 6.x
-FROM node:10-alpine
-
-# create app directory in container
-RUN mkdir -p /app
-
-# set /app directory as default working directory
+# ---- Base Node ----
+FROM node:10 AS base
+# Create app directory
 WORKDIR /app
 
-# only copy package.json initially so that `RUN npm start` layer is recreated only
-# if there are changes in package.json
-ADD dist/package.json /app/
+# ---- Dependencies ----
+FROM base AS dependencies  
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+COPY package.json ./
+# install app dependencies including 'devDependencies'
+RUN npm install
 
+# ---- Copy Files/Build ----
+FROM dependencies AS build  
+WORKDIR /app
+COPY . /app
+# Build react/vue/angular bundle static files
+RUN npm run build
+
+# --- Release with Alpine ----
+FROM node:10-alpine AS release  
+# Create app directory
+WORKDIR /app
+# optional
+# RUN npm -g install serve
 ENV NODE_ENV=development
 
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
 
-RUN npm install --production --silent
-
-# copy all file from current dir to /app in container
-COPY dist /app/
-
-# expose port 4040
-EXPOSE 80
-
-# cmd to start service
-CMD [ "node", "index.js" ]
+COPY --from=dependencies /app/dist/package.json ./
+# Install app dependencies
+RUN npm install --only=production
+COPY --from=build /app/dist ./
+#CMD ["serve", "-s", "dist", "-p", "8080"]
+CMD ["node", "index.js"]
