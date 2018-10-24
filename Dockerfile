@@ -1,3 +1,6 @@
+#https://blog.hasura.io/an-exhaustive-guide-to-writing-dockerfiles-for-node-js-web-apps-bbee6bd2f3c4
+
+
 # take default image of node boron i.e  node 6.x
 FROM node:10-alpine
 
