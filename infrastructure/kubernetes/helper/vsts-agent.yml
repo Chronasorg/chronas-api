@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: vsts-agent
-        image: microsoft/vsts-agent:ubuntu-16.04-docker-17.03.0-ce-standard
+        image: microsoft/vsts-agent:ubuntu-16.04-docker-17.12.0-ce-standard
         env:
           - name: VSTS_ACCOUNT
             valueFrom:
