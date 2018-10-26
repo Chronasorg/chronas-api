@@ -17,6 +17,8 @@ WORKDIR /app
 COPY . /app
 # Build react/vue/angular bundle static files
 RUN npm run build
+WORKDIR /app/dist
+RUN npm install --only=production
 
 # --- Release with Alpine ----
 FROM node:10-alpine AS release  
@@ -30,9 +32,7 @@ ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
 
-COPY --from=dependencies /app/dist/package.json ./
 # Install app dependencies
-RUN npm install --only=production
-COPY --from=build /app/dist ./
+COPY --from=build /app/dist/ ./
 #CMD ["serve", "-s", "dist", "-p", "8080"]
 CMD ["node", "index.js"]
