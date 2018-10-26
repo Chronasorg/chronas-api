@@ -1,0 +1,27 @@
+
+version: '3'
+
+services:
+  database:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "27017:27017"
+
+  app:
+    build: .
+    container_name: chronas_api
+    ports:
+      - "80:80"    
+    links:
+     - database
+    environment:
+      - JWT_SECRET='placeholder'
+      - MONGO_HOST=mongodb://database/chronas-api
+      - APPINSIGHTS_INSTRUMENTATIONKEY='placeholder'
+      - TWITTER_CONSUMER_KEY=placeholder
+      - TWITTER_CONSUMER_SECRET=placeholder
+      - TWITTER_CALLBACK_URL=placeholder
+      - PORT=80
+    depends_on:
+      - database
