@@ -258,6 +258,65 @@
 			"response": []
 		},
 		{
+			"name": "/areas Copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "eb44d6df-66ff-41b8-8445-89bf0473e389",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('data');",
+							"    pm.expect(jsonData[0]).to.have.property('year');",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/areas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"areas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/areas{id}",
 			"event": [
 				{
@@ -439,7 +498,6 @@
 					"listen": "test",
 					"script": {
 						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
@@ -450,10 +508,10 @@
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"    pm.expect(jsonData[0]).to.have.property('wiki');",
 							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
 							"});"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -744,7 +802,6 @@
 					"listen": "test",
 					"script": {
 						"id": "e26856bb-4a1f-41b0-8c05-def1952a7e66",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Response should contain a valid user\", function () {",
 							"    var jsonData = pm.response.json();",
@@ -760,7 +817,8 @@
 							"    pm.response.to.have.status(200);",
 							"});",
 							""
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -801,76 +859,12 @@
 			"response": []
 		},
 		{
-			"name": "/markers{id}- should update a marker",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "b17a88f5-e08a-48e1-9a9b-b0474cd85478",
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Response should contain a valid user\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    ",
-							"    pm.expect(jsonData).to.have.property('type');",
-							"    pm.expect(jsonData).to.have.property('name');",
-							"    pm.expect(jsonData).to.have.property('year');",
-							"    pm.expect(jsonData._id).to.eql(\"testMarker\");",
-							"    ",
-							"});",
-							"",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							""
-						]
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\n        \"_id\": \"testMarker\",\n        \"name\": \"testMarker\",\n        \"wiki\": \"testMarker\",\n        \"type\": \"politician\",\n        \"year\": -91,\n        \"coo\": [\n            13.616666666667,\n            41.266666666667\n        ]\n}"
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/markers/testMarker",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"markers",
-						"testMarker"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/marker Copy",
+			"name": "/marker",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
@@ -881,10 +875,10 @@
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"    pm.expect(jsonData[0]).to.have.property('wiki');",
 							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
 							"});"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
