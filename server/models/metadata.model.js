@@ -89,6 +89,7 @@ MetadataSchema.statics = {
    * @returns {Promise<Metadata[]>}
    */
   list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
+
     let hasEw = false
     if (fList) {
       const cachedInit = cache.get('init')
@@ -208,16 +209,18 @@ MetadataSchema.statics = {
           })
       }
     }
-    // return this.find()
-    //     .skip(+start)
-    //     .limit(+end)
-    //     .sort({ score: 'desc' })
-    //     .exec()
-    //     .then(metadata => metadata.map((obj) => {
-    //       const dataString = JSON.stringify(obj.data).substring(0, 200)
-    //       obj.data = dataString + ((dataString.length === 203) ? '...' : '')
-    //       return obj
-    //     }))
+    else {
+      return this.find()
+        .skip(+start)
+        .limit(+end)
+        .sort({ score: 'desc' })
+        .exec()
+        .then(metadata => metadata.map((obj) => {
+          const dataString = JSON.stringify(obj.data).substring(0, 200)
+          obj.data = dataString + ((dataString.length === 203) ? '...' : '')
+          return obj
+        }))
+    }
   }
 }
 
