@@ -1,6 +1,7 @@
 import Metadata from '../models/metadata.model'
 import Marker from '../models/marker.model'
 import userCtrl from './user.controller'
+import APIError from '../helpers/APIError'
 import revisionCtrl from './revision.controller'
 import { config, cache, initItemsAndLinksToRefresh } from "../../config/config";
 import httpStatus from "http-status";
@@ -88,8 +89,9 @@ function create(req, res, next) {
     .exec()
     .then((foundMetadata) => {
       if (foundMetadata && !req.body.parentId) {
-        const err = new APIError('This id already exists!', 400)
-        next(err)
+        // const err = new APIError('This id already exists!', 400)
+        return res.status(400).send()
+        // next(err)
       } else if (foundMetadata && req.body.parentId) {
         createNodeOne(foundMetadata, req, res, next)
       } else {
@@ -173,7 +175,13 @@ function vote(delta) {
   }
 }
 
-function updateSingle(req, res, next, fromRevision = false) {
+function updateSinglePromise(req, res, next, fromRevision = false) {
+  return new Promise((resolve) => {
+    updateSingle(req, res, next, fromRevision, resolve)
+  })
+}
+
+function updateSingle(req, res, next, fromRevision = false, resolve) {
   const metadata = req.entity
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
@@ -188,8 +196,18 @@ function updateSingle(req, res, next, fromRevision = false) {
   }
   metadata.markModified('data')
   metadata.save()
-    .then(() => { if (!fromRevision) next() })
-    .catch((e) => { if (!fromRevision) next(e) })
+    .then(() => {
+      if (!fromRevision) next()
+      if (resolve) {
+        return resolve()
+      }
+    })
+    .catch((e) => {
+      if (!fromRevision) next(e)
+      if (resolve) {
+        return resolve()
+      }
+    })
 }
 
 function updateLink(addLink) {
@@ -248,14 +266,16 @@ function updateLink(addLink) {
 
     req.body.nextBody = newNextBody1
     req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
-    updateSingle(req, res, next, true)
-    revisionCtrl.addUpdateSingleRevision(req, res, next, false)
-
-
-    req.body.nextBody = newNextBody2
-    req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
-    updateSingle(req, res, next, true)
-    revisionCtrl.addUpdateSingleRevision(req, res, next)
+    updateSinglePromise(req, res, next, true)
+      .then(() => {
+        revisionCtrl.addUpdateSingleRevision(req, res, next, false)
+        req.body.nextBody = newNextBody2
+        req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
+        return updateSinglePromise(req, res, next, true)
+          .then(() => {
+            revisionCtrl.addUpdateSingleRevision(req, res, next)
+          })
+      })
   }
 }
 
@@ -305,10 +325,9 @@ function getLinked(req, res, next) {
     .then((metadataPre) => {
       const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || []
       const aeEntities = []
-
       metadataAeList.forEach((el) => {
         const metaData = metadataPre.find((mEl) => mEl._id === el[1]).data[el[2]]
-        aeEntities.push({
+        if (metaData) aeEntities.push({
           properties: {
             n: metaData[nameAccByAEtype[el[1]]],
             w: metaData[wikiAccByAEtype[el[1]]],
@@ -326,7 +345,7 @@ function getLinked(req, res, next) {
       Marker.find(mongoSearchQueryMarker)
         .exec()
         .then((markers) => {
-          const fullList = (markers || []).map(feature => ({
+          const fullList = aeEntities.concat((markers || []).map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature.name,
               w: feature._id,
@@ -334,6 +353,7 @@ function getLinked(req, res, next) {
               t: feature.type,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
+              src: (feature.data || {}).source,
               s: feature.score,
               ct: 'marker'
             },
@@ -342,11 +362,13 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          })).concat(metadata.map(feature => ({
+          }))).concat(metadata.map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature._id,
-              w: feature._id || feature.wiki,
-              s: (feature.data || {}).source,
+              id: feature._id,
+              w: feature.wiki || feature._id,
+              s: feature.score,
+              src: (feature.data || {}).source,
               y: feature.year,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
@@ -358,13 +380,13 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          }))).concat(aeEntities)
+          })))
 
           fullList.forEach((el) => {
-            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
+            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
               resObj.map.push(el)
             }
-            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
+            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
               resObj.media.push(el)
             }
           })
@@ -372,6 +394,7 @@ function getLinked(req, res, next) {
           return res.json(resObj)
         })
     })
+    .catch(e => res.status(500).send(e))
 }
 
 /**
@@ -389,8 +412,9 @@ function list(req, res, next) {
   const delta = +req.query.delta || 10
   const wiki = req.query.wiki || false
   const search = req.query.search || false
+  const discover = req.query.discover || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (count) {
         Metadata.count().exec().then((metadataCount) => {

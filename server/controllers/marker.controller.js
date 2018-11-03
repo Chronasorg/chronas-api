@@ -50,6 +50,8 @@ function create(req, res, next, fromRevision = false) {
         coo: req.body.coo,
         type: req.body.type,
         year: req.body.year,
+        capital: req.body.capital,
+        partOf: req.body.partOf,
         end: req.body.end,
       })
 
@@ -77,6 +79,8 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
+  if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital
+  if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
   marker.save()
@@ -95,20 +99,22 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { offset = 0, count = 500, sort = 'name', order = 'asc', filter = '' } = req.query
+  const { offset = 0, count = 2000, sort = 'name', order = 'asc', filter = '' } = req.query
   const length = +count
   const typeArray = req.query.types || false
   const wikiArray = req.query.wikis || false
   const format = req.query.format || false
   const year = +req.query.year || false
   const end = +req.query.year || false
-  const delta = +req.query.delta || 10
+  const delta = +req.query.delta
   const includeMarkers = req.query.includeMarkers !== 'false'
   const search = req.query.search || false
   const both = req.query.both || false
   const start = offset
 
-  Marker.list({ start, length, sort, order, filter, delta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
+  const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10
+
+  Marker.list({ start, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {
