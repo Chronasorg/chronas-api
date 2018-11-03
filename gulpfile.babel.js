@@ -42,7 +42,7 @@ gulp.task('package', () => {
     '!_package',
     '!gulpfile.js']
 
-    // add exclusion patterns for all dev dependencies
+  // add exclusion patterns for all dev dependencies
   const packageJSON = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'))
   const devDeps = packageJSON.devDependencies
 
@@ -56,8 +56,8 @@ gulp.task('package', () => {
   }
 
   return gulp.src(packagePaths)
-          .pipe(zip(options.packageName))
-          .pipe(gulp.dest(options.packagePath))
+    .pipe(zip(options.packageName))
+    .pipe(gulp.dest(options.packagePath))
 })
 
 // Compile ES6 to ES5 and copy to dist

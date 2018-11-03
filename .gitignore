@@ -6,6 +6,9 @@ release
 dump
 dump.zip
 
+dump
+dump.zip
+
 # Runtime data
 pids
 *.pid
@@ -59,8 +62,6 @@ windows*
 connectToMongo.sh
 
 users-bk.json
-
-dataToMigrate
 
 scripts
 dataToMigrate

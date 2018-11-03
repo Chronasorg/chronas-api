@@ -11,7 +11,7 @@ const getDiscussions = require('./controller').getDiscussions
  */
 const router = express.Router() // eslint-disable-line
 
-  // get all forums
+// get all forums
 router.route('/').get(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
@@ -21,7 +21,7 @@ router.route('/').get(
     )
   })
 
-  // get discussions of a forum
+// get discussions of a forum
 router.route('/:forum_slug/discussions').get(
   // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
@@ -32,7 +32,7 @@ router.route('/:forum_slug/discussions').get(
     )
   })
 
-  // get pinned discussions of a forum
+// get pinned discussions of a forum
 router.route('/:forum_slug/pinned_discussions').get(
   // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {

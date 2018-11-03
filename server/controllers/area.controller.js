@@ -310,12 +310,12 @@ function updateMany(req, res, next) {
             }
           })
           if (typeof prevBody[currYear] !== 'undefined') {
-                // need to update
+            // need to update
             area.save()
-                  .then((ar) => {
-                    resolve()
-                  })
-                  .catch(e => reject(e))
+              .then((ar) => {
+                resolve()
+              })
+              .catch(e => reject(e))
           } else {
             resolve()
           }

@@ -263,10 +263,10 @@ MarkerSchema.statics = {
         })
     }
     return this.find()
-        .sort({ createdAt: -1 })
-        .skip(+offset)
-        .limit(+length)
-        .exec()
+      .sort({ createdAt: -1 })
+      .skip(+offset)
+      .limit(+length)
+      .exec()
   }
 }
 
