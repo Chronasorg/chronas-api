@@ -1,0 +1,1691 @@
+AAC:capital = 1878	# Aachen
+ABA:capital = 409	# Kufa
+ABA:762.7.30 = { capital = 410 } #Baghdad
+ABA:796.1.1 = { capital = 407 } # Ar-Raqqah
+ABA:809.1.1 = { capital = 410 } # Baghdad
+ABA:836.1.1 = { capital = 2274 } # Samarra
+ABA:892.1.1 = { capital = 810 } # Baghdad
+ABA:1153.1.1 = { capital = 410 } #Baghdad
+ABB:capital = 1228	# Dongola
+ABE:capital = 971	# Abnaki
+ABH:capital = 544
+ABH:250.1.1 = { capital = 2184 }
+ABK:capital = 1856	# Abkhazia
+ACH:capital = 1773	# Mystras
+ADA:capital = 1211	# Deker, Harer
+ADB:capital = 411	# Mosul (Arbela)
+ADC:capital = 4484	# Mikawa
+ADE:capital = 390	# Sana'a
+ADU:capital = 225	# Cordoba
+ADX:capital = 401 #Ubar
+AFA:capital = 1214	#Aussa
+AFG:capital = 451	# Kabul
+AFG:	capital = 450
+AFG:	capital = 451
+AFG:1266.1.1 = { capital = 448 }
+AFG:	capital = 451
+AFG:	capital = 447	# Kandahar
+AFG:1780.1.1 = { capital = 451 } # Kabul
+AGC:capital = 1749	# Cadiz
+AGD:capital = 4292
+AGL:capital = 1167
+AHM:capital = 544	# Ahmadnagar
+AIR:capital = 2053	# Agades
+AJU:capital = 2147 #Ajuuran
+AKK:capital = 418
+AKK:1469.1.1 = { capital = 416 } # Tabriz
+AKK:	capital = 433 #Yazd
+AKK:1504.1.1 = { capital = 410 }	#Baghdad
+AKM:capital = 1019	# Harima
+AKS:capital = 2673		# Axum
+AKT:capital = 4322	# Ugo
+ALA:capital = 463	# Alania
+ALB:capital = 4266	# Durr�s
+ALB:1392.1.1 = { government = despotic_monarchy capital = 143 }
+ALB:1700.1.1 = { capital = 4266 } #Tirana
+ALE:capital = 1879	# Alencon
+ALG:capital = 338	# Al-Djazair
+ALH:capital = 2275	# El Qatif
+ALM:capital = 69	# Konstanz
+ALO:capital = 2667 #Soba
+ALR:capital = 222	# Almeria
+ALS:capital = 75	# Strasbourg
+ALT:capital = 336 #Altava
+AMA:capital = 1018	# Izumo
+AMG:capital = 175	# Bayonne
+ANB:capital = 496
+ANC:capital = 377	# Antioch
+ANE:capital = 1943
+ANE:220.1.1 = { capital = 280 }
+ANG:capital = 326	# Angora
+ANH:capital = 58	# Dessau
+ANJ:capital = 178	# Angers
+ANL:capital = 1775
+ANN:capital = 610	# Hue
+ANS:capital = 67	# N�rnberg
+ANT:capital = 4258	# Antemoro
+ANU:capital = 1852
+ANZ:capital = 405 #Al Jawf
+APA:capital = 879	# Apache
+AQT:capital = 196	# Toulouse
+AQT:260.1.1 = { primary_culture = aquitaine capital = 196 } # Toulouse
+AQU:capital = 111	# Friuli
+ARA:capital = 211
+ARA:1118.12.18 = { capital = 214 } # Zaragoza
+ARA:1164.7.18 = { capital = 213 } # Barcelona
+ARB:capital = 385 # Mecca
+ARB:	capital = 361	# Cairo
+ARD:capital = 2280 # Ardalan
+ARK:capital = 579	# Akyab
+ARL:capital = 424 #Ardabil
+ARL:1548.7.27 = { capital = 428 } # Qazvin
+ARL:1598.1.1 = { capital = 429 } # Isfahan
+ARM:capital = 419	# Yerevan
+ARP:capital = 3062
+ARS:capital = 2270
+ARW:capital = 743
+ASA:capital = 1023	# Echizen
+ASB:capital = 427	# Astarabad
+ASB:1367.1.1 = { capital = 2286 } #Semnan
+ASB:1374.1.1 = { capital = 427 } #Astarabad
+ASH:capital = 1138	# Kumasi
+ASI:capital = 2141	# Bungi
+ASK:capital = 1020	# Yamashiro
+ASR:capital = 207	# Asturias
+ASS:capital = 566	# Gargaon
+AST:capital = 464	# Astrakhan
+ASX:capital = 4400
+ASX:1200.1.1 = { capital = 2537	} # Sabya
+ASY:capital = 2274 #Assur
+ATH:capital = 146	#Athens
+ATJ:capital = 617	# Banda Aceh
+ATR:capital = 2281 #Ganzak
+ATS:capital = 4260
+AUG:capital = 1868	# Augsburg
+AUS:capital = 1088 # Canberra
+AUV:capital = 199	# Clermont
+AVA:capital = 584	# Ava
+AVI:capital = 202	# Avignon
+AVR:capital = 282
+AVR:567.1.1 = { capital = 153 }
+AVR:	capital = 2264 #Khunzah
+AYD:capital = 318	# Smyrna
+AYU:capital = 600	# Ayutthaya
+AYX:capital = 535
+AZE:capital = 2281 # Maragha
+AZE:901.1.1 = { capital = 424 } # Ardabil
+AZE:	capital = 2283 # Tarom
+AZE:1150.1.1 = { capital = 416 }
+AZE:1800.1.1 = { capital = 421 }
+AZE:1918.5.28 = { capital = 421 } # Baku
+AZT:capital = 852	# Mexico
+BAA:capital = 547
+BAB:capital = 409 #Babylon
+BAD:capital = 74	# Baden
+BAE:capital = 122	# Bari
+BAG:capital = 1159	# Bagirmi
+BAH:capital = 2225	# Gulbarga
+BAL:capital = 577	# Quetta
+BAL:1547.1.1 = { capital = 576 } # Kalat
+BAM:capital = 66	# Bamberg
+BAN:capital = 624	# Bandung
+BAR:capital = 187	# Verdun
+BAU:capital = 60	# Bautzen
+BAV:capital = 64	# Regensburg
+BAV:1255.1.1 = { capital = 65 }	# M�nchen!
+BBD:capital = 501
+BDA:capital = 2203	# Baroda
+BDJ:capital = 218	# Badajoz
+BEI:capital = 636	# Brunei Town
+BEJ:capital = 2521
+BEJ:1276.1.1 = { capital = 1229 }
+BEL:capital = 92	# Bruxelles
+BEL:1945.5.8 = { capital = 92 }
+BEN:capital = 1147	# Oredo
+BER:capital = 179	# Bourges
+BFA:capital = 1134
+BGA:capital = 2208	# Mayuragiri
+BGD:capital = 564	# Dhaka
+BGL:capital = 2234	# Baghelkhand
+BGW:capital = 345
+BHA:capital = 522 # Delhi
+BHE:capital = 3117	# Sarajevo
+BHM:capital = 482
+BHR:capital = 396	# Manama
+BHT:capital = 4415 #Arbil
+BHU:capital = 565	# Thimphu
+BIJ:capital = 569	# Bijapur
+BJA:capital = 313
+BKJ:capital = 735
+BLA:capital = 2092 # Niitsitapi
+BLE:capital = 1232	# Suakin
+BLH:capital = 731 #Sanggyeong
+BLI:capital = 631	# Singaraja
+BLM:capital = 627	# Blambangan
+BLN:capital = 2423	# Tanjung Selor
+BLO:capital = 312	# Beloozero
+BLO:fixed_capital = 312 # Cannot move capital away from this province & no power cost to move to it
+BLR:capital = 276	# Minsk
+BLZ:capital = 843
+BNA:capital = 384	# Medina
+BND:capital = 2235	#Kalpi
+BND:	capital = 2235 #Kalpi
+BND:	capital = 559
+BNG:capital = 561	# Howrah, Murshidabad
+BNJ:capital = 639	# Banjar
+BNV:capital = 120	# Benevento
+BNY:capital = 4209 # Bunyoro
+BOH:capital = 266	# Praha
+BOI:capital = 1194
+BOL:capital = 802	# La Paz
+BOL:1839.8.25 = { capital = 802 }
+BON:capital = 2334 #Bono-Manso
+BOS:capital = 3117	# Sarajevo
+BOT:capital = 2024
+BOU:capital = 190	# Bourges
+BPI:capital = 4458 # Rasht
+BRA:capital = 50	# Berlin
+BRB:capital = 95	# 's Hertogenbosch
+BRE:capital = 1874	# Bremen
+BRG:capital = 246
+BRI:capital = 172	# Nantes
+BRM:capital = 586	# Rangoon
+BRN:capital = 246	# Northumberland
+BRO:capital = 171
+BRR:capital = 548	# Berar/Vidharba
+BRS:capital = 107	# Brescia
+BRT:capital = 1056
+BRU:capital = 57	# Braunschweig
+BRX:capital = 3147
+BRZ:capital = 756	# S�o Salvador
+BRZ:1763.1.1 = { capital = 763 }	# Rio de Janeiro
+BRZ:1960.4.22 = { capital = 2801 } # Brasilia
+BSG:capital = 4211 # Basoga
+BSH:capital = 475	# Bashkortostan
+BSP:capital = 285	# Kaffa
+BSR:capital = 408	# Basra
+BST:capital = 547	# Bastar
+BTI:capital = 2674		# Semien
+BTL:capital = 4296 # Bitlis
+BTN:capital = 2866	# Buton
+BTS:capital = 3146
+BTU:capital = 2863	# Butuan
+BUA:capital = 778	# Buenos Aires
+BUG:capital = 2036
+BUK:capital = 442 #Bukhara
+BUK:	capital = 454
+BUK:1533.1.1 = { capital = 442 } # Bukhara becomes capital
+BUL:capital = 299
+BUL:632.1.1 = { capital = 2614 } #Phanagoria
+BUL:681.1.1 = { capital = 150 } #Pliska
+BUL:972.1.1 = { capital = 148 } #Skopje
+BUL:1020.1.1 = { capital = 150 } #Tarnovo
+BUL:1879.1.1 = { capital = 1765 } # Sofia
+BUR:capital = 258
+BUR:260.1.1 = { capital = 79 }
+BUR:411.1.1 = { capital = 1761 } #Worms
+BUR:443.1.1 = { capital = 193 } #Besancon
+BUR:888.1.1 = { capital = 193 } #Besancon
+BUR:933.1.1 = { capital = 201 } #Arles
+BUR:961.1.1 = { capital = 193 } #Dole
+BUR:1032.9.6 = { capital = 192 } #Dijon
+BUU:capital = 2034
+BUY:capital = 730 #Buyeoseong
+BYZ:capital = 151	# Constantinople
+BYZ:fixed_capital = 151
+CAB:capital = 2805
+CAC:capital = 457 #Tashkent
+CAD:capital = 894 # Caddo
+CAF:capital = 2043
+CAL:capital = 2639	# Calakmul
+CAM:capital = 841	# Guatemala city
+CAN:capital = 3024	# Ottawa
+CAP:capital = 2364
+CAR:capital = 1768	# Sankt Veit an der Glan
+CAS:capital = 219	# Toledo
+CAS:1474.12.11 = { capital = 215 } # Castilla La Vieja
+CAS:1506.9.25 = { capital = 219 } # Toledo
+CAT:capital = 213	# Barcelona
+CBA:capital = 4320	# Shimousa
+CBN:capital = 459	# Chuy
+CCH:capital = 2196 # Ajmer
+CCQ:capital = 794
+CDD:capital = 2358
+CDL:capital = 661	# Dali
+CDU:capital = 4418
+CEA:capital = 534
+CEB:capital = 4478	# Cebu
+CEG:capital = 679	# Chengdu
+CEN:capital = 1821
+CEP:capital = 142
+CEY:capital = 572	# Kandy
+CGS:capital = 664 # Lingyun
+CHA:capital = 607	# Vijaya
+CHC:capital = 671	#Changsha
+CHD:capital = 2227	# Ballarsah
+CHE:capital = 936 # Cheraw
+CHG:capital = 715
+CHH:capital = 702	# Hohhot
+CHI:capital = 919	# Chickasaw
+CHK:capital = 608	# Champassak
+CHL:capital = 787	# Santiago
+CHM:capital = 812	# Chan Chan
+CHN:capital = 1821	# Nanjing
+CHN:	capital = 1816	# Beijing
+CHN:	capital = 1816	# Beijing
+CHN:	capital = 1821
+CHN:	capital = 682
+CHN:1937.1.1 = { capital = 680 }
+CHN:1948.5.20 = { capital = 1821 }
+CHN:	capital = 1816
+CHO:capital = 920	# Choctaw
+CHP:capital = 186	# Reims
+CHR:capital = 289	# Chernigov
+CHU:capital = 2912
+CHV:capital = 1041
+CHY:capital = 910 # Chippewa
+CIR:capital = 2260 # Circassia
+CJA:capital = 813
+CKW:capital = 2027 # Chokwe
+CLA:capital = 804	# Hutancolla
+CLA:1448.1.1 = { capital = 802 }
+CLB:capital = 420
+CLF:capital = 868
+CLM:capital = 2657
+CLS:capital = 540
+CLY:capital = 2211	# Badami
+CMB:capital = 2391	# Phnom Penh
+CMG:capital = 2368	# Sophene
+CMI:capital = 2488	# Umung
+CMO:capital = 1988
+CMP:capital = 2202	# Rewa Kantha
+CMR:capital = 2042
+CNA:capital = 609	# Isanapura
+CND:capital = 325	# Kastamon
+CNG:capital = 1169
+CNK:capital = 873 #Chinook
+CNN:capital = 376	# Galway
+COC:capital = 846
+COL:capital = 825	# Bogota
+COM:capital = 2144 # Apsaalooke
+COP:capital = 2632 # Cop�n
+COR:capital = 1247	# Bastia
+COS:capital = 836
+CPC:capital = 851
+CPV:capital = 1096
+CRA:capital = 798	# Charcas
+CRB:capital = 624	# Banten
+CRD:capital = 225	# Cordoba
+CRE:capital = 925
+CRI:capital = 284	# Salaciq
+CRL:capital = 240
+CRN:capital = 233	# Exeter
+CRO:capital = 131	# Zagreb
+CRO:1991.10.8 = { capital = 131 }
+CRR:capital = 163	# Chandax
+CRS:capital = 265
+CRT:capital = 163	# Heraklion
+CRV:capital = 240
+CSA:capital = 924	# Montgomery
+CSA:1861.5.29 = { capital = 952 } #Richmond
+CSH:capital = 688	# Kaifeng
+CSH:1644.1.1 = { capital = 689 } # Fengyuan
+CSK:capital = 1819	# Tosa
+CSU:capital = 808	# Cuzco
+CTV:capital = 237
+CUA:capital = 778
+CUB:capital = 484	# Havana
+CUD:capital = 34	# Ingria
+CUM:capital = 479
+CUM:1037.1.1 = { capital = 466 }
+CUM:1236.1.1 = { capital = 2607 }
+CUN:capital = 1875	# Cuneo
+CUR:capital = 39
+CXI:capital = 681	# Yichuan
+CXI:1644.8.9 = { capital = 679 } # Sichuan
+CYA:capital = 2722
+CYI:capital = 675	# Umung
+CYP:capital = 321	# Nicosia
+CZE:capital = 266	# Praha
+CZH:capital = 700	# Chang'an
+CZH:	capital = 688 #Kaifeng
+CZH:1350.1.1 = { capital = 1822 primary_culture = wu } #Suzhou
+CZH:1380.1.1 = { capital = 662 primary_culture = cantonese } #Yunnan
+CZS:capital = 266	# Praha
+DAC:capital = 1951	# Sarmizegetusa
+DAH:capital = 1140 #Allada
+DAI:capital = 616	# Hanoi
+DAK:capital = 551
+DAK:950.1.1 = { capital = 2232 }
+DAM:capital = 2762		# Damot
+DAN:capital = 12	#Sjaelland
+DAN:1945.5.4 = { capital = 12 }	#Sjaelland
+DAR:capital = 2047	# Darfur
+DAS:capital = 550
+DAU:capital = 204	# Grenoble
+DAW:capital = 2534 # Wadi al Dawasir
+DAX:capital = 2549
+DBY:capital = 1850 #Gaseopwon
+DEC:capital = 545 #Aurangabad
+DEC:	capital = 542	# Hyderabad
+DEH:capital = 241	# Glamorgan
+DEI:capital = 245	# Yorkshire
+DEN:capital = 1750	# Alicante
+DER:capital = 2691 #Taleh
+DGB:capital = 2335 #Yendi
+DGL:capital = 1248	# Mal�
+DHU:capital = 519	# Jaipur
+DIV:capital = 4432	# Divrigi
+DJI:capital = 2003
+DKR:capital = 4330
+DLH:capital = 522	# Delhi
+DLR:capital = 4488
+DMK:capital = 628	# Demak
+DMN:capital = 498
+DMS:capital = 375	# Cork
+DNI:capital = 329	# Sivas
+DNN:capital = 249
+DNZ:capital = 43	# Danzig
+DOC:capital = 138	# Ston
+DOM:capital = 490
+DON:capital = 734
+DRC:capital = 2037
+DRE:capital = 276
+DRV:capital = 4247
+DTE:capital = 1031	# Hokkaido
+DTT:capital = 4141 #Ditmarschen
+DUL:capital = 332	# Mus
+DUM:capital = 233
+DUM:710.1.1 = { primary_culture = breton capital = 169 }
+DUR:capital = 4499
+DVA:capital = 589
+DWR:capital = 2687	# Dawaro
+DYF:capital = 4494
+EAL:capital = 67
+EAL:	capital = 231 #Bragara Augusta
+EAN:capital = 1860	# Norfolk
+ECU:capital = 820	# Quito
+EDE:capital = 2269	# Edessa
+EDE:1144.12.24 = { capital = 4420 } #Turbessel
+EFR:capital = 1931	# Emden
+EGE:capital = 50	# Berlin
+EGP:capital = 358	# Alexandria
+EGY:capital = 361	# Cairo
+EGY:	capital = 361	# Cairo
+EGY:	capital = 4466	# Ramla
+EGY:	capital = 361	# Cairo
+EGY:1250.5.2 = { capital = 382 }
+EGY:1260.1.1 = { capital = 361 }
+EGY:1971.9.2 = { capital = 361 }
+ELM:capital = 1861
+ELS:capital = 839
+EMI:capital = 1025
+ENA:capital = 2758		# Eneara
+ENG:capital = 236	# London
+EPI:capital = 4267 # Arta
+EPI:1356.1.1 = { capital = 144 } #Ioannina
+EPI:1416.1.1 = { capital = 4267 } #Arta
+EQG:capital = 1097	# Malabo
+ERE:capital = 329	# Sivas
+ERG:capital = 239	# Gloucestershire
+ERI:capital = 2672
+EST:capital = 36
+EST:1918.2.24 = { capital = 36 }
+EST:1944.9.18 = { capital = 36 }
+EST:1991.8.20 = { capital = 36 government = presidental_republic }
+ESX:capital = 238	# Essex
+ETH:capital = 1224		# Gonder
+ETH:	capital = 1213 #Addis Ababa
+ETI:capital = 635 # Dili
+ETR:capital = 116	# Firenze
+EUR:capital = 3148
+FAD:capital = 2547 #Palmyra
+FAT:capital = 2584	# Mahdia
+FAT:973.1.1 = { capital = 361 }	# Cairo
+FEO:capital = 2608	# Theodoro
+FER:capital = 113	# Ferrara
+FER:1452.1.1 = { capital = 113 } # Ferrara
+FEZ:capital = 343	# Fez
+FIJ:capital = 1242
+FIN:capital = 27	# �bo
+FIN:1812.1.1 = { capital = 28 } #Helsinki
+FLA:capital = 90	# Antwerp
+FLY:capital = 4504	# Offaly
+FOI:capital = 176	# Pau
+FOX:capital = 945	# Fox
+FR2:capital = 183 # Paris
+FR2:1940.6.14 = { capital = 1169 } #Brazzaville
+FR2:1942.11.16 = { capital = 338 } #Algiers
+FR2:1944.8.25 = { capital = 183 }
+FRA:capital = 183	# Paris
+FRC:capital = 67	# Franken
+FRE:capital = 1876	# Frankfurt
+FRG:capital = 458 #Akhsikath
+FRI:capital = 100	# Groningen
+FRK:capital = 3104
+FRK:432.1.1 = { capital = 91 } #Tournai
+FRK:508.1.1 = { capital = 183 } #Paris
+FRM:capital = 189	# Lothringen
+FRN:capital = 1876	# Frankfurt
+FRS:capital = 2289 # Shiraz
+FRV:capital = 190	# Vichy
+FRW:capital = 183	# ile-de-france
+FRY:capital = 98	# Dorestad
+FUL:capital = 2310
+FUL:1861.1.1 = { capital = 1117 }
+FUN:capital = 2391	# Vyadhapura
+FZA:capital = 2055
+GAB:capital = 1165
+GAE:capital = 350
+GAH:capital = 556 # Kannauj
+GAL:capital = 206	# Galicia
+GAM:capital = 2005
+GAN:capital = 533	# Kolar
+GAR:capital = 2055
+GAY:capital = 2511
+GAZ:capital = 4428 #Kumukh
+GAZ:1680.1.1 = { capital = 2031 } # Tarki
+GAZ:1725.1.1 = { capital = 421 } # Shirvan
+GBI:capital = 1114
+GBR:capital = 236	# London
+GCR:capital = 256
+GCR:250.1.1 = { capital = 284 } #Crimea
+GDW:capital = 550	# Garha
+GDW:	capital = 2092
+GDW:	capital = 551
+GEE:capital = 2
+GEL:capital = 99	# Coevorde
+GEN:capital = 101	# Genova
+GEO:capital = 2266
+GEO:1008.1.1 = { capital = 462 }
+GEO:1122.1.1 = { capital = 423 } #Tbilisi
+GEO:1991.4.9 = { capital = 423 }
+GEP:capital = 162
+GEP:454.1.1 = { capital = 156 government = feudal_monarchy } #Sirmium
+GER:capital = 50	# Berlin
+GER:1990.10.3 = { capital = 50 }
+GEW:capital = 7
+GHA:capital = 2308	# Koumbi Saleh
+GHA:	capital = 1139 #Accra
+GHD:capital = 352	# Gafsa
+GHR:capital = 511	# Garhwal
+GHS:capital = 4395	# Jabiyah
+GHU:capital = 446	# Herat
+GHU:1175.1.1 = { capital = 448 } #Ghazni
+GHZ:capital = 448	# Ghazni
+GHZ:1163.1.1 = { capital = 507 } #Lahore
+GHZ:1237.1.1 = { capital = 448 religion = shiite }
+GLE:capital = 2703 #Afgooye
+GLH:capital = 466	# Sarai
+GLL:capital = 85
+GLU:capital = 625	# Kawali
+GNJ:capital = 420 # Ganja
+GNS:capital = 707
+GOC:capital = 542	# Golcanda
+GOD:capital = 248	# Lothian
+GOG:capital = 2553 #Gungnae
+GOG:427.1.1 = { capital = 1845 } #Pyongyang
+GOG:699.1.1 = { capital = 2510 }
+GOG:901.1.1 = { capital = 733 } #Songwak
+GOG:905.1.1 = { capital = 2512 } #Cheolwon
+GOK:capital = 2891	# Ordu Baliq
+GOL:capital = 303	# Saratov
+GOS:capital = 282
+GOS:455.1.1 = { capital = 140 }
+GOS:493.1.1 = { capital = 114 } #Romagna
+GOT:capital = 25	#Gotland
+GRA:capital = 223	# Granada
+GRE:capital = 146	# Athens
+GRE:1944.10.19 = { capital = 146 }
+GRJ:capital = 553	# Sambalpur
+GRM:capital = 322 # K�tahya
+GRN:capital = 1992
+GRR:capital = 394 #Al Hasa
+GTF:capital = 2529
+GTM:capital = 2633
+GUA:capital = 770
+GUG:capital = 2452
+GUI:capital = 2313
+GUJ:capital = 516	# Ahmadabad
+GUP:capital = 558	# Pataliputra
+GUR:capital = 518
+GUR:953.1.1 = { capital = 2196 }
+GUY:capital = 194	# Bergerac
+GVI:capital = 158
+GVI:350.1.1 = { capital = 150 }
+GVI:414.1.1 = { capital = 196 } #Toulouse
+GVI:507.1.1 = { capital = 2598 } #Narbonne
+GWA:capital = 525	# Gwalior
+GWE:capital = 241	# Glamorgan
+GWY:capital = 242	# Gwynedd
+GYA:capital = 744	# Georgetown
+HAB:capital = 134	# Wien
+HAB:976.1.1 = { capital = 134 }
+HAB:1278.8.26 = { capital = 134 }
+HAB:1583.1.1 = { capital = 266 }	# Prague
+HAB:1611.1.1 = { capital = 134 }	# Wien
+HAD:capital = 528 # Kota
+HAI:capital = 91	# Mons
+HAL:capital = 21
+HAM:capital = 44	# Hamburg
+HAN:capital = 57	# Hannover
+HAR:capital = 1211	# Deker, Harer
+HAT:capital = 488	# Port-Au-Prince
+HAU:capital = 1151	# Kano
+HAW:capital = 1240
+HAY:capital = 1012
+HDA:capital = 2145 #Haida
+HDR:capital = 389 #Hadramaut
+HDR:	capital = 4405 #Shihr
+HDY:capital = 2760		# Hadiya
+HED:capital = 385	# Jiddah
+HEP:capital = 578	# Kohistan
+HER:capital = 6
+HER:380.1.1 = { primary_culture = bavarian capital = 265 }
+HER:623.1.1 = { capital = 1771 }
+HES:capital = 81	# Kassel
+HES:1567.1.1 = { capital = 1762 }
+HIM:capital = 387 #Mocha
+HIN:capital = 540	# Vijayanagara
+HJA:capital = 814
+HJO:capital = 1028
+HLR:capital = 50	# Berlin
+HMD:capital = 1848	# Hamid
+HMI:capital = 2885	# hami
+HND:capital = 700	# Chang'an
+HND:25.1.1 = { capital = 2492 } #Luoyang
+HND:190.1.1 = { capital = 700 } #Chang'an
+HND:300.1.1 = { primary_culture = sichuanese capital = 679 }
+HND:350.1.1 = { primary_culture = chihan capital = 700 }
+HND:	capital = 688 #Kaifeng
+HND:	capital = 2505 #Taiyuan
+HND:1350.1.1 = { capital = 682 }
+HNS:capital = 2437
+HNS:350.1.1 = { capital = 467 }
+HNS:469.1.1 = { capital = 268 }
+HNX:capital = 667	# Guangzhou
+HOB:capital = 2698 #Hobyo
+HOD:capital = 1037
+HOH:capital = 877
+HOL:capital = 97	# Amsterdam
+HON:capital = 2630
+HOR:capital = 23
+HOT:capital = 710	# Khotan
+HOY:capital = 2214	# Halebidu
+HRI:capital = 808	# Cuzco
+HRK:capital = 564	# Vikrampur
+HRM:capital = 265
+HRN:capital = 407	# Harran
+HRP:capital = 589	# Lamphun
+HRS:capital = 2191	# Thanesar
+HRS:620.1.1 = { capital = 556 } #Kannauj
+HSA:capital = 45	# L�beck
+HSC:capital = 252 # Inverness
+HSE:capital = 583	# Hsenwi
+HSK:capital = 1021	# Settsu
+HSK:	capital = 1831 # Tanba
+HSK:	capital = 1817 # Higo
+HSM:capital = 2562
+HSN:capital = 4417 #Hisn Kayfa
+HSN:1198.1.1 = { capital = 418 } #Diyarbekir
+HSN:1231.1.1 = { primary_culture = kurdish add_accepted_culture = al_suryah_arabic capital = 4417 }
+HTK:capital = 1837	# Etchu
+HTK:1480.1.1 = { capital = 1022 } #Kii
+HUA:capital = 2158	#Shiukwan
+HUN:capital = 302
+HUN:760.1.1 = { capital = 1943 }
+HUN:897.1.1 = { capital = 153 } #Buda
+HUN:1541.1.1 = { capital = 154 } # Pressburg
+HUN:1784.1.1 = { capital = 153 } # Buda
+HUR:capital = 988	# Huron
+HUY:capital = 610
+HWZ:capital = 2535
+IAZ:capital = 155
+IBE:capital = 423
+ICE:capital = 370	#Reykjavik
+ICH:capital = 1819	# Tosa
+ICM:capital = 809 #Lima (Pachacamac)
+ICN:capital = 1860
+IDA:capital = 4461 # Idaj
+IDN:capital = 630	# Jakarta
+IFA:capital = 1212	# Zeila
+IGR:capital = 2181	# Sagala
+IKE:capital = 1019	# Harima
+IKE:	capital = 1827	# Bitchu
+ILK:capital = 2281 # Maragha
+ILK:1265.1.1 = { capital = 416 } # Tabriz
+ILK:1306.1.1 = { capital = 2283 } # Soltaniyeh
+ILL:capital = 917 # Cahokia
+ILL:1200.1.1 = { capital = 915 }
+ILM:capital = 310
+IME:capital = 422 # Kutaisi
+IMG:capital = 1839	# Totomi
+INC:capital = 808	# Cuzco
+IND:capital = 522	# Delhi
+IPA:capital = 578	# Taxila
+IPA:76.1.1 = { capital = 435 primary_culture = afghani } # Taxila conquered by Kushans
+IRA:capital = 428	# Tehran
+IRE:capital = 373	# Dublin
+IRO:capital = 960 #Onondaga
+IRQ:capital = 410	# Bagdad
+ISF:capital = 429 # Isfahan
+ISK:capital = 4315	# Tango
+ISL:capital = 407	# Ar-Raqqah
+ISR:capital = 2151	# Jerusalem
+ITA:capital = 114		# Ravenna
+ITA:500.1.1 = { primary_culture = lombard religion = chalcedonism capital = 118 } # Roma
+ITA:	capital = 118
+ITC:capital = 116
+ITO:capital = 4310	# Hyuga
+ITZ:capital = 846	# Chichen Itza
+ITZ:1000.1.1 = { primary_culture = putun capital = 842 } # Pet�n
+IVO:capital = 1126
+IVO:1983.3.1 = { capital = 1125 }
+IZU:capital = 1018	# Izumo
+JAI:capital = 126 #Malta
+JAJ:capital = 2210	# Janjira
+JAL:capital = 410	# Baghdad
+JAL:1411.1.1 = { capital = 408 } # Basra
+JAN:capital = 512	# Bikaner
+JAP:capital = 1020	# Kyoto
+JEO:capital = 4331
+JFN:capital = 2100	# Jaffna
+JGN:capital = 681	#Jingzhou
+JIM:capital = 2758
+JIN:capital = 688	# Luoyang
+JJI:capital = 4158		# Janjiro
+JMC:capital = 487
+JMN:capital = 3148
+JMT:capital = 10	# J�mtland
+JNN:capital = 1134
+JNP:capital = 555	# Jaunpur
+JOH:capital = 597	# Johor
+JOL:capital = 1116
+JOR:capital = 381	# Amman
+JSL:capital = 513	# Jaisalmer
+JUD:capital = 379	# Jerusalem
+JUT:capital = 15
+KAC:capital = 570	# Dimapur
+KAC:	capital = 573	# Maibong
+KAD:capital = 2211	# Banavasi
+KAD:960.1.1 = { capital = 531 religion = jainism }
+KAF:capital = 1218		# Kaffa
+KAG:capital = 2316	# Kangabe
+KAK:capital = 542	# Orugallu
+KAL:capital = 549
+KAM:capital = 2458	# Derge
+KAN:capital = 1155
+KAR:capital = 324	# Karaman
+KAS:capital = 2881	# Yarkand
+KAT:capital = 503	# Kutch
+KAY:capital = 2270	# Manzikert
+KAZ:capital = 1082	# Kazan
+KBA:capital = 339	# Kabylia
+KBO:capital = 1157	# Gatiga, Gazargamu
+KBU:capital = 1114
+KDR:capital = 2414	# Kediri
+KDT:capital = 457
+KED:capital = 2396 # Kedah
+KEN:capital = 235	# Kent
+KER:capital = 718
+KEY:capital = 1798
+KGA:capital = 476
+KGJ:capital = 456
+KGR:capital = 509	# Kangra
+KGR:	capital = 511 # Garhwal
+KGU:capital = 538
+KHA:capital = 2891	# Karakorum
+KHA:1390.1.1 = { capital = 2893 }
+KHA:	capital = 2891	# Ulan-Bator
+KHD:capital = 527	# Burhanpur
+KHI:capital = 441	# Khiva
+KHM:capital = 604	# Phnom Penh
+KHO:capital = 427 #Astarabad
+KHO:	#capital = 2214 #Astarabad
+KHO:	capital = 446
+KHO:	capital = 451	# Kabul
+KHO:	capital = 446	# Herat
+KHT:capital = 723
+KHW:capital = 2431	# Gurganj
+KHW:1212.1.1 = { capital = 454 } # Samarkand
+KHW:1220.1.1 = { capital = 448 } # Gazni
+KHW:1225.1.1 = { capital = 416 } # Tabriz
+KHZ:capital = 2263	# Balanjar
+KHZ:750.1.1 = { capital = 464 } #Atil
+KIB:capital = 1819
+KIC:capital = 841
+KID:capital = 4238	# Kildare
+KIE:capital = 280	# Kiev
+KIK:capital = 4178 # Upemba
+KIN:capital = 2534 # Qaryat Dhat Kahil
+KIN:480.1.1 = { capital = 405 } # Dumat Al-Jandal
+KIO:capital = 3057
+KIR:capital = 1991
+KKC:capital = 4311	# Higo
+KKE:capital = 2265
+KKH:capital = 460	# Kashgar
+KKS:capital = 32	# Kexholm
+KKT:capital = 459	# Balasagun
+KLA:capital = 540
+KLC:capital = 545
+KLC:	capital = 550
+KLC:	capital = 2233
+KLD:capital = 4179 # Kalundwe
+KLE:capital = 84	# D�sseldorf
+KLG:capital = 629	# Pelakongan
+KLK:capital = 2893	# In Huree
+KLN:capital = 2214	# Ikkeri
+KLU:capital = 461	# Moghulistan
+KMC:capital = 1034
+KMK:capital = 1020	# Yamashiro
+KMO:capital = 2893
+KMT:capital = 562	# Koch
+KNG:capital = 2326 #Kong
+KNI:capital = 126	# Medina
+KNK:capital = 529
+KNO:capital = 4316	# Iyo
+KNT:capital = 2406
+KNY:capital = 323	# Konya
+KOC:capital = 535	# Kochin
+KOI:capital = 4365 # Mann
+KOJ:capital = 379	# Jerusalem
+KOK:capital = 458	# Kokkand
+KOL:capital = 85	# K�ln
+KON:capital = 1170	# M'banza Kongo
+KOR:capital = 733	# Gaegyeong
+KOR:1232.1.1 = { capital = 735 }
+KOR:1260.1.1 = { capital = 733 }
+KOR:		capital = 735	# Hanseong
+KOS:capital = 1766
+KRA:capital = 262	# Krakow
+KRC:capital = 725	# Boduna
+KRD:capital = 418 # Diyar Bekir
+KRI:capital = 275
+KRK:capital = 537	# Thanjavur
+KRK:	capital = 1947	# Carnatic
+KRL:capital = 1776
+KRM:capital = 432 # Kerman
+KRT:capital = 446	# Herat
+KRU:capital = 280	# Kiev
+KRW:capital = 4205 # Karagwe
+KRY:capital = 417 # Lahijan
+KSD:capital = 706	# tsaidam
+KSH:capital = 509	# Srinagar
+KSJ:capital = 4170 # Kasanje
+KTB:capital = 4483	# Ise
+KTS:capital = 1149
+KUB:capital = 4174	# Kuba
+KUC:capital = 2882	# Kuqa
+KUN:capital = 510
+KUR:capital = 39	# Mitau
+KUS:capital = 451	# Bagram
+KUS:76.1.1 = { capital = 578 } # Peshawar
+KUT:capital = 638	# Kutai
+KUW:capital = 2130	# Kuwait
+KVE:capital = 2005
+KYR:capital = 459	# Bishkek
+KYU:capital = 1818
+KZB:capital = 4185 # Luapala
+KZH:capital = 1969	# Sozak
+KZK:capital = 461	# Almaty
+KZK:1997.12.10 = { capital = 476 }
+LAK:capital = 409	# al-Hirah
+LAN:capital = 116 # Firenze
+LAO:capital = 614	# Vientiane
+LAP:capital = 778	# Santa Mar�a del Buen Ayre
+LAP:1861.12.17 = { capital = 778 }
+LAT:capital = 151	# Constantinople
+LAU:capital = 1857	# Lauenburg
+LAV:capital = 600	# Lavo
+LAW:capital = 589
+LAZ:capital = 462
+LBR:capital = 2359
+LDK:capital = 2179	# Ladakh
+LDN:capital = 279
+LDU:capital = 4190	# Lundu
+LEB:capital = 378	# Beirut
+LEI:capital = 374	# Waterford
+LEN:capital = 956	# Lenape
+LES:capital = 2022
+LFA:capital = 640	# Pontianak
+LGK:capital = 593
+LIB:capital = 354	# Tripoli
+LIE:capital = 93	# Li�ge
+LIG:capital = 593	# Nakhon Si Thammarat
+LIM:capital = 1742	# Limburg
+LIN:capital = 243	# Lincoln
+LIO:capital = 4333
+LIT:capital = 272	# Vilnius
+LIT:1990.3.11 = { capital = 272 government = presidental_republic }
+LIV:capital = 37	# Latvia
+LNA:capital = 589	# Chiang Mai
+LND:capital = 4176	# Rund
+LNG:capital = 2462
+LNG:502.1.1 = { capital = 1821 } #Jiankang
+LNG:553.1.1 = { capital = 681 } #Jiangling
+LNG:907.1.1 = { capital = 2492 } #Luoyang
+LNG:913.1.1 = { capital = 688 } #Kaifeng
+LNO:capital = 653	# Lanao
+LOA:capital = 1166	# Loango
+LOI:capital = 253
+LOI:853.1.1 = { capital = 373 } #Dublin
+LOI:	capital = 253
+LOI:	capital = 373
+LOI:	capital = 4489
+LOM:capital = 59
+LOM:454.1.1 = { capital = 267 }
+LOM:553.1.1 = { capital = 1768 }
+LOM:569.6.1 = { capital = 104 } #Pavia
+LON:capital = 208 #Leon
+LOR:capital = 189	# Nancy
+LOT:capital = 93
+LOU:capital = 922	# Mobile
+LOU:1720.1.1 = { capital = 921 }
+LRI:#capital = 4342 # Malamir
+LRI:capital = 413 #Khorramabad
+LSO:capital = 1821	# Nanjing
+LTG:capital = 273
+LTV:capital = 38
+LUA:capital = 615	# Luang Prabang
+LUB:capital = 4180 # Luba
+LUC:capital = 3126 # Lucca
+LUN:capital = 53	# L�neburg
+LUS:capital = 1763	# L�bben
+LUW:capital = 2715	# Palopo
+LUX:capital = 94	# Luxembourg
+LVA:capital = 37
+LXA:capital = 615	# Luang Prabang (Xieng dong Xieng Tong)
+LXA:1560.1.1 = { capital = 614 } # Vientiane
+LYO:capital = 203	# Lyon
+MAA:capital = 1083 #Vetluga
+MAB:capital = 534	# Calicut
+MAC:capital = 148	# Skopje
+MAD:capital = 2215 #Tirunelveli
+MAE:capital = 1837	# Etchu
+MAG:capital = 52	# Magdeburg
+MAH:capital = 969 # Pocumtuk
+MAI:capital = 78	# Mainz
+MAJ:capital = 2413	# Surabaya
+MAK:capital = 1228	# Dongola
+MAL:capital = 2316	# Niani
+MAL:	capital = 2316 #Bamako
+MAM:capital = 361	# Cairo
+MAN:capital = 109	# Mantova
+MAR:capital = 1946	# Satara
+MAS:capital = 2862 #Panay
+MAU:capital = 2236	# Kannauj
+MAW:capital = 514	# Jodphur
+MAY:capital = 2637	# Mayapan
+MAZ:capital = 257	# Warsaw
+MBA:capital = 1202	# Mombasa
+MCA:capital = 825 #Bogota
+MCH:capital = 2554
+MCH:#1644.4.27 = { capital = 695	centralization_decentralization = -1 } # Beijing
+MCK:capital = 730	# Hsinking
+MCM:capital = 375	# Cork
+MCM:1259.1.1 = { capital = 4503 }
+MDA:capital = 384	# Medina
+MDG:capital = 1792
+MDG:1960.6.26 = { capital = 1792 }
+MDI:capital = 1205 #Mogadishu
+MDV:capital = 268	# Chisinau
+MED:capital = 2672		# Mendefera
+MEI:capital = 59	# Meissen
+MEM:capital = 68 # Memmingen
+MEM:fixed_capital = 68 # Cannot move capital away from this province & no power cost to move to it
+MEN:capital = 319	# Antalya
+MEO:capital = 2593	# Mero�
+MER:capital = 2198	# Chittogarh
+MER:1172.1.1 = { capital = 518 } #Dungarpur
+MER:1213.1.1 = { capital = 2198 } #Chittor
+MER:1568.1.1 = { capital = 518 } #Udaipur
+MES:capital = 301
+MEW:capital = 520	# Mewat
+MEX:capital = 852	# Mexico
+MFA:capital = 3123	# Montferrat
+MFL:capital = 2346 #Asir
+MFY:capital = 3145
+MGD:capital = 652	# Maguindanao
+MGH:capital = 558
+MGR:capital = 2281 # Maregh
+MHJ:capital = 555
+MHN:capital = 737
+MHR:capital = 402	# Qishn
+MHX:capital = 730	# Hinggan
+MIA:capital = 386 #Asir
+MIC:capital = 1995
+MIK:capital = 3005
+MIN:capital = 1829	#Quanzhou
+MIR:capital = 1792
+MIS:capital = 2953	# Cahokia
+MIX:capital = 847
+MJE:capital = 2695 #Hafun
+MJR:capital = 333	# Baleares
+MJZ:capital = 2554
+MKL:capital = 46	# Mecklenburg
+MKS:capital = 641	# Makassar
+MKU:capital = 4191	# Makua
+MKU:	capital = 4036 #Yao
+MLA:capital = 2398	# Kuala Lumpur
+MLB:capital = 2253 # Imphal
+MLC:capital = 596	# Malacca
+MLI:capital = 1203	# Malindi
+MLK:capital = 2282	# Melikates
+MLL:capital = 197	# Perpignan
+MLO:capital = 104	# Milano
+MLW:capital = 526	# Mandu
+MMI:capital = 943 # Miami
+MML:capital = 40	# Klaipeda
+MNA:capital = 656	# Manila
+MNB:capital = 1193
+MNE:capital = 177
+MNG:capital = 1821	# Nanjing
+MNG:1420.1.1 = { capital = 1816 } # Beijing
+MNM:capital = 586	# Rangoon
+MNM:2005.11.6 = { capital = 2371 } #Naypyidaw
+MNS:capital = 4239
+MNX:capital = 600
+MOC:capital = 812	# Chan Chan
+MOD:capital = 106	# Modena
+MOE:capital = 145	# Nafplio
+MOG:capital = 2933
+MOL:capital = 268	# Suceava
+MON:capital = 138	# Zabljak
+MOO:capital = 347	# Ifni
+MOR:capital = 343	# Fez
+MOR:1040.1.1 = { capital = 344 } # Marrakech
+MOR:1554.9.1 = { capital = 344 }	# Marrakech
+MOR:1672.1.1 = { capital = 346 } # Meknes
+MOR:1757.1.1 = { capital = 344 } # Marrakech
+MOR:1956.3.2 = { capital = 2568 } #Rabat
+MOS:capital = 295	# Moskva
+MOS:	capital = 297 # Bryansk
+MPC:capital = 784
+MPH:capital = 1844	# Xiangkhouang
+MRA:capital = 1799	# Kalonga
+MRC:capital = 234	# Wessex
+MRD:capital = 304
+MRE:capital = 1206 #Galkayo
+MRI:capital = 1825	# Aki
+MRK:capital = 1060
+MRM:capital = 67	# Franken
+MRN:capital = 343
+MRS:capital = 1993
+MRT:capital = 1112
+MRY:capital = 4377
+MSA:capital = 2398
+MSI:capital = 1137	# Niani
+MSK:capital = 276	# Minsk
+MSQ:capital = 400 #Masqat
+MSY:capital = 4290	# Haviza
+MTH:capital = 373	# Meath
+MTR:capital = 2412	# Karta
+MTU:capital = 1102
+MUC:capital = 221	# Murcia
+MUG:capital = 524 #Agra
+MUG:	capital = 522
+MUG:	capital = 451 #Kabul
+MUG:	capital = 522 #Delhi
+MUG:1571.1.1 = { capital = 524 } # Agra
+MUG:1584.1.1 = { capital = 507 } # Lahore
+MUG:1598.1.1 = { capital = 524 } # Agra
+MUG:1638.1.1 = { capital = 522 } # Delhi
+MUG:1681.1.1 = { capital = 545 } # Aurangabad
+MUG:	capital = 522 # Delhi
+MUL:capital = 506	# Multan
+MUN:capital = 86	# M�nster
+MUR:capital = 1754	# Murom
+MVA:capital = 265	# Moravia
+MWI:capital = 1799
+MYA:capital = 582	# Mong Yang
+MYI:capital = 584	# Myinsaing, Pinya
+MYR:capital = 2561
+MYS:capital = 533	# Mysore
+MZB:capital = 2579	# Mzab
+MZB:	capital = 2575 # Tiaret
+MZB:909.1.1 = { capital = 2579 }	# Mzab
+MZM:capital = 1182
+NAB:capital = 2528	# Petra
+NAG:capital = 546 #Nagpur
+NAH:capital = 878 # Navajo
+NAI:capital = 717
+NAJ:capital = 392	# Deraiyah
+NAM:capital = 1866	# Namur
+NAN:capital = 662	# Yunnan
+NAP:capital = 121	# Napoli
+NAP:1282.1.1 = { capital = 121 }	# Napoli
+NAP:1713.4.2 = { capital = 103 } # Piedmont
+NAP:1718.8.2 = { capital = 121 } # Napoli
+NAP:1800.1.1 = { capital = 125 } # Palermo
+NAP:1815.5.3 = { capital = 121 } # Napoli
+NAU:capital = 1992
+NAV:capital = 210	# Pamplona
+NAV:1512.9.1 = { capital = 176 government = despotic_monarchy } # Bearn/Foix
+NAX:capital = 164	# Naxos
+NAZ:capital = 806	# Nazca
+NCA:capital = 316	# Nicaea
+NCR:capital = 2628 #Managua
+NCR:1898.11.21 = { capital = 2628 } #Managua
+NDO:capital = 1171
+NED:capital = 97	# Amsterdam
+NED:1945.5.5 = { capital = 97 }
+NEK:capital = 4268	# Nekor
+NEO:capital = 147
+NEV:capital = 191	# Nevers
+NFL:capital = 980
+NGA:capital = 2195	# Nagaur
+NGP:capital = 560 # Jharkhand
+NGR:capital = 1142 #Niamey
+NIC:capital = 102	# Nice
+NIG:capital = 1153 #Abuja
+NIT:capital = 1843	# Kozuke
+NIZ:capital = 564	# Bikrampur
+NJR:capital = 391	# Najran
+NKO:capital = 4208 # Ndorwe & Nkore Province
+NMB:capital = 1173
+NNG:capital = 683	#Nanchang
+NOB:capital = 1234	# Pachoras
+NOG:capital = 465	# Saraycik
+NOK:capital = 1845	# Pyongyang
+NOL:capital = 246	# Newcastle
+NOR:capital = 17	#Akershus
+NOV:capital = 310	# Novgorod
+NOV:1054.2.20 = { government = principality religion = orthodox capital = 310 }
+NPL:capital = 557	# Kathmandu
+NPL:1000.1.1 = { capital = 557 }
+NPL:1768.9.25 = { capital = 554 } # Gorka
+NRM:capital = 168	# Caen
+NSA:capital = 83	# Nassau
+NSA:fixed_capital = 83 # Cannot move capital away from this province & no power cost to move to it
+NST:capital = 524	# Mathura
+NTL:capital = 1178
+NUB:capital = 1222	# Sennar
+NUM:capital = 67 # N�rnberg
+NUP:capital = 1145	# Nupe
+NVI:capital = 616	# Hanoi
+NZH:capital = 306	# Nizhny Novgorod
+NZL:capital = 1107 # Wellington
+OBO:capital = 46	# Mecklenburg
+OBO:1131.1.1 = { capital = 3121 }
+ODA:capital = 1030	# owari
+ODA:	capital = 1835 # Nobunaga moved the capital to Gifu in Mino
+ODA:	capital = 1020 # Nobunaga moved the capital to Azuchi in Omi
+ODA:	capital = 1021 # Hideyoshi moved the capital to Osaka in Settsu
+ODH:capital = 523	# Lucknow
+ODR:capital = 150
+OET:capital = 71	# Oettingen
+OFS:capital = 1178
+OGH:capital = 471
+OGH:659.1.1 = { capital = 2430 }
+OGH:750.1.1 = { technology_group = nomad_group capital = 1970 } #Yangikent
+OGS:capital = 4318	# Shinano
+OIR:capital = 718
+OIR:1623.1.1 = { capital = 714 }
+OJI:capital = 2140 # Nipigon
+OKA:capital = 4247	# Upper Oka
+OLD:capital = 55	# Oldenburg
+OMA:capital = 403	# Nizwa
+OMA:1749.6.10 = { capital = 400 }
+ORD:capital = 4502	# Ormond
+ORI:capital = 552	# Cuttack
+ORL:capital = 184	# Orl�ans
+ORM:capital = 2999	# Ormuz Island
+ORV:capital = 242
+OSA:capital = 899 # Osage
+OSG:capital = 4502
+OSN:capital = 56	# Osnabr�ck
+OSR:capital = 2269 #Edessa
+OTM:capital = 1014	# Bungo
+OTT:capital = 3023 # Ottawa
+OUC:capital = 1017	# Nagato
+OYO:capital = 1146	# Ife Ile
+PAA:capital = 558	# Pataliputra
+PAG:capital = 2371	# Pagan
+PAK:capital = 2180	# Islamabad
+PAL:capital = 77	# Pfalz
+PAN:capital = 536 #Madurai
+PAP:capital = 118	# Roma
+PAP:1408.1.1 = { capital = 114 } # Romagna
+PAP:1414.8.6 = { capital = 118 } # Roma
+PAR:capital = 105	# Parma
+PAT:capital = 594	# Pattani
+PAW:capital = 901 # Pawnee
+PCJ:capital = 2741
+PCT:capital = 252	# Highlands
+PEC:capital = 2451
+PEC:930.1.1 = { capital = 288 }
+PEC:1055.1.1 = { capital = 268 }
+PEG:capital = 586	# Pegu
+PEQ:capital = 2135 # Connecticut
+PER:capital = 2289	# Shiraz
+PER:1400.1.1 = { capital = 416 } # Tabriz
+PER:1548.7.27 = { capital = 428 } # Qazvin
+PER:1598.1.1 = { capital = 429 } # Isfahan
+PER:1750.1.2 = { capital = 2289 } # Shiraz
+PER:1795.1.1 = { capital = 428 } # Tehran
+PEU:capital = 809	# Lima
+PGR:capital = 619	# Pagarruyung
+PGS :capital = 2859 #Pangasinan
+PHI:capital = 656
+PIC:capital = 89 # picardy
+PIC:fixed_capital = 89 # Cannot move capital away from this province & no power cost to move to it
+PIM:capital = 877 # Pima
+PIS:capital = 115	# Pisa
+PLA:capital = 2958
+PLB:capital = 622	# Palembang
+PLC:capital = 262 # Krakow
+PLC:1596.1.1 = { capital = 257 } # Warsaw
+PLL:capital = 539	# Kanchipuram
+PLM:capital = 2547
+PLQ:capital = 2640	# Palenque
+PLS:capital = 379	# Judea
+PLT:capital = 275	# Polotsk
+PLU:capital = 1996
+PNC:capital = 555	# Ahichatra
+PNG:capital = 1237 # Port Moresby
+PNM:capital = 835
+PNN:capital = 1864
+POG:capital = 2258
+POL:capital = 254	# Poznan
+POL:960.1.1 = { capital = 262 } #Krakow
+POL:1138.10.28 = { capital = 254 }	# Poznan
+POL:1320.1.1 = { capital = 262 }	# Krakow
+POL:1596.1.1 = { capital = 257 } # Warsaw
+POM:capital = 48
+POM:395.1.1 = { capital = 1858 }	# Stettin
+POM:1235.1.1 = { capital = 1858 }	# Stettin
+PON:capital = 1846	# Amaseia
+POR:capital = 227	# Lisboa
+POR:1808.1.1 = { capital = 763 } # Rio de Janeiro
+POT:capital = 944 # Potawatomi
+POW:capital = 952 # Powhatan
+PPA:capital = 599
+PRG:capital = 776	# Asunci�n
+PRK:capital = 595	# Perak
+PRM:capital = 1963	# Cherdyn
+PRO:capital = 201	# Aix-en-Provence
+PRS:capital = 41
+PRT:capital = 410 # Ctesiphon
+PRT:116.1.1 = { capital = 414 } # Ecbatana
+PRT:118.1.1 = { capital = 410 } # Ctesiphon
+PRU:capital = 41	# K�nigsberg
+PRU:1701.1.18 = { capital = 50 }	# Berlin
+PRU:1807.1.1 = { capital = 40 } # Memel
+PRU:1808.1.1 = { capital = 50 } # Berlin
+PRY:capital = 2606	# Pereyaslav
+PSA:capital = 2399	# Pasai
+PSK:capital = 274	# Pskov
+PTA:capital = 510 # Sirhind
+PTE:capital = 2708	# Pate
+PTG:capital = 751
+PUE:capital = 880 # Pueblo
+PUN:capital = 507	# Lahore
+PUZ:capital = 2211 #Banavasi
+PWY:capital = 240
+PWY:700.1.1 = { capital = 4491 }
+PYU:capital = 585 #Sri Ksetra
+QAR:capital = 416 # Tabriz
+QAS:capital = 1778	# Kasimov
+QAT:capital = 2540
+QIA:capital = 706
+QIC:capital = 1821	# Nanjing
+QIC:550.1.1 = { capital = 691 }
+QIN:capital = 695	# Beijing
+QNG:capital = 1816 # Beijing
+QNG:1645.7.1 = { capital = 1816 } # Beijing
+QOM:capital = 2213 # Qom
+QRM:capital = 394
+QTO:capital = 820
+QTR:capital = 395	# Doha
+QUA:capital = 154
+QUE:capital = 994	# Quebec city
+QUR:capital = 385	# Mecca
+RAG:capital = 137	# Ragusa
+RAM:capital = 327	# Adana
+RAS:capital = 390	# Sana'a
+RAS:	capital = 4282
+RAS:	capital = 390
+RAS:	capital = 4282
+RAS:	capital = 390
+RAS:	capital = 4282
+RAT:capital = 263	# Ratibor
+RAV:capital = 114	# Ravenna
+RBR:capital = 236	# London
+RFR:capital = 4277 # Mutsu
+RHE:capital = 244	# Lancashire
+RHO:capital = 1184	# Zimbabwe
+RHO:1965.11.11 = { capital = 2853 primary_culture = english }
+RIG:capital = 38	# Riga
+RMD:capital = 3088
+RMN:capital = 161	# T�rgoviste
+RMP:capital = 2237 # Rohilkhand / Katehar
+ROG:capital = 24
+ROM:capital = 118	# Rome
+ROM:330.1.1 = { capital = 151 } #Constantinople
+ROU:capital = 2891 #Mumo
+ROW:capital = 104	# Mediolanum
+ROW:402.1.1 = { capital = 114 } #Ravenna
+RSA:capital = 2596
+RSD:capital = 384	# Medina
+RSD:656.1.1 = { capital = 409 } # Kufa
+RSH:capital = 2225	# Manyakheta
+RSO:capital = 4147 # Moskva
+RSO:fixed_capital = 4147 # Cannot move capital away from this province & no power cost to move to it
+RUG:capital = 3121
+RUG:395.1.1 = { primary_culture = bavarian capital = 266 }
+RUG:467.1.1 = { government = feudal_monarchy primary_culture = austrian capital = 134 }
+RUM:capital = 323	# Konya
+RUS:capital = 295 # Moskva
+RUS:1991.12.25 = { capital = 295 }
+RVA:capital = 69 # Ravensburg
+RVA:fixed_capital = 69 # Cannot move capital away from this province & no power cost to move to it
+RWA:capital = 2035
+RYA:capital = 301	# Ryazan
+RYU:capital = 1015	# Shuri
+RZW:capital = 2852	# Butua
+SAA:capital = 2539 #Marib
+SAE:capital = 3131	# Salerno
+SAF:capital = 435	# Zaranj
+SAG:capital = 581	# Sagaing
+SAK:capital = 620	# Siak
+SAL:capital = 874	# Salish
+SAM:capital = 454	# Samarkand
+SAM:	capital = 442 #Bukhara
+SAN:capital = 2061
+SAO:capital = 1243
+SAR:capital = 127	# Cagliari
+SAS:capital = 430 # Darabgerd
+SAS:224.1.1 = { capital = 2289 } # Estakhr
+SAS:226.1.1 = { capital = 410 } # Ctesiphon
+SAT:capital = 2223	# Amaravati
+SAU:capital = 392	# Riyad
+SAV:capital = 103 # Torino
+SAV:	capital = 1875 # Cuneo
+SAV:	capital = 103 # Piedmont
+SAV:	capital = 102 # Nice
+SAX:capital = 62 # Leipzig
+SAX:1423.1.6 = { capital = 61 } # Meissen
+SAZ:capital = 1772
+SBA:capital = 1030	# Owari
+SBA:1532.1.1 = { capital = 1025	} # Dewa
+SBZ:capital = 2296	# Sabzevar
+SCA:capital = 1	#Stockholm
+SCL:capital = 125	# Balharm (Palermo)
+SCO:capital = 248 # Edinburgh
+SDG:capital = 1880	# Sundgau
+SDY:capital = 2252
+SEL:capital = 436	# Nishapur
+SEL:1043.1.1 = { capital = 428 } # Rey
+SEL:1051.1.1 = { capital = 429 } # Isfahan
+SEL:1118.1.1 = { capital = 414 } # Hamadan
+SEN:capital = 561	# Nabadwip
+SER:capital = 1827	#Ras
+SER:930.1.1 = { capital = 1827 } #Ras
+SER:1091.1.1 = { capital = 1827 } #Ras
+SER:1284.1.1 = { capital = 148 } #Skopje
+SER:1300.1.1 = { capital = 1766 } #Prizren
+SER:1346.1.1 = { capital = 148 } #Skopje
+SER:1373.1.1 = { capital = 141 } #Krusevac
+SER:	capital = 4362 #Belgrade
+SEV:capital = 224	# Sevilla
+SEY:capital = 1100
+SFA:capital = 1186	# Sofala
+SGA:capital = 2008	# Singapore
+SGL:capital = 1113
+SHA:capital = 2986
+SHB:capital = 431	# Hormuz
+SHH:capital = 451	# Kabulistan
+SHL:capital = 13	# Slesvig
+SHL:1227.1.1 = { capital = 1775 } # Kiel
+SHM:capital = 393 # Jabal Shammar
+SHN:capital = 4312	# Hizen
+SHO:capital = 2081	# Bannock
+SHR:capital = 398	# Sharjah
+SHS:capital = 2884
+SHU:capital = 679	# Chengdu
+SHY:capital = 1075 #Chimgi-Tura
+SHY:1446.1.1 = { capital = 1970 } # moved to Syghnak
+SHY:	capital = 476	# Orda-Bazar
+SHY:1501.1.1 = { capital = 454 government = iqta technology_group = muslim } # Muhammad crowned at Samarkand, Uzbeks settle down
+SIB:capital = 1075	# Chimgi-Tura
+SIB:1495.1.1 = { capital = 1074 } # capital moved to Qashliq
+SIC:capital = 125	# Palermo
+SIE:capital = 117	# Siena
+SIJ:capital = 346	# Sijilmasa
+SIL:capital = 263	# Ratibor
+SIN:capital = 2413	# Tumapel, later called Ktaraja Singhasari
+SIO:capital = 2949
+SIR:capital = 2124
+SIS:capital = 4448	# Zaranj
+SKA:capital = 1193
+SKN:capital = 495
+SKO:capital = 735	# Seoul
+SKO:1948.9.9 = { capital = 735 }
+SLE:capital = 1118
+SLK:capital = 624
+SLL:capital = 736
+SLN:capital = 4237	# Sligo
+SLO:capital = 1772	# Nitra
+SLR:capital = 241
+SLT:capital = 331	# Erserum
+SLU:capital = 500
+SLV:capital = 230	# Algarve
+SLZ:capital = 76	# Salzburg
+SME:capital = 2204 # Kars
+SMI:capital = 315
+SMI:1200.1.1 = { capital = 4282 }
+SML:capital = 2690
+SMM:capital = 2556
+SMN:capital = 4362	# Beograd
+SMO:capital = 293	# Smolensk
+SMY:capital = 2118
+SMZ:capital = 1012	# Satsuma
+SNA:capital = 390	# Sana'a
+SND:capital = 505 #Rori
+SND:	capital = 504	# Thatta
+SNG:capital = 688	# Kaifeng
+SNZ:capital = 259	# Sandomierz
+SOA:capital = 1213	# Showa
+SOA:1400.1.1 = { capital = 2791 } #Ankober
+SOF:capital = 1131	# Goundam
+SOG:capital = 454	# Samarkand
+SOI:capital = 183
+SOK:capital = 1148	# Gobir
+SOL:capital = 1238
+SOM:capital = 1205
+SON:capital = 1133	# Gao
+SON:	capital = 1123
+SOR:capital = 60
+SOS:capital = 348 # Sus
+SOV:capital = 295	# Moskva
+SPA:capital = 219 # Toledo
+SPA:1561.6.1 = { capital = 217 } #Madrid
+SPA:1601.1.1 = { capital = 214 } # Valladolid
+SPA:1606.1.1 = { capital = 217 } # Madrid
+SPI:capital = 103 # Piedomont
+SRI:capital = 622	# Palembang
+SRL:capital = 572	# Kandy
+SRM:capital = 288
+SRN:capital = 2826	# Paramaribo
+SRR:capital = 2264
+SRU:capital = 2360	# Saruhan
+SRV:capital = 421	# Shirvan
+SRW:capital = 2009	# Kuching
+SST:capital = 582	# Mong Yang
+SST:1557.3.6 = { capital = 587 } # Kengtung, the fall of Mong Yang
+SSU:capital = 2064
+SSX:capital = 4496	# Sussex
+STK:capital = 1027	# Hitachi
+STP:capital = 2123
+STR:capital = 249	# Ayshire
+STY:capital = 1863	# Graz
+SUD:capital = 2667 #Khartoum
+SUE:capital = 739	# Kashgar
+SUH:capital = 561
+SUI:capital = 1821
+SUK:capital = 601	# Sukhothai
+SUL:capital = 651	# Jolo
+SUN:capital = 2410	# Pakuan
+SUR:capital = 435	# Sistan
+SUS:capital = 955 # Susquehannock
+SVE:capital = 1
+SVG:capital = 1991
+SVI:capital = 605	# Saigon
+SVK:capital = 1772	# Bratislava
+SVK:1992.12.31 = { capital = 1772 }
+SVN:capital = 1769	# Ljubljana
+SVR:capital = 289
+SWA:capital = 70	# Stuttgart
+SWE:capital = 1	#Stockholm
+SWI:capital = 165 # Bern
+SWZ:capital = 2021
+SXI:capital = 702
+SYG:capital = 2459	# Kobdo
+SYO:capital = 4080	# Soyo
+SYR:capital = 377	# Aleppo
+SYR:	capital = 2548 #Rahba
+SYR:1025.1.18 = { capital = 377 } #Aleppo
+SYR:1100.1.1 = { capital = 382 }	# Damascus
+SYR:1961.9.28 = { capital = 382 }
+TAA:capital = 511
+TAB:capital = 426	# Mazandaran
+TAH:capital = 436 #Nishapur
+TAK:capital = 2310	# Tekrur
+TAM:capital = 2516
+TAN:capital = 2461
+TAR:capital = 851
+TAT:capital = 721
+TAU:capital = 585 # Toungoo
+TAU:1539.1.1 = { capital = 586 } # Pegu
+TAV:capital = 29	# Tavastland
+TBK:capital = 4045	# Tumbuka
+TBR:capital = 416 # Tabriz
+TCT:capital = 2658
+TDO:capital = 2860 #Tondo
+TEK:capital = 2365	# Teke
+TEO:capital = 852	# Teotihuacan
+TER:capital = 649	# Ternate
+TEU:capital = 1841	# Marienburg
+TEU:1466.10.19 = { capital = 41 } # K�nigsberg
+TEX:capital = 888
+TFL:capital = 346	# Tafilalt
+TGT:capital = 2580	# Touggourt
+THA:capital = 590 # Thaton
+THL:capital = 600	# Ayutthaya
+THM:capital = 2531
+THS:capital = 1967	# Thessalonica
+THT:capital = 1987
+THU:capital = 59	# Wittenberg
+THU:1547.5.19 = { elector = no capital = 63 } # Capitulation of Wittenberg
+TIB:capital = 677 # Lhasa
+TID:capital = 650	# Tidore
+TIK:capital = 842	# Tikal
+TIM:capital = 454 # Samarkand
+TIM:	capital = 446
+TIM:	capital = 454 # Samarkand
+TIM:1458.12.23 = { capital = 446 } # Herat
+TIM:	capital = 454	#Samarkand
+TIM:	capital = 451	# Kabul
+TIM:1526.4.21 = { capital = 454 primary_culture = uzbehk } # Battle of Panipat, Babur forms MUG, Timurids back to being revolter
+TIR:capital = 73	# Innsbruck
+TIW:capital = 2741	# Tiwanaku
+TJK:capital = 1968	# Dushanbe
+TKD:capital = 1029	# Kai
+TKG:capital = 1839	# Suruga
+TKG:1590.8.10   = { capital = 1028 } # Musashi (Edo)
+TKI:capital = 1835	# Mino
+TKY:capital = 326	# Angora
+TLA:capital = 849
+TLC:capital = 336 # Tlemcen
+TLT:capital = 853	# Tula
+TLX:capital = 850
+TMB:capital = 1132	# Timbuktu
+TNG:capital = 700 #Chang'an
+TNG:	capital = 2492 #Luoyang
+TNG:	capital = 700 #Chang'an
+TNG:	capital = 2492 #Luoyang
+TNG:	capital = 2502 #Daming
+TNG:923.10.1 = { capital = 2492 } #Luoyang
+TNG:	capital = 1821 #Nanjing
+TNT:capital = 110	# Trent
+TNZ:capital = 2166 #Dodoma
+TOG:capital = 2016 #Lome
+TOK:capital = 1016
+TOL:capital = 219	# Toledo
+TOM:capital = 522
+TON:capital = 2002
+TOR:capital = 221	# Murcia
+TOT:capital = 848
+TOU:capital = 196	# Toulouse
+TPA:capital = 748
+TPL:capital = 378	# Tripoli
+TPQ:capital = 757
+TPR:capital = 2254 # Tripura
+TRA:capital = 1951	# Alba Iulia
+TRA:	capital = 157 # Bihar
+TRE:capital = 330	# Trebizond
+TRG:capital = 459	# Balasagun
+TRI:capital = 80	# Trier
+TRK:capital = 437	# Aghabat
+TRM:capital = 630	# Sundapura
+TRN:capital = 498
+TRP:capital = 354	# Tripoli
+TRP:	capital = 353	# Djerba
+TRP:1551.1.1 = { capital = 2585 } #Sfax
+TRP:	capital = 354	# Tripoli
+TRS:capital = 454 # Samarkand
+TRT:capital = 2242	# Tirhut
+TRV:capital = 1941	# Turov
+TRY:capital = 4241	# Donegal
+TTI:capital = 1832	# Yamato
+TTU:capital = 716
+TUA:capital = 761
+TUN:capital = 2584	# Kairouan
+TUN:1229.1.1 = { capital = 341 } #Tunis
+TUR:capital = 149 # Edirne
+TUR:1402.1.1 = { capital = 326 } # Angora
+TUR:1404.1.1 = { capital = 317 } # Bursa
+TUR:1413.1.1 = { capital = 149 } # Edirne
+TUR:		capital = 151
+TUS:capital = 116 # Firenze
+TUV:capital = 716
+TUY:capital = 706
+TVE:capital = 294	# Tver
+TVL:capital = 1990
+TVS:capital = 1774	# Treviso
+TWN:capital = 2858	# Taipei
+TYO:capital = 1169	# Anziku
+TYR:capital = 372	# Carrickfergus
+UAE:capital = 2543	# Abu Dhabi
+UBH:capital = 1197 # Ndorwe & Nkore Province
+UES:capital = 1843	# Kozuke
+UES:1561.3.16 = { capital = 1024 } #Echigo
+UES:1598.1.10 = { capital = 1025 } #Dewa
+UGA:capital = 2036
+UIG:capital = 2891
+UKR:capital = 280	# Kiev
+UKR:1991.8.24 = { capital = 280 }
+ULM:capital = 1872	# Ulm
+ULS:capital = 4240	# Ulster
+UMA:capital = 382	# Damascus
+UMA:744.1.1 = { capital = 2269 } # Harran
+URB:capital = 119	# Urbino
+URU:capital = 2773	# Montevideo
+USA:capital = 965	# New York
+USA:1776.1.1 = { capital = 956 } # Philadelphia
+USA:1789.3.4  = { capital = 965 } # New York
+USA:1790.12.6  = { capital = 956 } # Philadelphia
+USA:1800.5.14 = { capital = 953 } # Washington
+UTN:capital = 4321	# Shimotsuke
+UTR:capital = 98	# Utrecht
+UTS:capital = 677 # Lhasa
+UZB:capital = 457	# Tashkent
+VAK:capital = 545	# Vatsagulma
+VAL:capital = 220	# Valencia
+VAN:capital = 264
+VAN:350.1.1 = { capital = 66 } #Central Germany
+VAN:409.1.1 = { capital = 223 } #Southern Spain
+VAN:432.1.1 = { capital = 1882 } #Hippo Regius
+VAN:439.1.1 = { capital = 431 } #Carthage
+VAS:capital = 210	# Pamplona
+VAT:capital = 559
+VBU:capital = 4391	# Bolgar
+VEL:capital = 59
+VEN:capital = 112 # Venezia
+VEP:capital = 309 #Olonets
+VER:capital = 54	# Bremen
+VES:capital = 17
+VGA:capital = 564
+VIE:capital = 614	# Vientiane
+VIE:1560.1.1 = { capital = 614 } # Vientiane
+VIJ:capital = 541	# Vijayanagara
+VIJ:1565.1.26 = { capital = 1949 } # Chandragiri (Rayalaseema province)
+VLA:capital = 307	# Vladimir
+VND:capital = 537	# Padmanabhapuram
+VNE:capital = 260
+VNS:capital = 171
+VNU:capital = 1239
+VNZ:capital = 831	# Caracas
+VNZ:1830.1.13 = { capital = 831 }
+VOL:capital = 261	# Ruthenia
+VOT:capital = 248
+VRN:capital = 108	# Verona
+VTN:capital = 616	# Hanoi
+VYA:capital = 296
+WAA:capital = 583
+WAA:650.1.1 = { capital = 587 }
+WAD:capital = 2046	# Wadai
+WAL:capital = 161 # T�rgoviste
+WAR:capital = 2693 #Las Khorey
+WBG:capital = 79	# W�rzburg
+WCR:capital = 3028
+WEI:capital = 694 # Luoyang
+WES:capital = 81	# Kassel
+WGE:capital = 85	# Bonn
+WGO:capital = 459	# Suyab
+WIC:capital = 886
+WKA:capital = 810
+WLS:capital = 242	# Gwynedd
+WLY:capital = 2756		# Welayta
+WSA:capital = 518	# Udaipur (Ujjain)
+WSH:capital = 347	# El-Aiun
+WSX:capital = 234	# Wessex
+WUR:capital = 70	# Stuttgart
+WUS:capital = 2435
+WUU:capital = 685	# Jiankang
+WUY:capital = 684	# Qiantang
+XHO:capital = 1180
+XIA:capital = 698	# Yinchuan
+XIA:1350.1.1 = { culture = sichuanese capital = 680 }
+XIB:capital = 722
+XIC:capital = 850
+XIC:650.1.1 = { capital = 2650 } #Cholula
+XIO:capital = 717
+XIU:capital = 2637
+XIY:capital = 713 #Karasahr
+YAD:capital = 545 # Devagiri
+YAK:capital = 2846	# Yaka
+YAM:capital = 1832	# Yamato
+YAN:capital = 704
+YAN:	capital = 1816
+YAO:capital = 2357	# Yao
+YAR:capital = 308	# Yaroslavl
+YAS:capital = 404 # Liwa Oasis
+YAT:capital = 1135
+YAU:capital = 2191
+YEM:capital = 390 #Sana'a
+YEM:650.1.1 = { capital = 4401 }	# Zabid
+YEM:	capital = 4402 # Taiz
+YKY:capital = 2898
+YMN:capital = 1018	# Izumo
+YMN:	capital = 1830	# Tajima
+YMN:1524.1.1 = { capital = 1830 } #Tajima
+YOR:capital = 2223	# Addanki
+YOR:	capital = 2228
+YOR:	capital = 2223
+YOR:1434.1.1 = { capital = 2228 } # Rajahmundry
+YUA:capital = 1816	# Dadu
+YUE:capital = 667	#Canton
+YUG:capital = 4362	# Beograd
+YZD:capital = 433 # Yazd
+ZAB:capital = 2303	# Zamindawar
+ZAF:capital = 1131	# Macina
+ZAM:capital = 2851
+ZAN:capital = 1196	# Kilwa
+ZAO:capital = 695
+ZAO:	capital = 4325
+ZAP:capital = 844
+ZAR:capital = 214	# Zaragoza
+ZAZ:capital = 283	# Zaporozhia
+ZHA:capital = 2452	# Kyunglung
+ZIB:capital = 1184	# Zimbabwe
+ZIB:1840.1.1 = { capital = 2031 } #Matabeleland
+ZIB:1965.11.11 = { capital = 2853 }
+ZIM:capital = 1184	# Khami
+ZIM:1660.1.1 = { capital = 1188 }
+ZNG:capital = 411	# Mosul
+ZUL:capital = 2597
+ZUN:capital = 718	# Kobdo
+ZUR:capital = 1869	# Zürich
+ZZB:capital = 1201
+ZZZ:capital = 1154	# Zazzau

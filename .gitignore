@@ -2,6 +2,9 @@
 logs
 *.log
 npm-debug.log*
+release
+dump
+dump.zip
 
 dump
 dump.zip
@@ -57,3 +60,8 @@ utilScripts
 windows*
 *.iml
 connectToMongo.sh
+
+users-bk.json
+
+scripts
+dataToMigrate
