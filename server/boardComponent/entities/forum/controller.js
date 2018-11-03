@@ -31,7 +31,7 @@ const getAllForums = () => {
  * @param  {Boolean} pinned
  * @return {Promise}
  */
-const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false) => {
+const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 50) => {
   return new Promise((resolve, reject) => {
     // define sorthing method
     const sortWith = { };
@@ -43,7 +43,7 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
       .exec((error, forumFound) => {
         const searchObj = { pinned: pinned }
         if (qEntity) searchObj.qa_id = qEntity
-        else searchObj.forum_id = forumFound._id
+        else searchObj.forum_id = (forumFound || {})._id
 
         Discussion
         .find(searchObj)
@@ -51,6 +51,8 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
         .populate('forum')
         .populate('user')
         .lean()
+        .skip(+offset)
+        .limit(+limit)
         .exec((error, discussions) => {
           if (error) { console.error(error); reject(error); }
           else if (!discussions) reject(null);
@@ -58,7 +60,7 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
             // attach opinion count to each discussion
             asyncEach(discussions, (eachDiscussion, callback) => {
               // add opinion count
-              getAllOpinions(eachDiscussion._id).then(
+              getAllOpinions((eachDiscussion || {})._id).then(
                 (opinions) => {
                   // add opinion count to discussion doc
                   eachDiscussion.opinion_count = opinions ? opinions.length : 0;

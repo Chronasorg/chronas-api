@@ -256,7 +256,7 @@ function aggregateDimension(req, res, next) {
               if (foundMetadataEntity) {
                 // already exists -> update
                 foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] }
-                foundMetadataEntity.save()
+                return foundMetadataEntity.save()
               } else {
                 // does not exist -> create
                 const metadata = new Metadata({
@@ -265,7 +265,7 @@ function aggregateDimension(req, res, next) {
                   type: 'a_' + dimension
                 })
 
-                metadata.save({ checkKeys: false })
+                return metadata.save({ checkKeys: false })
                   .then(() => Promise.resolve())
               }
             })

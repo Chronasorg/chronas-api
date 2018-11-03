@@ -10,7 +10,7 @@ import fs from 'fs'
 const plugins = gulpLoadPlugins()
 
 const paths = {
-  js: ['./**/*.js', '!dist/**', '!node_modules/**', '!coverage/**'],
+  js: ['./**/*.js', '!dist/**', '!scripts/**', '!node_modules/**', '!coverage/**'],
   nonJs: ['./package.json', './.gitignore', './.env', './swagger.yaml'],
   tests: './server/tests/*.js'
 }
@@ -47,8 +47,10 @@ gulp.task('package', () => {
   const devDeps = packageJSON.devDependencies
 
   for (let i = 0; i < devDeps.length; i++) {
+    const excludePattern0 = '!**/scripts/*'
     const excludePattern1 = `!**/node_modules/${devDeps[i]}/**`
     const excludePattern2 = `!**/node_modules/${devDeps[i]}`
+    packagePaths.push(excludePattern0)
     packagePaths.push(excludePattern1)
     packagePaths.push(excludePattern2)
   }
@@ -78,7 +80,7 @@ gulp.task('nodemon', ['copy', 'babel'], () =>
   plugins.nodemon({
     script: path.join('dist', 'index.js'),
     ext: 'js',
-    ignore: ['node_modules/**/*.js', 'dist/**/*.js'],
+    ignore: ['node_modules/**/*.js', 'scripts/*', 'dist/**/*.js'],
     tasks: ['copy', 'babel']
   })
 )

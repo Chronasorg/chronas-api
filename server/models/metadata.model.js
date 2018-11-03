@@ -1,6 +1,7 @@
 import Promise from 'bluebird'
 import mongoose from 'mongoose'
 import httpStatus from 'http-status'
+import Marker from './marker.model'
 import APIError from '../helpers/APIError'
 import { cache } from '../../config/config'
 
@@ -22,7 +23,7 @@ const MetadataSchema = new mongoose.Schema({
     type: [Number],
     required: false,
     default: undefined,
-    validate: v => typeof v === 'undefined' || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
+    validate: v => typeof v === 'undefined' || v.length === 0 || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
   },
   type: {
     type: String,
@@ -60,7 +61,7 @@ MetadataSchema.method({
  * Statics
  */
 MetadataSchema.statics = {
-  /**.np
+  /** .np
    * Get Metadata
    * Metadata.
    * @returns {Promise<Metadata, APIError>}
@@ -87,11 +88,11 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
+    let hasEw = false
     if (fList) {
       const cachedInit = cache.get('init')
       if (cachedInit) {
-        console.debug('returning saved')
         return new Promise((resolve) => { resolve(cachedInit) })
       }
 
@@ -109,7 +110,7 @@ MetadataSchema.statics = {
 
       return this.find(findObject)
         .exec()
-        .then(metadata => {
+        .then((metadata) => {
           const completeRes = metadata.reduce((obj, item) => {
             obj[item._id] = item.data
             return obj
@@ -118,15 +119,17 @@ MetadataSchema.statics = {
           return completeRes
         })
     }
-    else if (type || subtype || year || wiki || search) {
+    else if (type || subtype || year || wiki || search || discover) {
       const subtypes = (subtype) ? subtype.split(',') : ''
+      const discovers = (discover) ? discover.split(',') : ''
+      hasEw = (subtypes || []).includes("ew")
       const searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
         subtype: { $in: subtypes },
         $or: [
-          {'_id': new RegExp(search, 'i')},
-          {'name': new RegExp(search, 'i')}
+          { _id: new RegExp(search, 'i') },
+          { name: new RegExp(search, 'i') }
         ]
       }
 
@@ -137,30 +140,84 @@ MetadataSchema.statics = {
 
       if (wiki) searchQuery.wiki = wiki
 
-      return this.find(searchQuery)
-        .skip(+start)
-        .limit(+end)
-        .sort({ score: 'desc' })
-        .exec()
-        .then((metadata) => {
-
-          if (search) {
-            return metadata.map(item => item._id)
-          } else {
-            return metadata.map(item => item)
-          }
+      if (discover) {
+        // find each discover item separately (promise reduce)
+        let allDiscoverItems = [[],[]]
+        return discovers.reduce(
+          (p, typeToSearch) => p.then(() => {
+            if (typeToSearch === "e") {
+              delete searchQuery.subtype
+              searchQuery.type = typeToSearch
+            } else {
+              searchQuery.type = "i"
+              searchQuery.subtype = typeToSearch
+            }
+            return this.find(searchQuery)
+              .skip(+start)
+              .limit(+end)
+              .sort({ score: 'desc' })
+              .exec()
+              .then((metadata) => {
+                if (typeToSearch === "e") {
+                  allDiscoverItems[0] = metadata
+                  return 1
+                } else {
+                  allDiscoverItems[1] = allDiscoverItems[1].concat(metadata)
+                  return 1
+                }
+              })
+              .catch(err => 1)
+          }),
+          Promise.resolve()
+        ).then(() => {
+          return allDiscoverItems
         })
+      }
+      else {
+        return this.find(searchQuery)
+          .skip(+start)
+          .limit(+end)
+          .sort({ score: 'desc' })
+          .exec()
+          .then((metadata) => {
+            if (search) {
+              return metadata.map(item => item._id)
+            }
+            else if (hasEw) {
+              return Marker.find({
+                "type": "b",
+                "partOf": { $exists: true}
+              })
+                .exec()
+                .then((markers) => {
+                  var resObj = {}
+                  markers.forEach((el) => {
+                    if (!resObj[el.partOf]) {
+                      resObj[el.partOf] = [[el.name, el.year]]
+                    }
+                    else {
+                      resObj[el.partOf].push([el.name, el.year])
+                    }
+                  })
+                  metadata.unshift(resObj)
+                  return metadata
+                })
+            } else {
+              return metadata
+            }
+          })
+      }
     }
-    return this.find()
-        .skip(+start)
-        .limit(+end)
-        .sort({ score: 'desc' })
-        .exec()
-        .then(metadata => metadata.map((obj) => {
-          const dataString = JSON.stringify(obj.data).substring(0, 200)
-          obj.data = dataString + ((dataString.length === 203) ? '...' : '')
-          return obj
-        }))
+    // return this.find()
+    //     .skip(+start)
+    //     .limit(+end)
+    //     .sort({ score: 'desc' })
+    //     .exec()
+    //     .then(metadata => metadata.map((obj) => {
+    //       const dataString = JSON.stringify(obj.data).substring(0, 200)
+    //       obj.data = dataString + ((dataString.length === 203) ? '...' : '')
+    //       return obj
+    //     }))
   }
 }
 

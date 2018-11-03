@@ -57,3 +57,10 @@ utilScripts
 windows*
 *.iml
 connectToMongo.sh
+
+users-bk.json
+
+dataToMigrate
+
+scripts
+dataToMigrate

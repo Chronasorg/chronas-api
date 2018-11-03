@@ -22,12 +22,15 @@ const MarkerSchema = new mongoose.Schema({
   },
   capital: {
     type: Array,
-    default: undefined
+    default: undefined,
+  },
+  partOf: {
+    type: String,
   },
   coo: {
     type: [Number], // long lat
     default: undefined,
-    validate: v => typeof v === 'undefined' || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
+    validate: v => typeof v === 'undefined' || v.length === 0 || (v[1] > -90 && v[1] < 90 && v[0] > -180 && v[0] < 180)
   },
   subtype: {
     type: String
@@ -84,20 +87,54 @@ MarkerSchema.statics = {
    * @param {number} length - Limit number of markers to be returned.
    * @returns {Promise<Marker[]>}
    */
-  list({ offset = 0, length = 500, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, includeMarkers = true, both = false } = {}) {
+  list({ offset = 0, length = 2000, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, includeMarkers = true, both = false } = {}) {
     if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
-      const mongoSearchQuery = {}
+      let mongoSearchQuery = {}
 
       if (year) {
-        mongoSearchQuery.year = { $gt: (year - delta), $lt: (year + delta) }
+        mongoSearchQuery.year = {
+          $gt: (year - delta),
+          $lt: (year + delta)
+        }
       }
 
       let types = false
       if (typeArray) {
         types = typeArray.split(',')
-        mongoSearchQuery.type = { $in: types }
-        mongoSearchQuery.coo = { $exists: true }
+        if (year) {
+          const types1 = types.filter(el => el === 'c' || el === 'ca')
+          const types2 = types.filter(el => el !== 'c' && el !== 'ca')
+          const AND1 = {
+            type: { $in: types1 },
+            coo: { $exists: true },
+            year: {
+              $lt: (year),
+            },
+            $or: [
+              { end: { $exists: false } },
+              { end: { $gt: (year) } }
+            ]
+          }
+
+          const AND2 = {
+            type: { $in: types2 },
+            coo: { $exists: true },
+            year: {
+              $gt: (year - delta),
+              $lt: (year + delta)
+            }
+          }
+          mongoSearchQuery = {
+            $or: [
+              AND1,
+              AND2
+            ]
+          }
+        } else {
+          mongoSearchQuery.type = { $in: types }
+          // mongoSearchQuery.capital = { $exists: true }
+        }
       }
 
       if (wikiArray) {
@@ -203,7 +240,7 @@ MarkerSchema.statics = {
             if (search) {
               if (both) {
                 const forbiddenTypes = ['g', 'a_', 'ap']
-                return markersPlus.filter(item => !forbiddenTypes.includes((item.subtype || item.type).substr(0, 2))).map(item => [item._id, (item.data || {}).title || item.name, `${item.type}|${item.subtype}`]).concat(metaAreaAddition)
+                return metaAreaAddition.concat(markersPlus.filter(item => !forbiddenTypes.includes((item.subtype || item.type).substr(0, 2))).map(item => [item._id, (item.data || {}).title || item.name, `${item.type}|${item.subtype}`]))
               }
               return markersPlus.map(item => item._id)
             } else if (format && format.toLowerCase() === 'geojson') {
