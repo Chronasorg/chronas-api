@@ -1,10 +1,8 @@
-import User from '../models/user.model'
-import { getAppVersion, getAppVersionSync, composePattern, composePatternSync } from 'appversion'
+import { composePatternSync } from 'appversion'
 
 
 /**
  * get current deployed version
- * @returns {User}
  */
 function get(req, res) {
   const getVersion = composePatternSync('M.m.p')

@@ -3,19 +3,18 @@ import httpStatus from 'http-status'
 import chai, { expect } from 'chai'
 import app from '../../..'
 import mongoUnit from 'mongo-unit'
+import testData from './fixtures/testData.json'
 
 chai.config.includeStack = true
 
 describe('## version', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
-  const testData = require('./fixtures/testData.json')  
 
   before(() => mongoUnit.initDb(testMongoUrl, testData))
   after(() => mongoUnit.drop())
 
-    it('should return OK and have properties version and commit', (done) => {
-      request(app)
+  it('should return OK and have properties version and commit', (done) => {
+    request(app)
         .get('/v1/version')
         .expect(httpStatus.OK)
         .then((res) => {
@@ -24,5 +23,5 @@ describe('## version', () => {
           done()
         })
         .catch(done)
-    })
+  })
 })
