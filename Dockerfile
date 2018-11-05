@@ -29,6 +29,11 @@ ENV NODE_ENV=development
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
+ENV APPINSIGHTS_INSTRUMENTATIONKEY=placeholder
+ENV TWITTER_CONSUMER_KEY=placeholder
+ENV TWITTER_CONSUMER_SECRET=placeholder
+ENV TWITTER_CALLBACK_URL=placeholder
+ENV JWT_SECRET=placeholder
 
 # copy app from build
 COPY --from=build /app/dist/ ./
