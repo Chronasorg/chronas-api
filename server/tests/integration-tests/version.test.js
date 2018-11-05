@@ -14,12 +14,13 @@ describe('## version', () => {
   before(() => mongoUnit.initDb(testMongoUrl, testData))
   after(() => mongoUnit.drop())
 
-    it('should return OK and the default version', (done) => {
+    it('should return OK and have properties version and commit', (done) => {
       request(app)
         .get('/v1/version')
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.version).to.equal('1.1.1')
+          expect(res.body).to.have.property('version')
+          expect(res.body).to.have.property('commit')
           done()
         })
         .catch(done)

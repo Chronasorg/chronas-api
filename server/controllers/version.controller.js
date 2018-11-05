@@ -1,16 +1,15 @@
 import User from '../models/user.model'
-import logger from '../../config/winston'
-import APIError from '../helpers/APIError'
-import { config } from '../../config/config'
-import jwt from 'jsonwebtoken'
-import httpStatus from "http-status";
+import { getAppVersion, getAppVersionSync, composePattern, composePatternSync } from 'appversion'
+
 
 /**
  * get current deployed version
  * @returns {User}
  */
 function get(req, res) {
-  return res.json({ version: "1.1.1" })
+  const getVersion = composePatternSync('M.m.p')
+  const getCommit = composePatternSync('c')
+  return res.json({ version: getVersion, commit: getCommit })
 }
 
 export default { get }
