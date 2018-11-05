@@ -26,6 +26,7 @@ Resources:
 
 ```mongodump --db chronas-api-staging -o dbBackupSep14```
 
+```mongorestore --drop --db chronas-api dbBackupSep14```
 ___
 *export/import all users*
 
