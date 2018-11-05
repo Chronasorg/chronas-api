@@ -6,7 +6,7 @@ import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'
 import staticRoutes from './static.route'
 import revisionRoutes from './revision.route'
-import versionRoutes from './version.route'
+import versionRoutes from './version.router'
 import boardRoutes from '../boardComponent/routes'
 
 const router = express.Router() // eslint-disable-line new-cap
