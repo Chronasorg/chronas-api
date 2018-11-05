@@ -43,3 +43,15 @@ mongoimport --host "mongo-0.mongo,mongo-1.mongo" --port 27017 --drop --db chrona
 
 mongoimport --host "mongo-0.mongo,mongo-1.mongo" --port 27017 --drop --db chronas-api --collection opinions --file /home/dump/opinions.json
 ```
+
+---
+For complete restore
+
+``
+kubectl cp dump/dumpNov4 restore-64cc7968d5-pmz9d:/home/dump/
+``
+
+``kubectl exec -it restore-64cc7968d5-pmz9d /bin/bash
+``
+
+``` mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump/dumpNov4/chronas-api-staging```
