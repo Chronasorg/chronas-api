@@ -47,7 +47,14 @@ Set environment (vars):
 cp .env.example .env
 ```
 
+Start an local mongoDB instance e.g. with an docker container:
+
+```sh
+docker run -d --name mongodatabase -p27017:27017 mongo
+```
+
 Start:
+
 ```sh
 npm start
 

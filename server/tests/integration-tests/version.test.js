@@ -14,7 +14,7 @@ describe('## version', () => {
   before(() => mongoUnit.initDb(testMongoUrl, testData))
   after(() => mongoUnit.drop())
 
-    it('should return OK', (done) => {
+    it('should return OK and the default version', (done) => {
       request(app)
         .get('/v1/version')
         .expect(httpStatus.OK)
