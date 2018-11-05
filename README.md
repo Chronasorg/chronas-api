@@ -125,18 +125,27 @@ Get code coverage summary on executing `npm test`
 `npm test` also generates HTML code coverage report in `coverage/` directory. Open `lcov-report/index.html` to view it.
 ![Code coverage HTML report](https://cloud.githubusercontent.com/assets/4172932/12625331/571a48fe-c559-11e5-8aa0-f9aacfb8c1cb.jpg)
 
-
 ## Docker
-the docker file will use the local dist folder
 
-```sh
-npm install && npm build
-docker build -t chronas-api .
+The [Dockerfile](Dockerfile) contains a multistage build. It installs node models and builds the application on a base node image and copy it to an node-alphine image.
 
-docker run -p80:80 chronas-api
+To run the application use docker-compose as it will start also a mongodb:
+
+```bash
+docker-compose up
 ```
 
-Initialize metadata/links object with:
-``
-{"_id":"links","data":{"undefined":[[],[]]},"score":0,"type":"g","coo":[]}
-``
+
+
+If you want to run it without docker-compose use this commands:
+
+```bash
+docker run -d -p27017:27017 --name mongodatabase mongo
+```
+
+```bash
+docker build -t chronas-api-local . && docker run -it --link mongodatabase:mongodatabase -e MONGO_HOST='MONGO_HOST=mongodb://mongodatabase/chronas-api' --name chrona-api -p 80:80 chronas-api-local
+```
+
+
+
