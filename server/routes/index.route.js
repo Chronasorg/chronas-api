@@ -6,6 +6,7 @@ import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'
 import staticRoutes from './static.route'
 import revisionRoutes from './revision.route'
+import versionRoutes from './version.router'
 import boardRoutes from '../boardComponent/routes'
 
 const router = express.Router() // eslint-disable-line new-cap
@@ -32,6 +33,9 @@ router.use('/metadata', metadataRoutes)
 
 // mount user routes at /revisions
 router.use('/revisions', revisionRoutes)
+
+// mount user routes at /revisions
+router.use('/version', versionRoutes)
 
 // Third Party ReForum App
 // mount board routes at /board
