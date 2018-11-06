@@ -86,8 +86,6 @@
 					"script": {
 						"id": "7685d0e1-d10a-433e-8540-1305a00d2a00",
 						"exec": [
-							"var data = JSON.parse(responseBody);",
-							"pm.globals.set(\"token\", data.token);",
 							"",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
