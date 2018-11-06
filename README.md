@@ -22,8 +22,9 @@ It is based on Node.js using ES6 and Express with Code Coverage and JWT Authenti
 | Debugging via [debug](https://www.npmjs.com/package/debug)           | Instead of inserting and deleting console.log you can replace it with the debug function and just leave it there. You can then selectively debug portions of your code by setting DEBUG env variable. If DEBUG env variable is not set, nothing is displayed to the console.                       |
 | Promisified Code via [bluebird](https://github.com/petkaantonov/bluebird)           | We love promise, don't we ? All our code is promisified and even so our tests via [supertest-as-promised](https://www.npmjs.com/package/supertest-as-promised).                       |
 | API parameter validation via [express-validation](https://www.npmjs.com/package/express-validation)           | Validate body, params, query, headers and cookies of a request (via middleware) and return a response with errors; if any of the configured validation rules fail. You won't anymore need to make your route handler dirty with such validations. |
-| Pre-commit hooks           | Runs lint and tests before any commit is made locally, making sure that only tested and quality code is committed
+| Pre-commit hooks           | Runs lint and tests before any commit is made locally, making sure that only tested and quality code is committed |
 | Secure app via [helmet](https://github.com/helmetjs/helmet)           | Helmet helps secure Express apps by setting various HTTP headers. |
+| Infrastructure Information           |  [MongoDB Restore in K8s to Azure](infrastructure/kubernetes/mongo_backup/README.md),  [Create MongoDB in K8s](infrastructure/kubernetes/mongo/README.md) |
 
 - CORS support via [cors](https://github.com/expressjs/cors)
 - Uses [http-status](https://www.npmjs.com/package/http-status) to set http status code. It is recommended to use `httpStatus.INTERNAL_SERVER_ERROR` instead of directly using `500` when setting status code.
@@ -121,18 +122,27 @@ Logs detailed info about each api request to console during development.
 Logs stacktrace of error to console along with other details.
 ![Error logging](https://cloud.githubusercontent.com/assets/4172932/12563361/fb9ef108-c3cf-11e5-9a58-3c5c4936ae3e.JPG)
 
-
 ## Docker
-the docker file will use the local dist folder
 
-```sh
-npm install && npm build
-docker build -t chronas-api .
+The [Dockerfile](Dockerfile) contains a multistage build. It installs node models and builds the application on a base node image and copy it to an node-alphine image.
 
-docker run -p80:80 chronas-api
+To run the application use docker-compose as it will start also a mongodb:
+
+```bash
+docker-compose up
 ```
 
-Initialize metadata/links object with:
-``
-{"_id":"links","data":{"undefined":[[],[]]},"score":0,"type":"g","coo":[]}
-``
+
+
+If you want to run it without docker-compose use this commands:
+
+```bash
+docker run -d -p27017:27017 --name mongodatabase mongo
+```
+
+```bash
+docker build -t chronas-api-local . && docker run -it --link mongodatabase:mongodatabase -e MONGO_HOST='MONGO_HOST=mongodb://mongodatabase/chronas-api' --name chrona-api -p 80:80 chronas-api-local
+```
+
+
+
