@@ -1,8 +1,10 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore'
 import Area from '../models/area.model'
 import Metadata from '../models/metadata.model'
+import metadataCtrl from '../controllers/metadata.controller'
 import { config } from "../../config/config";
 import httpStatus from "http-status";
+import Promise from "bluebird";
 
 const dimAccessor = {
   ruler: 0,
@@ -54,7 +56,7 @@ function create(req, res, next) {
     .catch(e => next(e))
 }
 
-function aggregateProvinces(req, res, next) {
+function aggregateProvinces(req, res, next, resolve=false) {
   const province = req.query.province || false
   // TODO: allow for aggregation of single provinces upon change
 
@@ -141,6 +143,7 @@ function aggregateProvinces(req, res, next) {
               if (foundMetadataEntity) {
                 // already exists -> update
                 foundMetadataEntity.data = aggregatedData[currProv]
+                foundMetadataEntity.markModified('data')
                 foundMetadataEntity.save()
               } else {
                 // does not exist -> create
@@ -156,13 +159,15 @@ function aggregateProvinces(req, res, next) {
             })
             .catch(e => res.status(500).send(e))
         })
+
+        if(resolve) return resolve()
         res.send('OK')
       })
     })
     .catch(e => res.status(500).send(e))
 }
 
-function aggregateDimension(req, res, next) {
+function aggregateDimension(req, res, next, resolve=false) {
   const dimension = req.query.dimension || false
   if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.')
 
@@ -256,6 +261,7 @@ function aggregateDimension(req, res, next) {
               if (foundMetadataEntity) {
                 // already exists -> update
                 foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] }
+                foundMetadataEntity.markModified('data')
                 return foundMetadataEntity.save()
               } else {
                 // does not exist -> create
@@ -271,10 +277,179 @@ function aggregateDimension(req, res, next) {
             })
             .catch(e => res.status(500).send(e))
         })
+
+        if(resolve) return resolve()
         res.send('OK')
       })
     })
     .catch(e => res.status(500).send(e))
+}
+
+function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
+  return new Promise((resolve) => {
+    req.body = {
+      linkedItemType1: el.properties.ct,
+      linkedItemType2: "metadata", // because replace only affects area entities
+      linkedItemKey1: el.properties.id || el.properties.w,
+      linkedItemKey2: replaceWithId,
+      type1: eORa, // is for map
+      type2: eORa, // is for map
+    }
+    new Promise((resolve, reject) => {
+      metadataCtrl.updateLinkAtom(req, res, next, true, resolve)
+    }).then(() => {
+      req.body = {
+        linkedItemType1: el.properties.ct,
+        linkedItemType2: "metadata", // because replace only affects area entities
+        linkedItemKey1: el.properties.id || el.properties.w,
+        linkedItemKey2: toReplaceLinkId,
+      }
+
+      new Promise((resolve, reject) => {
+        metadataCtrl.updateLinkAtom(req, res, next, false, resolve)
+      })
+        .then(() => {
+          return resolve()
+        })
+        .catch(() => resolve())
+    })
+  })
+}
+
+function replaceAll(req, res, next) {
+  const { start, end = start, ruler, culture, religion,  replaceWith } = req.body
+  const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
+
+  nextBody[0] = ruler
+  nextBody[1] = culture
+  nextBody[2] = religion
+
+  const typeId = ruler ? 0 : culture ? 1 : religion ? 2 : -1
+  const toReplace = ruler || culture || religion
+
+  if (!replaceWith || typeId === -1) return res.send('OK')
+  if (replaceWith) nextBody[typeId] = replaceWith
+
+  const typeDim = (ruler ? 'ruler' : culture ? 'culture' : 'religion')
+  const toReplaceLinkId = 'ae|' + typeDim + '|' + toReplace
+  const replaceWithId = 'ae|' + typeDim + '|' + replaceWith
+
+  const prevBody = {}
+  const trimmedNextBody = {}
+
+  const yearToUpdate = []
+  for (var i = start; i<(end+1); i++) {
+    yearToUpdate.push(i)
+  }
+
+  const waitForCompletion = (end - start) < 11
+  yearToUpdate.reduce(
+    (p, x) => p.then(_ => new Promise((resolve) => {
+      Area.findOne({year: x})
+        .exec()
+        .then((area) => {
+          const currYear = +area.year
+          const areaData = area.data
+          const provincesList = Object.keys(areaData)
+          const provincesIncluding = provincesList.filter((el) => {
+            return areaData[el][typeId] === toReplace
+          })
+
+          if (provincesIncluding.length === 0) return resolve()
+
+          provincesIncluding.forEach((province) => {
+            nextBody.forEach((singleValue, index) => {
+              if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
+                if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
+                if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = []
+                if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
+                if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = []
+
+                prevBody[currYear][province][index] = area.data[province][index]
+                trimmedNextBody[currYear][province][index] = nextBody[index]
+                area.data[province][index] = nextBody[index]
+                area.markModified('data')
+              }
+            })
+          })
+
+          if (typeof prevBody[currYear] !== 'undefined') {
+            // need to update
+            area.save()
+              .then((ar) => {
+                resolve()
+              })
+              .catch(e => reject(e))
+          } else {
+            resolve()
+          }
+        })
+      // Promise.all(areaPromises).then(() => {
+      }))
+      // })
+      // .catch(e => next(e))
+  , Promise.resolve()
+  ).then(() => {
+    // Promise.all(mapItemsPromises).then(() => {.
+    Metadata.get("links", req.method)
+      .then((linkObj) => {
+        req.entity = linkObj // eslint-disable-line no-param-reassign
+        req.query.source = '1:' + toReplaceLinkId
+        new Promise((resolve) => {
+          metadataCtrl.getLinked(req, res, next, resolve)
+        }).then((linkedItems) => {
+          const filteredMapItems = linkedItems["map"].filter(el => {
+            const itemYear = ((el || {}).properties || {}).y
+            return itemYear >= start && itemYear <= end
+          })
+          const filteredMediaItems = linkedItems["media"].filter(el => {
+            const itemYear = ((el || {}).properties || {}).y
+            return itemYear >= start && itemYear <= end
+          })
+
+          const mapItemsPromises = filteredMapItems.map(el => {
+            return [el, 'a', replaceWithId, toReplaceLinkId]
+          })
+          const mediaItemsPromises = filteredMediaItems.map(el => {
+            return [el, 'e', replaceWithId, toReplaceLinkId]
+          })
+
+          mapItemsPromises.concat(mediaItemsPromises).reduce(
+            (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3]) ),
+            Promise.resolve()
+          ).then(() => {
+            if (waitForCompletion) {
+              return res.send('OK')
+            } else {
+              new Promise((resolve, reject) => {
+                req.query.dimension = typeDim
+                aggregateDimension(req, res, next, resolve)
+              }).then(() => {
+                new Promise((resolve, reject) => {
+                  aggregateProvinces(req, res, next, resolve)
+                }).then(() => {
+                })
+              })
+            }
+
+            // Promise.all(mapItemsPromises).then(() => {
+          }, (error) => {
+            if (waitForCompletion) return res.send('NOTOK')
+          })
+
+        })
+      })
+
+    // optimize prevBody and add revision record
+    req.body.prevBody = getRanges(prevBody)
+    req.body.nextBody = getRanges(trimmedNextBody)
+
+    next()
+  }, (error) => {
+    next(error)
+  })
+
+  if (!waitForCompletion) return res.send('OK')
 }
 
 function updateMany(req, res, next) {
@@ -289,12 +464,19 @@ function updateMany(req, res, next) {
 
   const prevBody = {}
   const trimmedNextBody = {}
-  Area.find({ year: { $gte: start, $lte: end } })
-    .sort({ year: 1 })
-    .exec()
-    .then((Areas) => {
-      const areaPromises = Areas.map(area => new Promise((resolve, reject) => {
-        const currYear = +area.year
+
+  const yearToUpdate = []
+  for (var i = start; i<(end+1); i++) {
+    yearToUpdate.push(i)
+  }
+
+  const waitForCompletion = (end - start) < 11
+  yearToUpdate.reduce(
+    (p, x) => p.then(_ => new Promise((resolve) => {
+      Area.findOne({year: x})
+        .exec()
+        .then((area) => {
+          const currYear = +area.year
         provinces.forEach((province) => {
           nextBody.forEach((singleValue, index) => {
             if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
@@ -309,6 +491,7 @@ function updateMany(req, res, next) {
               area.markModified('data')
             }
           })
+        })
           if (typeof prevBody[currYear] !== 'undefined') {
             // need to update
             area.save()
@@ -320,19 +503,34 @@ function updateMany(req, res, next) {
             resolve()
           }
         })
-      }))
-
-      Promise.all(areaPromises).then(() => {
+          // Promise.all(areaPromises).then(() => {
+        }))
+      // })
+      // .catch(e => next(e))
+      , Promise.resolve()
+    ).then(() => {
         // optimize prevBody and add revision record
         req.body.prevBody = getRanges(prevBody)
         req.body.nextBody = getRanges(trimmedNextBody)
 
-        next()
+        if (waitForCompletion) {
+          return next()
+        } else {
+          new Promise((resolve, reject) => {
+            req.query.dimension = typeDim
+            aggregateDimension(req, res, next, resolve)
+          }).then(() => {
+            new Promise((resolve, reject) => {
+              aggregateProvinces(req, res, next, resolve)
+            }).then(() => {
+            })
+          })
+        }
       }, (error) => {
         next(error)
       })
-    })
-    .catch(e => next(e))
+
+      if (!waitForCompletion) return next()
 }
 
 function revertSingle(req, res, next, year, newBody) {
@@ -447,4 +645,4 @@ function getRanges(obj) {
   return compressedObj
 }
 
-export default { aggregateProvinces, aggregateDimension, load, get, create, update, updateMany, list, remove, revertSingle, defineEntity }
+export default { aggregateProvinces, aggregateDimension, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity }

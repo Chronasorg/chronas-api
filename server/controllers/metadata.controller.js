@@ -9,6 +9,7 @@ import httpStatus from "http-status";
 const linkedTypeAccessor = {
   "m": 0,
   "markers": 0,
+  "marker": 0,
   "me": 1,
   "metadata": 1
 }
@@ -212,8 +213,15 @@ function updateSingle(req, res, next, fromRevision = false, resolve) {
 
 function updateLink(addLink) {
   return (req, res, next) => {
-    const username = req.auth.username
-    userCtrl.changePoints(username, "linked", 1)
+    updateLinkAtom(req, res, next, addLink)
+  }
+}
+
+function updateLinkAtom(req, res, next, addLink, resolve = false) {
+    if (!resolve) {
+      const username = req.auth.username
+      userCtrl.changePoints(username, "linked", 1)
+    }
 
     const linkedItemType1 = req.body.linkedItemType1
     const linkedItemType2 = req.body.linkedItemType2
@@ -234,6 +242,7 @@ function updateLink(addLink) {
       [],
     ]
 
+  // try {
     if (addLink) {
       if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
         newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
@@ -247,7 +256,7 @@ function updateLink(addLink) {
       }
       if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) {
         newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
-      }  else if (type1 === 'b') {
+      } else if (type1 === 'b') {
         newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => {
           if (el[0] === linkedItemKey1) {
             el[1] = 'b'
@@ -260,26 +269,26 @@ function updateLink(addLink) {
       newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el[0] !== linkedItemKey2)
       newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el[0] !== linkedItemKey1)
 
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0 ) newNextBody1 = -1
-      if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0 ) newNextBody2 = -1
+      if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0) newNextBody1 = -1
+      if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0) newNextBody2 = -1
     }
 
     req.body.nextBody = newNextBody1
     req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
     updateSinglePromise(req, res, next, true)
       .then(() => {
-        revisionCtrl.addUpdateSingleRevision(req, res, next, false)
+        if (!resolve) revisionCtrl.addUpdateSingleRevision(req, res, next, false)
         req.body.nextBody = newNextBody2
         req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
         return updateSinglePromise(req, res, next, true)
           .then(() => {
+            if (resolve) return resolve()
             revisionCtrl.addUpdateSingleRevision(req, res, next)
           })
       })
-  }
 }
 
-function getLinked(req, res, next) {
+function getLinked(req, res, next, resolve = false) {
   const sourceItem = req.query.source || false
 
   const MAPIDS = ['a', 'b']
@@ -288,12 +297,17 @@ function getLinked(req, res, next) {
   if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.')
 
   const linkedItems = req.entity.data[sourceItem] || false
+
   const resObj = {
     map: [],
     media: []
   }
 
   if (!linkedItems) {
+    if (resolve) {
+      return resolve(resObj)
+    }
+
     return res.json(resObj)
   }
 
@@ -391,6 +405,9 @@ function getLinked(req, res, next) {
             }
           })
 
+          if (resolve) {
+            return resolve(resObj)
+          }
           return res.json(resObj)
         })
     })
@@ -449,4 +466,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { defineEntity, getLinked, load, get, updateLink, create, update, updateSingle, list, remove, vote }
+export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote }

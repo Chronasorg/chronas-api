@@ -27,8 +27,17 @@ router.route('/:forum_slug/discussions').get(
   (req, res) => {
     const { q, offset, limit } = req.query
     getDiscussions(req.params.forum_slug, false, req.query.sorting_method, q, offset, limit).then(
-      (result) => { res.send(result) },
-      (error) => { res.send([]) }
+      (result) => {
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+        res.set('X-Total-Count', result[1])
+        res.json(result[0])
+        // res.send(result)
+      },
+      (error) => {
+        res.set('X-Total-Count', 0)
+        res.json(result[0])
+        // res.send([])
+      }
     )
   })
 
@@ -38,7 +47,7 @@ router.route('/:forum_slug/pinned_discussions').get(
   (req, res) => {
     const { q, offset, limit } = req.query
     getDiscussions(req.params.forum_slug, true, false, false, offset, limit).then(
-      (result) => { res.send(result) },
+      (result) => { res.send(result[0]) },
       (error) => { res.send([]) }
     )
   })
