@@ -79,6 +79,73 @@
 			"response": []
 		},
 		{
+			"name": "/version",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7685d0e1-d10a-433e-8540-1305a00d2a00",
+						"exec": [
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response should contain version and should not be empty\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.version).to.not.be.empty;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "password",
+							"value": "postman123",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "postman@aui.de",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/version",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"version"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/metadata",
 			"event": [
 				{
@@ -508,7 +575,7 @@
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
+							"    pm.expect(jsonData[0]).to.have.property('year');    ",
 							"});"
 						],
 						"type": "text/javascript"
@@ -853,59 +920,6 @@
 						"v1",
 						"users",
 						"testUser"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "/marker",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"",
-							"",
-							"pm.test(\"Response should contain _id, data and score\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData[0]).to.have.property('_id');",
-							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"    pm.expect(jsonData[0]).to.have.property('coo');    ",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/markers/",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"markers",
-						""
 					]
 				}
 			},

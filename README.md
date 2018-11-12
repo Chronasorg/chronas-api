@@ -16,13 +16,15 @@ It is based on Node.js using ES6 and Express with Code Coverage and JWT Authenti
 | ES6 via Babel                  	 	 | ES6 support using [Babel](https://babeljs.io/).  |
 | Authentication via JsonWebToken                  	 	 | Supports authentication using [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken).  |
 | Code Linting               			 | JavaScript code linting is done using [ESLint](http://eslint.org) - a pluggable linter tool for identifying and reporting on patterns in JavaScript. Uses ESLint with [eslint-config-airbnb](https://github.com/airbnb/javascript/tree/master/packages/eslint-config-airbnb), which tries to follow the Airbnb JavaScript style guide.                                                                                                |
-| Auto server restart                  	 | Restart the server using [nodemon](https://github.com/remy/nodemon) in real-time anytime an edit is made, with babel compilation and eslint.                                                                                                                                                                            |
+| Auto server restart                  	 | Restart the server using [nodemon](https://github.com/remy/nodemon) in real-time anytime an edit is made, with babel compilation and eslint. |
+| Swagger               	 | Using [swagger-ui-express](https://www.npmjs.com/package/swagger-ui-express) Path to Docu [/api-docs](https://api-dev.chronas.org/api-docs) |
 | ES6 Code Coverage via [istanbul](https://www.npmjs.com/package/istanbul)                  | Supports code coverage of ES6 code using istanbul and mocha. Code coverage reports are saved in `coverage/` directory post `npm test` execution. Open `coverage/lcov-report/index.html` to view coverage report. `npm test` also displays code coverage summary on console. Code coverage can also be enforced overall and per file as well, configured via .istanbul.yml                                                                                                                                                                            |
 | Debugging via [debug](https://www.npmjs.com/package/debug)           | Instead of inserting and deleting console.log you can replace it with the debug function and just leave it there. You can then selectively debug portions of your code by setting DEBUG env variable. If DEBUG env variable is not set, nothing is displayed to the console.                       |
 | Promisified Code via [bluebird](https://github.com/petkaantonov/bluebird)           | We love promise, don't we ? All our code is promisified and even so our tests via [supertest-as-promised](https://www.npmjs.com/package/supertest-as-promised).                       |
 | API parameter validation via [express-validation](https://www.npmjs.com/package/express-validation)           | Validate body, params, query, headers and cookies of a request (via middleware) and return a response with errors; if any of the configured validation rules fail. You won't anymore need to make your route handler dirty with such validations. |
-| Pre-commit hooks           | Runs lint and tests before any commit is made locally, making sure that only tested and quality code is committed
+| Pre-commit hooks           | Runs lint and tests before any commit is made locally, making sure that only tested and quality code is committed |
 | Secure app via [helmet](https://github.com/helmetjs/helmet)           | Helmet helps secure Express apps by setting various HTTP headers. |
+| Infrastructure Information           |  [MongoDB Restore in K8s to Azure](infrastructure/kubernetes/mongo_backup/README.md),  [Create MongoDB in K8s](infrastructure/kubernetes/mongo/README.md) |
 
 - CORS support via [cors](https://github.com/expressjs/cors)
 - Uses [http-status](https://www.npmjs.com/package/http-status) to set http status code. It is recommended to use `httpStatus.INTERNAL_SERVER_ERROR` instead of directly using `500` when setting status code.
@@ -32,7 +34,7 @@ It is based on Node.js using ES6 and Express with Code Coverage and JWT Authenti
 
 Clone the repo:
 ```sh
-git clone https://github.com/daumann/chronas-api.git
+git clone https://github.com/Chronasorg/chronas-api
 ```
 
 Install dependencies:
@@ -46,7 +48,14 @@ Set environment (vars):
 cp .env.example .env
 ```
 
+Start an local mongoDB instance e.g. with an docker container:
+
+```sh
+docker run -d --name mongodatabase -p27017:27017 mongo
+```
+
 Start:
+
 ```sh
 npm start
 
@@ -59,23 +68,18 @@ Refer [debug](https://www.npmjs.com/package/debug) to know how to selectively tu
 Tests:
 ```sh
 # Run tests written in ES6 
-
 npm test
 
 # Run test along with code coverage
-npm test:coverage
+npm run test:coverage
 
 # Run tests on file change
-npm test:watch
-
-# Run tests enforcing code coverage (configured via .istanbul.yml)
-npm test:check-coverage
+npm run test:watch
 ```
 
 Lint:
 ```sh
 # Lint code with ESLint
-
 npm run lint
 
 # Run lint on any file change
@@ -118,25 +122,27 @@ Logs detailed info about each api request to console during development.
 Logs stacktrace of error to console along with other details.
 ![Error logging](https://cloud.githubusercontent.com/assets/4172932/12563361/fb9ef108-c3cf-11e5-9a58-3c5c4936ae3e.JPG)
 
-## Code Coverage
-Get code coverage summary on executing `npm test`
-![Code Coverage Text Summary](https://cloud.githubusercontent.com/assets/4172932/12827832/a0531e70-cba7-11e5-9b7c-9e7f833d8f9f.JPG)
-
-`npm test` also generates HTML code coverage report in `coverage/` directory. Open `lcov-report/index.html` to view it.
-![Code coverage HTML report](https://cloud.githubusercontent.com/assets/4172932/12625331/571a48fe-c559-11e5-8aa0-f9aacfb8c1cb.jpg)
-
-
 ## Docker
-the docker file will use the local dist folder
 
-```sh
-npm install && npm build
-docker build -t chronas-api .
+The [Dockerfile](Dockerfile) contains a multistage build. It installs node models and builds the application on a base node image and copy it to an node-alphine image.
 
-docker run -p80:80 chronas-api
+To run the application use docker-compose as it will start also a mongodb:
+
+```bash
+docker-compose up
 ```
 
-Initialize metadata/links object with:
-``
-{"_id":"links","data":{"undefined":[[],[]]},"score":0,"type":"g","coo":[]}
-``
+
+
+If you want to run it without docker-compose use this commands:
+
+```bash
+docker run -d -p27017:27017 --name mongodatabase mongo
+```
+
+```bash
+docker build -t chronas-api-local . && docker run -it --link mongodatabase:mongodatabase -e MONGO_HOST='MONGO_HOST=mongodb://mongodatabase/chronas-api' --name chrona-api -p 80:80 chronas-api-local
+```
+
+
+
