@@ -5,6 +5,7 @@ import userRoutes from './user.route'
 import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'
 import staticRoutes from './static.route'
+import statisticsRoutes from './statistics.route'
 import revisionRoutes from './revision.route'
 import versionRoutes from './version.router'
 import boardRoutes from '../boardComponent/routes'
@@ -42,5 +43,7 @@ router.use('/version', versionRoutes)
 router.use('/board', boardRoutes)
 
 router.use('/image', staticRoutes)
+
+router.use('/statistics', statisticsRoutes)
 
 export default router

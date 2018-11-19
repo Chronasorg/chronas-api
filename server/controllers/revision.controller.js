@@ -34,6 +34,7 @@ function load(req, res, next, id) {
       if (entityId === 'MANY') {
         next()
       } else {
+        console.debug('looking for resoyrce and entityId', resource, entityId)
         resourceCollection[resource].model.findById(entityId)
           .then((entity) => {
             if (resource === "metadata" && initItemsAndLinksToRefresh.includes(entityId)) {
@@ -340,8 +341,15 @@ function update(req, res, next) {
  * @returns {Revision[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', order = 'asc', filter = '' } = req.query
-  Revision.list({ start, end, sort, order, filter })
+  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', entity = false, subentity = false, order = 'asc', filter = '' } = req.query
+  let potentialEntity = false
+  let potentialSubentity = false
+  if (filter) {
+    const fullFilter = JSON.parse(filter)
+    potentialEntity = fullFilter.entity
+    potentialSubentity = fullFilter.subentity
+  }
+  Revision.list({ start, end, sort, order, entity: (potentialEntity || entity), subentity: (potentialSubentity || subentity), filter })
     .then((revisions) => {
       if (count) {
         Revision.count().exec().then((revisionCount) => {

@@ -10,6 +10,7 @@ const linkedTypeAccessor = {
   "m": 0,
   "markers": 0,
   "marker": 0,
+  "area": 1,
   "me": 1,
   "metadata": 1
 }
@@ -242,6 +243,7 @@ function updateLinkAtom(req, res, next, addLink, resolve = false) {
       [],
     ]
 
+  // console.debug(prevValue1,prevValue2,linkedItemType1,linkedItemType2,linkedTypeAccessor[linkedItemType2],linkedTypeAccessor[linkedItemType1])
   // try {
     if (addLink) {
       if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
@@ -280,8 +282,10 @@ function updateLinkAtom(req, res, next, addLink, resolve = false) {
         if (!resolve) revisionCtrl.addUpdateSingleRevision(req, res, next, false)
         req.body.nextBody = newNextBody2
         req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
+        console.debug("adding or deleting", addLink)
         return updateSinglePromise(req, res, next, true)
           .then(() => {
+            console.debug("done")
             if (resolve) return resolve()
             revisionCtrl.addUpdateSingleRevision(req, res, next)
           })
@@ -307,7 +311,6 @@ function getLinked(req, res, next, resolve = false) {
     if (resolve) {
       return resolve(resObj)
     }
-
     return res.json(resObj)
   }
 
