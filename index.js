@@ -19,7 +19,7 @@ const mongoUri = config.mongo.host
 mongoose.connect(mongoUri, {  useNewUrlParser: true , server: { socketOptions: { keepAlive: 1 }} })
 
 mongoose.connection.on('error',function (err) {  
-  throw new Error('nable to connect to database - URL' + mongoUri + ': ' + err);
+  throw new Error('nable to connect to database - URL - ' + mongoUri + ' - Error - ' + err);
 }); 
 
 // print mongoose logs in dev env
