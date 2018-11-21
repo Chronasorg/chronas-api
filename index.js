@@ -16,10 +16,11 @@ mongoose.Promise = Promise
 
 // connect to mongo db
 const mongoUri = config.mongo.host
-mongoose.connect(mongoUri, { useNewUrlParser: true, server: { socketOptions: { keepAlive: 1 } } })
-mongoose.connection.on('error', () => {
-  throw new Error(`unable to connect to database: ${mongoUri}`)
-})
+mongoose.connect(mongoUri, { useNewUrlParser: true, server: { socketOptions: { keepAlive: 1 }}})
+
+mongoose.connection.on('error',function (err) {
+  throw new Error('unable to connect to database - URL - ' + mongoUri + ' - Error - ' + err);
+});
 
 // print mongoose logs in dev env
 if (config.MONGOOSE_DEBUG) {
