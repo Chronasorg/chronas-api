@@ -239,11 +239,19 @@ function aggregateDimension(req, res, next, resolve=false) {
 
           if (prevDataValue.provCount !== currValue.provCount) {
             // add provCount entry
+            if (prevDataValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes((currYear-1)+'')) {
+              aggregatedData[currDimEntity].push({ [currYear-1]: [0, 0, 0] })
+            }
+            if (currValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes((currYear-1)+'')) {
+              aggregatedData[currDimEntity].push({ [currYear-1]: [prevDataValue.provCount, prevDataValue.popCount, prevDataValue.popShare] })
+            }
             prevData[currDimEntity].provCount = currValue.provCount
             prevData[currDimEntity].popShare = currpopShare
             prevData[currDimEntity].popCount = currValue.popCount
 
             aggregatedData[currDimEntity].push({ [currYear]: [currValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] })
+          } else if (+currYear === 2000 && prevDataValue.provCount !== 0) {
+            aggregatedData[currDimEntity].push({ [currYear]: [prevDataValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] })
           }
         })
         // popTotal

@@ -2,6 +2,7 @@ import express from 'express'
 import areaRoutes from './area.route'
 import authRoutes from './auth.route'
 import userRoutes from './user.route'
+import contactRoutes from './contact.router'
 import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'
 import staticRoutes from './static.route'
@@ -22,6 +23,9 @@ router.use('/auth', authRoutes)
 
 // mount user routes at /areas
 router.use('/areas', areaRoutes)
+
+// mount email send routes at /contact
+router.use('/contact', contactRoutes)
 
 // mount user routes at /users
 router.use('/users', userRoutes)
