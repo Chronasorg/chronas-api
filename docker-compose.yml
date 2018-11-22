@@ -22,6 +22,7 @@ services:
       - TWITTER_CONSUMER_KEY=placeholder
       - TWITTER_CONSUMER_SECRET=placeholder
       - TWITTER_CALLBACK_URL=placeholder
+      - MAILGUN_KEY=placeholder
       - PORT=80
     depends_on:
       - database
