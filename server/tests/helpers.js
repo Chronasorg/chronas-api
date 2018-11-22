@@ -14,3 +14,4 @@ prepare(done => mongoUnit.start()
  process.env.TWITTER_CONSUMER_KEY="placeholder"
  process.env.TWITTER_CONSUMER_SECRET="placeholder"
  process.env.TWITTER_CALLBACK_URL="placeholder"
+ process.env.MAILGUN_KEY="placeholder"
