@@ -2,9 +2,11 @@ import express from 'express'
 import areaRoutes from './area.route'
 import authRoutes from './auth.route'
 import userRoutes from './user.route'
+import contactRoutes from './contact.router'
 import markerRoutes from './marker.route'
 import metadataRoutes from './metadata.route'
 import staticRoutes from './static.route'
+import statisticsRoutes from './statistics.route'
 import revisionRoutes from './revision.route'
 import versionRoutes from './version.router'
 import boardRoutes from '../boardComponent/routes'
@@ -21,6 +23,9 @@ router.use('/auth', authRoutes)
 
 // mount user routes at /areas
 router.use('/areas', areaRoutes)
+
+// mount email send routes at /contact
+router.use('/contact', contactRoutes)
 
 // mount user routes at /users
 router.use('/users', userRoutes)
@@ -42,5 +47,7 @@ router.use('/version', versionRoutes)
 router.use('/board', boardRoutes)
 
 router.use('/image', staticRoutes)
+
+router.use('/statistics', statisticsRoutes)
 
 export default router

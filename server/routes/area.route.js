@@ -29,6 +29,15 @@ router.route('/')
     // validate(paramValidation.createArea),
     areaCtrl.create)
 
+router.route('/replace')
+  .all(areaCtrl.defineEntity)
+/** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilege(1),
+    areaCtrl.replaceAll,
+    revisionCtrl.addUpdateManyRevision)
+
 router.route('/aggregateProvinces')
   /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .get(

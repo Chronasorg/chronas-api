@@ -1,3 +1,5 @@
+import Marker from "../../../models/marker.model";
+
 const asyncEach = require('async/each');
 
 // models
@@ -31,7 +33,7 @@ const getAllForums = () => {
  * @param  {Boolean} pinned
  * @return {Promise}
  */
-const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 50) => {
+const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 10) => {
   return new Promise((resolve, reject) => {
     // define sorthing method
     const sortWith = { };
@@ -57,21 +59,25 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
             if (error) { console.error(error); reject(error); }
             else if (!discussions) reject(null);
             else {
-              // attach opinion count to each discussion
-              asyncEach(discussions, (eachDiscussion, callback) => {
-                // add opinion count
-                getAllOpinions((eachDiscussion || {})._id).then(
-                  (opinions) => {
-                    // add opinion count to discussion doc
-                    eachDiscussion.opinion_count = opinions ? opinions.length : 0;
-                    callback();
-                  },
-                  (error) => { console.error(error); callback(error); }
-                );
-              }, (error) => {
-                if (error) { console.error(error); reject(error); }
-                else resolve(discussions);
-              });
+              Discussion
+                .find(searchObj)
+                .count().exec().then((discussionCount) => {
+                // attach opinion count to each discussion
+                asyncEach(discussions, (eachDiscussion, callback) => {
+                  // add opinion count
+                  getAllOpinions((eachDiscussion || {})._id).then(
+                    (opinions) => {
+                      // add opinion count to discussion doc
+                      eachDiscussion.opinion_count = opinions ? opinions.length : 0;
+                      callback();
+                    },
+                    (error) => { console.error(error); callback(error); }
+                  );
+                }, (error) => {
+                  if (error) { console.error(error); reject(error); }
+                  else resolve([discussions,discussionCount]);
+                });
+              })
             }
           });
       })

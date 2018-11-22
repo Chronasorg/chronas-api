@@ -43,6 +43,7 @@ const getFullProfile = (username) => {
         // we got the user, now we need all discussions by the user
         Opinion
           .find({ user_id: result._id })
+          .limit(10)
           .populate('discussion')
           .exec((error, opinions) => {
             if (error) { console.log(error) }
@@ -51,6 +52,7 @@ const getFullProfile = (username) => {
             }
             Discussion
             .find({ user_id: result._id })
+            .limit(10)
             .populate('forum')
             .lean()
             .exec((error, discussions) => {
