@@ -114,3 +114,13 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: APPINSIGHTS_INSTRUMENTATIONKEY          
+        - name: MAILGUN_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_DOMAIN      
+        - name: MAILGUN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_KEY                                  
