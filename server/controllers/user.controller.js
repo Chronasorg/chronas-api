@@ -9,7 +9,7 @@ import httpStatus from "http-status";
  * Load user and append to req.
  */
 function load(req, res, next, id) {
-  User.get(id)
+  User.findOne({ email: id })
     .then((user) => {
       req.user = user // eslint-disable-line no-param-reassign
       return next()
@@ -58,6 +58,7 @@ function create(req, res, next) {
       const user = new User({
         _id: req.body.id || req.body.email || req.body.username,
         avatar: req.body.avatar,
+        bio: req.body.bio,
         website: req.body.website,
         username: req.body.username,
         name: req.body.name || req.body.username || req.body.id,
@@ -117,6 +118,7 @@ function update(req, res, next) {
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
+  if (typeof req.body.bio !== 'undefined') user.bio = req.body.bio
   if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
   if (typeof req.body.email !== 'undefined') user.email = req.body.email

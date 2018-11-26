@@ -5,7 +5,8 @@ const asyncEach = require('async/each');
 const getAllOpinions = require('../opinion/controller').getAllOpinions;
 
 // models
-const User = require('./model');
+// const User = require('./model');
+const User = require('../../../models/user.model');
 const Discussion = require('../discussion/model');
 const Opinion = require('../opinion/model');
 
@@ -34,24 +35,26 @@ const getFullProfile = (username) => {
   return new Promise((resolve, reject) => {
     User
     .findOne({ username })
+      // .exec()
+      // .then((foundUser) => {
     .lean()
-    .exec((error, result) => {
+    .exec((error, foundUser) => {
       if (error) { console.log(error); reject(error); }
-      else if (!result) reject('not_found');
+      if (!foundUser) reject('not_found');
       else {
         // TODO: add opinions!
         // we got the user, now we need all discussions by the user
         Opinion
-          .find({ user_id: result._id })
+          .find({ user_id: foundUser._id })
           .limit(10)
           .populate('discussion')
           .exec((error, opinions) => {
             if (error) { console.log(error) }
             else {
-              result.opinions = opinions
+              foundUser.opinions = opinions
             }
             Discussion
-            .find({ user_id: result._id })
+            .find({ user_id: foundUser._id })
             .limit(10)
             .populate('forum')
             .lean()
@@ -72,8 +75,8 @@ const getFullProfile = (username) => {
                 }, (error) => {
                   if (error) { console.log(error); reject(error); }
                   else {
-                    result.discussions = discussions;
-                    resolve(result);
+                    foundUser.discussions = discussions;
+                    resolve(foundUser);
                   }
                 });
               }

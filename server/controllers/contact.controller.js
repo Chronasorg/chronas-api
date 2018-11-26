@@ -24,9 +24,6 @@ function create(req, res) {
     message: 'Body does not contain any or all of the following fields: from, to, subject, html'
   })
 
-  console.debug('auth', auth)
-  console.debug('to', to)
-
   const toSendBody = {
     from: from,
     subject: subject,

@@ -282,10 +282,8 @@ function updateLinkAtom(req, res, next, addLink, resolve = false) {
         if (!resolve) revisionCtrl.addUpdateSingleRevision(req, res, next, false)
         req.body.nextBody = newNextBody2
         req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
-        console.debug("adding or deleting", addLink)
         return updateSinglePromise(req, res, next, true)
           .then(() => {
-            console.debug("done")
             if (resolve) return resolve()
             revisionCtrl.addUpdateSingleRevision(req, res, next)
           })

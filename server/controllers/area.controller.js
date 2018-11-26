@@ -296,7 +296,6 @@ function aggregateDimension(req, res, next, resolve=false) {
 var s = 0
 function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
   return new Promise((resolve) => {
-    console.debug(s, el.properties.id || el.properties.w)
     s++
     req.body = {
       linkedItemType1: el.properties.ct,
@@ -306,7 +305,6 @@ function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId
       type1: eORa, // is for map
       type2: eORa, // is for map
     }
-    console.debug(req.body)
     new Promise((resolve, reject) => {
       metadataCtrl.updateLinkAtom(req, res, next, true, resolve)
     }).then(() => {
@@ -358,7 +356,6 @@ function replaceAll(req, res, next) {
   const waitForCompletion = (end - start) < 11
   yearToUpdate.reduce(
     (p, x) => p.then(_ => new Promise((resolve) => {
-      console.debug("year",x)
       Area.findOne({year: x})
         .exec()
         .then((area) => {
@@ -389,7 +386,6 @@ function replaceAll(req, res, next) {
 
           if (typeof prevBody[currYear] !== 'undefined') {
             // need to update
-            console.debug('updating year ', currYear)
             area.save()
               .then((ar) => {
                 resolve()
@@ -406,17 +402,13 @@ function replaceAll(req, res, next) {
   , Promise.resolve()
   ).then(() => {
     // Promise.all(mapItemsPromises).then(() => {.
-    console.debug("handle Links")
     Metadata.get("links", req.method)
       .then((linkObj) => {
         req.entity = linkObj // eslint-disable-line no-param-reassign
         req.query.source = '1:' + toReplaceLinkId
-        console.debug("handle req.query.source", req.query.source)
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve)
         }).then((linkedItems) => {
-
-          console.debug("handle linkedItems")
           const filteredMapItems = linkedItems["map"].filter(el => {
             const itemYear = ((el || {}).properties || {}).y
             return itemYear >= start && itemYear <= end
@@ -432,9 +424,6 @@ function replaceAll(req, res, next) {
           const mediaItemsPromises = filteredMediaItems.map(el => {
             return [el, 'e', replaceWithId, toReplaceLinkId]
           })
-
-
-          console.debug("handle mapItemsPromises.concat(mediaItemsPromises).length", mapItemsPromises.concat(mediaItemsPromises).length)
           mapItemsPromises.concat(mediaItemsPromises).reduce(
             (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3]) ),
             Promise.resolve()
@@ -442,7 +431,6 @@ function replaceAll(req, res, next) {
 
             Metadata.find({ subtype: "ew", year: { $gt: start, $lt: end } })
               .then((warMetadatas) => {
-                console.debug("FOUND warMetadatas", warMetadatas.length)
                 warMetadatas.forEach((warMetadata) => {
                   const attackersDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[0] || []).findIndex(el => el === toReplace)
                   const defenderDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[1] || []).findIndex(el => el === toReplace)
@@ -456,7 +444,6 @@ function replaceAll(req, res, next) {
 
                   if (attackersDirtyIndex !== -1 || defenderDirtyIndex !== -1) {
                     warMetadata.markModified('data')
-                    console.debug("saving modified warmeta",warMetadata._id)
                     warMetadata.save()
                   }
                 })

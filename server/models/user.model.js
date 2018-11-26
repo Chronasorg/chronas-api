@@ -36,6 +36,9 @@ const UserSchema = new mongoose.Schema({
   name: {
     type: String,
   },
+  bio: {
+    type: String,
+  },
   education: {
     type: String
   },

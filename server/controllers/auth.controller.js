@@ -17,7 +17,7 @@ import userCtrl from '../controllers/user.controller'
  * @returns {*}
  */
 function login(req, res, next) {
-  User.findById(req.body.email)
+  User.findOne({ email: req.body.email })
     .exec()
     .then((user) => {
       if (user && req.body.email === user.email) {
@@ -28,11 +28,12 @@ function login(req, res, next) {
             const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
             return next(err2)
           }
+          // console.debug(user)
           const token = jwt.sign({
-            id: user._id,
-            avatar: user.avatar,
-            username: user.username,
-            lastUpdated: user.lastUpdated,
+            id: user.email || user._id,
+            avatar: user.avatar || user.gravatar,
+            username: user.username || (((user || {}).name || {}).first),
+            lastUpdated: user.lastUpdated || user.lastLogin,
             privilege: user.privilege ? user.privilege : 1
           }, config.jwtSecret)
 
@@ -41,7 +42,7 @@ function login(req, res, next) {
 
           return res.json({
             token,
-            username: user.username
+            username: user.username || (((user || {}).name || {}).first)
           })
         })
       }
@@ -65,9 +66,9 @@ function login(req, res, next) {
 
 function signup(req, res, next) {
   req.body.signup = true
-  req.body.username = (req.body.first_name && req.body.last_name) ? req.body.first_name + ' ' + req.body.last_name
+  req.body.username = req.body.username || ((req.body.first_name && req.body.last_name) ? req.body.first_name + ' ' + req.body.last_name
     : (req.body.first_name) ? req.body.first_name
-      : (req.body.last_name) ? req.body.last_name : Moniker.choose()
+      : (req.body.last_name) ? req.body.last_name : Moniker.choose())
 
   // TODO: add email service
   // mandrill('/messages/send', {
