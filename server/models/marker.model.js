@@ -71,7 +71,6 @@ MarkerSchema.statics = {
    */
   get(id) {
     return this.findById(id)
-      .lean()
       .exec()
       .then((marker) => {
         if (marker) {
