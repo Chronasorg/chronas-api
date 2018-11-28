@@ -197,6 +197,7 @@ UserSchema.statics = {
       .sort(sortObject)
       .skip(+start)
       .limit(+limit)
+      .lean()
       .exec()
   }
 }

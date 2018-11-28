@@ -38,6 +38,7 @@ function get(req, res) {
 function create(req, res, next, fromRevision = false) {
   const markerId = decodeURIComponent(req.body._id) || decodeURIComponent(req.body.wiki)
   Marker.findById(markerId)
+    .lean()
     .exec()
     .then((duplicatedMarker) => {
       if (duplicatedMarker) {

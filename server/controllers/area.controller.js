@@ -61,6 +61,7 @@ function aggregateProvinces(req, res, next, resolve=false) {
   // TODO: allow for aggregation of single provinces upon change
 
   Metadata.findById('religion')
+    .lean()
     .exec()
     .then((religion) => {
       const religionMap = religion.data
@@ -172,6 +173,7 @@ function aggregateDimension(req, res, next, resolve=false) {
   if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.')
 
   Metadata.findById((dimension === 'religionGeneral') ? 'religion' : dimension)
+    .lean()
     .exec()
     .then((dimensionMetaRes) => {
       const dimensionMeta = dimensionMetaRes.data

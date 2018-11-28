@@ -11,6 +11,11 @@ import httpStatus from "http-status";
 function load(req, res, next, id) {
   User.findOne({ email: id })
     .then((user) => {
+      if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({
+          message: 'Not Found'
+        })
+      }
       req.user = user // eslint-disable-line no-param-reassign
       return next()
     })
@@ -163,13 +168,15 @@ function incrementLoginCount(username) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  const highscoreCount = req.query.top || false
+  let highscoreCount = req.query.top || false
+  if (highscoreCount > 100) highscoreCount = highscoreCount;
   const countOnly = req.query.countOnly || false
 
   if (highscoreCount !== false) {
     User.find()
       .sort({ karma: -1 })
       .limit(+highscoreCount)
+      .lean()
       .exec()
       .then((users) => {
         res.json(users.map((u) => {

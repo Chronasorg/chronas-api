@@ -12,7 +12,7 @@ router.route('/')
   /** GET /v1/users - Get list of users */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    // checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilege(5),
     userCtrl.list)
 
   /** POST /v1/users - Create new user */
@@ -20,11 +20,17 @@ router.route('/')
     validate(paramValidation.createUser),
     userCtrl.create)
 
+router.route('/highscore')
+/** GET /v1/users - Get list of users */
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    userCtrl.list)
+
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilegeOrOwnership(5),
+    // checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */

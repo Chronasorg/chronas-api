@@ -69,6 +69,7 @@ AreaSchema.statics = {
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(length)
+      .lean()
       .exec()
       .then(areas => areas.map((obj) => {
         const dataString = JSON.stringify(obj.data).substring(0, 200)

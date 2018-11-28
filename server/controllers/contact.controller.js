@@ -26,25 +26,22 @@ function create(req, res) {
 
   const toSendBody = {
     from: from,
-    subject: subject,
+    subject: "[Chronas Contact] " + subject,
     html: html
   }
 
-  if (Array.isArray(to) && to.length > 1) {
-    toSendBody.to = to[0]
-    toSendBody.cc = to[1]
+  if (Array.isArray(to) && to.length === 2) {
+    toSendBody.to = [{address: to[0]}, {address: to[1]}]
   } else if (Array.isArray(to)) {
     toSendBody.to = to[0]
   } else {
     toSendBody.to = to
   }
 
-  nodemailerMailgun.sendMail({
-    from: from,
-    to: to,
-    subject: subject,
-    html: html
-  }, (err, info) => {
+  console.debug(toSendBody)
+  nodemailerMailgun.sendMail(
+    toSendBody
+  , (err, info) => {
     if (err) {
       return res.json(err.message)
     }

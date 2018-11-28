@@ -95,6 +95,7 @@ RevisionSchema.statics = {
       .sort({ timestamp: -1 })
       .skip(+start)
       .limit(+end)
+      .lean()
       .exec()
       .then(revisions => revisions.map((obj) => {
         const nextBodyString = (JSON.stringify(obj.nextBody) || '').substring(0, 400)

@@ -28,7 +28,6 @@ function login(req, res, next) {
             const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
             return next(err2)
           }
-          // console.debug(user)
           const token = jwt.sign({
             id: user.email || user._id,
             avatar: user.avatar || user.gravatar,

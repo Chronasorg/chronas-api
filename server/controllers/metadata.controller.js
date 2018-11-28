@@ -243,8 +243,6 @@ function updateLinkAtom(req, res, next, addLink, resolve = false) {
       [],
     ]
 
-  // console.debug(prevValue1,prevValue2,linkedItemType1,linkedItemType2,linkedTypeAccessor[linkedItemType2],linkedTypeAccessor[linkedItemType1])
-  // try {
     if (addLink) {
       if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
         newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
@@ -336,6 +334,7 @@ function getLinked(req, res, next, resolve = false) {
 
   // TODO: links collection should be cached!
   Metadata.find(mongoSearchQueryMetadata)
+    .lean()
     .exec()
     .then((metadataPre) => {
       const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || []
@@ -358,6 +357,7 @@ function getLinked(req, res, next, resolve = false) {
       })
 
       Marker.find(mongoSearchQueryMarker)
+        .lean()
         .exec()
         .then((markers) => {
           const fullList = aeEntities.concat((markers || []).map(feature => ({

@@ -7,6 +7,7 @@
   "scripts": {
     "start": "cross-env DEBUG=chronas-api:* gulp serve",
     "start:debug": "cross-env DEBUG=chronas-api:* npm start",
+    "start:prodSim": "cross-env NODE_ENV=production npm start",
     "build": "gulp",
     "lint": "esw *.js server config --color --fix",
     "lint:watch": "npm run lint -- --watch",

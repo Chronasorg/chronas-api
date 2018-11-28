@@ -110,6 +110,7 @@ MetadataSchema.statics = {
       }
 
       return this.find(findObject)
+        .lean()
         .exec()
         .then((metadata) => {
           const completeRes = metadata.reduce((obj, item) => {
@@ -157,6 +158,7 @@ MetadataSchema.statics = {
               .skip(+start)
               .limit(+end)
               .sort({ score: 'desc' })
+              .lean()
               .exec()
               .then((metadata) => {
                 if (typeToSearch === "e") {
@@ -179,6 +181,7 @@ MetadataSchema.statics = {
           .skip(+start)
           .limit(+end)
           .sort({ score: 'desc' })
+          .lean()
           .exec()
           .then((metadata) => {
             if (search) {
@@ -189,6 +192,7 @@ MetadataSchema.statics = {
                 "type": "b",
                 "partOf": { $exists: true}
               })
+                .lean()
                 .exec()
                 .then((markers) => {
                   var resObj = {}
@@ -214,6 +218,7 @@ MetadataSchema.statics = {
         .skip(+start)
         .limit(+end)
         .sort({ score: 'desc' })
+        .lean()
         .exec()
         .then(metadata => metadata.map((obj) => {
           const dataString = JSON.stringify(obj.data).substring(0, 200)

@@ -20,8 +20,9 @@ describe('## User APIs', () => {
   }
 
   let user = {
-    _id : "test@test.de",
+    email: "test2@test.de", // email is required
     username: 'doubtful-throne',
+    password: 'doubtful-throne',
     privilege: 1
   }
 
@@ -83,7 +84,7 @@ describe('## User APIs', () => {
         })
         .catch(done)
     })
-  })  
+  })
 
   it('should handle if user not exist 404', (done) => {
     request(app)
@@ -122,8 +123,8 @@ describe('## User APIs', () => {
           done()
         })
         .catch(done)
-    })  
-    
+    })
+
     it('should report error with message - Not found, when user does not exists', (done) => {
       request(app)
         .get('/v1/users/56c787ccc67fc16ccc1a5e92')
@@ -135,7 +136,7 @@ describe('## User APIs', () => {
         })
         .catch(done)
     })
-  })    
+  })
 
   describe('# PUT /v1/users/:userId', () => {
     it('should update user details', (done) => {
@@ -167,5 +168,5 @@ describe('## User APIs', () => {
         })
         .catch(done)
     })
-  })  
+  })
 })
