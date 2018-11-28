@@ -81,7 +81,7 @@
     "eslint-config-airbnb-base": "7.1.0",
     "eslint-plugin-import": "1.16.0",
     "eslint-watch": "2.1.14",
-    "gulp": "4.0.0",
+    "gulp": "3.9.1",
     "gulp-babel": "7.0.1",
     "gulp-load-plugins": "^1.2.0",
     "gulp-newer": "^1.1.0",
