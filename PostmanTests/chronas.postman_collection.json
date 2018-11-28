@@ -783,7 +783,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"email\":\"testUser@test.de\",\n\t\"privilege\":\"1\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/users/",
@@ -849,7 +849,7 @@
 					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/users/testUser",
+					"raw": "{{baseUrl}}/v1/users/testUser@test.de",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -912,7 +912,7 @@
 					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/users/testUser",
+					"raw": "{{baseUrl}}/v1/users/testUser@test.de",
 					"host": [
 						"{{baseUrl}}"
 					],

@@ -61,7 +61,7 @@ function create(req, res, next) {
       }
 
       const user = new User({
-        _id: req.body.id || req.body.email || req.body.username,
+        _id: req.body.email || req.body.id || req.body.username,
         avatar: req.body.avatar,
         bio: req.body.bio,
         website: req.body.website,
