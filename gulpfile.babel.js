@@ -75,18 +75,18 @@ gulp.task('babel', () =>
     .pipe(gulp.dest('dist'))
 )
 
-// // Start server with restart on file changes
-// gulp.task('nodemon', ['copy', 'babel'], () =>
-//   plugins.nodemon({
-//     script: path.join('dist', 'index.js'),
-//     ext: 'js',
-//     ignore: ['node_modules/**/*.js', 'scripts/*', 'dist/**/*.js'],
-//     tasks: ['copy', 'babel']
-//   })
-// )
-//
-// // gulp serve for development
-// gulp.task('serve', ['clean'], () => runSequence('nodemon'))
+// Start server with restart on file changes
+gulp.task('nodemon', ['copy', 'babel'], () =>
+  plugins.nodemon({
+    script: path.join('dist', 'index.js'),
+    ext: 'js',
+    ignore: ['node_modules/**/*.js', 'scripts/*', 'dist/**/*.js'],
+    tasks: ['copy', 'babel']
+  })
+)
+
+// gulp serve for development
+gulp.task('serve', ['clean'], () => runSequence('nodemon'))
 
 
 // default task: clean dist, compile js files and copy non-js files.

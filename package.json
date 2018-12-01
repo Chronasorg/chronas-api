@@ -38,6 +38,7 @@
     "express-session": "1.15.6",
     "express-validation": "1.0.2",
     "express-winston": "2.5.1",
+    "gulp-nodemon": "2.4.2",
     "helmet": "3.14.0",
     "http-status": "^0.2.5",
     "joi": "11.0.2",
