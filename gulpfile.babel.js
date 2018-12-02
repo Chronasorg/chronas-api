@@ -88,6 +88,7 @@ gulp.task('nodemon', ['copy', 'babel'], () =>
 // gulp serve for development
 gulp.task('serve', ['clean'], () => runSequence('nodemon'))
 
+
 // default task: clean dist, compile js files and copy non-js files.
 gulp.task('default', ['clean'], () => {
   runSequence(

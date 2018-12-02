@@ -61,6 +61,7 @@ function list(req, res, next) {
             .then((metadataIBreakDown) => {
               statisticsObj.metadataI = metadataIBreakDown
               Metadata.find({ _id: { $in: entityMetadatas } })
+                .lean()
                 .exec()
                 .then((entityMetadatasObj) => {
                   let entitySum = 0

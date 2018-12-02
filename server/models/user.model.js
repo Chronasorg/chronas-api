@@ -36,6 +36,9 @@ const UserSchema = new mongoose.Schema({
   name: {
     type: String,
   },
+  bio: {
+    type: String,
+  },
   education: {
     type: String
   },
@@ -194,6 +197,7 @@ UserSchema.statics = {
       .sort(sortObject)
       .skip(+start)
       .limit(+limit)
+      .lean()
       .exec()
   }
 }

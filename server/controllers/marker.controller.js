@@ -38,6 +38,7 @@ function get(req, res) {
 function create(req, res, next, fromRevision = false) {
   const markerId = decodeURIComponent(req.body._id) || decodeURIComponent(req.body.wiki)
   Marker.findById(markerId)
+    .lean()
     .exec()
     .then((duplicatedMarker) => {
       if (duplicatedMarker) {
@@ -75,9 +76,6 @@ function create(req, res, next, fromRevision = false) {
  */
 function update(req, res, next, fromRevision = false) {
   const marker = req.entity
-
-  console.debug("now inside update with req.entity", req.entity)
-  console.debug("now inside update with req.body", req.body)
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
@@ -87,9 +85,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
   const newId = decodeURIComponent(req.body.wiki) || decodeURIComponent(req.body._id)
-  console.debug("newId", newId, marker._id)
   if (typeof newId !== "undefined" && newId !== "undefined" && newId !== marker._id) {
-    console.debug("inside new id")
     const oldId = marker._id
     marker._id = newId
     // changing wiki (id!)
@@ -154,7 +150,6 @@ function update(req, res, next, fromRevision = false) {
                           }
                         })
                         .catch((err) => {
-                          console.debug(err)
                           if (!fromRevision) {
                             res.send('NOTOK')
                           }
@@ -162,7 +157,6 @@ function update(req, res, next, fromRevision = false) {
                     }
                   })
                   .catch((err) => {
-                    console.debug(err)
                     if (!fromRevision) {
                       res.send('NOTOK')
                     }

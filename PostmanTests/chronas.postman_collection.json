@@ -751,7 +751,7 @@
 							"    pm.expect(jsonData).to.have.property('username');",
 							"    pm.expect(jsonData).to.have.property('name');",
 							"    pm.expect(jsonData).to.have.property('privilege');",
-							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    pm.expect(jsonData._id).to.eql(\"testUser@test.de\");",
 							"    ",
 							"});",
 							"",
@@ -783,7 +783,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"email\":\"testUser@test.de\",\n\t\"privilege\":\"1\"\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/users/",
@@ -814,7 +814,7 @@
 							"    pm.expect(jsonData).to.have.property('username');",
 							"    pm.expect(jsonData).to.have.property('name');",
 							"    pm.expect(jsonData).to.have.property('privilege');",
-							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    pm.expect(jsonData._id).to.eql(\"testUser@test.de\");",
 							"    ",
 							"});",
 							"",
@@ -849,14 +849,14 @@
 					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/users/testUser",
+					"raw": "{{baseUrl}}/v1/users/testUser@test.de",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
 						"users",
-						"testUser"
+						"testUser@test.de"
 					]
 				}
 			},
@@ -876,7 +876,7 @@
 							"    pm.expect(jsonData).to.have.property('username');",
 							"    pm.expect(jsonData).to.have.property('name');",
 							"    pm.expect(jsonData).to.have.property('privilege');",
-							"    pm.expect(jsonData._id).to.eql(\"testUser\");",
+							"    pm.expect(jsonData._id).to.eql(\"testUser@test.de\");",
 							"    ",
 							"});",
 							"",
@@ -912,14 +912,14 @@
 					"raw": "{\n    \"_id\": \"testUser\",\n    \"username\": \"testUser\",\n\t\"privilege\":1\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/users/testUser",
+					"raw": "{{baseUrl}}/v1/users/testUser@test.de",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
 						"users",
-						"testUser"
+						"testUser@test.de"
 					]
 				}
 			},

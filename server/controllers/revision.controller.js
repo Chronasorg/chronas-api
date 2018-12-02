@@ -34,7 +34,6 @@ function load(req, res, next, id) {
       if (entityId === 'MANY') {
         next()
       } else {
-        console.debug('looking for resoyrce and entityId', resource, entityId)
         resourceCollection[resource].model.findById(entityId)
           .then((entity) => {
             if (resource === "metadata" && initItemsAndLinksToRefresh.includes(entityId)) {
@@ -349,10 +348,16 @@ function list(req, res, next) {
     potentialEntity = fullFilter.entity
     potentialSubentity = fullFilter.subentity
   }
-  Revision.list({ start, end, sort, order, entity: (potentialEntity || entity), subentity: (potentialSubentity || subentity), filter })
+  const fEntity = (potentialEntity || entity)
+  const fSubentity = (potentialSubentity || subentity)
+  Revision.list({ start, end, sort, order, entity: fEntity, subentity: fSubentity, filter })
     .then((revisions) => {
       if (count) {
-        Revision.count().exec().then((revisionCount) => {
+        let optionalFind = (fEntity) ? { entityId: fEntity } : {}
+        if (fSubentity) {
+          optionalFind['subEntityId'] = fSubentity
+        }
+        Revision.find(optionalFind).count().exec().then((revisionCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
           res.set('X-Total-Count', revisionCount)
           res.json(revisions)

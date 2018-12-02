@@ -159,6 +159,7 @@ MarkerSchema.statics = {
           this.find(mongoSearchQuery)
             .skip(+offset)
             .limit(+length)
+            .lean()
             .exec()
             .then((markers) => { resolve(markers) })
         } else {
@@ -201,11 +202,13 @@ MarkerSchema.statics = {
             Metadata.find(searchQuery)
               .skip(+offset)
               .limit(+length)
+              .lean()
               .exec()
               .then((metadata) => {
                 if (both) {
                   const areaMetaIds = ['ruler', 'culture', 'capital', 'religion', 'religionGeneral']
                   Metadata.find({ _id: { $in: areaMetaIds } })
+                    .lean()
                     .exec()
                     .then((areaMeta) => {
                       const lowerSearch = search.toLowerCase()
@@ -266,6 +269,7 @@ MarkerSchema.statics = {
       .sort({ createdAt: -1 })
       .skip(+offset)
       .limit(+length)
+      .lean()
       .exec()
   }
 }
