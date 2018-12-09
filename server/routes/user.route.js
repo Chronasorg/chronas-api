@@ -20,6 +20,12 @@ router.route('/')
     validate(paramValidation.createUser),
     userCtrl.create)
 
+router.route('/sustainers')
+/** GET /v1/users - Get list of users */
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    userCtrl.list)
+
 router.route('/highscore')
 /** GET /v1/users - Get list of users */
   .get(

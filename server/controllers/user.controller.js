@@ -166,11 +166,15 @@ function incrementLoginCount(username) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
+  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  let highscoreCount = req.query.top || false
-  if (highscoreCount > 100) highscoreCount = highscoreCount;
+  let highscoreCount = (req.query.top || 10)
+  if (highscoreCount > 100) highscoreCount = highscoreCount
   const countOnly = req.query.countOnly || false
+
+  if (patreon !== false) {
+    res.json([])
+  }
 
   if (highscoreCount !== false) {
     User.find()
