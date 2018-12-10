@@ -19,10 +19,10 @@ metadata:
 spec:  
   tls:
   - hosts:
-    - api-dev.chronas.org
-    secretName: https-api-crt
+    - api.chronas.org
+    secretName: api-crt
   rules:
-  - host: api-dev.chronas.org
+  - host: api.chronas.org
     http:
       paths:
       - path: /
