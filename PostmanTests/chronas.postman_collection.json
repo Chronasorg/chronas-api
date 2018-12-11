@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6cb69e47-91f8-46f9-b6f3-19795a0344b8",
+		"_postman_id": "2cf7187a-6528-45a9-aecb-a4b33232174a",
 		"name": "chronas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -118,19 +118,8 @@
 					}
 				],
 				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "password",
-							"value": "postman123",
-							"type": "text"
-						},
-						{
-							"key": "email",
-							"value": "postman@aui.de",
-							"type": "text"
-						}
-					]
+					"mode": "raw",
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/version",
@@ -189,7 +178,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/metadata/",
@@ -249,7 +238,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/metadata/religion",
@@ -309,7 +298,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/areas",
@@ -368,7 +357,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/areas",
@@ -420,7 +409,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/areas/1000",
@@ -595,7 +584,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"aui\",\n\t\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/markers/",
@@ -618,22 +607,20 @@
 					"listen": "test",
 					"script": {
 						"id": "a29c66f8-a2a6-4399-a552-d1db0a7ae7c4",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Response should have a list of users\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    ",
 							"    pm.expect(jsonData[0]).to.have.property('username');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"    pm.expect(jsonData[0]).to.have.property('privilege');",
-							"    ",
 							"});",
 							"",
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
 							""
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -657,7 +644,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/users/",
@@ -720,7 +707,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"testUser\",\n\t\"privilege\":\"1\"\n}"
+					"raw": ""
 				},
 				"url": {
 					"raw": "{{baseUrl}}/v1/users/postman@aui.de",

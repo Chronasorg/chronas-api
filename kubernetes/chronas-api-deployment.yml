@@ -123,4 +123,9 @@ spec:
           valueFrom:
             secretKeyRef:
               name: chronas-secrets
-              key: MAILGUN_KEY                                  
+              key: MAILGUN_KEY       
+        - name: MAILGUN_RECEIVER
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_RECEIVER                                             
