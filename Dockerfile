@@ -20,7 +20,7 @@ ENV CHRONAS_HOST=https://chronas.org
 ENV FACEBOOK_CALLBACK_URL=https://api.chronas.org/v1/auth/login/facebook?cb
 ENV GOOGLE_CALLBACK_URL=https://api.chronas.org/v1/auth/login/google?cb
 ENV GITHUB_CALLBACK_URL=https://api.chronas.org/v1/auth/login/github?cb
-ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter?cb
+ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
 
 RUN npm install --production --silent
 
