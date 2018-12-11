@@ -16,6 +16,7 @@ import winstonInstance from './winston'
 import routes from '../server/routes/index.route'
 import { config } from './config'
 import APIError from '../server/helpers/APIError'
+import versionRoutes from '../server/routes/version.router'
 
 const app = express()
 
@@ -117,6 +118,9 @@ if (config.env === 'development') {
 
 // route for v1 (current) requests
 app.use('/v1', routes)
+
+//fore the default route return the version
+app.use('/',versionRoutes)
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
