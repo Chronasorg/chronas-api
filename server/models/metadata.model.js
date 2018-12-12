@@ -163,11 +163,11 @@ MetadataSchema.statics = {
               .then((metadata) => {
                 if (typeToSearch === "e") {
                   allDiscoverItems[0] = metadata
-                  return 1
                 } else {
                   allDiscoverItems[1] = allDiscoverItems[1].concat(metadata)
-                  return 1
                 }
+                
+                return 1
               })
               .catch(err => 1)
           }),

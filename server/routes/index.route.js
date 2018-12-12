@@ -39,8 +39,9 @@ router.use('/metadata', metadataRoutes)
 // mount user routes at /revisions
 router.use('/revisions', revisionRoutes)
 
-// mount user routes at /revisions
+// mount version routes at /version and on blank
 router.use('/version', versionRoutes)
+router.use('/', versionRoutes)
 
 // Third Party ReForum App
 // mount board routes at /board
