@@ -50,6 +50,7 @@ function authenticateUser(req, res, next) {
       const name = data.profile && data.profile.displayName ? data.profile.displayName.split(' ') : []
 
       const auth = {
+        id: 'github' + data.profile.id,
         type: 'github',
         name: {
           first: name.length ? name[0] : '',

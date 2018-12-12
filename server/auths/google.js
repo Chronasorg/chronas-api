@@ -42,7 +42,7 @@ function authenticateUser(req, res, next) {
     passport.authenticate('google', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.google] - Error retrieving Google account data - ${JSON.stringify(err)}`)
-        return res.redirect(process.env.CHRONAS_HOST + '/#/login')
+        return res.redirect(`${process.env.CHRONAS_HOST}/#/login`)
         // const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         // return next(err)
       }
@@ -51,6 +51,7 @@ function authenticateUser(req, res, next) {
       console.log('------------------------------------------------------------')
 
       const auth = {
+        id: 'google' + data.profile.id,
         type: 'google',
         name: {
           first: data.profile.name.givenName,
@@ -59,11 +60,14 @@ function authenticateUser(req, res, next) {
         email: data.profile.emails.length ? (data.profile.emails)[0].value : null,
         website: data.profile._json.blog,
         profileId: data.profile.id,
-        username: data.profile.username,
-        avatar: data.profile._json.picture,
+        username: data.profile.username || data.profile.displayName || data.profile.id,
+        avatar: data.profile.photos.length ? (data.profile.photos)[0].value : null,
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
       }
+
+      console.debug('data', JSON.stringify(data), 'dataEnd')
+      console.debug('auth', auth, 'authEnd')
 
       req.body = {
         id: auth.type + auth.profileId,
@@ -82,7 +86,7 @@ function authenticateUser(req, res, next) {
 
       const token = jwt.sign(auth, config.jwtSecret)
 
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
       // return res.redirect(redirect);
     })(req, res, next)
 

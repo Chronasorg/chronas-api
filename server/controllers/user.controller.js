@@ -52,6 +52,8 @@ function create(req, res, next) {
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
         if (!req.body.thirdParty || req.body.signup) {
+          duplicatedUsername.loginCount += 1
+          duplicatedUsername.save()
           const err = new APIError('This username/ email already exists!', 400)
           return next(err)
         }

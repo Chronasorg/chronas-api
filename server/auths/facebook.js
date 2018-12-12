@@ -51,6 +51,7 @@ function authenticateUser(req, res, next) {
       const name = (data.profile && data.profile.displayName) ? data.profile.displayName.split(' ') : []
       //
       const auth = {
+        id: 'facebook' + data.profile.id,
         type: 'facebook',
         name: {
           first: name.length ? name[0] : '',

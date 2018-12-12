@@ -36,7 +36,8 @@ function authenticateUser(req, res, next) {
   passport.use(twitterStrategy)
 
   // Save user data once returning from Twitter
-  if (typeof (req.query || {}).cb !== 'undefined') {
+  if (typeof (req.query || {}).oauth_token !== 'undefined') {
+    req.query.cb = req.query.oauth_token
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
 
@@ -56,6 +57,7 @@ function authenticateUser(req, res, next) {
         urls = profileJSON.entities.url && profileJSON.entities.url.urls && profileJSON.entities.url.urls.length ? profileJSON.entities.url.urls : []
 
       const auth = {
+        id: 'twitter' + data.profile.id,
         type: 'twitter',
         name: {
           first: name.length ? name[0] : '',
@@ -70,7 +72,7 @@ function authenticateUser(req, res, next) {
       }
 
       req.body = {
-        id: auth.type + auth.profileId,
+        id: auth.id,
         authType: auth.type,
         avatar: auth.avatar,
         username: auth.username,
