@@ -35,7 +35,6 @@ function getPlusUser(req, res) {
     .exec()
     .then((rev) => {
       User.count().exec().then(userCount => {
-        console.debug(rev)
         res.json({ lastDataEdit: (rev[0] || {}).timestamp || "n/a", version: getVersion, commit: getCommit, build: formatedDate, user: userCount })
       })
     })

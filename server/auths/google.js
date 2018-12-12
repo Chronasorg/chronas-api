@@ -66,9 +66,6 @@ function authenticateUser(req, res, next) {
         refreshToken: data.refreshToken,
       }
 
-      console.debug('data', JSON.stringify(data), 'dataEnd')
-      console.debug('auth', auth, 'authEnd')
-
       req.body = {
         id: auth.type + auth.profileId,
         authType: auth.type,

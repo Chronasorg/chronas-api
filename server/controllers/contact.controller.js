@@ -38,7 +38,6 @@ function create(req, res) {
     toSendBody.to = to
   }
 
-  console.debug("toSendBody",toSendBody,to)
   nodemailerMailgun.sendMail(
     toSendBody
   , (err, info) => {
