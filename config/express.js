@@ -97,7 +97,7 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'Sssecret', resave: true, saveUninitialized: true, cookie: { secure: true } }))
+app.use(require('express-session')({ secret: 'Sssecret', cookie: { secure: true } }))
 
 app.use(passport.initialize())
 app.use(passport.session({ secret: 'Sssecret', cookie: { secure: true } }))
@@ -118,7 +118,7 @@ if (config.env === 'development') {
 app.use('/v1', routes)
 
 //fore the default route return the version
-app.use('/',versionRoutes)
+app.use('/', versionRoutes)
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
@@ -148,10 +148,9 @@ if (config.env !== 'test') {
 }
 
 
-function removeStackTraces ( envelope, context ) {
-
+function removeStackTraces(envelope, context) {
   var data = envelope.data.baseData;
-  if (data.url && data.url.includes("health") )
+  if (data.url && data.url.includes("health"))
   {
       return false;
   }
