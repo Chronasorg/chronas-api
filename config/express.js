@@ -97,7 +97,7 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }))
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true, key: 'sid', cookie: { secure: true } }))
 
 app.use(passport.initialize())
 app.use(passport.session())
@@ -151,8 +151,8 @@ if (config.env !== 'test') {
 
 
 function removeStackTraces ( envelope, context ) {
- 
-  var data = envelope.data.baseData;  
+
+  var data = envelope.data.baseData;
   if (data.url && data.url.includes("health") )
   {
       return false;

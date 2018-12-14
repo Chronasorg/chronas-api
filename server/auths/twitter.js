@@ -42,7 +42,7 @@ function authenticateUser(req, res, next) {
   passport.use(twitterStrategy)
 
   // Save user data once returning from Twitter
-  if (false && typeof (req.query || {}).oauth_token !== 'undefined') {
+  if (typeof (req.query || {}).oauth_token !== 'undefined') {
     // return res.json({credentials: credentials})
     req.query.cb = req.query.oauth_token
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
@@ -50,13 +50,13 @@ function authenticateUser(req, res, next) {
 
     passport.authenticate('twitter', (err, data, info) => {
       if (err || !data) {
-        console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`,)
-        return res.json({ err: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query.cb})
-        // return res.redirect('/signin')
+        console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
+        // return res.json({ err: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query.cb})
+        return res.redirect(process.env.CHRONAS_HOST + '/#/login?failed=true')
         // const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         // return next(err2)
       }
-      return res.json({ tata: 1 })
+
       console.log('[services.twitter] - Successfully retrieved Twitter account data, processing...')
       console.log('------------------------------------------------------------')
 
