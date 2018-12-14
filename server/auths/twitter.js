@@ -51,8 +51,8 @@ function authenticateUser(req, res, next) {
     passport.authenticate('twitter', (err, data, info) => {
       if (err || !data) {
         console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
-        // return res.json({ err: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query.cb})
-        return res.redirect(process.env.CHRONAS_HOST + '/#/login?failed=true')
+        return res.json({ errr: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query})
+        // return res.redirect(process.env.CHRONAS_HOST + '/#/login?failed=true')
         // const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         // return next(err2)
       }

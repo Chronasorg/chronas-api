@@ -97,12 +97,10 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true, key: 'sid', cookie: { secure: true } }))
+app.use(require('express-session')({ secret: 'Sssecret', resave: true, saveUninitialized: true, cookie: { secure: true } }))
 
 app.use(passport.initialize())
-app.use(passport.session())
-
-
+app.use(passport.session({ secret: 'Sssecret', cookie: { secure: true } }))
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {
