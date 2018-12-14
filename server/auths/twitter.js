@@ -37,7 +37,7 @@ function authenticateUser(req, res, next) {
 
   // Save user data once returning from Twitter
   if (typeof (req.query || {}).oauth_token !== 'undefined') {
-    return res.json({credentials: credentials})
+    // return res.json({credentials: credentials})
     req.query.cb = req.query.oauth_token
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
