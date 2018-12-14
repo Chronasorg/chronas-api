@@ -25,7 +25,13 @@ function authenticateUser(req, res, next) {
 
   // Initalise Twitter credentials
   const twitterStrategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {
-    done(null, {
+    return res.json({
+      accessToken,
+      refreshToken,
+      profile
+    })
+
+    return done(null, {
       accessToken,
       refreshToken,
       profile
