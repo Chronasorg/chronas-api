@@ -171,7 +171,7 @@ function list(req, res, next) {
   const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
   let highscoreCount = (req.query.top || 10)
-  if (highscoreCount > 100) highscoreCount = highscoreCount
+  if (highscoreCount > 15) highscoreCount = highscoreCount
   const countOnly = req.query.countOnly || false
 
   if (patreon !== false) {
@@ -211,21 +211,22 @@ function list(req, res, next) {
         res.json({ total: userCount })
       })
   } else {
-    User.list({ start, limit, sort, order, filter })
-      .then((users) => {
-        if (count) {
-          User.count()
-            .exec()
-            .then((userCount) => {
-              res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-              res.set('X-Total-Count', userCount)
-              res.json(users)
-            })
-        } else {
-          res.json(users)
-        }
-      })
-      .catch(e => next(e))
+    res.status(401).json({ message: 'Unauthorized'})
+    // User.list({ start, limit, sort, order, filter })
+    //   .then((users) => {
+    //     if (count) {
+    //       User.count()
+    //         .exec()
+    //         .then((userCount) => {
+    //           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+    //           res.set('X-Total-Count', userCount)
+    //           res.json(users)
+    //         })
+    //     } else {
+    //       res.json(users)
+    //     }
+    //   })
+    //   .catch(e => next(e))
   }
 }
 

@@ -41,12 +41,13 @@ function authenticateUser(req, res, next) {
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
 
-    passport.authenticate('twitter', { session: false }, (err, data, info) => {
+    passport.authenticate('twitter', (err, data, info) => {
       if (err || !data) {
         console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
+        return res.json({ err: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`})
         // return res.redirect('/signin')
-        const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
-        return next(err2)
+        // const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
+        // return next(err2)
       }
 
       console.log('[services.twitter] - Successfully retrieved Twitter account data, processing...')

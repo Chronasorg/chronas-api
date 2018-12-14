@@ -88,6 +88,10 @@ MarkerSchema.statics = {
    * @returns {Promise<Marker[]>}
    */
   list({ offset = 0, length = 2000, sort, order, filter, delta, year = false, typeArray = false, wikiArray = false, format = false, search = false, includeMarkers = true, both = false } = {}) {
+    if (+length === 0) {
+      return new Promise((resolve) => { resolve([]) })
+    }
+
     if (year || typeArray || wikiArray || search) {
       // geojson endpoint hit
       let mongoSearchQuery = {}
