@@ -8,7 +8,7 @@ import checkPrivilege from '../helpers/privileges'
 
 const router = express.Router() // eslint-disable-line new-cap
 
-// router.route('/')
+router.route('/')
 //   /** GET /v1/users - Get list of users */
 //   .get(
 //     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),

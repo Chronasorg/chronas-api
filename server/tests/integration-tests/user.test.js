@@ -59,32 +59,32 @@ describe('## User APIs', () => {
     })
   })
 
-  describe('# GET /v1/users/', () => {
-    it('should get all users', (done) => {
-      request(app)
-        .get('/v1/users')
-        .set('Authorization', jwtToken)
-        .expect(httpStatus.OK)
-        .then((res) => {
-          expect(res.body).to.be.an('array')
-          done()
-        })
-        .catch(done)
-    })
-  })
-
-  describe('# GET /v1/users/ without token', () => {
-    it('should return unauthorized', (done) => {
-      request(app)
-        .get('/v1/users')
-        .expect(httpStatus.UNAUTHORIZED)
-        .then((res) => {
-          expect(res.body.message).to.equal("Unauthorized")
-          done()
-        })
-        .catch(done)
-    })
-  })
+  // describe('# GET /v1/users/', () => {
+  //   it('should get all users', (done) => {
+  //     request(app)
+  //       .get('/v1/users')
+  //       .set('Authorization', jwtToken)
+  //       .expect(httpStatus.OK)
+  //       .then((res) => {
+  //         expect(res.body).to.be.an('array')
+  //         done()
+  //       })
+  //       .catch(done)
+  //   })
+  // })
+  //
+  // describe('# GET /v1/users/ without token', () => {
+  //   it('should return unauthorized', (done) => {
+  //     request(app)
+  //       .get('/v1/users')
+  //       .expect(httpStatus.UNAUTHORIZED)
+  //       .then((res) => {
+  //         expect(res.body.message).to.equal("Unauthorized")
+  //         done()
+  //       })
+  //       .catch(done)
+  //   })
+  // })
 
   it('should handle if user not exist 404', (done) => {
     request(app)

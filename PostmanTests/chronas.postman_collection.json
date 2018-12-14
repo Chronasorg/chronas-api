@@ -601,66 +601,6 @@
 			"response": []
 		},
 		{
-			"name": "/users - get a list of users",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "a29c66f8-a2a6-4399-a552-d1db0a7ae7c4",
-						"exec": [
-							"pm.test(\"Response should have a list of users\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    ",
-							"    pm.expect(jsonData[0]).to.have.property('username');",
-							"    pm.expect(jsonData[0]).to.have.property('name');",
-							"});",
-							"",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "{{baseUrl}}/v1/users/",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"v1",
-						"users",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "/users{id}- should return a saved user",
 			"event": [
 				{
