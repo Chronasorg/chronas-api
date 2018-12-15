@@ -25,13 +25,7 @@ function authenticateUser(req, res, next) {
 
   // Initalise Twitter credentials
   const twitterStrategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {
-    return res.json({
-      accessToken,
-      refreshToken,
-      profile
-    })
-
-    return done(null, {
+    done(null, {
       accessToken,
       refreshToken,
       profile
@@ -43,7 +37,6 @@ function authenticateUser(req, res, next) {
 
   // Save user data once returning from Twitter
   if (typeof (req.query || {}).oauth_token !== 'undefined') {
-    // return res.json({credentials: credentials})
     req.query.cb = req.query.oauth_token
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
@@ -71,6 +64,7 @@ function authenticateUser(req, res, next) {
           first: name.length ? name[0] : '',
           last: name.length > 1 ? name[1] : ''
         },
+        privilege: 1,
         website: urls.length ? urls[0].expanded_url : '',
         profileId: data.profile.id,
         username: data.profile.username,
@@ -82,6 +76,7 @@ function authenticateUser(req, res, next) {
       req.body = {
         id: auth.id,
         authType: auth.type,
+        privilege: 1,
         avatar: auth.avatar,
         username: auth.username,
         name: `${auth.name.first} ${auth.name.last}`,

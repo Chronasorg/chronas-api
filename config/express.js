@@ -97,10 +97,10 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'Sssecret', cookie: { secure: true } }))
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true  /*key: 'sid', cookie: { secure: true }*/ }))
 
 app.use(passport.initialize())
-app.use(passport.session({ secret: 'Sssecret', cookie: { secure: true } }))
+app.use(passport.session())
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {
@@ -117,7 +117,7 @@ if (config.env === 'development') {
 // route for v1 (current) requests
 app.use('/v1', routes)
 
-//fore the default route return the version
+//for the default route return the version
 app.use('/', versionRoutes)
 
 // if error is not an instanceOf APIError, convert it.

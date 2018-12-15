@@ -53,6 +53,7 @@ function create(req, res, next) {
       if (duplicatedUsername) {
         if (!req.body.thirdParty || req.body.signup) {
           duplicatedUsername.loginCount += 1
+          if (typeof duplicatedUsername.privilege === "undefined") duplicatedUsername.privilege = 1
           duplicatedUsername.save()
           const err = new APIError('This username/ email already exists!', 400)
           return next(err)
@@ -73,7 +74,7 @@ function create(req, res, next) {
         education: req.body.education,
         email: req.body.email,
         authType: req.body.authType || 'chronas',
-        privilege: req.body.privilege
+        privilege: (req.body.privilege !== "undefined") ? req.body.privilege : 1
       })
 
       return user.save()
@@ -86,7 +87,7 @@ function create(req, res, next) {
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
-              privilege: savedUser.privilege ? savedUser.privilege : 1
+              privilege: (savedUser.privilege !== "undefined") ? savedUser.privilege : 1
             }, config.jwtSecret)
             return res.json({
               token,

@@ -48,7 +48,7 @@ function authenticateUser(req, res, next) {
       }
 
       console.log('[services.google] - Successfully retrieved Google account data, processing...')
-      console.log('------------------------------------------------------------')
+      console.log('------------------------------------------------------------',data.profile)
 
       const auth = {
         id: 'google' + data.profile.id,
@@ -60,6 +60,7 @@ function authenticateUser(req, res, next) {
         email: data.profile.emails.length ? (data.profile.emails)[0].value : null,
         website: data.profile._json.blog,
         profileId: data.profile.id,
+        privilege: 1,
         username: data.profile.username || data.profile.displayName || data.profile.id,
         avatar: data.profile.photos.length ? (data.profile.photos)[0].value : null,
         accessToken: data.accessToken,
@@ -71,6 +72,7 @@ function authenticateUser(req, res, next) {
         authType: auth.type,
         avatar: auth.avatar,
         email: auth.email,
+        privilege: 1,
         username: auth.username,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
