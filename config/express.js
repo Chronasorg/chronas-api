@@ -97,7 +97,7 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true  /*key: 'sid', cookie: { secure: true }*/ }))
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /*key: 'sid', cookie: { secure: true }*/ }))
 
 app.use(passport.initialize())
 app.use(passport.session())
