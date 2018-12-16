@@ -3,6 +3,8 @@ import { OAuth2Strategy } from 'passport-google-oauth'
 import jwt from 'jsonwebtoken'
 import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
+import metadataCtrl from "../controllers/metadata.controller";
+import Promise from "bluebird";
 
 const credentials = {
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -79,13 +81,13 @@ function authenticateUser(req, res, next) {
         website: auth.website,
       }
 
+      // new Promise((resolve, reject) => {
       userCtrl.create(req, res, next)
-
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-
-      return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+      // }).then(() => {
+      //   req.session.auth = auth
+      //   const token = jwt.sign(auth, config.jwtSecret)
+      //   return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+      // })
       // return res.redirect(redirect);
     })(req, res, next)
 

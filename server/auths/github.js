@@ -80,11 +80,11 @@ function authenticateUser(req, res, next) {
 
       userCtrl.create(req, res, next)
 
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      // req.session.auth = auth
+      //
+      // const token = jwt.sign(auth, config.jwtSecret)
+      //
+      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 

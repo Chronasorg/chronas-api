@@ -51,16 +51,31 @@ function create(req, res, next) {
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        if (!req.body.thirdParty || req.body.signup) {
-          duplicatedUsername.loginCount += 1
-          if (typeof duplicatedUsername.privilege === "undefined") duplicatedUsername.privilege = 1
-          duplicatedUsername.save()
+        if (req.body.thirdParty){
+          if (req.body.email === duplicatedUsername.email) {
+            duplicatedUsername.loginCount += 1
+            duplicatedUsername.save()
+
+            const token = jwt.sign({
+              id: duplicatedUsername._id,
+              avatar: duplicatedUsername.avatar,
+              username: duplicatedUsername.username,
+              lastUpdated: duplicatedUsername.lastUpdated,
+              privilege: (duplicatedUsername.privilege !== "undefined") ? duplicatedUsername.privilege : 1
+            }, config.jwtSecret)
+            return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+          }
+          else {
+            // throw err?
+            const err = new APIError('This username/ email already exists with a different email address!', 400)
+            return next(err)
+          }
+        }
+
+        else {
           const err = new APIError('This username/ email already exists!', 400)
           return next(err)
         }
-
-        duplicatedUsername.loginCount += 1
-        return duplicatedUsername.save()
       }
 
       const user = new User({
@@ -77,11 +92,11 @@ function create(req, res, next) {
         privilege: (req.body.privilege !== "undefined") ? req.body.privilege : 1
       })
 
-      return user.save()
+      user.save()
         .then((savedUser) => {
           if (!req.body.thirdParty && !req.body.signup) {
             res.json(savedUser)
-          } else if (!req.body.thirdParty) {
+          } else {
             const token = jwt.sign({
               id: savedUser._id,
               avatar: savedUser.avatar,
@@ -89,10 +104,14 @@ function create(req, res, next) {
               lastUpdated: savedUser.lastUpdated,
               privilege: (savedUser.privilege !== "undefined") ? savedUser.privilege : 1
             }, config.jwtSecret)
-            return res.json({
-              token,
-              username: savedUser.username
-            })
+            if (req.body.thirdParty) {
+              return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+            } else {
+              return res.json({
+                token,
+                username: savedUser.username
+              })
+            }
           }
         })
         .catch((e) => {

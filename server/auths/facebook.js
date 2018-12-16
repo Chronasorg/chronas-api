@@ -81,11 +81,11 @@ function authenticateUser(req, res, next) {
 
       userCtrl.create(req, res, next)
 
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      // req.session.auth = auth
+      //
+      // const token = jwt.sign(auth, config.jwtSecret)
+      //
+      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
     })(req, res, next)
 
     // Perform inital authentication request to Facebook
