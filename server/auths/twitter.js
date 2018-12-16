@@ -41,7 +41,7 @@ function authenticateUser(req, res, next) {
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
 
-    passport.authenticate('twitter', (err, data, info) => {
+    passport.authenticate('twitter', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
         // return res.json({ errr: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query})
