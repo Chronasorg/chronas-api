@@ -73,7 +73,7 @@ function authenticateUser(req, res, next) {
         avatar: auth.avatar,
         email: auth.email,
         privilege: 1,
-        username: auth.username,
+        username: auth.username || `${auth.name.first} ${auth.name.last}`,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
