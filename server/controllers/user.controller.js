@@ -47,7 +47,7 @@ function create(req, res, next) {
   console.log('Attempting to create user')
   console.log('------------------------------------------------------------')
 
-  User.findById(req.body.id || req.body.email || req.body.username)
+  User.findById(req.body.email || req.body.id || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
