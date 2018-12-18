@@ -244,10 +244,6 @@ function update(req, res, next) {
   const username = req.auth.username
   const usernameAuthor = revision.user
 
-  if (resource === "metadata") {
-
-  }
-
   userCtrl.changePoints(username, "reverted", 1)
   switch (revision.type) {
     case 'CREATE':

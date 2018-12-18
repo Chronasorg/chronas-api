@@ -29,7 +29,7 @@ const deepPropSearch = (obj, callback) => {
   };
 
   // start deep searching for properties
-  deepSearch(newObj, callback);
+  deepSearch(newObj);
 
   // return new object, maintain immutability
   return newObj;

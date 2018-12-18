@@ -31,14 +31,13 @@ function create(req, res) {
   }
 
   if (Array.isArray(to) && to.length === 2) {
-    toSendBody.to = [{address: to[0]}, {address: to[1]}]
+    toSendBody.to = to[0]
   } else if (Array.isArray(to)) {
     toSendBody.to = to[0]
   } else {
     toSendBody.to = to
   }
 
-  console.debug(toSendBody)
   nodemailerMailgun.sendMail(
     toSendBody
   , (err, info) => {

@@ -3,6 +3,8 @@ import { OAuth2Strategy } from 'passport-google-oauth'
 import jwt from 'jsonwebtoken'
 import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
+import metadataCtrl from "../controllers/metadata.controller";
+import Promise from "bluebird";
 
 const credentials = {
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -42,15 +44,16 @@ function authenticateUser(req, res, next) {
     passport.authenticate('google', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.google] - Error retrieving Google account data - ${JSON.stringify(err)}`)
-        return res.redirect(process.env.CHRONAS_HOST + '/#/login')
+        return res.redirect(`${process.env.CHRONAS_HOST}/#/login`)
         // const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         // return next(err)
       }
 
       console.log('[services.google] - Successfully retrieved Google account data, processing...')
-      console.log('------------------------------------------------------------')
+      console.log('------------------------------------------------------------',data.profile)
 
       const auth = {
+        id: 'google' + data.profile.id,
         type: 'google',
         name: {
           first: data.profile.name.givenName,
@@ -59,8 +62,9 @@ function authenticateUser(req, res, next) {
         email: data.profile.emails.length ? (data.profile.emails)[0].value : null,
         website: data.profile._json.blog,
         profileId: data.profile.id,
-        username: data.profile.username,
-        avatar: data.profile._json.picture,
+        privilege: 1,
+        username: data.profile.username || data.profile.displayName || data.profile.id,
+        avatar: data.profile.photos.length ? (data.profile.photos)[0].value : null,
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
       }
@@ -70,19 +74,20 @@ function authenticateUser(req, res, next) {
         authType: auth.type,
         avatar: auth.avatar,
         email: auth.email,
-        username: auth.username,
+        privilege: 1,
+        username: auth.username || `${auth.name.first} ${auth.name.last}`,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
       }
 
+      // new Promise((resolve, reject) => {
       userCtrl.create(req, res, next)
-
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      // }).then(() => {
+      //   req.session.auth = auth
+      //   const token = jwt.sign(auth, config.jwtSecret)
+      //   return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+      // })
       // return res.redirect(redirect);
     })(req, res, next)
 

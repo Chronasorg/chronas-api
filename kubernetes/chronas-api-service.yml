@@ -3,7 +3,6 @@ kind: Service
 metadata:
   name: chronas-api
 spec:
-  type: NodePort
   ports:
   - port: 80
   selector:
@@ -19,10 +18,10 @@ metadata:
 spec:  
   tls:
   - hosts:
-    - api-dev.chronas.org
-    secretName: https-api-crt
+    - api.chronas.org
+    secretName: api-crt
   rules:
-  - host: api-dev.chronas.org
+  - host: api.chronas.org
     http:
       paths:
       - path: /

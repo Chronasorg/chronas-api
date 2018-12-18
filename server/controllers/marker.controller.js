@@ -36,7 +36,7 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
-  const markerId = decodeURIComponent(req.body._id) || decodeURIComponent(req.body.wiki)
+  const markerId = decodeURIComponent(req.body._id || req.body.wiki)
   Marker.findById(markerId)
     .lean()
     .exec()
@@ -84,7 +84,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
-  const newId = decodeURIComponent(req.body.wiki) || decodeURIComponent(req.body._id)
+  const newId = decodeURIComponent(req.body.wiki || req.body._id)
   if (typeof newId !== "undefined" && newId !== "undefined" && newId !== marker._id) {
     const oldId = marker._id
     marker._id = newId

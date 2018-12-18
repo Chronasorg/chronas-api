@@ -47,17 +47,35 @@ function create(req, res, next) {
   console.log('Attempting to create user')
   console.log('------------------------------------------------------------')
 
-  User.findById(req.body.id || req.body.email || req.body.username)
+  User.findById(req.body.email || req.body.id || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        if (!req.body.thirdParty || req.body.signup) {
+        if (req.body.thirdParty){
+          if (req.body.email === duplicatedUsername.email) {
+            duplicatedUsername.loginCount += 1
+            duplicatedUsername.save()
+
+            const token = jwt.sign({
+              id: duplicatedUsername._id,
+              avatar: duplicatedUsername.avatar,
+              username: duplicatedUsername.username,
+              lastUpdated: duplicatedUsername.lastUpdated,
+              privilege: (duplicatedUsername.privilege !== "undefined") ? duplicatedUsername.privilege : 1
+            }, config.jwtSecret)
+            return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+          }
+          else {
+            // throw err?
+            const err = new APIError('This username/ email already exists with a different email address!', 400)
+            return next(err)
+          }
+        }
+
+        else {
           const err = new APIError('This username/ email already exists!', 400)
           return next(err)
         }
-
-        duplicatedUsername.loginCount += 1
-        return duplicatedUsername.save()
       }
 
       const user = new User({
@@ -71,25 +89,29 @@ function create(req, res, next) {
         education: req.body.education,
         email: req.body.email,
         authType: req.body.authType || 'chronas',
-        privilege: req.body.privilege
+        privilege: (req.body.privilege !== "undefined") ? req.body.privilege : 1
       })
 
-      return user.save()
+      user.save()
         .then((savedUser) => {
           if (!req.body.thirdParty && !req.body.signup) {
             res.json(savedUser)
-          } else if (!req.body.thirdParty) {
+          } else {
             const token = jwt.sign({
               id: savedUser._id,
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
-              privilege: savedUser.privilege ? savedUser.privilege : 1
+              privilege: (savedUser.privilege !== "undefined") ? savedUser.privilege : 1
             }, config.jwtSecret)
-            return res.json({
-              token,
-              username: savedUser.username
-            })
+            if (req.body.thirdParty) {
+              return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+            } else {
+              return res.json({
+                token,
+                username: savedUser.username
+              })
+            }
           }
         })
         .catch((e) => {
@@ -166,11 +188,15 @@ function incrementLoginCount(username) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
+  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  let highscoreCount = req.query.top || false
-  if (highscoreCount > 100) highscoreCount = highscoreCount;
+  let highscoreCount = (req.query.top || 10)
+  if (highscoreCount > 15) highscoreCount = highscoreCount
   const countOnly = req.query.countOnly || false
+
+  if (patreon !== false) {
+    res.json([])
+  }
 
   if (highscoreCount !== false) {
     User.find()
@@ -205,21 +231,22 @@ function list(req, res, next) {
         res.json({ total: userCount })
       })
   } else {
-    User.list({ start, limit, sort, order, filter })
-      .then((users) => {
-        if (count) {
-          User.count()
-            .exec()
-            .then((userCount) => {
-              res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-              res.set('X-Total-Count', userCount)
-              res.json(users)
-            })
-        } else {
-          res.json(users)
-        }
-      })
-      .catch(e => next(e))
+    res.status(401).json({ message: 'Unauthorized'})
+    // User.list({ start, limit, sort, order, filter })
+    //   .then((users) => {
+    //     if (count) {
+    //       User.count()
+    //         .exec()
+    //         .then((userCount) => {
+    //           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+    //           res.set('X-Total-Count', userCount)
+    //           res.json(users)
+    //         })
+    //     } else {
+    //       res.json(users)
+    //     }
+    //   })
+    //   .catch(e => next(e))
   }
 }
 
