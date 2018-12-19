@@ -16,9 +16,8 @@ WORKDIR /app
 COPY . /app
 # Build the app
 RUN npm run build
+##RUN npm test
 WORKDIR /app/dist
-# install npm models in dist
-RUN npm install --only=production
 
 # --- Release with Alpine ----
 FROM node:10-alpine AS release  
@@ -44,10 +43,12 @@ ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
 COPY --from=build /app/dist/ ./
 CMD ["node", "index.js"]
 
-RUN npm install --production --silent
-
-# copy all file from current dir to /app in container
-COPY dist /app/
+#workaround to install python for bcrypt 
+RUN apk update && apk upgrade \
+	&& apk add --no-cache git \
+	&& apk --no-cache add --virtual builds-deps build-base python \
+	&& npm install --production\
+	&& npm rebuild bcrypt --build-from-source
 
 # expose port 4040
 EXPOSE 80
