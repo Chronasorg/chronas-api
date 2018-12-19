@@ -25,7 +25,7 @@
     "applicationinsights": "1.0.6",
     "appversion": "1.7.1",
     "async": "^2.1.5",
-    "bcrypt": "3.0.0",
+    "bcrypt": "3.0.2",
     "bluebird": "3.5.1",
     "body-parser": "1.18.2",
     "compression": "1.7.2",
