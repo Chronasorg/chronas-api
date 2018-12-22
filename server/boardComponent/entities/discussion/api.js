@@ -49,7 +49,7 @@ router.route('/newDiscussion').post(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
   // if (req.user) {
-    createDiscussion(req.body).then(
+    createDiscussion(req.body, req, res).then(
         (result) => { res.send(Object.assign({}, result._doc, { postCreated: true })) },
         (error) => { res.send({ postCreated: false }) }
       )

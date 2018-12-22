@@ -18,7 +18,7 @@ router.route('/newOpinion').post(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
   // if (req.user) {
-    createOpinion(req.body).then(
+    createOpinion(req.body, req , res).then(
         (result) => { res.send(result) },
         (error) => { res.send(error) }
       )

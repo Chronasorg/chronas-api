@@ -1,5 +1,6 @@
 // models
 import userCtrl from "../../../controllers/user.controller";
+import contactCtrl from "../../../controllers/contact.controller";
 
 const Opinion = require('./model');
 
@@ -30,7 +31,7 @@ const getAllOpinions = (discussion_id) => {
  * @param  {Object} content
  * @return {Promise}
  */
-const createOpinion = ({ forum_id, discussion_id, user_id, content }) => {
+const createOpinion = ({ forum_id, discussion_id, user_id, content }, req , res) => {
   return new Promise((resolve, reject) => {
     const newOpinion = new Opinion({
       forum_id,
@@ -44,7 +45,23 @@ const createOpinion = ({ forum_id, discussion_id, user_id, content }) => {
 
     newOpinion.save((error) => {
       if (error) { console.log(error); reject(error); }
-      else { resolve(newOpinion); }
+      else {
+        req.body = {
+          subject: 'Chronas: New Comment added',
+          from: 'noreply@chronas.org',
+          html: 'Full payload: ' + JSON.stringify({
+            forum_id,
+            discussion_id,
+            discussion: discussion_id,
+            user_id,
+            user: user_id,
+            content,
+            date: new Date(),
+          }, undefined, '<br />')
+        }
+        contactCtrl.create(req, res, false)
+        resolve(newOpinion)
+      }
     });
   });
 };

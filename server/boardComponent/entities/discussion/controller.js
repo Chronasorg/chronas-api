@@ -1,3 +1,5 @@
+import contactCtrl from "../../../controllers/contact.controller";
+
 const generateDiscussionSlug = require('../../utilities/tools').generateDiscussionSlug;
 const getAllOpinions = require('../opinion/controller').getAllOpinions;
 const getUser = require('../user/controller').getUser;
@@ -44,7 +46,7 @@ const getDiscussion = (discussion_slug, discussion_id) => {
  * @param  {Object} discussion
  * @return {Promise}
  */
-const createDiscussion = (discussion) => {
+const createDiscussion = (discussion, req, res) => {
   return new Promise((resolve, reject) => {
     const newDiscussion = new Discussion({
       forum_id: discussion.forumId,
@@ -67,7 +69,26 @@ const createDiscussion = (discussion) => {
         reject(error);
       }
 
-      resolve(newDiscussion);
+      req.body = {
+        subject: 'Chronas: New Post added',
+        from: 'noreply@chronas.org',
+        html: 'Full payload: ' + JSON.stringify({
+          forum_id: discussion.forumId,
+          forum: discussion.forumId,
+          user_id: discussion.userId,
+          user: discussion.userId,
+          discussion_slug: generateDiscussionSlug(discussion.title),
+          date: new Date(),
+          title: discussion.title,
+          qa_id: discussion.qa_id,
+          content: discussion.content,
+          favorites: [],
+          tags: discussion.tags,
+          pinned: discussion.pinned,
+        }, undefined, '<br />'),
+      }
+      contactCtrl.create(req, res, false)
+      resolve(newDiscussion)
     });
   });
 };

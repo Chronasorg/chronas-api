@@ -18,7 +18,7 @@ const nodemailerMailgun = nodemailer.createTransport(mg(auth));
 /**
  * get current deployed version
  */
-function create(req, res) {
+function create(req, res, doReturn = true) {
   const { from, to = (process.env.MAILGUN_RECEIVER || '').split(','), subject, html } = req.body
   if (!from || !to || !subject || !html) return res.status(httpStatus.BAD_REQUEST).json({
     message: 'Body does not contain any or all of the following fields: from, to, subject, html'
@@ -41,12 +41,14 @@ function create(req, res) {
   nodemailerMailgun.sendMail(
     toSendBody
   , (err, info) => {
-    if (err) {
-      return res.json(err.message)
-    }
-    else {
-      return res.json(info.message)
-    }
+      if (doReturn) {
+        if (err) {
+          return res.json(err.message)
+        }
+        else {
+          return res.json(info.message)
+        }
+      }
   });
 
   /*
