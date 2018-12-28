@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2cf7187a-6528-45a9-aecb-a4b33232174a",
+		"_postman_id": "478cdd4c-1089-48b6-99d4-a7a27acdb4b8",
 		"name": "chronas",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -135,6 +135,65 @@
 			"response": []
 		},
 		{
+			"name": "/versio/welcome",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7685d0e1-d10a-433e-8540-1305a00d2a00",
+						"exec": [
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response should contain version, user,  and should not be empty\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.version).to.not.be.empty;",
+							"    pm.expect(jsonData.user).to.be.a('number')",
+							"    pm.expect(jsonData.build).to.not.be.empty;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/version/welcome",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"version",
+						"welcome"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/metadata",
 			"event": [
 				{
@@ -195,13 +254,150 @@
 			"response": []
 		},
 		{
+			"name": "/metadata inital requst",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "64f7b683-4ef4-4943-b898-120824e08c4b",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('culture');",
+							"    pm.expect(jsonData).to.have.property('province');",
+							"    pm.expect(jsonData).to.have.property('provinces');",
+							"    pm.expect(jsonData).to.have.property('ruler');",
+							"    pm.expect(jsonData).to.have.property('religion');",
+							"    pm.expect(jsonData).to.have.property('religionGeneral');    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "g"
+						},
+						{
+							"key": "f",
+							"value": "provinces,ruler,culture,religion,capital,province,religionGeneral"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata with type,end,subtype param",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "64f7b683-4ef4-4943-b898-120824e08c4b",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata?type=e&end=3000&subtype=ew",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "e"
+						},
+						{
+							"key": "end",
+							"value": "3000"
+						},
+						{
+							"key": "subtype",
+							"value": "ew"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "/metadata{id}",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"id": "5b2144a8-1df5-4ed2-b3c2-f5ab7d249db6",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
@@ -214,7 +410,8 @@
 							"    pm.expect(jsonData).to.have.property('data');",
 							"    pm.expect(jsonData).to.have.property('score');",
 							"});"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -249,6 +446,83 @@
 						"v1",
 						"metadata",
 						"religion"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/metadata/links/getLinked",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5b2144a8-1df5-4ed2-b3c2-f5ab7d249db6",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"    ",
+							"pm.test(\"Response should map and media\", function () {",
+							"",
+							"    pm.expect(jsonData).to.have.property('map');",
+							"    pm.expect(jsonData).to.have.property('media');",
+							"});",
+							"",
+							"pm.test(\"Response map opject should have properties and type\", function () {",
+							"    pm.expect(jsonData['map'][0]).to.have.property('properties');",
+							"    pm.expect(jsonData['map'][0]).to.have.property('type');",
+							"});",
+							"",
+							"pm.test(\"Response media opject should have properties and type\", function () {",
+							"    pm.expect(jsonData['media'][0]).to.have.property('properties');",
+							"    pm.expect(jsonData['media'][0]).to.have.property('type');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/metadata/links/getLinked?source=1:e_Falklands_War",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"metadata",
+						"links",
+						"getLinked"
+					],
+					"query": [
+						{
+							"key": "source",
+							"value": "1:e_Falklands_War"
+						}
 					]
 				}
 			},
@@ -314,13 +588,12 @@
 			"response": []
 		},
 		{
-			"name": "/areas Copy",
+			"name": "/board/forum/questions/discussions",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"id": "eb44d6df-66ff-41b8-8445-89bf0473e389",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
@@ -330,10 +603,12 @@
 							"pm.test(\"Response should contain _id, data and score\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
-							"    pm.expect(jsonData[0]).to.have.property('data');",
-							"    pm.expect(jsonData[0]).to.have.property('year');",
+							"    pm.expect(jsonData[0]).to.have.property('forum');",
+							"    pm.expect(jsonData[0]).to.have.property('content');",
+							"    pm.expect(jsonData[0]).to.have.property('user');    ",
 							"});"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -360,13 +635,30 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/areas",
+					"raw": "{{baseUrl}}/v1/board/forum/questions/discussions?sorting_method=date&q=1:ae|ruler|KHI&limit=5",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
-						"areas"
+						"board",
+						"forum",
+						"questions",
+						"discussions"
+					],
+					"query": [
+						{
+							"key": "sorting_method",
+							"value": "date"
+						},
+						{
+							"key": "q",
+							"value": "1:ae|ruler|KHI"
+						},
+						{
+							"key": "limit",
+							"value": "5"
+						}
 					]
 				}
 			},
@@ -379,13 +671,13 @@
 					"listen": "test",
 					"script": {
 						"id": "a68b4089-fc17-4a1f-bda1-e77c353bb5bb",
-						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
 							""
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -412,14 +704,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/areas/1000",
+					"raw": "{{baseUrl}}/v1/areas/2000",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
 						"areas",
-						"1000"
+						"2000"
 					]
 				}
 			},
@@ -548,7 +840,7 @@
 			"response": []
 		},
 		{
-			"name": "/marker",
+			"name": "/marker single request",
 			"event": [
 				{
 					"listen": "test",
@@ -565,6 +857,7 @@
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
 							"    pm.expect(jsonData[0]).to.have.property('year');    ",
+							"    pm.expect(jsonData[0]).to.have.property('coo');       ",
 							"});"
 						],
 						"type": "text/javascript"
@@ -587,7 +880,7 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/markers/",
+					"raw": "{{baseUrl}}/v1/markers/?count=1",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -595,6 +888,150 @@
 						"v1",
 						"markers",
 						""
+					],
+					"query": [
+						{
+							"key": "count",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker with types and count",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('year');    ",
+							"    pm.expect(jsonData[0]).to.have.property('coo');       ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers?types=a,ar,at,b,c,ca,cp,e,m,op,p,r,s,si&year=714&count=3000",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers"
+					],
+					"query": [
+						{
+							"key": "types",
+							"value": "a,ar,at,b,c,ca,cp,e,m,op,p,r,s,si"
+						},
+						{
+							"key": "year",
+							"value": "714"
+						},
+						{
+							"key": "count",
+							"value": "3000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/marker with 100 results",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bff90656-86a1-469a-9fdd-30e2a30bd375",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							" var jsonData = pm.response.json();",
+							" ",
+							"pm.test(\"Response should contain _id, data and score\", function () {",
+							"    pm.expect(jsonData[0]).to.have.property('_id');",
+							"    pm.expect(jsonData[0]).to.have.property('name');",
+							"    pm.expect(jsonData[0]).to.have.property('year');    ",
+							"    pm.expect(jsonData[0]).to.have.property('coo');       ",
+							"});",
+							"",
+							"pm.test(\"check if count 100 works\", function () {",
+							"   pm.expect(jsonData.length).to.equal(100);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/markers?types=a,ar,at,b,c,ca,cp,e,m,op,p,r,s,si&year=1945&count=100",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"markers"
+					],
+					"query": [
+						{
+							"key": "types",
+							"value": "a,ar,at,b,c,ca,cp,e,m,op,p,r,s,si"
+						},
+						{
+							"key": "year",
+							"value": "1945"
+						},
+						{
+							"key": "count",
+							"value": "100"
+						}
 					]
 				}
 			},
