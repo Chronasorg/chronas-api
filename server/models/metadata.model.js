@@ -91,6 +91,7 @@ MetadataSchema.statics = {
   list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
 
     let hasEw = false
+    let hasEs = false
     if (fList) {
       const cachedInit = cache.get('init')
       if (cachedInit) {
@@ -125,7 +126,11 @@ MetadataSchema.statics = {
       const subtypes = (subtype) ? subtype.split(',') : ''
       const discovers = (discover) ? discover.split(',') : ''
       hasEw = (subtypes || []).includes("ew")
-      const searchQuery = {
+      hasEs = (subtypes || []).includes("es")
+      if (hasEs) {
+        subtypes.splice( subtypes.indexOf('es'), 1 )
+      }
+      let searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
         type,
         subtype: { $in: subtypes },
@@ -134,14 +139,18 @@ MetadataSchema.statics = {
           { name: new RegExp(search, 'i') }
         ]
       }
-
       if (!type) delete searchQuery.type
       if (!search) delete searchQuery.$or
       if (!subtype) delete searchQuery.subtype
       if (!year) delete searchQuery.year
-
       if (wiki) searchQuery.wiki = wiki
 
+      if (hasEs) {
+        searchQuery = { $or: [
+          searchQuery,
+          { subtype: 'ps', 'data.source': { $exists: true } }
+        ] }
+      }
       if (discover) {
         // find each discover item separately (promise reduce)
         let allDiscoverItems = [[],[]]
@@ -166,7 +175,7 @@ MetadataSchema.statics = {
                 } else {
                   allDiscoverItems[1] = allDiscoverItems[1].concat(metadata)
                 }
-                
+
                 return 1
               })
               .catch(err => 1)
