@@ -16,7 +16,7 @@ WORKDIR /app
 COPY . /app
 # Build the app
 RUN npm run build
-##RUN npm test
+RUN npm test
 WORKDIR /app/dist
 
 # --- Release with Alpine ----
@@ -41,14 +41,14 @@ ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
 
 # copy app from build
 COPY --from=build /app/dist/ ./
-CMD ["node", "index.js"]
 
 #workaround to install python for bcrypt 
 RUN apk update && apk upgrade \
 	&& apk add --no-cache git \
 	&& apk --no-cache add --virtual builds-deps build-base python \
 	&& npm install --production\
-	&& npm rebuild bcrypt --build-from-source
+	&& npm rebuild bcrypt --build-from-source \
+	&& apk del builds-deps
 
 # expose port 4040
 EXPOSE 80
