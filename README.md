@@ -129,12 +129,6 @@ The [Dockerfile](Dockerfile) contains a multistage build. It installs node model
 
 To run the application use docker-compose as it will start also a mongodb:
 
-## Docker
-
-The [Dockerfile](Dockerfile) contains a multistage build. It installs node models and builds the application on a base node image and copy it to an node-alphine image.
-
-To run the application use docker-compose as it will start also a mongodb:
-
 ```bash
 docker-compose up
 ```
