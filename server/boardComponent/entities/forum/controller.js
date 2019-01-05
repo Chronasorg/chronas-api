@@ -1,31 +1,28 @@
-import Marker from "../../../models/marker.model";
+import Marker from '../../../models/marker.model'
 
-const asyncEach = require('async/each');
+const asyncEach = require('async/each')
 
 // models
-const Forum = require('./model');
-const Discussion = require('../discussion/model');
+const Forum = require('./model')
+const Discussion = require('../discussion/model')
 
 // controllers
-const getAllOpinions = require('../opinion/controller').getAllOpinions;
-const getUser = require('../user/controller').getUser;
+const getAllOpinions = require('../opinion/controller').getAllOpinions
+const getUser = require('../user/controller').getUser
 const mongoose = require('mongoose')
 
 /**
  * get all forums list
  * @type {Promise}
  */
-const getAllForums = () => {
-  return new Promise((resolve, reject) => {
-    Forum
+const getAllForums = () => new Promise((resolve, reject) => {
+  Forum
       .find({})
       .exec((error, results) => {
-        if (error) { console.log(error); reject(error); }
-        else if (!results) reject(null);
-        else resolve(results);
-      });
-  });
-};
+        if (error) { console.log(error); reject(error) } else if (!results) reject(null)
+        else resolve(results)
+      })
+})
 
 /**
  * get discussions of a forum
@@ -33,17 +30,16 @@ const getAllForums = () => {
  * @param  {Boolean} pinned
  * @return {Promise}
  */
-const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 10) => {
-  return new Promise((resolve, reject) => {
+const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 10) => new Promise((resolve, reject) => {
     // define sorthing method
-    const sortWith = { };
-    if (sorting_method === 'date') sortWith.date = -1;
-    if (sorting_method === 'popularity') sortWith.favorites = -1;
+  const sortWith = { }
+  if (sorting_method === 'date') sortWith.date = -1
+  if (sorting_method === 'popularity') sortWith.favorites = -1
 
-    Forum
-      .findOne({ forum_slug: forum_slug })
+  Forum
+      .findOne({ forum_slug })
       .exec((error, forumFound) => {
-        const searchObj = { pinned: pinned }
+        const searchObj = { pinned }
         if (qEntity) searchObj.qa_id = qEntity
         else searchObj.forum_id = (forumFound || {})._id
 
@@ -56,35 +52,32 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
           .skip(+offset)
           .limit(+limit)
           .exec((error, discussions) => {
-            if (error) { console.error(error); reject(error); }
-            else if (!discussions) reject(null);
+            if (error) { console.error(error); reject(error) } else if (!discussions) reject(null)
             else {
               Discussion
                 .find(searchObj)
                 .count().exec().then((discussionCount) => {
                 // attach opinion count to each discussion
-                asyncEach(discussions, (eachDiscussion, callback) => {
+                  asyncEach(discussions, (eachDiscussion, callback) => {
                   // add opinion count
-                  getAllOpinions((eachDiscussion || {})._id).then(
+                    getAllOpinions((eachDiscussion || {})._id).then(
                     (opinions) => {
                       // add opinion count to discussion doc
-                      eachDiscussion.opinion_count = opinions ? opinions.length : 0;
-                      callback();
+                      eachDiscussion.opinion_count = opinions ? opinions.length : 0
+                      callback()
                     },
-                    (error) => { console.error(error); callback(error); }
-                  );
-                }, (error) => {
-                  if (error) { console.error(error); reject(error); }
-                  else resolve([discussions,discussionCount]);
-                });
-              })
+                    (error) => { console.error(error); callback(error) }
+                  )
+                  }, (error) => {
+                    if (error) { console.error(error); reject(error) } else resolve([discussions, discussionCount])
+                  })
+                })
             }
-          });
+          })
       })
-  });
-};
+})
 
 module.exports = {
   getAllForums,
   getDiscussions,
-};
+}

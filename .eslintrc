@@ -7,7 +7,7 @@
     "one-var": "off", // ["warn", "never"],
     "no-nested-ternary": "off",
     "no-plusplus": "off",
-    "no-unused-vars": "warn",
+    "no-unused-vars": "off",
     "indent": [
       2,
       2,

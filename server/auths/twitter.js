@@ -58,7 +58,7 @@ function authenticateUser(req, res, next) {
         urls = profileJSON.entities.url && profileJSON.entities.url.urls && profileJSON.entities.url.urls.length ? profileJSON.entities.url.urls : []
 
       const auth = {
-        id: 'twitter' + data.profile.id,
+        id: `twitter${data.profile.id}`,
         type: 'twitter',
         name: {
           first: name.length ? name[0] : '',

@@ -48,7 +48,7 @@ AreaSchema.statics = {
     return this.findById(id)
       .exec()
       .then((area) => {
-        if (area && area.data && method == "GET") {
+        if (area && area.data && method == 'GET') {
           return area.data
         } else if (area) {
           return area

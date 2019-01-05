@@ -7,15 +7,14 @@ import mongoUnit from 'mongo-unit'
 chai.config.includeStack = true
 
 describe('## health', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
-  const testData = require('./fixtures/testData.json')  
+  const testData = require('./fixtures/testData.json')
 
   before(() => mongoUnit.initDb(testMongoUrl, testData))
   after(() => mongoUnit.drop())
 
-    it('should return OK', (done) => {
-      request(app)
+  it('should return OK', (done) => {
+    request(app)
         .get('/v1/health')
         .expect(httpStatus.OK)
         .then((res) => {
@@ -23,10 +22,10 @@ describe('## health', () => {
           done()
         })
         .catch(done)
-    })
+  })
 
-    it('should return 404 status', (done) => {
-      request(app)
+  it('should return 404 status', (done) => {
+    request(app)
         .get('/v1/404')
         .expect(httpStatus.NOT_FOUND)
         .then((res) => {
@@ -34,5 +33,5 @@ describe('## health', () => {
           done()
         })
         .catch(done)
-    })
+  })
 })

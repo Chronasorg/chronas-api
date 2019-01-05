@@ -1,6 +1,6 @@
 // controllers
 import express from 'express'
-import { config } from "../../../../config/config";
+import { config } from '../../../../config/config'
 import expressJwt from 'express-jwt'
 
 const getAllOpinions = require('./controller').getAllOpinions
@@ -18,14 +18,14 @@ router.route('/newOpinion').post(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
   // if (req.user) {
-    createOpinion(req.body, req , res).then(
+    createOpinion(req.body, req, res).then(
         (result) => { res.send(result) },
         (error) => { res.send(error) }
       )
   // } else {
   //   res.send({ authenticated: false })
   // }
-})
+  })
 
 // vote an opinion
 router.route('/voteOpinion/:opinion_id').put(
@@ -38,7 +38,7 @@ router.route('/voteOpinion/:opinion_id').put(
       (error) => { res.send({ voted: false }) }
     )
     // }
-})
+  })
 
   // remove an opinion
 router.route('/deleteOpinion/:opinion_id').delete(
@@ -50,6 +50,6 @@ router.route('/deleteOpinion/:opinion_id').delete(
         (error) => { res.send({ deleted: false }) }
       )
   // }
-})
+  })
 
 export default router

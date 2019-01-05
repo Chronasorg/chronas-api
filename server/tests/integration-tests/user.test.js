@@ -7,7 +7,6 @@ import mongoUnit from 'mongo-unit'
 chai.config.includeStack = true
 
 describe('## User APIs', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
   const testData = require('./fixtures/testData.json')
 
@@ -20,7 +19,7 @@ describe('## User APIs', () => {
   }
 
   let user = {
-    email: "test2@test.de", // email is required
+    email: 'test2@test.de', // email is required
     username: 'doubtful-throne',
     password: 'doubtful-throne',
     privilege: 1

@@ -3,8 +3,8 @@ import { OAuth2Strategy } from 'passport-google-oauth'
 import jwt from 'jsonwebtoken'
 import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
-import metadataCtrl from "../controllers/metadata.controller";
-import Promise from "bluebird";
+import metadataCtrl from '../controllers/metadata.controller'
+import Promise from 'bluebird'
 
 const credentials = {
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -50,10 +50,10 @@ function authenticateUser(req, res, next) {
       }
 
       console.log('[services.google] - Successfully retrieved Google account data, processing...')
-      console.log('------------------------------------------------------------',data.profile)
+      console.log('------------------------------------------------------------', data.profile)
 
       const auth = {
-        id: 'google' + data.profile.id,
+        id: `google${data.profile.id}`,
         type: 'google',
         name: {
           first: data.profile.name.givenName,

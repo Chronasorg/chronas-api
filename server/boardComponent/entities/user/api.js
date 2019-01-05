@@ -1,5 +1,5 @@
 import express from 'express'
-import { config } from "../../../../config/config";
+import { config } from '../../../../config/config'
 import expressJwt from 'express-jwt'
 
 const passport = require('passport')
@@ -15,8 +15,8 @@ const router = express.Router() // eslint-disable-line
 router.route('/getUser').get(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  res.send(req.auth)
-})
+    res.send(req.auth)
+  })
 
 // github authentication route
 router.route('/authViaGitHub').get(
@@ -34,10 +34,10 @@ router.route('/authViaGitHub/callback').get(
 router.route('/profile/:username').get(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  getFullProfile(req.params.username).then(
+    getFullProfile(req.params.username).then(
     (result) => { res.send(result) },
     (error) => { res.send({ error }) }
   )
-})
+  })
 
 export default router

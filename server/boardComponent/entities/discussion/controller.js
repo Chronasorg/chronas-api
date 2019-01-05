@@ -1,11 +1,11 @@
-import contactCtrl from "../../../controllers/contact.controller";
+import contactCtrl from '../../../controllers/contact.controller'
 
-const generateDiscussionSlug = require('../../utilities/tools').generateDiscussionSlug;
-const getAllOpinions = require('../opinion/controller').getAllOpinions;
-const getUser = require('../user/controller').getUser;
+const generateDiscussionSlug = require('../../utilities/tools').generateDiscussionSlug
+const getAllOpinions = require('../opinion/controller').getAllOpinions
+const getUser = require('../user/controller').getUser
 
-const Discussion = require('./model');
-const Opinion = require('../opinion/model');
+const Discussion = require('./model')
+const Opinion = require('../opinion/model')
 
 /**
  * get a single discussion
@@ -13,85 +13,80 @@ const Opinion = require('../opinion/model');
  * @param  {String} discussion_id
  * @return {Promise}
  */
-const getDiscussion = (discussion_slug, discussion_id) => {
-  return new Promise((resolve, reject) => {
-    let findObject = {};
-    if (discussion_slug) findObject.discussion_slug = discussion_slug;
-    if (discussion_id) findObject._id = discussion_id;
+const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, reject) => {
+  const findObject = {}
+  if (discussion_slug) findObject.discussion_slug = discussion_slug
+  if (discussion_id) findObject._id = discussion_id
 
-    Discussion
+  Discussion
     .findOne(findObject)
     .populate('forum')
     .populate('user')
     .lean()
     .exec((error, result) => {
-      if (error) { console.log(error); reject(error); }
-      else if (!result) reject(null);
+      if (error) { console.log(error); reject(error) } else if (!result) reject(null)
       else {
         // add opinions to the discussion object
         getAllOpinions(result._id).then(
           (opinions) => {
-            result.opinions = opinions;
-            resolve(result);
+            result.opinions = opinions
+            resolve(result)
           },
-          (error) => { { console.log(error); reject(error); } }
-        );
+          (error) => { { console.log(error); reject(error) } }
+        )
       }
-    });
-  });
-};
+    })
+})
 
 /**
  * Create a new discussion
  * @param  {Object} discussion
  * @return {Promise}
  */
-const createDiscussion = (discussion, req, res) => {
-  return new Promise((resolve, reject) => {
-    const newDiscussion = new Discussion({
-      forum_id: discussion.forumId,
-      forum: discussion.forumId,
-      user_id: discussion.userId,
-      user: discussion.userId,
-      discussion_slug: generateDiscussionSlug(discussion.title),
-      date: new Date(),
-      title: discussion.title,
-      qa_id: discussion.qa_id,
-      content: discussion.content,
-      favorites: [],
-      tags: discussion.tags,
-      pinned: discussion.pinned,
-    });
+const createDiscussion = (discussion, req, res) => new Promise((resolve, reject) => {
+  const newDiscussion = new Discussion({
+    forum_id: discussion.forumId,
+    forum: discussion.forumId,
+    user_id: discussion.userId,
+    user: discussion.userId,
+    discussion_slug: generateDiscussionSlug(discussion.title),
+    date: new Date(),
+    title: discussion.title,
+    qa_id: discussion.qa_id,
+    content: discussion.content,
+    favorites: [],
+    tags: discussion.tags,
+    pinned: discussion.pinned,
+  })
 
-    newDiscussion.save((error) => {
-      if (error) {
-        console.log(error);
-        reject(error);
-      }
+  newDiscussion.save((error) => {
+    if (error) {
+      console.log(error)
+      reject(error)
+    }
 
-      req.body = {
-        subject: 'Chronas: New Post added',
-        from: 'noreply@chronas.org',
-        html: 'Full payload: ' + JSON.stringify({
-          forum_id: discussion.forumId,
-          forum: discussion.forumId,
-          user_id: discussion.userId,
-          user: discussion.userId,
-          discussion_slug: generateDiscussionSlug(discussion.title),
-          date: new Date(),
-          title: discussion.title,
-          qa_id: discussion.qa_id,
-          content: discussion.content,
-          favorites: [],
-          tags: discussion.tags,
-          pinned: discussion.pinned,
-        }, undefined, '<br />'),
-      }
-      contactCtrl.create(req, res, false)
-      resolve(newDiscussion)
-    });
-  });
-};
+    req.body = {
+      subject: 'Chronas: New Post added',
+      from: 'noreply@chronas.org',
+      html: `Full payload: ${JSON.stringify({
+        forum_id: discussion.forumId,
+        forum: discussion.forumId,
+        user_id: discussion.userId,
+        user: discussion.userId,
+        discussion_slug: generateDiscussionSlug(discussion.title),
+        date: new Date(),
+        title: discussion.title,
+        qa_id: discussion.qa_id,
+        content: discussion.content,
+        favorites: [],
+        tags: discussion.tags,
+        pinned: discussion.pinned,
+      }, undefined, '<br />')}`,
+    }
+    contactCtrl.create(req, res, false)
+    resolve(newDiscussion)
+  })
+})
 
 /**
  * toggle favorite status of discussion
@@ -99,75 +94,68 @@ const createDiscussion = (discussion, req, res) => {
  * @param  {ObjectId} user_id
  * @return {Promise}
  */
-const toggleFavorite = (discussion_id, user_id) => {
-  return new Promise((resolve, reject) => {
-    Discussion.findById(discussion_id, (error, discussion) => {
-      if (error) { console.log(error); reject(error); }
-      else if (!discussion) reject(null);
-      else {
+const toggleFavorite = (discussion_id, user_id) => new Promise((resolve, reject) => {
+  Discussion.findById(discussion_id, (error, discussion) => {
+    if (error) { console.log(error); reject(error) } else if (!discussion) reject(null)
+    else {
         // add or remove favorite
-        let matched = null;
-        for (let i = 0; i < discussion.favorites.length; i++) {
-          if (String(discussion.favorites[i]) === String(user_id)) {
-            matched = i;
-          }
+      let matched = null
+      for (let i = 0; i < discussion.favorites.length; i++) {
+        if (String(discussion.favorites[i]) === String(user_id)) {
+          matched = i
         }
-        if (matched === null) {
-          discussion.favorites.push(user_id);
-        } else {
-          discussion.favorites = [
-            ...discussion.favorites.slice(0, matched),
-            ...discussion.favorites.slice(matched + 1, discussion.favorites.length),
-          ];
-        }
-
-
-        discussion.save((error, updatedDiscussion) => {
-          if (error) { console.log(error); reject(error); }
-          resolve(updatedDiscussion);
-        });
       }
-    });
-  });
+      if (matched === null) {
+        discussion.favorites.push(user_id)
+      } else {
+        discussion.favorites = [
+          ...discussion.favorites.slice(0, matched),
+          ...discussion.favorites.slice(matched + 1, discussion.favorites.length),
+        ]
+      }
 
-};
+
+      discussion.save((error, updatedDiscussion) => {
+        if (error) { console.log(error); reject(error) }
+        resolve(updatedDiscussion)
+      })
+    }
+  })
+})
 
 const updateDiscussion = (forum_id, discussion_slug) => {
   // TODO: implement update feature
-};
+}
 
-const deleteDiscussion = (discussion_slug) => {
-  return new Promise((resolve, reject) => {
+const deleteDiscussion = discussion_slug => new Promise((resolve, reject) => {
     // find the discussion id first
-    Discussion
+  Discussion
     .findOne({ discussion_slug })
     .exec((error, discussion) => {
-      if (error) { console.log(error); reject(error); }
+      if (error) { console.log(error); reject(error) }
 
       // get the discussion id
-      const discussion_id = discussion._id;
+      const discussion_id = discussion._id
 
       // remove any opinion regarding the discussion
       Opinion
       .remove({ discussion_id })
       .exec((error) => {
-        if (error) { console.log(error); reject(error); }
+        if (error) { console.log(error); reject(error) }
 
         // finally remove the discussion
         else {
           Discussion
           .remove({ discussion_slug })
           .exec((error) => {
-            if (error) { console.log(error); reject(error); }
-            else {
-              resolve({ deleted: true });
+            if (error) { console.log(error); reject(error) } else {
+              resolve({ deleted: true })
             }
-          });
+          })
         }
-      });
-    });
-  });
-};
+      })
+    })
+})
 
 module.exports = {
   getDiscussion,
@@ -175,4 +163,4 @@ module.exports = {
   updateDiscussion,
   deleteDiscussion,
   toggleFavorite,
-};
+}

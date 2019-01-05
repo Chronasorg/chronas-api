@@ -3,7 +3,7 @@ import logger from '../../config/winston'
 import APIError from '../helpers/APIError'
 import { config } from '../../config/config'
 import jwt from 'jsonwebtoken'
-import httpStatus from "http-status";
+import httpStatus from 'http-status'
 
 /**
  * Load user and append to req.
@@ -51,7 +51,7 @@ function create(req, res, next) {
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        if (req.body.thirdParty){
+        if (req.body.thirdParty) {
           if (req.body.email === duplicatedUsername.email) {
             duplicatedUsername.loginCount += 1
             duplicatedUsername.save()
@@ -61,21 +61,16 @@ function create(req, res, next) {
               avatar: duplicatedUsername.avatar,
               username: duplicatedUsername.username,
               lastUpdated: duplicatedUsername.lastUpdated,
-              privilege: (duplicatedUsername.privilege !== "undefined") ? duplicatedUsername.privilege : 1
+              privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1
             }, config.jwtSecret)
-            return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+            return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
           }
-          else {
             // throw err?
-            const err = new APIError('This username/ email already exists with a different email address!', 400)
-            return next(err)
-          }
-        }
-
-        else {
-          const err = new APIError('This username/ email already exists!', 400)
+          const err = new APIError('This username/ email already exists with a different email address!', 400)
           return next(err)
         }
+        const err = new APIError('This username/ email already exists!', 400)
+        return next(err)
       }
 
       const user = new User({
@@ -89,7 +84,7 @@ function create(req, res, next) {
         education: req.body.education,
         email: req.body.email,
         authType: req.body.authType || 'chronas',
-        privilege: (req.body.privilege !== "undefined") ? req.body.privilege : 1
+        privilege: (req.body.privilege !== 'undefined') ? req.body.privilege : 1
       })
 
       user.save()
@@ -102,16 +97,15 @@ function create(req, res, next) {
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
-              privilege: (savedUser.privilege !== "undefined") ? savedUser.privilege : 1
+              privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1
             }, config.jwtSecret)
             if (req.body.thirdParty) {
-              return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
-            } else {
-              return res.json({
-                token,
-                username: savedUser.username
-              })
+              return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
             }
+            return res.json({
+              token,
+              username: savedUser.username
+            })
           }
         })
         .catch((e) => {
@@ -163,8 +157,8 @@ function changePoints(username, type, delta = 1) {
     .exec()
     .then((user) => {
       if (typeof user !== 'undefined') {
-        user["karma"] += delta
-        user["count_" + type] += delta
+        user.karma += delta
+        user[`count_${type}`] += delta
         user.save()
       }
     })
@@ -205,24 +199,22 @@ function list(req, res, next) {
       .lean()
       .exec()
       .then((users) => {
-        res.json(users.map((u) => {
-          return {
-            avatar: u.avatar,
-            name: u.name,
-            username: u.username,
-            karma: u.karma,
-            count_mistakes: u.count_mistakes,
-            count_linked: u.count_linked,
-            count_created:  u.count_created,
-            count_reverted:  u.count_reverted,
-            count_updated:  u.count_updated,
-            count_deleted:  u.count_deleted,
-            count_voted:  u.count_voted,
-            lastUpdated:  u.lastUpdated,
-            createdAt:  u.createdAt,
-            loginCount:  u.loginCount,
-          }
-        }))
+        res.json(users.map(u => ({
+          avatar: u.avatar,
+          name: u.name,
+          username: u.username,
+          karma: u.karma,
+          count_mistakes: u.count_mistakes,
+          count_linked: u.count_linked,
+          count_created: u.count_created,
+          count_reverted: u.count_reverted,
+          count_updated: u.count_updated,
+          count_deleted: u.count_deleted,
+          count_voted: u.count_voted,
+          lastUpdated: u.lastUpdated,
+          createdAt: u.createdAt,
+          loginCount: u.loginCount,
+        })))
       })
   } else if (countOnly !== false) {
     User.count()
@@ -231,7 +223,7 @@ function list(req, res, next) {
         res.json({ total: userCount })
       })
   } else {
-    res.status(401).json({ message: 'Unauthorized'})
+    res.status(401).json({ message: 'Unauthorized' })
     // User.list({ start, limit, sort, order, filter })
     //   .then((users) => {
     //     if (count) {

@@ -87,9 +87,9 @@ RevisionSchema.statics = {
    * @returns {Promise<Revision[]>}
    */
   list({ start = 0, end = 50, entity, subentity } = {}) {
-    let optionalFind = (entity) ? { entityId: entity } : {}
+    const optionalFind = (entity) ? { entityId: entity } : {}
     if (subentity) {
-      optionalFind['subEntityId'] = subentity
+      optionalFind.subEntityId = subentity
     }
     return this.find(optionalFind)
       .sort({ timestamp: -1 })

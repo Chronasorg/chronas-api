@@ -1,7 +1,7 @@
 // discussion controllers
 import express from 'express'
 import expressJwt from 'express-jwt'
-import { config } from "../../../../config/config";
+import { config } from '../../../../config/config'
 
 const getDiscussion = require('./controller').getDiscussion
 const createDiscussion = require('./controller').createDiscussion
@@ -16,18 +16,18 @@ const router = express.Router() // eslint-disable-line
 router.route('/:discussion_slug').get(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  const { discussion_slug } = req.params
-  getDiscussion(discussion_slug).then(
+    const { discussion_slug } = req.params
+    getDiscussion(discussion_slug).then(
       (result) => { res.send(result) },
       (error) => { res.send(error) }
     )
-})
+  })
 
   // toggle favorite to the discussion
 router.route('/toggleFavorite/:discussion_id').put(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
   (req, res) => {
-  const { discussion_id } = req.params
+    const { discussion_id } = req.params
   // if (req.user) {
       // TODO: describe the toggle process with comments
     toggleFavorite(discussion_id, req.auth.id).then(
@@ -42,7 +42,7 @@ router.route('/toggleFavorite/:discussion_id').put(
   // } else {
   //   res.send({ discussionUpdated: false })
   // }
-})
+  })
 
   // create a new discussion
 router.route('/newDiscussion').post(
@@ -56,7 +56,7 @@ router.route('/newDiscussion').post(
   // } else {
   //   res.send({ postCreated: false })
   // }
-})
+  })
 
   // delete a discussion
 router.route('/deleteDiscussion/:discussion_slug').delete(
@@ -70,6 +70,6 @@ router.route('/deleteDiscussion/:discussion_slug').delete(
   // } else {
   //   res.send({ deleted: false })
   // }
-})
+  })
 
 export default router

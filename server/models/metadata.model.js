@@ -89,7 +89,6 @@ MetadataSchema.statics = {
    * @returns {Promise<Metadata[]>}
    */
   list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
-
     let hasEw = false
     let hasEs = false
     if (fList) {
@@ -121,14 +120,13 @@ MetadataSchema.statics = {
           cache.put('init', completeRes, CACHETTL)
           return completeRes
         })
-    }
-    else if (type || subtype || year || wiki || search || discover) {
+    } else if (type || subtype || year || wiki || search || discover) {
       const subtypes = (subtype) ? subtype.split(',') : ''
       const discovers = (discover) ? discover.split(',') : ''
-      hasEw = (subtypes || []).includes("ew")
-      hasEs = (subtypes || []).includes("es")
+      hasEw = (subtypes || []).includes('ew')
+      hasEs = (subtypes || []).includes('es')
       if (hasEs) {
-        subtypes.splice( subtypes.indexOf('es'), 1 )
+        subtypes.splice(subtypes.indexOf('es'), 1)
       }
       let searchQuery = {
         year: { $gt: (year - delta), $lt: (year + delta) },
@@ -153,14 +151,14 @@ MetadataSchema.statics = {
       }
       if (discover) {
         // find each discover item separately (promise reduce)
-        let allDiscoverItems = [[],[]]
+        const allDiscoverItems = [[], []]
         return discovers.reduce(
           (p, typeToSearch) => p.then(() => {
-            if (typeToSearch === "e") {
+            if (typeToSearch === 'e') {
               delete searchQuery.subtype
               searchQuery.type = typeToSearch
             } else {
-              searchQuery.type = "i"
+              searchQuery.type = 'i'
               searchQuery.subtype = typeToSearch
             }
             return this.find(searchQuery)
@@ -170,7 +168,7 @@ MetadataSchema.statics = {
               .lean()
               .exec()
               .then((metadata) => {
-                if (typeToSearch === "e") {
+                if (typeToSearch === 'e') {
                   allDiscoverItems[0] = metadata
                 } else {
                   allDiscoverItems[1] = allDiscoverItems[1].concat(metadata)
@@ -181,12 +179,9 @@ MetadataSchema.statics = {
               .catch(err => 1)
           }),
           Promise.resolve()
-        ).then(() => {
-          return allDiscoverItems
-        })
+        ).then(() => allDiscoverItems)
       }
-      else {
-        return this.find(searchQuery)
+      return this.find(searchQuery)
           .skip(+start)
           .limit(+end)
           .sort({ score: 'desc' })
@@ -195,35 +190,30 @@ MetadataSchema.statics = {
           .then((metadata) => {
             if (search) {
               return metadata.map(item => item._id)
-            }
-            else if (hasEw) {
+            } else if (hasEw) {
               return Marker.find({
-                "type": "b",
-                "partOf": { $exists: true}
+                type: 'b',
+                partOf: { $exists: true }
               })
                 .lean()
                 .exec()
                 .then((markers) => {
-                  var resObj = {}
+                  const resObj = {}
                   markers.forEach((el) => {
                     if (!resObj[el.partOf]) {
                       resObj[el.partOf] = [[el.name, el.year]]
-                    }
-                    else {
+                    } else {
                       resObj[el.partOf].push([el.name, el.year])
                     }
                   })
                   metadata.unshift(resObj)
                   return metadata
                 })
-            } else {
-              return metadata
             }
+            return metadata
           })
-      }
     }
-    else {
-      return this.find()
+    return this.find()
         .skip(+start)
         .limit(+end)
         .sort({ score: 'desc' })
@@ -234,7 +224,6 @@ MetadataSchema.statics = {
           obj.data = dataString + ((dataString.length === 203) ? '...' : '')
           return obj
         }))
-    }
   }
 }
 

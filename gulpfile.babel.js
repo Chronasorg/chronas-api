@@ -2,7 +2,6 @@ import gulp from 'gulp'
 import gulpLoadPlugins from 'gulp-load-plugins'
 import path from 'path'
 import del from 'del'
-import runSequence from 'run-sequence'
 import minimist from 'minimist'
 import zip from 'gulp-zip'
 import fs from 'fs'
@@ -23,18 +22,22 @@ const knownOptions = {
 const options = minimist(process.argv.slice(2), knownOptions)
 
 // Clean up dist and coverage directory
-gulp.task('clean', () =>
+gulp.task('clean', (done) => {
   del.sync(['dist/**', 'dist/.*', 'coverage/**', '!dist', '!coverage'])
+  done()
+  }
 )
 
 // Copy non-js files to dist
-gulp.task('copy', () =>
+gulp.task('copy', (done) => {
   gulp.src(paths.nonJs)
     .pipe(plugins.newer('dist'))
     .pipe(gulp.dest('dist'))
+  done()
+  }
 )
 
-gulp.task('package', () => {
+gulp.task('package', (done) => {
   const packagePaths = ['dist/**',
     '!**/_package/**',
     '!**/typings/**',
@@ -55,43 +58,56 @@ gulp.task('package', () => {
     packagePaths.push(excludePattern2)
   }
 
-  return gulp.src(packagePaths)
+  gulp.src(packagePaths)
     .pipe(zip(options.packageName))
     .pipe(gulp.dest(options.packagePath))
+
+
 })
 
 // Compile ES6 to ES5 and copy to dist
-gulp.task('babel', () =>
-  gulp.src([...paths.js, '!gulpfile.babel.js'], { base: '.' })
-    .pipe(plugins.newer('dist'))
-    .pipe(plugins.sourcemaps.init())
-    .pipe(plugins.babel())
-    .pipe(plugins.sourcemaps.write('.', {
-      includeContent: false,
-      sourceRoot(file) {
-        return path.relative(file.path, __dirname)
-      }
-    }))
-    .pipe(gulp.dest('dist'))
+gulp.task('babel', (done) => {
+  var stream = gulp.src([...paths.js, '!gulpfile.babel.js'], {base: '.'})
+      .pipe(plugins.newer('dist'))
+      .pipe(plugins.sourcemaps.init())
+      .pipe(plugins.babel())
+      .pipe(plugins.sourcemaps.write('.', {
+        includeContent: false,
+        sourceRoot(file) {
+          return path.relative(file.path, __dirname)
+        }
+      }))
+      .pipe(gulp.dest('dist'))
+
+  stream.on('end', function() {
+    //run some code here
+    done();
+  });
+  stream.on('error', function(err) {
+    done(err);
+  });
+  }
 )
 
 // Start server with restart on file changes
-gulp.task('nodemon', ['copy', 'babel'], () =>
+gulp.task('nodemon', gulp.series('copy', 'babel', (done) => {
   plugins.nodemon({
     script: path.join('dist', 'index.js'),
     ext: 'js',
     ignore: ['node_modules/**/*.js', 'scripts/*', 'dist/**/*.js'],
     tasks: ['copy', 'babel']
   })
-)
+  done()
+  }
+))
 
 // gulp serve for development
-gulp.task('serve', ['clean'], () => runSequence('nodemon'))
+gulp.task('serve', gulp.series('clean', 'nodemon', (done) => {
+    done()
+}))
 
 
 // default task: clean dist, compile js files and copy non-js files.
-gulp.task('default', ['clean'], () => {
-  runSequence(
-    ['copy', 'babel']
-  )
-})
+gulp.task('default', gulp.series('clean', 'copy', 'babel', (done) => {
+  done()
+}))

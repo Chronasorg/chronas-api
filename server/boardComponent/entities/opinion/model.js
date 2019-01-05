@@ -1,7 +1,7 @@
 /**
  * opinion model
  */
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const opinionSchema = mongoose.Schema({
   forum_id: mongoose.Schema.ObjectId,
@@ -16,6 +16,6 @@ const opinionSchema = mongoose.Schema({
     default: 0,
   },
   content: Object,
-}, { usePushEach: true });
+}, { usePushEach: true })
 
-module.exports = mongoose.model('opinion', opinionSchema);
+module.exports = mongoose.model('opinion', opinionSchema)

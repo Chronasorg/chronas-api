@@ -65,7 +65,7 @@ function login(req, res, next) {
 
 function signup(req, res, next) {
   req.body.signup = true
-  req.body.username = req.body.username || ((req.body.first_name && req.body.last_name) ? req.body.first_name + ' ' + req.body.last_name
+  req.body.username = req.body.username || ((req.body.first_name && req.body.last_name) ? `${req.body.first_name} ${req.body.last_name}`
     : (req.body.first_name) ? req.body.first_name
       : (req.body.last_name) ? req.body.last_name : Moniker.choose())
 

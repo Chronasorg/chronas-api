@@ -1,7 +1,7 @@
 /**
  * user model
  */
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const userSchema = mongoose.Schema({
   name: String,
@@ -19,6 +19,6 @@ const userSchema = mongoose.Schema({
     followers: Number,
     following: Number,
   },
-}, { usePushEach: true });
+}, { usePushEach: true })
 
-module.exports = mongoose.model('user', userSchema);
+module.exports = mongoose.model('user', userSchema)

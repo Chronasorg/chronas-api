@@ -85,7 +85,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
   const newId = decodeURIComponent(req.body.wiki || req.body._id)
-  if (typeof newId !== "undefined" && newId !== "undefined" && newId !== marker._id) {
+  if (typeof newId !== 'undefined' && newId !== 'undefined' && newId !== marker._id) {
     const oldId = marker._id
     marker._id = newId
     // changing wiki (id!)
@@ -168,7 +168,6 @@ function update(req, res, next, fromRevision = false) {
       })
       .catch(e => next(e))
   } else {
-
     marker.save()
       .then((savedMarker) => {
         if (!fromRevision) {
