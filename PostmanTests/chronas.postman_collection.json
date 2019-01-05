@@ -857,7 +857,6 @@
 							"    pm.expect(jsonData[0]).to.have.property('_id');",
 							"    pm.expect(jsonData[0]).to.have.property('name');",
 							"    pm.expect(jsonData[0]).to.have.property('year');    ",
-							"    pm.expect(jsonData[0]).to.have.property('coo');       ",
 							"});"
 						],
 						"type": "text/javascript"
