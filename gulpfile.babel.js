@@ -30,10 +30,18 @@ gulp.task('clean', (done) => {
 
 // Copy non-js files to dist
 gulp.task('copy', (done) => {
-  gulp.src(paths.nonJs)
+  var stream = gulp.src(paths.nonJs)
     .pipe(plugins.newer('dist'))
     .pipe(gulp.dest('dist'))
-  done()
+
+  stream.on('end', function() {
+    //run some code here
+    done();
+  });
+  stream.on('error', function(err) {
+    done(err);
+  });
+
   }
 )
 
@@ -58,10 +66,17 @@ gulp.task('package', (done) => {
     packagePaths.push(excludePattern2)
   }
 
-  gulp.src(packagePaths)
+  var stream = gulp.src(packagePaths)
     .pipe(zip(options.packageName))
     .pipe(gulp.dest(options.packagePath))
 
+  stream.on('end', function() {
+    //run some code here
+    done();
+  });
+  stream.on('error', function(err) {
+    done(err);
+  });
 
 })
 
