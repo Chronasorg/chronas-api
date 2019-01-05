@@ -16,23 +16,28 @@ WORKDIR /app
 COPY . /app
 # Build the app
 RUN npm run build
+#run all unit tests
 RUN npm test
+
 WORKDIR /app/dist
 
 # --- Release with Alpine ----
 FROM node:10-alpine AS release  
 # Create app directory
 WORKDIR /app
-# optional
+
+#  --- add env variables ---
 ENV NODE_ENV=development
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
+
 ENV APPINSIGHTS_INSTRUMENTATIONKEY=placeholder
 ENV TWITTER_CONSUMER_KEY=placeholder
 ENV TWITTER_CONSUMER_SECRET=placeholder
 ENV TWITTER_CALLBACK_URL=placeholder
 ENV JWT_SECRET=placeholder
+
 ENV CHRONAS_HOST=https://chronas.org
 ENV FACEBOOK_CALLBACK_URL=https://api.chronas.org/v1/auth/login/facebook?cb
 ENV GOOGLE_CALLBACK_URL=https://api.chronas.org/v1/auth/login/google?cb
