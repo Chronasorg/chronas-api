@@ -65,10 +65,20 @@ function load(req, res, next, id) {
       return next()
     })
     .catch((e) => {
-      res.status(httpStatus.NOT_FOUND).json({
-        message: e.isPublic ? e.message : httpStatus[e.status],
-        stack: config.env === 'development' ? e.stack : {}
-      })
+      if((id || "").substr(0,2) === "a_") {
+        req.entity = {
+          "_id": id,
+          "data": {
+            "influence": []
+          }
+        }
+        return next()
+      } else {
+        res.status(httpStatus.NOT_FOUND).json({
+          message: e.isPublic ? e.message : httpStatus[e.status],
+          stack: config.env === 'development' ? e.stack : {}
+        })
+      }
     })
 }
 
