@@ -340,8 +340,8 @@ function replaceAll(req, res, next) {
   const typeId = ruler ? 0 : culture ? 1 : religion ? 2 : -1
   const toReplace = ruler || culture || religion
 
-  if (!replaceWith || typeId === -1) return res.send('OK')
-  if (replaceWith) nextBody[typeId] = replaceWith
+  if (typeof replaceWith === "undefined" || typeId === -1) return res.send('OK')
+  if (typeof replaceWith !== "undefined") nextBody[typeId] = replaceWith
 
   const typeDim = (ruler ? 'ruler' : culture ? 'culture' : 'religion')
   const toReplaceLinkId = 'ae|' + typeDim + '|' + toReplace
