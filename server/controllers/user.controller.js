@@ -3,14 +3,19 @@ import logger from '../../config/winston'
 import APIError from '../helpers/APIError'
 import { config } from '../../config/config'
 import jwt from 'jsonwebtoken'
-import httpStatus from "http-status";
+import httpStatus from 'http-status'
 
 /**
  * Load user and append to req.
  */
 function load(req, res, next, id) {
-  User.get(id)
+  User.findOne({ email: id })
     .then((user) => {
+      if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({
+          message: 'Not Found'
+        })
+      }
       req.user = user // eslint-disable-line no-param-reassign
       return next()
     })
@@ -42,22 +47,36 @@ function create(req, res, next) {
   console.log('Attempting to create user')
   console.log('------------------------------------------------------------')
 
-  User.findById(req.body.id || req.body.email || req.body.username)
+  User.findById(req.body.email || req.body.id || req.body.username)
     .exec()
     .then((duplicatedUsername) => {
       if (duplicatedUsername) {
-        if (!req.body.thirdParty || req.body.signup) {
-          const err = new APIError('This username/ email already exists!', 400)
+        if (req.body.thirdParty) {
+          if (req.body.email === duplicatedUsername.email) {
+            duplicatedUsername.loginCount += 1
+            duplicatedUsername.save()
+
+            const token = jwt.sign({
+              id: duplicatedUsername._id,
+              avatar: duplicatedUsername.avatar,
+              username: duplicatedUsername.username,
+              lastUpdated: duplicatedUsername.lastUpdated,
+              privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1
+            }, config.jwtSecret)
+            return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+          }
+            // throw err?
+          const err = new APIError('This username/ email already exists with a different email address!', 400)
           return next(err)
         }
-
-        duplicatedUsername.loginCount += 1
-        return duplicatedUsername.save()
+        const err = new APIError('This username/ email already exists!', 400)
+        return next(err)
       }
 
       const user = new User({
-        _id: req.body.id || req.body.email || req.body.username,
+        _id: req.body.email || req.body.id || req.body.username,
         avatar: req.body.avatar,
+        bio: req.body.bio,
         website: req.body.website,
         username: req.body.username,
         name: req.body.name || req.body.username || req.body.id,
@@ -65,21 +84,24 @@ function create(req, res, next) {
         education: req.body.education,
         email: req.body.email,
         authType: req.body.authType || 'chronas',
-        privilege: req.body.privilege
+        privilege: (req.body.privilege !== 'undefined') ? req.body.privilege : 1
       })
 
-      return user.save()
+      user.save()
         .then((savedUser) => {
           if (!req.body.thirdParty && !req.body.signup) {
             res.json(savedUser)
-          } else if (!req.body.thirdParty) {
+          } else {
             const token = jwt.sign({
               id: savedUser._id,
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
-              privilege: savedUser.privilege ? savedUser.privilege : 1
+              privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1
             }, config.jwtSecret)
+            if (req.body.thirdParty) {
+              return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+            }
             return res.json({
               token,
               username: savedUser.username
@@ -117,6 +139,7 @@ function update(req, res, next) {
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
+  if (typeof req.body.bio !== 'undefined') user.bio = req.body.bio
   if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
@@ -134,8 +157,8 @@ function changePoints(username, type, delta = 1) {
     .exec()
     .then((user) => {
       if (typeof user !== 'undefined') {
-        user["karma"] += delta
-        user["count_" + type] += delta
+        user.karma += delta
+        user[`count_${type}`] += delta
         user.save()
       }
     })
@@ -159,35 +182,39 @@ function incrementLoginCount(username) {
  * @returns {User[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
+  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
-  const highscoreCount = req.query.top || false
+  let highscoreCount = (req.query.top || 10)
+  if (highscoreCount > 15) highscoreCount = highscoreCount
   const countOnly = req.query.countOnly || false
+
+  if (patreon !== false) {
+    res.json([])
+  }
 
   if (highscoreCount !== false) {
     User.find()
       .sort({ karma: -1 })
       .limit(+highscoreCount)
+      .lean()
       .exec()
       .then((users) => {
-        res.json(users.map((u) => {
-          return {
-            avatar: u.avatar,
-            name: u.name,
-            username: u.username,
-            karma: u.karma,
-            count_mistakes: u.count_mistakes,
-            count_linked: u.count_linked,
-            count_created:  u.count_created,
-            count_reverted:  u.count_reverted,
-            count_updated:  u.count_updated,
-            count_deleted:  u.count_deleted,
-            count_voted:  u.count_voted,
-            lastUpdated:  u.lastUpdated,
-            createdAt:  u.createdAt,
-            loginCount:  u.loginCount,
-          }
-        }))
+        res.json(users.map(u => ({
+          avatar: u.avatar,
+          name: u.name,
+          username: u.username,
+          karma: u.karma,
+          count_mistakes: u.count_mistakes,
+          count_linked: u.count_linked,
+          count_created: u.count_created,
+          count_reverted: u.count_reverted,
+          count_updated: u.count_updated,
+          count_deleted: u.count_deleted,
+          count_voted: u.count_voted,
+          lastUpdated: u.lastUpdated,
+          createdAt: u.createdAt,
+          loginCount: u.loginCount,
+        })))
       })
   } else if (countOnly !== false) {
     User.count()
@@ -196,21 +223,22 @@ function list(req, res, next) {
         res.json({ total: userCount })
       })
   } else {
-    User.list({ start, limit, sort, order, filter })
-      .then((users) => {
-        if (count) {
-          User.count()
-            .exec()
-            .then((userCount) => {
-              res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-              res.set('X-Total-Count', userCount)
-              res.json(users)
-            })
-        } else {
-          res.json(users)
-        }
-      })
-      .catch(e => next(e))
+    res.status(401).json({ message: 'Unauthorized' })
+    // User.list({ start, limit, sort, order, filter })
+    //   .then((users) => {
+    //     if (count) {
+    //       User.count()
+    //         .exec()
+    //         .then((userCount) => {
+    //           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
+    //           res.set('X-Total-Count', userCount)
+    //           res.json(users)
+    //         })
+    //     } else {
+    //       res.json(users)
+    //     }
+    //   })
+    //   .catch(e => next(e))
   }
 }
 

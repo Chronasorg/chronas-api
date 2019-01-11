@@ -1,7 +1,8 @@
 import Marker from '../models/marker.model'
 import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import { config } from "../../config/config";
-import httpStatus from "http-status";
+import { config } from '../../config/config'
+import httpStatus from 'http-status'
+import Metadata from '../models/metadata.model'
 
 /**
  * Load marker and append to req.
@@ -35,8 +36,9 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
-  const markerId = req.body._id || decodeURIComponent(req.body.wiki)
+  const markerId = decodeURIComponent(req.body._id || req.body.wiki)
   Marker.findById(markerId)
+    .lean()
     .exec()
     .then((duplicatedMarker) => {
       if (duplicatedMarker) {
@@ -50,6 +52,8 @@ function create(req, res, next, fromRevision = false) {
         coo: req.body.coo,
         type: req.body.type,
         year: req.body.year,
+        capital: req.body.capital,
+        partOf: req.body.partOf,
         end: req.body.end,
       })
 
@@ -72,20 +76,106 @@ function create(req, res, next, fromRevision = false) {
  */
 function update(req, res, next, fromRevision = false) {
   const marker = req.entity
-
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
+  if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital
+  if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
-  marker.save()
-    .then((savedMarker) => {
-      if (!fromRevision) {
-        res.json(savedMarker)
-      }
+  const newId = decodeURIComponent(req.body.wiki || req.body._id)
+  if (typeof newId !== 'undefined' && newId !== 'undefined' && newId !== marker._id) {
+    const oldId = marker._id
+    marker._id = newId
+    // changing wiki (id!)
+    // migrate links
+    // create copy and remove old
+
+    const markerNew = new Marker({
+      _id: marker._id,
+      name: marker.name,
+      coo: marker.coo,
+      type: marker.type,
+      year: marker.year,
+      capital: marker.capital,
+      partOf: marker.partOf,
+      end: marker.end,
     })
-    .catch(e => next(e))
+
+    markerNew.save()
+      .then((savedMarker) => {
+        // return res.send("OK")
+        Marker.get(oldId)
+          .then((origMarker) => {
+            origMarker.remove() // removing the just created
+              .then(() => {
+                Metadata.get('links', req.method)
+                  .then((links) => {
+                    if (links) {
+                      const linkedItems = links.data[(`0:${oldId}`)]
+                      if (linkedItems) {
+                        const linkedMarkers = linkedItems[0]
+                        const linkedMetadata = linkedItems[1]
+
+                        linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
+                          const currVal = links.data[key]
+                          if (currVal) {
+                            const mediaIndex = currVal[0].findIndex(el => el[0] === oldId)
+                            const mapIndex = currVal[1].findIndex(el => el[0] === oldId)
+                            const dirtyMedia = mediaIndex > -1
+                            const dirtyMap = mapIndex > -1
+
+                            if (dirtyMedia) {
+                              currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]]
+                            }
+                            if (dirtyMap) {
+                              currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]]
+                            }
+                            if (dirtyMap || dirtyMedia) {
+                              links.data[key] = currVal
+                            }
+                          }
+                        })
+
+                        links.data[(`0:${newId}`)] = linkedItems
+                        delete links.data[(`0:${oldId}`)]
+                        links.markModified('data')
+                      }
+
+                      links.save()
+                        .then(() => {
+                          if (!fromRevision) {
+                            res.json(savedMarker)
+                          }
+                        })
+                        .catch((err) => {
+                          if (!fromRevision) {
+                            res.send('NOTOK')
+                          }
+                        })
+                    }
+                  })
+                  .catch((err) => {
+                    if (!fromRevision) {
+                      res.send('NOTOK')
+                    }
+                  })
+              })
+              // .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
+              .catch(e => next(e))
+          }).catch(e => next(e))
+      })
+      .catch(e => next(e))
+  } else {
+    marker.save()
+      .then((savedMarker) => {
+        if (!fromRevision) {
+          res.json(savedMarker)
+        }
+      })
+      .catch(e => next(e))
+  }
 }
 
 /**
@@ -95,20 +185,21 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { offset = 0, count = 500, sort = 'name', order = 'asc', filter = '' } = req.query
+  const { offset = 0, count = 2000, sort = 'name', order = 'asc', filter = '' } = req.query
   const length = +count
   const typeArray = req.query.types || false
   const wikiArray = req.query.wikis || false
   const format = req.query.format || false
   const year = +req.query.year || false
   const end = +req.query.year || false
-  const delta = +req.query.delta || 10
+  const delta = +req.query.delta
   const includeMarkers = req.query.includeMarkers !== 'false'
   const search = req.query.search || false
   const both = req.query.both || false
   const start = offset
+  const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10
 
-  Marker.list({ start, length, sort, order, filter, delta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
+  Marker.list({ start, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {

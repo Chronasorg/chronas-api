@@ -33,12 +33,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: chronas-secrets
-              key: MONGO_HOST
-        - name: CHRONAS_HOST
-          valueFrom:
-            secretKeyRef:
-              name: chronas-secrets
-              key: CHRONAS_HOST              
+              key: MONGO_HOST            
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -59,11 +54,6 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: FACEBOOK_CLIENT_SECRET
-        - name: FACEBOOK_CALLBACK_URL
-          valueFrom:
-            secretKeyRef:
-              name: chronas-secrets
-              key: FACEBOOK_CALLBACK_URL
         - name: GOOGLE_CLIENT_ID
           valueFrom:
             secretKeyRef:
@@ -74,11 +64,6 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: GOOGLE_CLIENT_SECRET
-        - name: GOOGLE_CALLBACK_URL
-          valueFrom:
-            secretKeyRef:
-              name: chronas-secrets
-              key: GOOGLE_CALLBACK_URL
         - name: GITHUB_CLIENT_ID
           valueFrom:
             secretKeyRef:
@@ -89,11 +74,6 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: GITHUB_CLIENT_SECRET
-        - name: GITHUB_CALLBACK_URL
-          valueFrom:
-            secretKeyRef:
-              name: chronas-secrets
-              key: GITHUB_CALLBACK_URL
         - name: TWITTER_CONSUMER_KEY
           valueFrom:
             secretKeyRef:
@@ -104,13 +84,23 @@ spec:
             secretKeyRef:
               name: chronas-secrets
               key: TWITTER_CONSUMER_SECRET
-        - name: TWITTER_CALLBACK_URL
-          valueFrom:
-            secretKeyRef:
-              name: chronas-secrets
-              key: TWITTER_CALLBACK_URL
         - name: APPINSIGHTS_INSTRUMENTATIONKEY
           valueFrom:
             secretKeyRef:
               name: chronas-secrets
               key: APPINSIGHTS_INSTRUMENTATIONKEY          
+        - name: MAILGUN_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_DOMAIN      
+        - name: MAILGUN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_KEY       
+        - name: MAILGUN_RECEIVER
+          valueFrom:
+            secretKeyRef:
+              name: chronas-secrets
+              key: MAILGUN_RECEIVER                                             

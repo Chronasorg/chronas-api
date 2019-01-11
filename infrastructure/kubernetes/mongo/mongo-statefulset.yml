@@ -51,7 +51,7 @@ metadata:
   name: mongo
 spec:
   serviceName: "mongo"
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -61,7 +61,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo
+          image: mongo:3.6.9
           command:
             - mongod
             - "--replSet"

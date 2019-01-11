@@ -48,7 +48,7 @@ AreaSchema.statics = {
     return this.findById(id)
       .exec()
       .then((area) => {
-        if (area && area.data && method === "GET") {
+        if (area && area.data && method == 'GET') {
           return area.data
         } else if (area) {
           return area
@@ -69,6 +69,7 @@ AreaSchema.statics = {
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(length)
+      .lean()
       .exec()
       .then(areas => areas.map((obj) => {
         const dataString = JSON.stringify(obj.data).substring(0, 200)

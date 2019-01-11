@@ -86,11 +86,16 @@ RevisionSchema.statics = {
    * @param {number} length - Limit number of revisions to be returned.
    * @returns {Promise<Revision[]>}
    */
-  list({ start = 0, end = 50 } = {}) {
-    return this.find()
-      .sort({ createdAt: -1 })
+  list({ start = 0, end = 50, entity, subentity } = {}) {
+    const optionalFind = (entity) ? { entityId: entity } : {}
+    if (subentity) {
+      optionalFind.subEntityId = subentity
+    }
+    return this.find(optionalFind)
+      .sort({ timestamp: -1 })
       .skip(+start)
       .limit(+end)
+      .lean()
       .exec()
       .then(revisions => revisions.map((obj) => {
         const nextBodyString = (JSON.stringify(obj.nextBody) || '').substring(0, 400)

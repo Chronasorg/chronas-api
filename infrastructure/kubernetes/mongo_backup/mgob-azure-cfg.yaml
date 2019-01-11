@@ -1,0 +1,20 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    role: mongo-backup
+  name: mgob-gstore-config
+data:
+  test.yml: |
+    target:
+      host: "mongo-0.mongo"
+      port: 27017
+      database: "chronas-api"
+    scheduler:
+      cron: "0 6 */1 * *"
+      retention: 4
+      timeout: 60
+    azure:
+      containerName: "backup"
+      connectionString: "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"

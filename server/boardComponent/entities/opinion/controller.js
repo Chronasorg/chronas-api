@@ -1,26 +1,24 @@
 // models
-import userCtrl from "../../../controllers/user.controller";
+import userCtrl from '../../../controllers/user.controller'
+import contactCtrl from '../../../controllers/contact.controller'
 
-const Opinion = require('./model');
+const Opinion = require('./model')
 
 /**
  * get all opinion regarding a single discussion
  * @param  {ObjectId} discussion_id
  * @return {Promise}
  */
-const getAllOpinions = (discussion_id) => {
-  return new Promise((resolve, reject) => {
-    Opinion
+const getAllOpinions = discussion_id => new Promise((resolve, reject) => {
+  Opinion
     .find({ discussion_id })
     .populate('user')
     .sort({ date: -1 })
     .exec((error, opinions) => {
-      if (error) { console.log(error); reject(error); }
-      else if (!opinions) reject(null);
-      else resolve(opinions);
-    });
-  });
-};
+      if (error) { console.log(error); reject(error) } else if (!opinions) reject(null)
+      else resolve(opinions)
+    })
+})
 
 /**
  * create an opinion regarding a discussion
@@ -30,49 +28,58 @@ const getAllOpinions = (discussion_id) => {
  * @param  {Object} content
  * @return {Promise}
  */
-const createOpinion = ({ forum_id, discussion_id, user_id, content }) => {
-  return new Promise((resolve, reject) => {
-    const newOpinion = new Opinion({
-      forum_id,
-      discussion_id,
-      discussion: discussion_id,
-      user_id,
-      user: user_id,
-      content,
-      date: new Date(),
-    });
+const createOpinion = ({ forum_id, discussion_id, user_id, content }, req, res) => new Promise((resolve, reject) => {
+  const newOpinion = new Opinion({
+    forum_id,
+    discussion_id,
+    discussion: discussion_id,
+    user_id,
+    user: user_id,
+    content,
+    date: new Date(),
+  })
 
-    newOpinion.save((error) => {
-      if (error) { console.log(error); reject(error); }
-      else { resolve(newOpinion); }
-    });
-  });
-};
+  newOpinion.save((error) => {
+    if (error) { console.log(error); reject(error) } else {
+      req.body = {
+        subject: 'Chronas: New Comment added',
+        from: 'noreply@chronas.org',
+        html: `Full payload: ${JSON.stringify({
+          forum_id,
+          discussion_id,
+          discussion: discussion_id,
+          user_id,
+          user: user_id,
+          content,
+          date: new Date(),
+        }, undefined, '<br />')}`
+      }
+      contactCtrl.create(req, res, false)
+      resolve(newOpinion)
+    }
+  })
+})
 
 const updateOpinion = (opinion_id) => {
   // TODO: implement update for opinion
-};
+}
 
 /**
  * delete a single opinion
  * @param  {ObjectId} opinion_id
  * @return {Promise}
  */
-const deleteOpinion = (opinion_id) => {
-  return new Promise((resolve, reject) => {
-    Opinion
+const deleteOpinion = opinion_id => new Promise((resolve, reject) => {
+  Opinion
     .remove({ _id: opinion_id })
     .exec((error) => {
-      if (error) { console.log(error); reject(error); }
-      else resolve('deleted');
-    });
-  });
-};
+      if (error) { console.log(error); reject(error) } else resolve('deleted')
+    })
+})
 
-const voteOpinion = (req, res, opinion_id, delta = 0) => {
-  return new Promise((resolve, reject) => {
-    const username = (req.auth || {}).username
-    Opinion
+const voteOpinion = (req, res, opinion_id, delta = 0) => new Promise((resolve, reject) => {
+  const username = (req.auth || {}).username
+  Opinion
       .findOne({ _id: opinion_id })
       .exec()
       .then((opinion) => {
@@ -88,8 +95,7 @@ const voteOpinion = (req, res, opinion_id, delta = 0) => {
           .catch(e => reject(e))
       })
       .catch(e => reject(e))
-  });
-};
+})
 
 module.exports = {
   getAllOpinions,
@@ -97,4 +103,4 @@ module.exports = {
   updateOpinion,
   voteOpinion,
   deleteOpinion,
-};
+}

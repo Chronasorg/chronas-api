@@ -7,7 +7,6 @@ import mongoUnit from 'mongo-unit'
 chai.config.includeStack = true
 
 describe('## Areas APIs', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
   const testData = require('./fixtures/testData.json')
 
@@ -19,43 +18,43 @@ describe('## Areas APIs', () => {
     password: 'asdf'
   }
 
-  let area = {
-      _id: "1887",
-      year: 1887,
-      data: {
-        Mentawai: [
-          "SWE",
-          "swedish",
-          "redo",
-          "Stockholm",
-          1001
-        ],
-        Belitung: [
-          "GBR",
-          "sumatran",
-          "sunni",
-          "Bangka",
-          1000
-        ]
-      }
+  const area = {
+    _id: '1887',
+    year: 1887,
+    data: {
+      Mentawai: [
+        'SWE',
+        'swedish',
+        'redo',
+        'Stockholm',
+        1001
+      ],
+      Belitung: [
+        'GBR',
+        'sumatran',
+        'sunni',
+        'Bangka',
+        1000
+      ]
+    }
   }
 
-  let updateArea = {
-    _id: "1001",
+  const updateArea = {
+    _id: '1001',
     year: 1001,
     data: {
-      "LinggaUpdate": [
-        "undefined",
-        "malayan",
-        "sunni",
-        "Lingga",
+      LinggaUpdate: [
+        'undefined',
+        'malayan',
+        'sunni',
+        'Lingga',
         1000
       ],
-      "SognUpdate": [
-        "DAN",
-        "norwegian",
-        "protestant",
-        "Sogndal",
+      SognUpdate: [
+        'DAN',
+        'norwegian',
+        'protestant',
+        'Sogndal',
         15240
       ]
     }
@@ -64,7 +63,6 @@ describe('## Areas APIs', () => {
   let jwtToken
 
   describe('# GET /v1/area', () => {
-
     it('should get valid JWT token', (done) => {
       request(app)
         .post('/v1/auth/login')
@@ -86,7 +84,6 @@ describe('## Areas APIs', () => {
           .send(area)
           .expect(httpStatus.OK)
           .then((res) => {
-  
             expect(res.body.id).to.equal(area.id)
             expect(res.body.year).to.equal(area.year)
             done()
@@ -125,7 +122,7 @@ describe('## Areas APIs', () => {
         request(app)
           .get('/v1/areas')
           .expect(httpStatus.UNAUTHORIZED)
-          .then((res) => { 
+          .then((res) => {
             expect(res.body.message).to.equal('Unauthorized')
             done()
           })
@@ -150,7 +147,7 @@ describe('## Areas APIs', () => {
             done()
           })
           .catch(done)
-      })      
+      })
 
       it('should  aggreagteDiminsion', (done) => {
         request(app)
@@ -160,7 +157,7 @@ describe('## Areas APIs', () => {
             done()
           })
           .catch(done)
-      })      
+      })
 
 
       it('should get specifc area', (done) => {
@@ -168,7 +165,6 @@ describe('## Areas APIs', () => {
           .get('/v1/areas/1001')
           .expect(httpStatus.OK)
           .then((res) => {
-
             expect(res.body).to.be.an('object')
             expect(res.body.Sogn).to.be.an('array')
             done()
@@ -178,7 +174,6 @@ describe('## Areas APIs', () => {
     })
 
     describe('# Put /v1/areas', () => {
-
       it('should fail to put area because of wrong token', (done) => {
         request(app)
           .put('/v1/areas/1001')
@@ -193,7 +188,7 @@ describe('## Areas APIs', () => {
 
       it('should update a area', (done) => {
         updateArea.year = 1987
-        
+
         request(app)
           .put(`/v1/areas/${updateArea._id}`)
           .set('Authorization', jwtToken)
@@ -209,7 +204,6 @@ describe('## Areas APIs', () => {
     })
 
     describe('# delete /v1/areas', () => {
-
       it('should fail to delete area because of wrong token', (done) => {
         request(app)
           .delete('/v1/areas/1000')
@@ -236,6 +230,4 @@ describe('## Areas APIs', () => {
       })
     })
   })
-
-
 })

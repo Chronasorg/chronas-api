@@ -7,40 +7,40 @@
  */
 const deepPropSearch = (obj, callback) => {
   // new object for immutability
-  const newObj = Object.assign({}, obj);
+  const newObj = Object.assign({}, obj)
 
   // recursive search function
   const deepSearch = (obj) => {
     for (const prop in obj) {
       // perform callback for each property
-      callback && callback(prop, obj);
+      callback && callback(prop, obj)
 
       // recursive search inside objects/arrays
       if (typeof obj[prop] === 'object') {
         if (obj[prop].length && obj[prop].length > 0) {
           obj[prop].forEach((deepObj) => {
-            deepSearch(deepObj);
-          });
+            deepSearch(deepObj)
+          })
         } else {
-          deepSearch(obj[prop]);
+          deepSearch(obj[prop])
         }
       }
     }
-  };
+  }
 
   // start deep searching for properties
-  deepSearch(newObj, callback);
+  deepSearch(newObj)
 
   // return new object, maintain immutability
-  return newObj;
-};
+  return newObj
+}
 
 const generateDiscussionSlug = (discussionTitle) => {
-  const ObjectId = require('mongoose').Types.ObjectId();
-  return discussionTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_' + ObjectId;
-};
+  const ObjectId = require('mongoose').Types.ObjectId()
+  return `${discussionTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${ObjectId}`
+}
 
 module.exports = {
   deepPropSearch,
   generateDiscussionSlug,
-};
+}

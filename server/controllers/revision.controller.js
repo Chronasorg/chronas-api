@@ -9,8 +9,8 @@ import areaCtrl from './area.controller'
 import userCtrl from './user.controller'
 import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
-import {cache, config} from "../../config/config";
-import httpStatus from "http-status";
+import { cache, config } from '../../config/config'
+import httpStatus from 'http-status'
 
 const debug = require('debug')('chronas-api:index')
 
@@ -36,7 +36,7 @@ function load(req, res, next, id) {
       } else {
         resourceCollection[resource].model.findById(entityId)
           .then((entity) => {
-            if (resource === "metadata" && initItemsAndLinksToRefresh.includes(entityId)) {
+            if (resource === 'metadata' && initItemsAndLinksToRefresh.includes(entityId)) {
               if (id === 'links') {
                 cache.del('links')
               } else {
@@ -47,12 +47,10 @@ function load(req, res, next, id) {
             req.entity = entity // eslint-disable-line no-param-reassign
             return next()
           })
-          .catch((e) => {
-            return res.status(httpStatus.NOT_FOUND).json({
-              message: e.isPublic ? e.message : httpStatus[e.status],
-              stack: config.env === 'development' ? e.stack : {}
-            })
-          })
+          .catch(e => res.status(httpStatus.NOT_FOUND).json({
+            message: e.isPublic ? e.message : httpStatus[e.status],
+            stack: config.env === 'development' ? e.stack : {}
+          }))
       }
     })
     .catch(e => next(e))
@@ -74,7 +72,7 @@ function addCreateRevision(req, res, next) {
   }
 
   const username = req.auth.username
-  userCtrl.changePoints(username, "created", 1)
+  userCtrl.changePoints(username, 'created', 1)
 
   const entityId = decodeURIComponent(req.body[resourceCollection[req.resource].id])
   const revision = new Revision({
@@ -98,7 +96,7 @@ function addCreateRevision(req, res, next) {
 function addDeleteRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changePoints(username, "deleted", 1)
+  userCtrl.changePoints(username, 'deleted', 1)
 
   const revision = new Revision({
     entityId: entity._id,
@@ -119,7 +117,7 @@ function addDeleteRevision(req, res, next) {
 function addUpdateRevision(req, res, next) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changePoints(username, "updated", 1)
+  userCtrl.changePoints(username, 'updated', 1)
 
   const nextBody =
     (req.resource === 'areas')
@@ -168,7 +166,7 @@ function addUpdateRevision(req, res, next) {
 function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
   const entity = req.entity
   const username = req.auth.username
-  userCtrl.changePoints(username, "updated", 1)
+  userCtrl.changePoints(username, 'updated', 1)
 
   const { prevBody, nextBody } = req.body
 
@@ -196,14 +194,14 @@ function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
     .then(() => {
       if (shouldReturn) return res.status(200).send('Metadata successfully updated.')
     })
-    .catch(e => {
+    .catch((e) => {
       if (shouldReturn) return res.status(500).send(e)
     })
 }
 
 function addUpdateManyRevision(req, res, next) {
   const username = req.auth.username
-  userCtrl.changePoints(username, "updated", 1)
+  userCtrl.changePoints(username, 'updated', 1)
 
   const { prevBody, nextBody } = req.body
 
@@ -244,36 +242,30 @@ function update(req, res, next) {
   const username = req.auth.username
   const usernameAuthor = revision.user
 
-  if (resource === "metadata") {
-
-  }
-
-  userCtrl.changePoints(username, "reverted", 1)
+  userCtrl.changePoints(username, 'reverted', 1)
   switch (revision.type) {
     case 'CREATE':
       if (revision.reverted) {
-        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', -1)
         // post nextBody
         req.body = JSON.parse(revision.nextBody)
         resourceCollection[resource].controller.create(req, res, next, true)
       } else {
-        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', 1)
         // was post, so delete again by id nextBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       }
       break
     case 'UPDATE':
       if (revision.reverted) {
-        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', -1)
       // was updated, so put prevBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.nextBody))
           const areaPromises = Object.keys(unpackedObj).map(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
           Promise.all(areaPromises).then(() => {
               // res.status(200).send('Areas revision MANY successfully applied.')
-          }, (error) => {
-            return res.status(500).send(error)
-          })
+          }, error => res.status(500).send(error))
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.nextBody)
           req.body.subEntityId = revision.subEntityId
@@ -283,14 +275,12 @@ function update(req, res, next) {
           resourceCollection[resource].controller.update(req, res, next, true)
         }
       } else {
-        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', 1)
         // update to nextBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.prevBody))
           const areaPromises = Object.keys(unpackedObj).forEach(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
-          Promise.all(areaPromises).then(() => {
-            return res.status(200).send('Areas revision MANY successfully applied.')
-          }, (error) => {
+          Promise.all(areaPromises).then(() => res.status(200).send('Areas revision MANY successfully applied.'), (error) => {
             logger.error(error)
           })
         } else if (revision.subEntityId && revision.resource === 'metadata') {
@@ -305,11 +295,11 @@ function update(req, res, next) {
       break
     case 'DELETE':
       if (revision.reverted) {
-        userCtrl.changePoints(usernameAuthor, "mistakes", -1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', -1)
         // delete by id prevBody
         resourceCollection[resource].controller.remove(req, res, next, true)
       } else {
-        userCtrl.changePoints(usernameAuthor, "mistakes", 1)
+        userCtrl.changePoints(usernameAuthor, 'mistakes', 1)
         // was deleted, so post prevBody
         req.body = JSON.parse(revision.prevBody)
         resourceCollection[resource].controller.create(req, res, next, true)
@@ -340,11 +330,24 @@ function update(req, res, next) {
  * @returns {Revision[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', order = 'asc', filter = '' } = req.query
-  Revision.list({ start, end, sort, order, filter })
+  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', entity = false, subentity = false, order = 'asc', filter = '' } = req.query
+  let potentialEntity = false
+  let potentialSubentity = false
+  if (filter) {
+    const fullFilter = JSON.parse(filter)
+    potentialEntity = fullFilter.entity
+    potentialSubentity = fullFilter.subentity
+  }
+  const fEntity = (potentialEntity || entity)
+  const fSubentity = (potentialSubentity || subentity)
+  Revision.list({ start, end, sort, order, entity: fEntity, subentity: fSubentity, filter })
     .then((revisions) => {
       if (count) {
-        Revision.count().exec().then((revisionCount) => {
+        const optionalFind = (fEntity) ? { entityId: fEntity } : {}
+        if (fSubentity) {
+          optionalFind.subEntityId = fSubentity
+        }
+        Revision.find(optionalFind).count().exec().then((revisionCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count')
           res.set('X-Total-Count', revisionCount)
           res.json(revisions)

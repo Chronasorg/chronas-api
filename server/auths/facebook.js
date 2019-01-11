@@ -51,6 +51,7 @@ function authenticateUser(req, res, next) {
       const name = (data.profile && data.profile.displayName) ? data.profile.displayName.split(' ') : []
       //
       const auth = {
+        id: `facebook${data.profile.id}`,
         type: 'facebook',
         name: {
           first: name.length ? name[0] : '',
@@ -59,6 +60,7 @@ function authenticateUser(req, res, next) {
         email: data.profile.emails && data.profile.emails.length ? (data.profile.emails)[0].value : null,
         website: data.profile._json.blog,
         profileId: data.profile.id,
+        privilege: 1,
         username: data.profile.displayName || data.profile.id,
         avatar: `https://graph.facebook.com/${data.profile.id}/picture?width=600&height=600`,
         accessToken: data.accessToken,
@@ -70,7 +72,8 @@ function authenticateUser(req, res, next) {
         authType: auth.type,
         avatar: auth.avatar,
         email: auth.email,
-        username: auth.username,
+        privilege: 1,
+        username: auth.username || `${auth.name.first} ${auth.name.last}`,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
         website: auth.website,
@@ -78,11 +81,11 @@ function authenticateUser(req, res, next) {
 
       userCtrl.create(req, res, next)
 
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      // req.session.auth = auth
+      //
+      // const token = jwt.sign(auth, config.jwtSecret)
+      //
+      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
     })(req, res, next)
 
     // Perform inital authentication request to Facebook

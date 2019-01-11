@@ -1,26 +1,59 @@
-# take default image of node boron i.e  node 6.x
-FROM node:10
-
-# create app directory in container
-RUN mkdir -p /app
-
-# set /app directory as default working directory
+#https://blog.hasura.io/an-exhaustive-guide-to-writing-dockerfiles-for-node-js-web-apps-bbee6bd2f3c4
+# ---- Base Node ----
+FROM node:10 AS base
+# Create app directory
 WORKDIR /app
 
-# only copy package.json initially so that `RUN npm start` layer is recreated only
-# if there are changes in package.json
-ADD dist/package.json /app/
+# ---- Dependencies ----
+FROM base AS dependencies  
+COPY package.json ./
+# install app dependencies including 'devDependencies'
+RUN npm install
 
+# ---- Copy Files/Build ----
+FROM dependencies AS build  
+WORKDIR /app
+COPY . /app
+# Build the app
+RUN npm run build
+#run all unit tests
+RUN npm test
+
+WORKDIR /app/dist
+
+# --- Release with Alpine ----
+FROM node:10-alpine AS release  
+# Create app directory
+WORKDIR /app
+
+#  --- add env variables ---
 ENV NODE_ENV=development
-
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
 ENV PORT=80
 
-RUN npm install --production --silent
+ENV APPINSIGHTS_INSTRUMENTATIONKEY=placeholder
+ENV TWITTER_CONSUMER_KEY=placeholder
+ENV TWITTER_CONSUMER_SECRET=placeholder
+ENV TWITTER_CALLBACK_URL=placeholder
+ENV JWT_SECRET=placeholder
 
-# copy all file from current dir to /app in container
-COPY dist /app/
+ENV CHRONAS_HOST=https://chronas.org
+ENV FACEBOOK_CALLBACK_URL=https://api.chronas.org/v1/auth/login/facebook?cb
+ENV GOOGLE_CALLBACK_URL=https://api.chronas.org/v1/auth/login/google?cb
+ENV GITHUB_CALLBACK_URL=https://api.chronas.org/v1/auth/login/github?cb
+ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
+
+# copy app from build
+COPY --from=build /app/dist/ ./
+
+#workaround to install python for bcrypt 
+RUN apk update && apk upgrade \
+	&& apk add --no-cache git \
+	&& apk --no-cache add --virtual builds-deps build-base python \
+	&& npm install --production\
+	&& npm rebuild bcrypt --build-from-source \
+	&& apk del builds-deps
 
 # expose port 4040
 EXPOSE 80

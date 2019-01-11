@@ -16,6 +16,7 @@ import winstonInstance from './winston'
 import routes from '../server/routes/index.route'
 import { config } from './config'
 import APIError from '../server/helpers/APIError'
+import versionRoutes from '../server/routes/version.router'
 
 const app = express()
 
@@ -96,12 +97,10 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }))
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /* key: 'sid', cookie: { secure: true }*/ }))
 
 app.use(passport.initialize())
 app.use(passport.session())
-
-
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {
@@ -117,6 +116,9 @@ if (config.env === 'development') {
 
 // route for v1 (current) requests
 app.use('/v1', routes)
+
+// for the default route return the version
+app.use('/', versionRoutes)
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
@@ -146,24 +148,22 @@ if (config.env !== 'test') {
 }
 
 
-function removeStackTraces ( envelope, context ) {
- 
-  var data = envelope.data.baseData;  
-  if (data.url && data.url.includes("health") )
-  {
-      return false;
+function removeStackTraces(envelope, context) {
+  const data = envelope.data.baseData
+  if (data.url && data.url.includes('health')) {
+    return false
   }
 
-  return true;
+  return true
 }
 
 
-appInsights.defaultClient.addTelemetryProcessor(removeStackTraces);
+appInsights.defaultClient.addTelemetryProcessor(removeStackTraces)
 
 
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  appInsights.defaultClient.trackException({exception: err})
+  appInsights.defaultClient.trackException({ exception: err })
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}

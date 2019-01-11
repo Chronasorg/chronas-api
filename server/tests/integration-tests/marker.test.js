@@ -7,7 +7,6 @@ import mongoUnit from 'mongo-unit'
 chai.config.includeStack = true
 
 describe('## Marker APIs', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
   const testData = require('./fixtures/testData.json')
 
@@ -19,11 +18,11 @@ describe('## Marker APIs', () => {
     password: 'asdf'
   }
 
-  let marker = {
-    _id: "AuisMarker",
-    name: "new Marker",
-    wiki: "new%20Marker",
-    type: "politician",
+  const marker = {
+    _id: 'AuisMarker',
+    name: 'new Marker',
+    wiki: 'new%20Marker',
+    type: 'politician',
     year: 1987,
     coo: [
       12.5,
@@ -31,11 +30,11 @@ describe('## Marker APIs', () => {
     ]
   }
 
-  let updateMarker = {
-    _id: "Mamurra",
-    name: "Mamurra",
-    wiki: "Mamurra",
-    type: "politician",
+  const updateMarker = {
+    _id: 'Mamurra',
+    name: 'Mamurra',
+    wiki: 'Mamurra',
+    type: 'politician',
     year: -91,
     coo: [
       13.616666666667,
@@ -46,7 +45,6 @@ describe('## Marker APIs', () => {
   let jwtToken
 
   describe('# GET /v1/markers', () => {
-
     it('should get valid JWT token', (done) => {
       request(app)
         .post('/v1/auth/login')
@@ -106,7 +104,7 @@ describe('## Marker APIs', () => {
           .get('/v1/markers/Mamurra')
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal("Mamurra")
+            expect(res.body._id).to.equal('Mamurra')
             expect(res.body.year).to.equal(-91)
             done()
           })
@@ -115,7 +113,6 @@ describe('## Marker APIs', () => {
     })
 
     describe('# Put /v1/markers', () => {
-
       it('should fail to put markers because of wrong token', (done) => {
         request(app)
           .put('/v1/markers/Mamurra')
@@ -130,7 +127,7 @@ describe('## Marker APIs', () => {
 
       it('should update a marker', (done) => {
         updateMarker.type = 'aui'
-        
+
         request(app)
           .put(`/v1/markers/${updateMarker._id}`)
           .set('Authorization', jwtToken)
@@ -146,7 +143,6 @@ describe('## Marker APIs', () => {
     })
 
     describe('# delete /v1/markers', () => {
-
       it('should fail to delete markers because of wrong token', (done) => {
         request(app)
           .delete('/v1/markers/Mamurra')
@@ -173,6 +169,4 @@ describe('## Marker APIs', () => {
       })
     })
   })
-
-
 })

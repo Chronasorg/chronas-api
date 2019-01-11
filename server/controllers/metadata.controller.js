@@ -1,46 +1,49 @@
 import Metadata from '../models/metadata.model'
 import Marker from '../models/marker.model'
 import userCtrl from './user.controller'
+import APIError from '../helpers/APIError'
 import revisionCtrl from './revision.controller'
-import { config, cache, initItemsAndLinksToRefresh } from "../../config/config";
-import httpStatus from "http-status";
+import { config, cache, initItemsAndLinksToRefresh } from '../../config/config'
+import httpStatus from 'http-status'
 
 const linkedTypeAccessor = {
-  "m": 0,
-  "markers": 0,
-  "me": 1,
-  "metadata": 1
+  m: 0,
+  markers: 0,
+  marker: 0,
+  area: 1,
+  me: 1,
+  metadata: 1
 }
 
 const nameAccByAEtype = {
-  'ruler': 0,
-  'culture': 0,
-  'capital': 0,
-  'religion': 0,
-  'religionGeneral': 0,
+  ruler: 0,
+  culture: 0,
+  capital: 0,
+  religion: 0,
+  religionGeneral: 0,
 }
 
 const wikiAccByAEtype = {
-  'ruler': 2,
-  'culture': 2,
-  'capital': 0,
-  'religion': 2,
-  'religionGeneral': 2,
+  ruler: 2,
+  culture: 2,
+  capital: 0,
+  religion: 2,
+  religionGeneral: 2,
 }
 
 const iconAccByAEtype = {
-  'ruler': 3,
-  'culture': 3,
-  'capital': 1,
-  'religion': 4,
-  'religionGeneral': 3,
+  ruler: 3,
+  culture: 3,
+  capital: 1,
+  religion: 4,
+  religionGeneral: 3,
 }
 
 /**
  * Load metadata and append to req.
  */
 function load(req, res, next, id) {
-  if (req.method === "PUT" && initItemsAndLinksToRefresh.includes(id)) {
+  if (req.method === 'PUT' && initItemsAndLinksToRefresh.includes(id)) {
     if (id === 'links') {
       cache.del('links')
     } else {
@@ -48,7 +51,7 @@ function load(req, res, next, id) {
     }
   }
 
-  if (req.method === "GET" && id === "links") {
+  if (req.method === 'GET' && id === 'links') {
     const cachedLinks = cache.get('links')
     if (cachedLinks) {
       req.entity = cachedLinks
@@ -62,10 +65,20 @@ function load(req, res, next, id) {
       return next()
     })
     .catch((e) => {
-      res.status(httpStatus.NOT_FOUND).json({
-        message: e.isPublic ? e.message : httpStatus[e.status],
-        stack: config.env === 'development' ? e.stack : {}
-      })
+      if((id || "").substr(0,2) === "a_") {
+        req.entity = {
+          "_id": id,
+          "data": {
+            "influence": []
+          }
+        }
+        return next()
+      } else {
+        res.status(httpStatus.NOT_FOUND).json({
+          message: e.isPublic ? e.message : httpStatus[e.status],
+          stack: config.env === 'development' ? e.stack : {}
+        })
+      }
     })
 }
 
@@ -88,8 +101,9 @@ function create(req, res, next) {
     .exec()
     .then((foundMetadata) => {
       if (foundMetadata && !req.body.parentId) {
-        const err = new APIError('This id already exists!', 400)
-        next(err)
+        // const err = new APIError('This id already exists!', 400)
+        return res.status(400).send()
+        // next(err)
       } else if (foundMetadata && req.body.parentId) {
         createNodeOne(foundMetadata, req, res, next)
       } else {
@@ -173,7 +187,13 @@ function vote(delta) {
   }
 }
 
-function updateSingle(req, res, next, fromRevision = false) {
+function updateSinglePromise(req, res, next, fromRevision = false) {
+  return new Promise((resolve) => {
+    updateSingle(req, res, next, fromRevision, resolve)
+  })
+}
+
+function updateSingle(req, res, next, fromRevision = false, resolve) {
   const metadata = req.entity
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
@@ -188,78 +208,96 @@ function updateSingle(req, res, next, fromRevision = false) {
   }
   metadata.markModified('data')
   metadata.save()
-    .then(() => { if (!fromRevision) next() })
-    .catch((e) => { if (!fromRevision) next(e) })
+    .then(() => {
+      if (!fromRevision) next()
+      if (resolve) {
+        return resolve()
+      }
+    })
+    .catch((e) => {
+      if (!fromRevision) next(e)
+      if (resolve) {
+        return resolve()
+      }
+    })
 }
 
 function updateLink(addLink) {
   return (req, res, next) => {
-    const username = req.auth.username
-    userCtrl.changePoints(username, "linked", 1)
-
-    const linkedItemType1 = req.body.linkedItemType1
-    const linkedItemType2 = req.body.linkedItemType2
-    const linkedItemKey1 = req.body.linkedItemKey1
-    const linkedItemKey2 = req.body.linkedItemKey2
-    const type1 = req.body.type1
-    const type2 = req.body.type2
-    const prevValue1 = req.entity.data[linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1] || false
-    const prevValue2 = req.entity.data[linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2] || false
-
-    let newNextBody1 = (prevValue1) ? prevValue1 : [
-      [],
-      [],
-    ]
-
-    let newNextBody2 = (prevValue2) ? prevValue2 : [
-      [],
-      [],
-    ]
-
-    if (addLink) {
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
-        newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
-      } else if (type2 === 'b') {
-        newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => {
-          if (el[0] === linkedItemKey2) {
-            el[1] = 'b'
-          }
-          return el
-        })
-      }
-      if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) {
-        newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
-      }  else if (type1 === 'b') {
-        newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => {
-          if (el[0] === linkedItemKey1) {
-            el[1] = 'b'
-          }
-          return el
-        })
-      }
-    }
-    else {
-      newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter((el) => el[0] !== linkedItemKey2)
-      newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter((el) => el[0] !== linkedItemKey1)
-
-      if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0 ) newNextBody1 = -1
-      if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0 ) newNextBody2 = -1
-    }
-
-    req.body.nextBody = newNextBody1
-    req.body.subEntityId = linkedTypeAccessor[linkedItemType1] + ":" + linkedItemKey1
-    updateSingle(req, res, next, true)
-    revisionCtrl.addUpdateSingleRevision(req, res, next, false)
-
-
-    req.body.nextBody = newNextBody2
-    req.body.subEntityId = linkedTypeAccessor[linkedItemType2] + ":" + linkedItemKey2
-    updateSingle(req, res, next, true)
-    revisionCtrl.addUpdateSingleRevision(req, res, next)
+    updateLinkAtom(req, res, next, addLink)
   }
 }
 
-function getLinked(req, res, next) {
+function updateLinkAtom(req, res, next, addLink, resolve = false) {
+  if (!resolve) {
+    const username = req.auth.username
+    userCtrl.changePoints(username, 'linked', 1)
+  }
+
+  const linkedItemType1 = req.body.linkedItemType1
+  const linkedItemType2 = req.body.linkedItemType2
+  const linkedItemKey1 = req.body.linkedItemKey1
+  const linkedItemKey2 = req.body.linkedItemKey2
+  const type1 = req.body.type1
+  const type2 = req.body.type2
+  const prevValue1 = req.entity.data[`${linkedTypeAccessor[linkedItemType1]}:${linkedItemKey1}`] || false
+  const prevValue2 = req.entity.data[`${linkedTypeAccessor[linkedItemType2]}:${linkedItemKey2}`] || false
+
+  let newNextBody1 = (prevValue1) || [
+      [],
+      [],
+  ]
+
+  let newNextBody2 = (prevValue2) || [
+      [],
+      [],
+  ]
+
+  if (addLink) {
+    if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
+      newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]) // [linkedItemKey2, type2] ?
+    } else if (type2 === 'b') {
+      newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].map((el) => {
+        if (el[0] === linkedItemKey2) {
+          el[1] = 'b'
+        }
+        return el
+      })
+    }
+    if (newNextBody2[linkedTypeAccessor[linkedItemType1]].map(el => el[0]).indexOf(linkedItemKey1) === -1) {
+      newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1])
+    } else if (type1 === 'b') {
+      newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].map((el) => {
+        if (el[0] === linkedItemKey1) {
+          el[1] = 'b'
+        }
+        return el
+      })
+    }
+  } else {
+    newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter(el => el[0] !== linkedItemKey2)
+    newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter(el => el[0] !== linkedItemKey1)
+
+    if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0) newNextBody1 = -1
+    if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0) newNextBody2 = -1
+  }
+
+  req.body.nextBody = newNextBody1
+  req.body.subEntityId = `${linkedTypeAccessor[linkedItemType1]}:${linkedItemKey1}`
+  updateSinglePromise(req, res, next, true)
+      .then(() => {
+        if (!resolve) revisionCtrl.addUpdateSingleRevision(req, res, next, false)
+        req.body.nextBody = newNextBody2
+        req.body.subEntityId = `${linkedTypeAccessor[linkedItemType2]}:${linkedItemKey2}`
+        return updateSinglePromise(req, res, next, true)
+          .then(() => {
+            if (resolve) return resolve()
+            revisionCtrl.addUpdateSingleRevision(req, res, next)
+          })
+      })
+}
+
+function getLinked(req, res, next, resolve = false) {
   const sourceItem = req.query.source || false
 
   const MAPIDS = ['a', 'b']
@@ -268,12 +306,16 @@ function getLinked(req, res, next) {
   if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.')
 
   const linkedItems = req.entity.data[sourceItem] || false
+
   const resObj = {
     map: [],
     media: []
   }
 
   if (!linkedItems) {
+    if (resolve) {
+      return resolve(resObj)
+    }
     return res.json(resObj)
   }
 
@@ -283,9 +325,7 @@ function getLinked(req, res, next) {
     return el[0]
   })
 
-  const metadataAeList = linkedItems[1].filter((el) => {
-    return (el[0].indexOf('ae|') > -1)
-  }).map((el) => {
+  const metadataAeList = linkedItems[1].filter(el => (el[0].indexOf('ae|') > -1)).map((el) => {
     idTypeObj[el[0]] = el[1]
     const aeArr = el[0].split('|')
     return aeArr
@@ -301,32 +341,35 @@ function getLinked(req, res, next) {
 
   // TODO: links collection should be cached!
   Metadata.find(mongoSearchQueryMetadata)
+    .lean()
     .exec()
     .then((metadataPre) => {
       const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || []
       const aeEntities = []
-
       metadataAeList.forEach((el) => {
-        const metaData = metadataPre.find((mEl) => mEl._id === el[1]).data[el[2]]
-        aeEntities.push({
-          properties: {
-            n: metaData[nameAccByAEtype[el[1]]],
-            w: metaData[wikiAccByAEtype[el[1]]],
-            t: el[0] + '|' + el[1],
-            i: metaData[iconAccByAEtype[el[1]]],
-            aeId: el.join('|'),
-            ct: 'area'
-          },
-          geometry: {
-          },
-          type: 'Feature'
-        })
+        const metaData = metadataPre.find(mEl => mEl._id === el[1]).data[el[2]]
+        if (metaData) {
+          aeEntities.push({
+            properties: {
+              n: metaData[nameAccByAEtype[el[1]]],
+              w: metaData[wikiAccByAEtype[el[1]]],
+              t: `${el[0]}|${el[1]}`,
+              i: metaData[iconAccByAEtype[el[1]]],
+              aeId: el.join('|'),
+              ct: 'area'
+            },
+            geometry: {
+            },
+            type: 'Feature'
+          })
+        }
       })
 
       Marker.find(mongoSearchQueryMarker)
+        .lean()
         .exec()
         .then((markers) => {
-          const fullList = (markers || []).map(feature => ({
+          const fullList = aeEntities.concat((markers || []).map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature.name,
               w: feature._id,
@@ -334,6 +377,7 @@ function getLinked(req, res, next) {
               t: feature.type,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
+              src: (feature.data || {}).source,
               s: feature.score,
               ct: 'marker'
             },
@@ -342,11 +386,13 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          })).concat(metadata.map(feature => ({
+          }))).concat(metadata.map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature._id,
-              w: feature._id || feature.wiki,
-              s: (feature.data || {}).source,
+              id: feature._id,
+              w: feature.wiki || feature._id,
+              s: feature.score,
+              src: (feature.data || {}).source,
               y: feature.year,
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
@@ -358,20 +404,24 @@ function getLinked(req, res, next) {
               type: 'Point'
             },
             type: 'Feature'
-          }))).concat(aeEntities)
+          })))
 
           fullList.forEach((el) => {
-            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
+            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
               resObj.map.push(el)
             }
-            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.w])) {
+            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
               resObj.media.push(el)
             }
           })
 
+          if (resolve) {
+            return resolve(resObj)
+          }
           return res.json(resObj)
         })
     })
+    .catch(e => res.status(500).send(e))
 }
 
 /**
@@ -389,8 +439,9 @@ function list(req, res, next) {
   const delta = +req.query.delta || 10
   const wiki = req.query.wiki || false
   const search = req.query.search || false
+  const discover = req.query.discover || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search })
+  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (count) {
         Metadata.count().exec().then((metadataCount) => {
@@ -425,4 +476,4 @@ function defineEntity(req, res, next) {
   next()
 }
 
-export default { defineEntity, getLinked, load, get, updateLink, create, update, updateSingle, list, remove, vote }
+export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote }

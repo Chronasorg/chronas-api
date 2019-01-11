@@ -15,8 +15,7 @@ const UserSchema = new mongoose.Schema({
   },
   _id: {
     type: String,
-    required: true,
-    index: { unique: true }
+    required: true
   },
   username: {
     type: String,
@@ -35,6 +34,9 @@ const UserSchema = new mongoose.Schema({
     type: String,
   },
   name: {
+    type: String,
+  },
+  bio: {
     type: String,
   },
   education: {
@@ -126,7 +128,7 @@ UserSchema.pre('save', function (next) {
   return bcrypt.genSalt(SALT_WORK_FACTOR, (err, salt) => {
     if (err) return next(err)
 
-    if (typeof user.password !== "undefined") {
+    if (typeof user.password !== 'undefined') {
       // hash the password using our new salt
       return bcrypt.hash(user.password, salt, (err2, hash) => {
         if (err2) return next(err2)
@@ -135,9 +137,8 @@ UserSchema.pre('save', function (next) {
         user.password = hash
         return next()
       })
-    } else {
-      return next()
     }
+    return next()
   })
 })
 
@@ -195,6 +196,7 @@ UserSchema.statics = {
       .sort(sortObject)
       .skip(+start)
       .limit(+limit)
+      .lean()
       .exec()
   }
 }

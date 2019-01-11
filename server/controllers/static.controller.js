@@ -19,32 +19,32 @@ function get(req, res) {
     return res.status(400).send('Year must be between -2000 and 2000')
   }
 
-  const cachedImage = cache.get('image_' + req.params.year)
+  const cachedImage = cache.get(`image_${req.params.year}`)
   if (cachedImage) {
-    res.contentType('image/' + selectedYearAndFormat[1]);
-    return res.send(cachedImage);
+    res.contentType(`image/${selectedYearAndFormat[1]}`)
+    return res.send(cachedImage)
   }
 
-  puppeteer.launch().then(browser => {
+  puppeteer.launch().then((browser) => {
     browser.newPage()
-      .then(page => {
-        page.goto('http://localhost:3000/?year=' + selectedYearAndFormat[0] + '&isStatic=true')
+      .then((page) => {
+        page.goto(`http://localhost:3000/?year=${selectedYearAndFormat[0]}&isStatic=true`)
           .then(resp => page.waitForFunction('document.querySelector(".mapboxgl-canvas") !== null'))
           .then(resp => page.waitFor(3000))
-          .then(resp => page.screenshot({ type : selectedYearAndFormat[1] }))
-          .then(buffer => {
+          .then(resp => page.screenshot({ type: selectedYearAndFormat[1] }))
+          .then((buffer) => {
             browser.close()
 
-            const currImageKeys = cache.keys().filter(el => el.substr(0,6) === "image_")
+            const currImageKeys = cache.keys().filter(el => el.substr(0, 6) === 'image_')
             if (currImageKeys.length > MAXCACHEDIMAGES) {
               // max cached items reached, delete first in
               if (cache.del(currImageKeys[0])) {
-                cache.put('image_' + req.params.year, buffer, CACHETTL)
+                cache.put(`image_${req.params.year}`, buffer, CACHETTL)
               }
             } else {
-              cache.put('image_' + req.params.year, buffer, CACHETTL)
+              cache.put(`image_${req.params.year}`, buffer, CACHETTL)
             }
-            res.contentType('image/' + selectedYearAndFormat[1])
+            res.contentType(`image/${selectedYearAndFormat[1]}`)
             res.send(buffer)
           })
       })

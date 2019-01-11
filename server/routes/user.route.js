@@ -9,22 +9,34 @@ import checkPrivilege from '../helpers/privileges'
 const router = express.Router() // eslint-disable-line new-cap
 
 router.route('/')
-  /** GET /v1/users - Get list of users */
-  .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    // checkPrivilege.checkPrivilege(5),
-    userCtrl.list)
+//   /** GET /v1/users - Get list of users */
+//   .get(
+//     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+//     checkPrivilege.checkPrivilege(5),
+//     userCtrl.list)
 
   /** POST /v1/users - Create new user */
   .post(
     validate(paramValidation.createUser),
     userCtrl.create)
 
+router.route('/sustainers')
+/** GET /v1/users - Get list of users */
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    userCtrl.list)
+
+router.route('/highscore')
+/** GET /v1/users - Get list of users */
+  .get(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    userCtrl.list)
+
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilegeOrOwnership(5),
+    // checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */

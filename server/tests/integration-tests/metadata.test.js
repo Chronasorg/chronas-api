@@ -7,7 +7,6 @@ import mongoUnit from 'mongo-unit'
 chai.config.includeStack = true
 
 describe('## Metadata APIs', () => {
-
   const testMongoUrl = process.env.MONGO_HOST
   const testData = require('./fixtures/testData.json')
 
@@ -19,40 +18,39 @@ describe('## Metadata APIs', () => {
     password: 'asdf'
   }
 
-  let metadata = {
-    _id: "religionNew",
-    data: "{\"south_arabian\":[\"South Arabian\",\"rgb(153,26,51)\",\"Arabian_mythology\",\"Paganism\"],\"ashurism\":[\"Ashurism\",\"rgb(230,230,230)\",\"Ancient_Mesopotamian_religion\",\"Paganism\"],\"african\":[\"African\",\"rgb(204,5",
+  const metadata = {
+    _id: 'religionNew',
+    data: '{"south_arabian":["South Arabian","rgb(153,26,51)","Arabian_mythology","Paganism"],"ashurism":["Ashurism","rgb(230,230,230)","Ancient_Mesopotamian_religion","Paganism"],"african":["African","rgb(204,5',
     __v: 0,
     score: 0,
-    type: "g",
+    type: 'g',
     coo: []
 
   }
 
-  let updateMetadata = {
-    _id: "culture",
+  const updateMetadata = {
+    _id: 'culture',
     data: {
-      "sapmiii": [
-        "sapmi",
-        "rgb(157,51,167)",
-        "asdf"
+      sapmiii: [
+        'sapmi',
+        'rgb(157,51,167)',
+        'asdf'
       ],
-      "samoyed": [
-        "samoyed",
-        "rgb(220,220,103)",
-        "Samoyedic peoples"
+      samoyed: [
+        'samoyed',
+        'rgb(220,220,103)',
+        'Samoyedic peoples'
       ]
     },
     __v: 1,
     coo: [],
     score: 0,
-    type: "g"
+    type: 'g'
   }
 
   let jwtToken
 
   describe('# GET /v1/metadata', () => {
-
     it('should get valid JWT token', (done) => {
       request(app)
         .post('/v1/auth/login')
@@ -112,8 +110,8 @@ describe('## Metadata APIs', () => {
           .get('/v1/metadata/culture')
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal("culture")
-            expect(res.body.type).to.equal("g")
+            expect(res.body._id).to.equal('culture')
+            expect(res.body.type).to.equal('g')
             expect(res.body).to.have.property('data')
             done()
           })
@@ -122,7 +120,6 @@ describe('## Metadata APIs', () => {
     })
 
     describe('# Put /v1/metadata', () => {
-
       it('should fail to update metadata because of wrong token', (done) => {
         request(app)
           .put('/v1/metadata/culture')
@@ -151,7 +148,6 @@ describe('## Metadata APIs', () => {
     })
 
     describe('# upvote /v1/metadata', () => {
-
       it('should update a metadat value', (done) => {
         request(app)
           .put(`/v1/metadata/${updateMetadata._id}/upvote`)
@@ -170,18 +166,17 @@ describe('## Metadata APIs', () => {
     describe('# getLinked /v1/metadata/:id/getLinked', () => {
       it('should get bad request because source is not set', (done) => {
         request(app)
-          .get(`/v1/metadata/culture/getLinked`)
+          .get('/v1/metadata/culture/getLinked')
           .expect(httpStatus.BAD_REQUEST)
           .then((res) => {
             done()
           })
           .catch(done)
       })
-    })    
+    })
 
 
     describe('# downvote /v1/metadata', () => {
-
       it('should update a metadat value', (done) => {
         request(app)
           .put(`/v1/metadata/${updateMetadata._id}/downvote`)
@@ -197,10 +192,7 @@ describe('## Metadata APIs', () => {
     })
 
 
-
-
     describe('# delete /v1/metadata', () => {
-
       it('should fail to delete metadata because of wrong token', (done) => {
         request(app)
           .delete('/v1/metadata/culture')
@@ -227,6 +219,4 @@ describe('## Metadata APIs', () => {
       })
     })
   })
-
-
 })

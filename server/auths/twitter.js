@@ -36,14 +36,16 @@ function authenticateUser(req, res, next) {
   passport.use(twitterStrategy)
 
   // Save user data once returning from Twitter
-  if (typeof (req.query || {}).cb !== 'undefined') {
+  if (typeof (req.query || {}).oauth_token !== 'undefined') {
+    req.query.cb = req.query.oauth_token
     console.log('[services.twitter] - Callback workflow detected, attempting to process data...')
     console.log('------------------------------------------------------------')
 
     passport.authenticate('twitter', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
-        // return res.redirect('/signin')
+        // return res.json({ errr: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query})
+        // return res.redirect(process.env.CHRONAS_HOST + '/#/login?failed=true')
         const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         return next(err2)
       }
@@ -56,11 +58,13 @@ function authenticateUser(req, res, next) {
         urls = profileJSON.entities.url && profileJSON.entities.url.urls && profileJSON.entities.url.urls.length ? profileJSON.entities.url.urls : []
 
       const auth = {
+        id: `twitter${data.profile.id}`,
         type: 'twitter',
         name: {
           first: name.length ? name[0] : '',
           last: name.length > 1 ? name[1] : ''
         },
+        privilege: 1,
         website: urls.length ? urls[0].expanded_url : '',
         profileId: data.profile.id,
         username: data.profile.username,
@@ -70,8 +74,9 @@ function authenticateUser(req, res, next) {
       }
 
       req.body = {
-        id: auth.type + auth.profileId,
+        id: auth.id,
         authType: auth.type,
+        privilege: 1,
         avatar: auth.avatar,
         username: auth.username,
         name: `${auth.name.first} ${auth.name.last}`,
@@ -80,11 +85,10 @@ function authenticateUser(req, res, next) {
       }
 
       userCtrl.create(req, res, next)
-      userCtrl.incrementLoginCount(auth.username)
-      req.session.auth = auth
-
-      const token = jwt.sign(auth, config.jwtSecret)
-      return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
+      // req.session.auth = auth
+      //
+      // const token = jwt.sign(auth, config.jwtSecret)
+      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 
