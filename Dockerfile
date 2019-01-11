@@ -10,6 +10,16 @@ COPY package.json ./
 # install app dependencies including 'devDependencies'
 RUN npm install
 
+ARG BUILD_ID=123
+
+#update commit and build id
+RUN npm install appversion -g
+RUN apv set-version 1.0.$BUILD_ID
+RUN apv update commit
+RUN apv update build
+
+RUN cat appversion.json
+
 # ---- Copy Files/Build ----
 FROM dependencies AS build  
 WORKDIR /app
