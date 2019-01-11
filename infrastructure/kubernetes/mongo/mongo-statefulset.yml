@@ -51,7 +51,7 @@ metadata:
   name: mongo
 spec:
   serviceName: "mongo"
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:

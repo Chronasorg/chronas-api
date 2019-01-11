@@ -8,7 +8,7 @@ metadata:
 data:
   test.yml: |
     target:
-      host: "mongo-0.mongo,mongo-1.mongo"
+      host: "mongo-0.mongo"
       port: 27017
       database: "chronas-api"
     scheduler:
