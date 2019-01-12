@@ -63,7 +63,7 @@ If you want to restore from an gzip file from backup.
 1. copy the dump to the mongo-restore pod
 
    ```bash
-   kubectl cp test-1545717600.gz restore-64cc7968d5-mp7fk
+   kubectl cp test-1545717600.gz restore-64cc7968d5-mp7fk:/tmp
    ```
 
 2. restore the dump from the gz file
