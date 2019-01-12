@@ -190,8 +190,8 @@ function list(req, res, next) {
   const typeArray = req.query.types || false
   const wikiArray = req.query.wikis || false
   const format = req.query.format || false
-  const year = +req.query.year || false
-  const end = +req.query.year || false
+  const year = isNaN(req.query.year) ? false : +req.query.year
+  const end = isNaN(req.query.year) ? false : +req.query.year
   const delta = +req.query.delta
   const includeMarkers = req.query.includeMarkers !== 'false'
   const search = req.query.search || false

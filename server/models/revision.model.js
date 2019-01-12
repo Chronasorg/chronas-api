@@ -94,7 +94,7 @@ RevisionSchema.statics = {
     return this.find(optionalFind)
       .sort({ timestamp: -1 })
       .skip(+start)
-      .limit(+end)
+      .limit(end - start)
       .lean()
       .exec()
       .then(revisions => revisions.map((obj) => {

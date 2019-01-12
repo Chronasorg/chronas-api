@@ -135,7 +135,7 @@ function create(req, res, next) {
  */
 function update(req, res, next) {
   const user = req.user
-  const isAdmin = (req.auth && req.auth.privilege >= 5)
+  const isAdmin = true // (req.auth && req.auth.privilege >= 5)
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name
@@ -143,6 +143,7 @@ function update(req, res, next) {
   if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
+  if (typeof req.body.patreon !== 'undefined') user.patreon = req.body.patreon
   if (typeof req.body.karma !== 'undefined' && isAdmin) user.karma = req.body.karma
   if (typeof req.body.website !== 'undefined') user.website = req.body.website
   if (typeof req.body.password !== 'undefined') user.password = req.body.password
@@ -189,7 +190,29 @@ function list(req, res, next) {
   const countOnly = req.query.countOnly || false
 
   if (patreon !== false) {
-    res.json([])
+    User.find({ patreon: 1 })
+      .sort({ karma: -1 })
+      .limit(+highscoreCount)
+      .lean()
+      .exec()
+      .then((users) => {
+        res.json(users.map(u => ({
+          avatar: u.avatar,
+          name: u.name,
+          username: u.username,
+          karma: u.karma,
+          count_mistakes: u.count_mistakes,
+          count_linked: u.count_linked,
+          count_created: u.count_created,
+          count_reverted: u.count_reverted,
+          count_updated: u.count_updated,
+          count_deleted: u.count_deleted,
+          count_voted: u.count_voted,
+          lastUpdated: u.lastUpdated,
+          createdAt: u.createdAt,
+          loginCount: u.loginCount,
+        })))
+      })
   }
 
   if (highscoreCount !== false) {
