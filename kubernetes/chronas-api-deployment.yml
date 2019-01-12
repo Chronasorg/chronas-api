@@ -16,14 +16,14 @@ spec:
         - containerPort: 80
         livenessProbe:
           httpGet:
-            path: /v1/health
+            path: /v1/markers?count=1
             port: 80
           initialDelaySeconds: 55
           timeoutSeconds: 1
           periodSeconds: 15
         readinessProbe:
           httpGet:
-            path: /v1/health
+            path: /v1/markers?count=1
             port: 80
           initialDelaySeconds: 30
           timeoutSeconds: 1
