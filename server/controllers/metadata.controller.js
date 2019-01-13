@@ -198,6 +198,10 @@ function updateSingle(req, res, next, fromRevision = false, resolve) {
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
 
+  if (typeof subEntityId === "undefined" || subEntityId === "undefined" || typeof nextBody === "undefined" || (nextBody !== -1 && _isInvalidRgb(nextBody[1]))) {
+    return res.status(400).send("Malformated parameters")
+  }
+
   req.body.prevBody = metadata.data[subEntityId] || -1
 
   if (nextBody === -1) {
@@ -474,6 +478,16 @@ function remove(req, res, next, fromRevision = false) {
 function defineEntity(req, res, next) {
   req.resource = 'metadata'
   next()
+}
+
+function _isInvalidRgb(rgb) {
+  const rxValidRgb = /([R][G][B][A]?[(]\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])(\s*,\s*((0\.[0-9]{1})|(1\.0)|(1)))?[)])/i
+
+  if (rxValidRgb.test(rgb)) {
+    return false
+  } else {
+    return true
+  }
 }
 
 export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote }
