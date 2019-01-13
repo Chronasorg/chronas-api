@@ -98,7 +98,7 @@ describe('## Metadata APIs', () => {
           .expect(httpStatus.OK)
           .then((res) => {
             expect(res.body).to.be.an('array')
-            expect(res.body[0]).to.have.property('coo')
+            expect(res.body[0]).to.have.property('_id')
             expect(res.body[0]).to.have.property('data')
             done()
           })

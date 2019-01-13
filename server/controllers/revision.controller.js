@@ -11,19 +11,18 @@ import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
 import { cache, config } from '../../config/config'
 import httpStatus from 'http-status'
-
-const debug = require('debug')('chronas-api:index')
-
-const resourceCollection = {
-  areas: { id: 'year', model: Area, controller: areaCtrl },
-  markers: { id: 'wiki', model: Marker, controller: markerCtrl },
-  metadata: { id: '_id', model: Metadata, controller: metadataCtrl },
-}
+import Promise from "bluebird";
 
 /**
  * Load revision and append to req.
  */
 function load(req, res, next, id) {
+  const resourceCollection = {
+    areas: { id: 'year', model: Area, controller: areaCtrl },
+    markers: { id: 'wiki', model: Marker, controller: markerCtrl },
+    metadata: { id: '_id', model: Metadata, controller: metadataCtrl },
+  }
+
   Revision.findById(id)
     .then((revision) => {
       req.revision = revision // eslint-disable-line no-param-reassign
@@ -71,6 +70,11 @@ function addCreateRevision(req, res, next) {
     return
   }
 
+  const resourceCollection = {
+    areas: { id: 'year', model: Area, controller: areaCtrl },
+    markers: { id: 'wiki', model: Marker, controller: markerCtrl },
+    metadata: { id: '_id', model: Metadata, controller: metadataCtrl },
+  }
   const username = req.auth.username
   userCtrl.changePoints(username, 'created', 1)
 
@@ -242,6 +246,11 @@ function update(req, res, next) {
   const username = req.auth.username
   const usernameAuthor = revision.user
 
+  const resourceCollection = {
+    areas: { id: 'year', model: Area, controller: areaCtrl },
+    markers: { id: 'wiki', model: Marker, controller: markerCtrl },
+    metadata: { id: '_id', model: Metadata, controller: metadataCtrl },
+  }
   userCtrl.changePoints(username, 'reverted', 1)
   switch (revision.type) {
     case 'CREATE':
@@ -262,10 +271,14 @@ function update(req, res, next) {
       // was updated, so put prevBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.nextBody))
-          const areaPromises = Object.keys(unpackedObj).map(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
-          Promise.all(areaPromises).then(() => {
-              // res.status(200).send('Areas revision MANY successfully applied.')
-          }, error => res.status(500).send(error))
+          const yearToUpdate = Object.keys(unpackedObj).map(year => [year, unpackedObj[year]])
+
+          yearToUpdate.reduce(
+              (p, x) => p.then(_ => new Promise((resolve) => {
+                resourceCollection[resource].controller.revertSingle(req, res, next, x[0], x[1]).then(() => resolve())
+              }))
+            , Promise.resolve()
+          )
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.nextBody)
           req.body.subEntityId = revision.subEntityId
@@ -279,10 +292,14 @@ function update(req, res, next) {
         // update to nextBody
         if (revision.entityId === 'MANY') {
           const unpackedObj = unpackObj(JSON.parse(revision.prevBody))
-          const areaPromises = Object.keys(unpackedObj).forEach(year => resourceCollection[resource].controller.revertSingle(req, res, next, year, unpackedObj[year]))
-          Promise.all(areaPromises).then(() => res.status(200).send('Areas revision MANY successfully applied.'), (error) => {
-            logger.error(error)
-          })
+          const yearToUpdate = Object.keys(unpackedObj).map(year => [year, unpackedObj[year]])
+
+          yearToUpdate.reduce(
+            (p, x) => p.then(_ => new Promise((resolve) => {
+              resourceCollection[resource].controller.revertSingle(req, res, next, x[0], x[1]).then(() => resolve())
+            }))
+            , Promise.resolve()
+          )
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.prevBody)
           req.body.subEntityId = revision.subEntityId
@@ -319,7 +336,15 @@ function update(req, res, next) {
   revision.reverted = !revision.reverted
 
   revision.save()
-    .then(savedRevision => res.json(savedRevision))
+    .then((savedRevision) => {
+      const nextBodyString = (JSON.stringify(savedRevision.nextBody) || '').substring(0, 400)
+      const prevBodyString = (JSON.stringify(savedRevision.prevBody) || '').substring(0, 400)
+
+      if (typeof savedRevision.nextBody !== 'undefined') { savedRevision.nextBody = nextBodyString + ((nextBodyString.length === 403) ? '...' : '') }
+      if (typeof savedRevision.prevBody !== 'undefined') { savedRevision.prevBody = prevBodyString + ((prevBodyString.length === 403) ? '...' : '') }
+
+      res.json(savedRevision)
+    })
     .catch(e => next(e))
 }
 
@@ -380,8 +405,8 @@ function unpackObj(obj) {
   const unpackedObj = {}
   for (let i = 0; i < array.length; i++) {
     const years = array[i].split('-')
-    for (let j = 0; j < years.length; j++) {
-      unpackedObj[years[j]] = obj[array[i]]
+    for (let j = years[0]; j <= (isNaN(years[1]) ? years[0] : years[1]); j++) {
+      unpackedObj[j] = obj[array[i]]
     }
   }
   return unpackedObj
