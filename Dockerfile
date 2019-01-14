@@ -9,6 +9,10 @@ FROM base AS dependencies
 COPY package.json ./
 # install app dependencies including 'devDependencies'
 RUN npm install
+# ---- Copy Files/Build ----
+FROM dependencies AS build  
+WORKDIR /app
+COPY . /app
 
 ARG BUILD_ID=123
 
@@ -19,10 +23,6 @@ RUN npm install appversion -g \
 	&& apv update commit \
 	&& apv update build
 
-# ---- Copy Files/Build ----
-FROM dependencies AS build  
-WORKDIR /app
-COPY . /app
 # Build the app and run the tests
 RUN npm run build \
 	&& npm test
