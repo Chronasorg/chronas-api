@@ -58,6 +58,19 @@ router.route('/newDiscussion').post(
   // }
   })
 
+router.route('/newDiscussion/:discussion_slug').post(
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  (req, res) => {
+    // if (req.user) {
+    createDiscussion(req.body, req, res).then(
+      (result) => { res.send(Object.assign({}, result._doc, { postCreated: true })) },
+      (error) => { res.send({ postCreated: false }) }
+    )
+    // } else {
+    //   res.send({ postCreated: false })
+    // }
+  })
+
   // delete a discussion
 router.route('/deleteDiscussion/:discussion_slug').delete(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),

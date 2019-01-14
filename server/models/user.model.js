@@ -100,6 +100,9 @@ const UserSchema = new mongoose.Schema({
     default: 0,
     required: true
   },
+  patreon: {
+    type: Number,
+  },
   website: {
     type: String
   },

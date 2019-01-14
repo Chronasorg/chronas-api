@@ -26,11 +26,36 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
     .exec((error, result) => {
       if (error) { console.log(error); reject(error) } else if (!result) reject(null)
       else {
+        result.user = {
+          avatar: result.user.avatar,
+          username: result.user.username,
+          name: result.user.name,
+          _id: result.user._id
+        }
         // add opinions to the discussion object
         getAllOpinions(result._id).then(
           (opinions) => {
-            result.opinions = opinions
-            resolve(result)
+            result.opinions = opinions.map((op) => {
+              const opinion = op.toObject()
+              return {
+                ...opinion,
+                user: {
+                  avatar: opinion.user.avatar,
+                  username: opinion.user.username,
+                  name: opinion.user.name,
+                  _id: opinion.user._id
+                }
+              }
+            })
+            console.debug("1done", result)
+            // result.user = {
+            //   avatar: user.avatar,
+            //   username: user.username,
+            //   name: user.name,
+            //   _id: user._id
+            // }
+            console.debug("2return", result)
+            return resolve(result)
           },
           (error) => { { console.log(error); reject(error) } }
         )
@@ -44,48 +69,75 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
  * @return {Promise}
  */
 const createDiscussion = (discussion, req, res) => new Promise((resolve, reject) => {
-  const newDiscussion = new Discussion({
-    forum_id: discussion.forumId,
-    forum: discussion.forumId,
-    user_id: discussion.userId,
-    user: discussion.userId,
-    discussion_slug: generateDiscussionSlug(discussion.title),
-    date: new Date(),
-    title: discussion.title,
-    qa_id: discussion.qa_id,
-    content: discussion.content,
-    favorites: [],
-    tags: discussion.tags,
-    pinned: discussion.pinned,
-  })
+  const potentialDiscussionSlug = req.params.discussion_slug
+  if (potentialDiscussionSlug) {
+    Discussion
+      .findOne({ discussion_slug: potentialDiscussionSlug })
+      .exec((error, discussionFound) => {
+        if (error) {
+          console.log(error)
+          reject(error)
+        }
+        if (discussion.forumId) discussionFound.forum_id = discussion.forumId
+        if (discussion.userId) discussionFound.user_id = discussion.userId
+        if (discussion.title) discussionFound.title = discussion.title
+        if (discussion.qa_id) discussionFound.qa_id = discussion.qa_id
+        if (discussion.content) discussionFound.content = discussion.content
+        if (discussion.favorites) discussionFound.favorites = []
+        if (discussion.tags) discussionFound.tags = discussion.tags
 
-  newDiscussion.save((error) => {
-    if (error) {
-      console.log(error)
-      reject(error)
-    }
+        discussionFound.save((error2) => {
+          if (error2) {
+            console.log(error2)
+            reject(error2)
+          }
+          return resolve(discussion)
+        })
+      })
+  } else {
+    const newDiscussion = new Discussion({
+      forum_id: discussion.forumId,
+      forum: discussion.forumId,
+      user_id: discussion.userId,
+      user: discussion.userId,
+      discussion_slug: generateDiscussionSlug(discussion.title),
+      date: new Date(),
+      title: discussion.title,
+      qa_id: discussion.qa_id,
+      content: discussion.content,
+      favorites: [],
+      tags: discussion.tags,
+      pinned: discussion.pinned,
+    })
 
-    req.body = {
-      subject: 'Chronas: New Post added',
-      from: 'noreply@chronas.org',
-      html: `Full payload: ${JSON.stringify({
-        forum_id: discussion.forumId,
-        forum: discussion.forumId,
-        user_id: discussion.userId,
-        user: discussion.userId,
-        discussion_slug: generateDiscussionSlug(discussion.title),
-        date: new Date(),
-        title: discussion.title,
-        qa_id: discussion.qa_id,
-        content: discussion.content,
-        favorites: [],
-        tags: discussion.tags,
-        pinned: discussion.pinned,
-      }, undefined, '<br />')}`,
-    }
-    contactCtrl.create(req, res, false)
-    resolve(newDiscussion)
-  })
+    newDiscussion.save((error) => {
+      if (error) {
+        console.log(error)
+        reject(error)
+      }
+
+      req.body = {
+        subject: 'Chronas: New Post added',
+        from: 'noreply@chronas.org',
+        html: `Full payload: ${JSON.stringify({
+          forum_id: discussion.forumId,
+          forum: discussion.forumId,
+          user_id: discussion.userId,
+          user: discussion.userId,
+          discussion_slug: generateDiscussionSlug(discussion.title),
+          date: new Date(),
+          title: discussion.title,
+          qa_id: discussion.qa_id,
+          content: discussion.content,
+          favorites: [],
+          tags: discussion.tags,
+          pinned: discussion.pinned,
+        }, undefined, '<br />')}`,
+      }
+      contactCtrl.create(req, res, false)
+      return resolve(newDiscussion)
+    })
+  }
 })
 
 /**

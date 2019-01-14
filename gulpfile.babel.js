@@ -25,24 +25,23 @@ const options = minimist(process.argv.slice(2), knownOptions)
 gulp.task('clean', (done) => {
   del.sync(['dist/**', 'dist/.*', 'coverage/**', '!dist', '!coverage'])
   done()
-  }
+}
 )
 
 // Copy non-js files to dist
 gulp.task('copy', (done) => {
-  var stream = gulp.src(paths.nonJs, { allowEmpty: true })
+  const stream = gulp.src(paths.nonJs, { allowEmpty: true })
     .pipe(plugins.newer('dist'))
     .pipe(gulp.dest('dist'))
 
-  stream.on('end', function() {
-    //run some code here
-    done();
-  });
-  stream.on('error', function(err) {
-    done(err);
-  });
-
-  }
+  stream.on('end', () => {
+    // run some code here
+    done()
+  })
+  stream.on('error', (err) => {
+    done(err)
+  })
+}
 )
 
 gulp.task('package', (done) => {
@@ -66,23 +65,22 @@ gulp.task('package', (done) => {
     packagePaths.push(excludePattern2)
   }
 
-  var stream = gulp.src(packagePaths)
+  const stream = gulp.src(packagePaths)
     .pipe(zip(options.packageName))
     .pipe(gulp.dest(options.packagePath))
 
-  stream.on('end', function() {
-    //run some code here
-    done();
-  });
-  stream.on('error', function(err) {
-    done(err);
-  });
-
+  stream.on('end', () => {
+    // run some code here
+    done()
+  })
+  stream.on('error', (err) => {
+    done(err)
+  })
 })
 
 // Compile ES6 to ES5 and copy to dist
 gulp.task('babel', (done) => {
-  var stream = gulp.src([...paths.js, '!gulpfile.babel.js'], {base: '.'})
+  const stream = gulp.src([...paths.js, '!gulpfile.babel.js'], { base: '.' })
       .pipe(plugins.newer('dist'))
       .pipe(plugins.sourcemaps.init())
       .pipe(plugins.babel())
@@ -94,14 +92,14 @@ gulp.task('babel', (done) => {
       }))
       .pipe(gulp.dest('dist'))
 
-  stream.on('end', function() {
-    //run some code here
-    done();
-  });
-  stream.on('error', function(err) {
-    done(err);
-  });
-  }
+  stream.on('end', () => {
+    // run some code here
+    done()
+  })
+  stream.on('error', (err) => {
+    done(err)
+  })
+}
 )
 
 // Start server with restart on file changes
@@ -113,12 +111,12 @@ gulp.task('nodemon', gulp.series('copy', 'babel', (done) => {
     tasks: ['copy', 'babel']
   })
   done()
-  }
+}
 ))
 
 // gulp serve for development
 gulp.task('serve', gulp.series('clean', 'nodemon', (done) => {
-    done()
+  done()
 }))
 
 
