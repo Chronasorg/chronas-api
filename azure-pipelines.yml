@@ -1,6 +1,9 @@
 trigger:
 - master
 
+# no PR builds
+pr: none
+
 pool:
   vmImage: 'Ubuntu-16.04'
 
