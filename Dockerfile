@@ -18,7 +18,6 @@ ARG BUILD_ID=123
 
 #update commit and build id
 RUN npm install appversion -g \
-	&& apv init \
 	&& apv set-version 1.0.$BUILD_ID \
 	&& apv update commit \
 	&& apv update build
