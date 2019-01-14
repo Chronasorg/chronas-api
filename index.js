@@ -16,8 +16,8 @@ mongoose.Promise = Promise
 
 // connect to mongo db
 const mongoUri = config.mongo.host
-mongoose.connect(mongoUri, { autoReconnect: true, useNewUrlParser: true, server: {
-    reconnectTries: Number.MAX_VALUE, socketOptions: { keepAlive: 1 } } })
+mongoose.connect(mongoUri, { autoReconnect: true, reconnectInterval: 1000, reconnectTries: Number.MAX_VALUE, useNewUrlParser: true /*server: {
+     socketOptions: { keepAlive: 1 } }*/ })
 
 mongoose.connection.on('error', (err) => {
   // throw new Error(`unable to connect to database - URL - ${mongoUri} - Error - ${err}`)

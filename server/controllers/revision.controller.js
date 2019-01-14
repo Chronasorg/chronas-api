@@ -282,7 +282,7 @@ function update(req, res, next) {
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.nextBody)
           req.body.subEntityId = revision.subEntityId
-          resourceCollection[resource].controller.updateSingle(req, res, next, true)
+          resourceCollection[resource].controller.updateSingle(req, res, next, 'revision')
         } else {
           req.body = JSON.parse(revision.nextBody)
           resourceCollection[resource].controller.update(req, res, next, true)
@@ -303,10 +303,10 @@ function update(req, res, next) {
         } else if (revision.subEntityId && revision.resource === 'metadata') {
           req.body.nextBody = JSON.parse(revision.prevBody)
           req.body.subEntityId = revision.subEntityId
-          resourceCollection[resource].controller.updateSingle(req, res, next, true)
+          resourceCollection[resource].controller.updateSingle(req, res, next, 'revision')
         } else {
           req.body = JSON.parse(revision.prevBody)
-          resourceCollection[resource].controller.update(req, res, next, true)
+          resourceCollection[resource].controller.update(req, res, next, 'revision')
         }
       }
       break
