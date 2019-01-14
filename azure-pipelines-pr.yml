@@ -45,17 +45,7 @@ steps:
 
 - script: |
     docker build -f Dockerfile -t $(imageName) --build-arg BUILD_ID=$(Build.BuildId) .
-  displayName: 'docker build '
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: 'kubernetes'
-    artifactName: k8s
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: 'PostmanTests'
-    artifactName: postmanTests
+  displayName: 'docker build'
 
 - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
   displayName: 'Publish Quality Gate Result'
