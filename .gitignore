@@ -56,6 +56,9 @@ node_modules
 # .env
 .env
 
+#create it doring build
+appversion.json
+
 utilScripts
 windows*
 *.iml
