@@ -1,6 +1,5 @@
 [![Build Status](https://dev.azure.com/chronas/chronas/_apis/build/status/Chronasorg.chronas-api?branchName=master)](https://dev.azure.com/chronas/chronas/_build/latest?definitionId=1?branchName=master)
 
-
 # [Chronas](https://github.com/daumann/chronas) API
 
 ## Overview
