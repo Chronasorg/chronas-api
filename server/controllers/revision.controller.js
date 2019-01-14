@@ -9,7 +9,7 @@ import areaCtrl from './area.controller'
 import userCtrl from './user.controller'
 import markerCtrl from './marker.controller'
 import metadataCtrl from './metadata.controller'
-import { cache, config } from '../../config/config'
+import { cache, config, initItemsAndLinksToRefresh } from '../../config/config'
 import httpStatus from 'http-status'
 import Promise from "bluebird";
 
@@ -355,17 +355,21 @@ function update(req, res, next) {
  * @returns {Revision[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'lastUpdated', entity = false, subentity = false, order = 'asc', filter = '' } = req.query
+  const { start = 0, end = 10, count = 0, sort = 'timestamp', entity = false, subentity = false, order = 'asc', filter = '' } = req.query
+  let potentialUser
+  let potentialReverted
   let potentialEntity = false
   let potentialSubentity = false
   if (filter) {
     const fullFilter = JSON.parse(filter)
+    potentialUser = fullFilter.user
+    potentialReverted = fullFilter.reverted
     potentialEntity = fullFilter.entity
     potentialSubentity = fullFilter.subentity
   }
   const fEntity = (potentialEntity || entity)
   const fSubentity = (potentialSubentity || subentity)
-  Revision.list({ start, end, sort, order, entity: fEntity, subentity: fSubentity, filter })
+  Revision.list({ start, end, sort, order, entity: fEntity, user: potentialUser, subentity: fSubentity, reverted: potentialReverted, filter })
     .then((revisions) => {
       if (count) {
         const optionalFind = (fEntity) ? { entityId: fEntity } : {}

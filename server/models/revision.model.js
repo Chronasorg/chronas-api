@@ -86,13 +86,20 @@ RevisionSchema.statics = {
    * @param {number} length - Limit number of revisions to be returned.
    * @returns {Promise<Revision[]>}
    */
-  list({ start = 0, end = 50, entity, subentity } = {}) {
+  list({ start = 0, end = 50, entity, user, order, subentity, reverted, sort = 'timestamp' } = {}) {
     const optionalFind = (entity) ? { entityId: entity } : {}
     if (subentity) {
       optionalFind.subEntityId = subentity
     }
+    if (typeof reverted !== "undefined") {
+      optionalFind.reverted = reverted
+    }
+    if (typeof user !== "undefined") {
+      optionalFind.user = user
+    }
+
     return this.find(optionalFind)
-      .sort({ timestamp: -1 })
+      .sort({ [sort]: order })
       .skip(+start)
       .limit(end - start)
       .lean()
