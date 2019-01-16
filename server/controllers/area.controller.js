@@ -430,7 +430,6 @@ function replaceAll(req, res, next) {
             (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3]) ),
             Promise.resolve()
           ).then(() => {
-
             Metadata.find({ subtype: "ew", year: { $gt: start, $lt: end } })
               .then((warMetadatas) => {
                 warMetadatas.forEach((warMetadata) => {

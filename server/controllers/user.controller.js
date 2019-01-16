@@ -135,7 +135,7 @@ function create(req, res, next) {
  */
 function update(req, res, next) {
   const user = req.user
-  const isAdmin = true // (req.auth && req.auth.privilege >= 5)
+  const isAdmin = (req.auth && req.auth.privilege >= 5)
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar
   if (typeof req.body.username !== 'undefined') user.username = req.body.username
   if (typeof req.body.name !== 'undefined') user.name = req.body.name

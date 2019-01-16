@@ -76,7 +76,10 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
       .exec((error, discussionFound) => {
         if (error) {
           console.log(error)
-          reject(error)
+          return reject(error)
+        }
+        if (!discussionFound) {
+          return reject('not found')
         }
         if (discussion.forumId) discussionFound.forum_id = discussion.forumId
         if (discussion.userId) discussionFound.user_id = discussion.userId
@@ -89,7 +92,7 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
         discussionFound.save((error2) => {
           if (error2) {
             console.log(error2)
-            reject(error2)
+            return reject(error2)
           }
           return resolve(discussion)
         })
