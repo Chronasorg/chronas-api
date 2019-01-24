@@ -50,6 +50,7 @@ function create(req, res, next, fromRevision = false) {
         _id: markerId,
         name: req.body.name,
         coo: req.body.coo,
+        coo2: req.body.coo2,
         type: req.body.type,
         year: req.body.year,
         capital: req.body.capital,
@@ -78,6 +79,7 @@ function update(req, res, next, fromRevision = false) {
   const marker = req.entity
   if (typeof req.body.name !== 'undefined') marker.name = req.body.name
   if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
+  if (typeof req.body.coo2 !== 'undefined') marker.coo2 = req.body.coo2
   if (typeof req.body.type !== 'undefined') marker.type = req.body.type
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
   if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital
@@ -96,6 +98,7 @@ function update(req, res, next, fromRevision = false) {
       _id: marker._id,
       name: marker.name,
       coo: marker.coo,
+      coo2: marker.coo2,
       type: marker.type,
       year: marker.year,
       capital: marker.capital,
@@ -198,8 +201,9 @@ function list(req, res, next) {
   const both = req.query.both || false
   const start = offset
   const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10
+  const migrationDelta = req.query.migration ? ((year > 1950) ? 1000 : (year > 1860) ? 50 : (year > 1820) ? 30 : (year > 1700) ? 20 : (year > 1500) ? 30 : (year > 1400) ? 50 : (year > 1200) ? 100 : (year > 1000) ? 250 : (year > 500) ? 300 : (year > -200) ? 200 : (year > -500) ? 250 : (year > -1000) ? 300 : (year > -1200) ? 400 : (year > -1500) ? 500 : 10) : false
 
-  Marker.list({ start, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
+  Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {
