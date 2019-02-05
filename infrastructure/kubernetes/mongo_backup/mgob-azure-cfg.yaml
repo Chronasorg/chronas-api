@@ -8,7 +8,7 @@ metadata:
 data:
   test.yml: |
     target:
-      host: "mongo-0.mongo"
+      host: "mongo-0.mongo,mongo-1.mongo"
       port: 27017
       database: "chronas-api"
     scheduler:
@@ -17,4 +17,4 @@ data:
       timeout: 60
     azure:
       containerName: "backup"
-      connectionString: "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
+      connectionString: "DefaultEndpointsProtocol=https;AccountName=backupchronas;AccountKey=bZsN0MWv0T2iQRPhGs/L3XRgD8w4lQgyiSX1BuqeY8s1p5gtZYKaD+H2AiBfN0SyVM/pTZY0i+INZPn2RuCAMw==;EndpointSuffix=core.windows.net"
