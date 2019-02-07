@@ -438,6 +438,7 @@ function getLinked(req, res, next, resolve = false) {
 function list(req, res, next) {
   const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const fList = req.query.f || false
+  const locale = req.query.locale || false
   const type = req.query.type || false
   const subtype = req.query.subtype || false
   const year = +req.query.year || false
@@ -446,7 +447,7 @@ function list(req, res, next) {
   const search = req.query.search || false
   const discover = req.query.discover || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, type, subtype, year, delta, wiki, search, discover })
+  Metadata.list({ start, end, sort, order, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (count) {
         Metadata.count().exec().then((metadataCount) => {

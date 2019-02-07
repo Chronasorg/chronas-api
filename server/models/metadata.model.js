@@ -88,11 +88,11 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, locale = '', fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
     let hasEw = false
     let hasEs = false
     if (fList) {
-      const cachedInit = cache.get('init')
+      const cachedInit = cache.get('init' + (locale || ''))
       if (cachedInit) {
         return new Promise((resolve) => { resolve(cachedInit) })
       }
@@ -113,11 +113,13 @@ MetadataSchema.statics = {
         .lean()
         .exec()
         .then((metadata) => {
+          let countLength = 0
+          if (locale) countLength = locale.length + 1
           const completeRes = metadata.reduce((obj, item) => {
-            obj[item._id] = item.data
+            obj[item._id.substr(0, item._id.length - countLength)] = item.data
             return obj
           }, {})
-          cache.put('init', completeRes, CACHETTL)
+          cache.put(('init' + locale || ''), completeRes, CACHETTL)
           return completeRes
         })
     } else if (type || subtype || year || wiki || search || discover) {
