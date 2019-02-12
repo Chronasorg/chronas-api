@@ -199,7 +199,7 @@ function updateSingle(req, res, next, from = false, resolve) {
   const subEntityId = req.body.subEntityId
   const nextBody = req.body.nextBody
 
-  if (!fromRevision && (typeof subEntityId === "undefined" || subEntityId === "undefined" || typeof nextBody === "undefined" || (req.params.metadataId !== "province" && nextBody !== -1 && _isInvalidRgb(nextBody[1])))) {
+  if (!fromRevision && (!subEntityId || typeof subEntityId === "undefined" || subEntityId === "undefined" || typeof nextBody === "undefined" || (req.params.metadataId !== "province" && nextBody !== -1 && _isInvalidRgb(nextBody[1])))) {
     return res.status(400).send("Malformated parameters")
   }
 
