@@ -112,11 +112,11 @@ MarkerSchema.statics = {
         .then((markers) => { return markers.map(el => [el.coo, el.coo2]) })
     }
     else {
-      if (!isNaN(year) || typeArray || wikiArray || search) {
+      if ((year !== false && !isNaN(year)) || typeArray || wikiArray || search) {
         // geojson endpoint hit
         let mongoSearchQuery = {}
 
-        if (!isNaN(year)) {
+        if (year !== false && !isNaN(year)) {
           mongoSearchQuery.year = {
             $gt: (year - delta),
             $lt: (year + delta)
@@ -126,7 +126,7 @@ MarkerSchema.statics = {
         let types = false
         if (typeArray) {
           types = typeArray.split(',')
-          if (!isNaN(year)) {
+          if ((year !== false && !isNaN(year))) {
             const types1 = types.filter(el => el === 'c' || el === 'ca')
             const types2 = types.filter(el => el !== 'c' && el !== 'ca')
             const AND1 = {
