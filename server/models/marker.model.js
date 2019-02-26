@@ -98,18 +98,18 @@ MarkerSchema.statics = {
     }
     if (migrationDelta) {
       return this.find({
-        type: { $in: ['a','at','e','m','op','p','r','s'] },
+        type: { $in: ['a', 'at', 'e', 'm', 'op', 'p', 'r', 's'] },
         coo: { $exists: true },
         coo2: { $exists: true },
         year: {
-          $gt: (year - (1.5*migrationDelta)),
-          $lt: (year + (0.5*migrationDelta))
+          $gt: (year - (1.5 * migrationDelta)),
+          $lt: (year + (0.5 * migrationDelta))
         }
       })
         .limit(5000)
         .lean()
         .exec()
-        .then((markers) => { return markers.map(el => [el.coo, el.coo2]) })
+        .then((markers) => markers.map(el => [el.coo, el.coo2]))
     }
     else {
       if ((year !== false && !isNaN(year)) || typeArray || wikiArray || search) {
