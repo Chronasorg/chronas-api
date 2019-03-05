@@ -10,7 +10,8 @@ const credentials = {
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_CALLBACK_URL,
-  scope: 'profile email'
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+  // scope: 'profile email'
 }
 
 function authenticateUser(req, res, next) {
