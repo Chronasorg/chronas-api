@@ -173,11 +173,11 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
     .then((linkObj) => {
       req.entity = linkObj // eslint-disable-line no-param-reassign
 
-      const { start = 0, end = 1 } = req.query
+      const { start = 0, end = 1, type = "i" } = req.query
     const metadataStream = Metadata
       .find({
         coo: { $exists: false },
-        type: "i",
+        type: type,
         // $and: [
         //   { 'data.poster':  { $exists: true } },
         //   { 'data.poster':  {$ne : false} },

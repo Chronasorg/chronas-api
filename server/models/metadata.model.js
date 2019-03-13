@@ -88,7 +88,7 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, locale = '', fList = false, type = false, subtype = false, year = false, mustGeo = false, delta = false, wiki = false, search = false, discover = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, locale = '', fList = false, type = false, subtype = '', year = false, mustGeo = false, delta = false, wiki = false, search = false, discover = false } = {}) {
     let hasEw = false
     let hasEs = false
     if (fList) {
@@ -124,7 +124,7 @@ MetadataSchema.statics = {
         })
     }
     else if (type || subtype || year || wiki || search || discover) {
-      const subtypes = (subtype) ? subtype.split(',') : ''
+      const subtypes = (subtype) ? (mustGeo ? subtype.replace(',cities', '').split(',') : subtype.split(',')) : ''
       const discovers = (discover) ? discover.split(',') : ''
       hasEw = (subtypes || []).includes('ew')
       hasEs = (subtypes || []).includes('es')
@@ -196,6 +196,20 @@ MetadataSchema.statics = {
           }),
           Promise.resolve()
         ).then(() => allDiscoverItems)
+      }
+
+      if (mustGeo) {
+        const citySearch = { ...searchQuery,
+          subtype: 'cities',
+          year: { $gt: (year - (10*delta)), $lt: (year + (10*delta)) },
+          type: 'i'
+        }
+        delete citySearch.$or
+        searchQuery = { $or: [
+            searchQuery,
+            citySearch
+          ]
+        }
       }
       return this.find(searchQuery)
           .skip(+start)
