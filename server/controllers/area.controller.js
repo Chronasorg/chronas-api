@@ -173,8 +173,7 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
     .then((linkObj) => {
       req.entity = linkObj // eslint-disable-line no-param-reassign
 
-      let it = 0
-      let et = 0
+      const { start = 0, end = 1 } = req.query
     const metadataStream = Metadata
       .find({
         coo: { $exists: false },
@@ -184,6 +183,8 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
         //   { 'data.poster':  {$ne : false} },
         // ]
       })
+      .skip(+start)
+      .limit(end - start)
       // .limit(100)
       .cursor()
       metadataStream.on('data', (_metadata) => {
@@ -191,7 +192,7 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
         req.query.source = '1:' + _metadata._id
 
         // const linkedItems = req.entity.data[ '1:' + _metadata._id] || false
-        // console.debug()
+        // console.debug(linkedItems)
 
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve)
@@ -209,8 +210,8 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
       }).on('close', () => {
         // the stream is closed
 
-        if(resolve) return resolve()
-        res.send('OK')
+        // if(resolve) return resolve()
+        res.send((end - start) + 'updated')
       })
 
     })
