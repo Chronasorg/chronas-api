@@ -187,21 +187,18 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
       // .limit(100)
       .cursor()
       metadataStream.on('data', (_metadata) => {
-        it++
         // const allMetadata = dimensionMetaRes.data
         req.query.source = '1:' + _metadata._id
-        if (req.query.source === '1:http%3A%2F%2Fi.imgur.com%2FEGY5vAi.jpg') console.debug('tata')
+
+        // const linkedItems = req.entity.data[ '1:' + _metadata._id] || false
+        // console.debug()
+
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve)
         }).then((linkedItems) => {
-          // console.debug(linkedItems["map"])
           const elCoo = linkedItems["map"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2) || linkedItems["media"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2)
           if (elCoo) {
             _metadata.coo = elCoo.geometry.coordinates
-            if (_metadata._id === 'http%3A%2F%2Fi.imgur.com%2FEGY5vAi.jpg') console.debug('tata',_metadata)
-            // console.debug(_metadata, "->", _metadata.coo)
-            console.debug(it,et)
-            et++
             _metadata.markModified('coo')
             _metadata.save()
           }
