@@ -44,6 +44,12 @@ router.route('/aggregateProvinces')
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     areaCtrl.aggregateProvinces)
 
+router.route('/aggregateMetaCoo')
+/** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
+  .get(
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    areaCtrl.aggregateMetaCoo)
+
 router.route('/aggregateDimension')
 /** GET /v1/areas/aggregateDimension - Aggregate all years by selected dimension (ruler, religion, religionGeneral or culture) */
   .get(

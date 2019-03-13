@@ -445,9 +445,10 @@ function list(req, res, next) {
   const delta = +req.query.delta || 10
   const wiki = req.query.wiki || false
   const search = req.query.search || false
+  const mustGeo = req.query.geo || false
   const discover = req.query.discover || false
 
-  Metadata.list({ start, end, sort, order, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
+  Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (count) {
         Metadata.count().exec().then((metadataCount) => {

@@ -168,6 +168,57 @@ function aggregateProvinces(req, res, next, resolve=false) {
     .catch(e => res.status(500).send(e))
 }
 
+function aggregateMetaCoo(req, res, next, resolve = false) {
+  Metadata.get("links", req.method)
+    .then((linkObj) => {
+      req.entity = linkObj // eslint-disable-line no-param-reassign
+
+      let it = 0
+      let et = 0
+    const metadataStream = Metadata
+      .find({
+        coo: { $exists: false },
+        type: "i",
+        // $and: [
+        //   { 'data.poster':  { $exists: true } },
+        //   { 'data.poster':  {$ne : false} },
+        // ]
+      })
+      // .limit(100)
+      .cursor()
+      metadataStream.on('data', (_metadata) => {
+        it++
+        // const allMetadata = dimensionMetaRes.data
+        req.query.source = '1:' + _metadata._id
+        if (req.query.source === '1:http%3A%2F%2Fi.imgur.com%2FEGY5vAi.jpg') console.debug('tata')
+        new Promise((resolve) => {
+          metadataCtrl.getLinked(req, res, next, resolve)
+        }).then((linkedItems) => {
+          // console.debug(linkedItems["map"])
+          const elCoo = linkedItems["map"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2) || linkedItems["media"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2)
+          if (elCoo) {
+            _metadata.coo = elCoo.geometry.coordinates
+            if (_metadata._id === 'http%3A%2F%2Fi.imgur.com%2FEGY5vAi.jpg') console.debug('tata',_metadata)
+            // console.debug(_metadata, "->", _metadata.coo)
+            console.debug(it,et)
+            et++
+            _metadata.markModified('coo')
+            _metadata.save()
+          }
+        })
+      })
+      .on('error', (e) => {
+        res.status(500).send(e)
+      }).on('close', () => {
+        // the stream is closed
+
+        if(resolve) return resolve()
+        res.send('OK')
+      })
+
+    })
+}
+
 function aggregateDimension(req, res, next, resolve=false) {
   const dimension = req.query.dimension || false
   if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.')
@@ -676,4 +727,4 @@ function getRanges(obj) {
   return compressedObj
 }
 
-export default { aggregateProvinces, aggregateDimension, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity }
+export default { aggregateProvinces, aggregateDimension, aggregateMetaCoo, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity }

@@ -88,7 +88,7 @@ MetadataSchema.statics = {
    * @param {number} length - Limit number of metadata to be returned.
    * @returns {Promise<Metadata[]>}
    */
-  list({ start = 0, end = 50, sort, order, filter, locale = '', fList = false, type = false, subtype = false, year = false, delta = false, wiki = false, search = false, discover = false } = {}) {
+  list({ start = 0, end = 50, sort, order, filter, locale = '', fList = false, type = false, subtype = false, year = false, mustGeo = false, delta = false, wiki = false, search = false, discover = false } = {}) {
     let hasEw = false
     let hasEs = false
     if (fList) {
@@ -122,7 +122,8 @@ MetadataSchema.statics = {
           cache.put(('init' + locale || ''), completeRes, CACHETTL)
           return completeRes
         })
-    } else if (type || subtype || year || wiki || search || discover) {
+    }
+    else if (type || subtype || year || wiki || search || discover) {
       const subtypes = (subtype) ? subtype.split(',') : ''
       const discovers = (discover) ? discover.split(',') : ''
       hasEw = (subtypes || []).includes('ew')
@@ -144,6 +145,19 @@ MetadataSchema.statics = {
       if (!subtype) delete searchQuery.subtype
       if (!year) delete searchQuery.year
       if (wiki) searchQuery.wiki = wiki
+      if (mustGeo) {
+        delete searchQuery.subtype
+        searchQuery.coo = { $exists: true }
+        searchQuery.$or = [
+          { $and: [
+              { type: 'e' },
+            { 'data.poster':  { $exists: true } },
+            { 'data.poster':  { $ne : false } },
+          ] },
+          { type: 'e' },
+          { subtype: { $in: subtypes } }
+        ]
+      }
 
       if (hasEs) {
         searchQuery = { $or: [
@@ -192,7 +206,8 @@ MetadataSchema.statics = {
           .then((metadata) => {
             if (search) {
               return metadata.map(item => item._id)
-            } else if (hasEw) {
+            }
+            else if (hasEw) {
               return Marker.find({
                 type: 'b',
                 partOf: { $exists: true }
@@ -210,6 +225,17 @@ MetadataSchema.statics = {
                   })
                   metadata.unshift(resObj)
                   return metadata
+                })
+            }
+            if (mustGeo) {
+              return metadata.sort((a, b) => {
+                  if ((a.type === "e" && b.type === "e") || (a.type !== "e" && b.type !== "e")) {
+                    if ((a.subtype === "cities" && b.subtype === "cities") || (a.subtype !== "cities" && b.subtype !== "cities")) {
+                      return (a.subtype === "battles" && b.subtype !== "battles") ? -1 : 1
+                    }
+                    return (a.subtype === "cities" && b.subtype !== "cities") ? -1 : 1;
+                  }
+                  return (a.type === "e" && b.type !== "e") ? -1 : 1;
                 })
             }
             return metadata
