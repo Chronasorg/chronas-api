@@ -31,8 +31,6 @@ const getUser = user_id => new Promise((resolve, reject) => {
 const getFullProfile = username => new Promise((resolve, reject) => {
   User
     .findOne({ username })
-      // .exec()
-      // .then((foundUser) => {
     .lean()
     .exec((error, foundUser) => {
       if (error) { console.log(error); reject(error) }

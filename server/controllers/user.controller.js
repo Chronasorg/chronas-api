@@ -61,6 +61,7 @@ function create(req, res, next) {
               avatar: duplicatedUsername.avatar,
               username: duplicatedUsername.username,
               lastUpdated: duplicatedUsername.lastUpdated,
+              score: duplicatedUsername.karma,
               privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1
             }, config.jwtSecret)
             return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
@@ -97,6 +98,7 @@ function create(req, res, next) {
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
+              score: savedUser.karma,
               privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1
             }, config.jwtSecret)
             if (req.body.thirdParty) {
