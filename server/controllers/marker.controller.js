@@ -54,6 +54,7 @@ function create(req, res, next, fromRevision = false) {
         type: req.body.type,
         year: req.body.year,
         capital: req.body.capital,
+        html: req.body.html,
         partOf: req.body.partOf,
         end: req.body.end,
       })
@@ -84,6 +85,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.year !== 'undefined') marker.year = req.body.year
   if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital
   if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf
+  if (typeof req.body.html !== 'undefined') marker.html = req.body.html
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end
 
   const newId = decodeURIComponent(req.body.wiki || req.body._id)
@@ -102,6 +104,7 @@ function update(req, res, next, fromRevision = false) {
       type: marker.type,
       year: marker.year,
       capital: marker.capital,
+      html: marker.html,
       partOf: marker.partOf,
       end: marker.end,
     })

@@ -32,6 +32,7 @@ function login(req, res, next) {
             id: user.email || user._id,
             avatar: user.avatar || user.gravatar,
             username: user.username || (((user || {}).name || {}).first),
+            score: user.karma,
             lastUpdated: user.lastUpdated || user.lastLogin,
             privilege: user.privilege ? user.privilege : 1
           }, config.jwtSecret)

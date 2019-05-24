@@ -40,6 +40,9 @@ const MarkerSchema = new mongoose.Schema({
   subtype: {
     type: String
   },
+  html: {
+    type: String
+  },
   year: {
     type: Number,
     min: -2000,

@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema({
   },
   karma: {
     type: Number,
-    default: 0,
+    default: 1,
     required: true
   },
   loginCount: {
