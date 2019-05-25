@@ -16,15 +16,8 @@ COPY . /app
 
 ARG BUILD_ID=123
 
-#update commit and build id
-RUN npm install appversion -g \
-	&& apv set-version 1.0.$BUILD_ID \
-	&& apv update commit \
-	&& apv update build
-
 # Build the app and run the tests
-RUN npm run build \
-	&& npm test
+RUN npm run build 
 
 WORKDIR /app/dist
 
@@ -37,6 +30,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
+ENV MAILGUN_KEY=placeholder
 ENV PORT=80
 
 ENV APPINSIGHTS_INSTRUMENTATIONKEY=placeholder
@@ -44,7 +38,6 @@ ENV TWITTER_CONSUMER_KEY=placeholder
 ENV TWITTER_CONSUMER_SECRET=placeholder
 ENV TWITTER_CALLBACK_URL=placeholder
 ENV JWT_SECRET=placeholder
-ENV MAILGUN_KEY=placeholder
 
 ENV CHRONAS_HOST=https://chronas.org
 ENV FACEBOOK_CALLBACK_URL=https://api.chronas.org/v1/auth/login/facebook?cb
@@ -63,6 +56,7 @@ RUN apk update && apk upgrade \
 	&& npm rebuild bcrypt --build-from-source \
 	&& apk del builds-deps
 
+# expose port 4040
 EXPOSE 80
 
 # cmd to start service

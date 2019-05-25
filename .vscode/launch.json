@@ -1,27 +1,27 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Launch App.js",
-        "program": "${workspaceRoot}/index.js",
-        "outFiles": [ "${workspaceRoot}/dist/**/*.js" ],
-        "env": {
-            "NODE_ENV": "development",
-            "JWT_SECRET": "placeholder",
-            "APPINSIGHTS_INSTRUMENTATIONKEY": "placeholder",
-            "TWITTER_CONSUMER_KEY": "placeholder",
-            "TWITTER_CONSUMER_SECRET": "placeholder",
-            "TWITTER_CALLBACK_URL": "placeholder",
-            "MONGO_HOST":"mongodb://localhost/chronas-api"
-          },        
-      },
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Launch Current File",
-        "program": "${file}",
-        "outFiles": [ "${workspaceRoot}/dist/**/*.js" ]
-      }
+  "configurations": [
+    {
+      "name": "Launch Server (AZDS)",
+      "type": "node",
+      "request": "launch",
+      "protocol": "inspector",
+      "preLaunchTask": "azds: prelaunch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "azds",
+      "runtimeArgs": [
+        "exec",
+        "--on-exit-resume-up",
+        "--",
+        "node",
+        "--inspect=0.0.0.0:9229",
+        "--inspect-brk",
+        "--nolazy",
+        "index.js"
+      ],
+      "address": "127.0.0.1",
+      "port": 51091,
+      "localRoot": "${workspaceFolder}/.",
+      "remoteRoot": "/app"
+    }
+  ]
 }
