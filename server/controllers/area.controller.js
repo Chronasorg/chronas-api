@@ -192,7 +192,6 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
         req.query.source = '1:' + _metadata._id
 
         // const linkedItems = req.entity.data[ '1:' + _metadata._id] || false
-        // console.debug(linkedItems)
 
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve)

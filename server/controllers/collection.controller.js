@@ -45,7 +45,6 @@ const iconAccByAEtype = {
  * Load collection and append to req.
  */
 function load(req, res, next, id) {
-  console.debug('load',req, id)
   Collection.findById(id)
     .then((collection) => {
       req.collection = collection // eslint-disable-line no-param-reassign
@@ -102,9 +101,7 @@ function get(req, res) {
   const mongoSearchQueryMarker = { _id: { $in: markerIdList } }
   const mongoSearchQueryMetadata = { _id: { $in: metadataIdList.concat(metadataAeList.map(el => el[1])) } }
 
-  console.debug(markerIdList, metadataIdList, metadataAeList)
   // TODO: links collection should be cached!
-  // console.debug("mongoSearchQueryMetadata", mongoSearchQueryMetadata)
   // return res.json(returnCollection)
   Metadata.find(mongoSearchQueryMetadata)
     .lean()
@@ -113,7 +110,6 @@ function get(req, res) {
       const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || []
       const aeEntities = []
       metadataAeList.forEach((el) => {
-        // console.debug('res22',metadataPre, el)
         const metaData = metadataPre.find(mEl => mEl._id === el[1]).data[el[2]]
         if (metaData) {
           aeEntities.push({
@@ -131,12 +127,10 @@ function get(req, res) {
           })
         }
       })
-      console.debug("mongoSearchQueryMarker", mongoSearchQueryMarker)
       Marker.find(mongoSearchQueryMarker)
         .lean()
         .exec()
         .then((markers) => {
-          console.debug("markers",markers)
           const fullList = aeEntities.concat((markers || []).map(feature => ({
             properties: {
               n: feature.name || (feature.data || {}).title || feature.name,
@@ -146,6 +140,7 @@ function get(req, res) {
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
               src: (feature.data || {}).source,
+              gt: feature.type,
               s: feature.score,
               ct: 'marker'
             },
@@ -165,6 +160,7 @@ function get(req, res) {
               f: (feature.data || {}).geojson,
               c: (feature.data || {}).content,
               t: feature.subtype || feature.type,
+              gt: feature.type,
               ct: 'metadata'
             },
             geometry: {
@@ -191,7 +187,6 @@ function get(req, res) {
 
 function updateBookmark(req, res, next) {
 
-  console.debug('updateBookmark')
   const { username = false, toUpdate = false, toAdd = -1, collection = false } = req.query
   if (!collection || !username || !toUpdate || toAdd === -1) {
     return res.status(httpStatus.BAD_REQUEST).json({
@@ -204,22 +199,18 @@ function updateBookmark(req, res, next) {
   Collection.findOne(findObj)
     .exec()
     .then((foundBookmark) => {
-      console.debug('foundBookmark',foundBookmark)
       if (foundBookmark) {
         // update and return
-        console.debug('1')
         if (!foundBookmark.isPublic && foundBookmark.owner !== username) {
           return res.status(httpStatus.NOT_FOUND).json({
             message: 'Collection is not public and you are not the owner',
           })
         }
-        console.debug('12', foundBookmark)
         if (toAdd === "true") {
           foundBookmark.slides = [ ...foundBookmark.slides, toUpdate]
         } else {
           foundBookmark.slides = (foundBookmark.slides || []).filter(el => el !== toUpdate)
         }
-        console.debug('1foundBookmark', foundBookmark)
         foundBookmark.save()
           .then((savedBookmarks) => {
             return res.json(savedBookmarks)
@@ -294,8 +285,6 @@ function create(req, res, next) {
       res.json(savedCollection)
     })
     .catch(e => next(e))
-    // })
-    // .catch(e => next(e))
 }
 
 /**
