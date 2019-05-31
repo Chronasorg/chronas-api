@@ -61,6 +61,10 @@ const CollectionSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  isStory: {
+    type: Boolean,
+    default: false
+  },
   drawRoute: {
     type: Boolean,
     default: false

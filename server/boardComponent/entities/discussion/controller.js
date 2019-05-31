@@ -47,14 +47,6 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
                 }
               }
             })
-            console.debug("1done", result)
-            // result.user = {
-            //   avatar: user.avatar,
-            //   username: user.username,
-            //   name: user.name,
-            //   _id: user._id
-            // }
-            console.debug("2return", result)
             return resolve(result)
           },
           (error) => { { console.log(error); reject(error) } }

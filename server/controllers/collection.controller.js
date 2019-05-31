@@ -7,7 +7,7 @@ import Marker from "../models/marker.model";
 import Metadata from "../models/metadata.model";
 import userCtrl from "./user.controller";
 
-const markersTypes = ['w', 'w|b', 'w|si', 'w|c', 'w|ca', 'w|m', 'w|p', 'w|e', 'w|s', 'w|a', 'w|r', 'w|at', 'w|op', 'w|l', 'w|o']
+const markersTypes = ['w', 'w|b', 'w|si', 'w|c', 'w|ca', 'w|m', 'w|p', 'w|e', 'w|s', 'w|a', 'w|r', 'w|at', 'w|op', 'w|h', 'w|l', 'w|o']
 const linkedTypeAccessor = {
   m: 0,
   markers: 0,
@@ -135,6 +135,7 @@ function get(req, res) {
             properties: {
               n: feature.name || (feature.data || {}).title || feature.name,
               w: feature._id,
+              h: feature.html,
               y: feature.year,
               t: feature.type,
               f: (feature.data || {}).geojson,
@@ -222,6 +223,7 @@ function updateBookmark(req, res, next) {
           owner: username,
           isPublic: false,
           allowClickAway: true,
+          isStory: false,
           drawRoute: false,
           changeYearByArticle: false,
           slides: toAdd === "true" ? [toUpdate] : []
@@ -251,6 +253,7 @@ function update(req, res, next) {
   if (typeof req.body.slides !== 'undefined') collection.slides = req.body.slides
   if (typeof req.body.quiz !== 'undefined') collection.quiz = req.body.quiz
   if (typeof req.body.allowClickAway !== 'undefined') collection.allowClickAway = req.body.allowClickAway
+  if (typeof req.body.isStory !== 'undefined') collection.isStory = req.body.isStory
   if (typeof req.body.drawRoute !== 'undefined') collection.drawRoute = req.body.drawRoute
   if (typeof req.body.changeYearByArticle !== 'undefined') collection.changeYearByArticle = req.body.changeYearByArticle
   if (typeof req.body.isPublic !== 'undefined') collection.isPublic = req.body.isPublic
@@ -274,6 +277,7 @@ function create(req, res, next) {
     slides: req.body.slides,
     quiz: req.body.quiz,
     allowClickAway: req.body.allowClickAway,
+    isStory: req.body.isStory,
     drawRoute: req.body.drawRoute,
     changeYearByArticle: req.body.changeYearByArticle,
     isPublic: req.body.isPublic
