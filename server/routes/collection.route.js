@@ -12,8 +12,8 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   /** GET /v1/collections - Get list of collections */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // checkPrivilege.checkPrivilege(1),
     collectionCtrl.list)
 
   /** POST /v1/collections - Create new collection */
