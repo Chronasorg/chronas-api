@@ -188,7 +188,7 @@ function list(req, res, next) {
   const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
   const limit = end - start
   let highscoreCount = (req.query.top || 10)
-  if (highscoreCount > 15) highscoreCount = highscoreCount
+  if (highscoreCount > 15) highscoreCount = 15
   const countOnly = req.query.countOnly || false
 
   if (patreon !== false) {

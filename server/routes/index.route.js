@@ -3,6 +3,7 @@ import areaRoutes from './area.route'
 import authRoutes from './auth.route'
 import collectionRoutes from './collection.route'
 import flagRoutes from './flag.route'
+import gameRoutes from './game.route'
 import userRoutes from './user.route'
 import contactRoutes from './contact.router'
 import markerRoutes from './marker.route'
@@ -35,8 +36,12 @@ router.use('/collections', collectionRoutes)
 // mount user routes at /flags
 router.use('/flags', flagRoutes)
 
+// mount user routes at /game
+router.use('/game', gameRoutes)
+
 // mount user routes at /users
 router.use('/users', userRoutes)
+
 
 // mount user routes at /markers
 router.use('/markers', markerRoutes)

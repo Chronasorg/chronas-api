@@ -8,6 +8,12 @@ export default {
     }
   },
 
+  createGame: {
+    body: {
+      name: Joi.string().required()
+    }
+  },
+
   // POST /v1/markers
   createMarker: {
     body: {
