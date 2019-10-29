@@ -1,4 +1,4 @@
-apiVersion: certmanager.k8s.io/v1alpha1
+apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
   name: api-crt
@@ -13,5 +13,5 @@ spec:
       domains:
       - api.chronas.org
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-cluster-issuer
     kind: ClusterIssuer
