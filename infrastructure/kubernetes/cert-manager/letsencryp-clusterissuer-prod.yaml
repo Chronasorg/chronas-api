@@ -1,7 +1,7 @@
 apiVersion: cert-manager.io/v1alpha2
-kind: ClusterIssuer
+kind: Issuer
 metadata:
-  name: letsencrypt-cluster-issuer
+  name: letsencrypt-prod
 spec:
   acme:
     # The ACME server URL
@@ -12,5 +12,7 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
-    http01: {}
-          
+    solvers:
+    - http01:
+        ingress:
+          class: nginx    
