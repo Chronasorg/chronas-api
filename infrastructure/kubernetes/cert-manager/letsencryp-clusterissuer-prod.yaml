@@ -1,5 +1,5 @@
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: ClusterIssuer
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
 metadata:
   name: letsencrypt-prod
 spec:
@@ -12,4 +12,7 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     # Enable the HTTP-01 challenge provider
-    http01: {}
+    solvers:
+    - http01:
+        ingress:
+          class: nginx    

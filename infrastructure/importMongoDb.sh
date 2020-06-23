@@ -1,7 +1,7 @@
 #!/bin/bash
 host=tempchronasapi.documents.azure.com
 user=tempchronasapi
-password=N2Rn45wvSdzaqhhYoXZjNYAColQ6A8LMFqOtfdtXzfSf1REuOAMFLtCdPwgsgwVYehkxEQ9mRjOp7wyHYjko5A==
+password=<pw>
 
 #mongorestore --host $host:10255 -u $user -p $password --ssl --sslAllowInvalidCertificates --numInsertionWorkers 1 --batchSize 24 --drop --db chronas-api chronas-api
 
