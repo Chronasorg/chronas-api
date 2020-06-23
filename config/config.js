@@ -1,6 +1,6 @@
 import Joi from 'joi'
 export const cache = require('memory-cache')
-import logger from './winston'
+// import logger from './winston'
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 require('dotenv').config()
