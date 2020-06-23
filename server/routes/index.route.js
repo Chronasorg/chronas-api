@@ -18,7 +18,7 @@ const router = express.Router() // eslint-disable-line new-cap
 
 /** GET /health - Check service health */
 router.get('/health', (req, res) =>
-  res.send('OK')
+  res.send('Health OK')
 )
 
 // mount auth routes at /auth
