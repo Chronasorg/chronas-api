@@ -11,6 +11,6 @@
   "dependencies": {
     "axios": "^0.18.0",
     "convert-csv-to-json": "0.0.13",
-    "node-fetch": "^2.1.2"
+    "node-fetch": "^2.6.1"
   }
 }
