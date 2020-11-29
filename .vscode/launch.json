@@ -22,6 +22,11 @@
       "port": 51091,
       "localRoot": "${workspaceFolder}/.",
       "remoteRoot": "/app"
+    },
+    {
+      "name": "Bridge to Kubernetes",
+      "type": "bridge-to-kubernetes.configuration",
+      "request": "launch"
     }
   ]
 }

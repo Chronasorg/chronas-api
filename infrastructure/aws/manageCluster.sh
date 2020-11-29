@@ -1,0 +1,11 @@
+eksctl create cluster \
+ --name k8s \
+ --version 1.16 \
+ --region eu-central-1 \
+ --nodegroup-name standard-workers \
+ --node-type m5.large \
+ --nodes 1 \
+ --nodes-min 1 \
+ --nodes-max 2 \
+ --managed \
+ --asg-access

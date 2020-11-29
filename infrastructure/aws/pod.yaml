@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: some-mongo
+  labels:
+    name: some-mongo
+spec:
+  containers:
+    - image: launcher.gcr.io/google/mongodb3
+      name: mongo
