@@ -17,7 +17,7 @@ phases:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$OWN_IMAGE_TAG
-      - printf '[{"name":"chronas","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$OWN_IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"chronas-api","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$OWN_IMAGE_TAG > imagedefinitions.json
 
 artifacts:
     files: imagedefinitions.json
