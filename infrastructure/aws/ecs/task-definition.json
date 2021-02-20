@@ -1,0 +1,38 @@
+{
+    "family": "chronas-api-def",
+    "networkMode": "awsvpc",
+    "containerDefinitions": [
+        {
+            "name": "chronas-api-def",
+            "image": "httpd:2.4",
+            "environment": [
+                {
+                    "name": "MONGO_HOST",
+                    "value": "chronas-api-def"
+                }
+            ],            
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/chronas-api-def",
+                    "awslogs-region": "eu-central-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "taskRoleArn": "arn:aws:iam::980343854643:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::980343854643:role/ecsTaskExecutionRole"
+}

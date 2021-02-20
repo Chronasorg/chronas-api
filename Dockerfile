@@ -35,7 +35,7 @@ WORKDIR /app
 
 #  --- add env variables ---
 ENV NODE_ENV=production
-ENV MONGO_HOST=mongodb://localhost/chronas-api
+ENV MONGO_HOST=mongodb://localhost/chronas-api-env-varibles
 ENV MONGO_PORT=27017
 ENV PORT=80
 
