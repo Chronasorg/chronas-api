@@ -8,7 +8,7 @@
             "environment": [
                 {
                     "name": "MONGO_HOST",
-                    "value": "chronas-api-def"
+                    "value": "chronas-api-def-mongo-host"
                 }
             ],            
             "portMappings": [
