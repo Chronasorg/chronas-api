@@ -20,7 +20,6 @@
             ],
             "logConfiguration": {
                 "logDriver": "awslogs",
-                "secretOptions": null,
                 "options": {
                     "awslogs-group": "/ecs/chronas-api-def",
                   "awslogs-region": "eu-central-1",
