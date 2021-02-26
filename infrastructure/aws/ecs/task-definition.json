@@ -5,12 +5,12 @@
         {
             "name": "chronas-api-def",
             "image": "aumanjoa/chronas-api",
-            "environment": [
+            "environmentFiles": [
                 {
-                    "name": "MONGO_HOST",
-                    "value": "chronas-api-def-mongo-host"
+                    "value": "arn:aws:s3:::chronas-PLACEHOLDER/cronas.env",
+                    "type": "s3"
                 }
-            ],            
+            ],        
             "portMappings": [
                 {
                     "containerPort": 80,
