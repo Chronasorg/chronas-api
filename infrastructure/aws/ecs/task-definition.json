@@ -4,7 +4,7 @@
     "containerDefinitions": [
         {
             "name": "chronas-api-def",
-            "image": "httpd:2.4",
+            "image": "aumanjoa/chronas-api",
             "environment": [
                 {
                     "name": "MONGO_HOST",
@@ -20,19 +20,20 @@
             ],
             "logConfiguration": {
                 "logDriver": "awslogs",
+                "secretOptions": null,
                 "options": {
                     "awslogs-group": "/ecs/chronas-api-def",
-                    "awslogs-region": "eu-central-1",
-                    "awslogs-stream-prefix": "ecs"
+                  "awslogs-region": "eu-central-1",
+                  "awslogs-stream-prefix": "ecs"
                 }
-            }
+              }
         }
     ],
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "256",
-    "memory": "512",
+    "cpu": "1024",
+    "memory": "2048",
     "taskRoleArn": "arn:aws:iam::980343854643:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::980343854643:role/ecsTaskExecutionRole"
 }
