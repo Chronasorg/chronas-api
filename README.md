@@ -143,5 +143,3 @@ docker run -d -p27017:27017 --name mongodatabase mongo
 docker build -t chronas-api-local . && docker run -it --link mongodatabase:mongodatabase -e MONGO_HOST='MONGO_HOST=mongodb://mongodatabase/chronas-api' --name chrona-api -p 80:80 chronas-api-local
 ```
 
-
-
