@@ -1,9 +1,12 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chronas-api
 spec:
   replicas: 2
+  selector:
+      matchLabels:
+        app: chronas-api  
   template:
     metadata:
       labels:
@@ -11,7 +14,7 @@ spec:
     spec:
       containers:
       - name: chronas-api
-        image: aumanjoa/chronas-api:#{buildId}#
+        image: aumanjoa/chronas-api:ci-173
         ports:
         - containerPort: 80
         livenessProbe:
