@@ -72,6 +72,18 @@ If you want to restore from an gzip file from backup.
    mongorestore --gzip --archive=test-1545717600.gz --host "mongo-0.mongo,mongo-1.mongo" --port 27017 --drop
    ```
 
+
+
+   ```bash
+mongorestore --ssl \
+    --host="chronas-db-cluster.niceurl.com:27017" \
+    --numParallelCollections 4 \
+    --username=user \
+    --password=pw \
+    --gzip --archive=test-1637215200.gz \
+    --drop \
+    --sslCAFile rds-combined-ca-bundle.pem   ```
+
 ---
 
 If you want to dump and restore within the restore pod
