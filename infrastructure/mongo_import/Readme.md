@@ -75,14 +75,15 @@ If you want to restore from an gzip file from backup.
 
 
    ```bash
-mongorestore --ssl \
+    mongorestore --ssl \
     --host="chronas-db-cluster.niceurl.com:27017" \
     --numParallelCollections 4 \
     --username=user \
     --password=pw \
     --gzip --archive=test-1637215200.gz \
     --drop \
-    --sslCAFile rds-combined-ca-bundle.pem   ```
+    --sslCAFile rds-combined-ca-bundle.pem   
+    ```
 
 ---
 
