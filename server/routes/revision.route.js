@@ -29,7 +29,7 @@ router.route('/:revisionId')
   /** PUT /v1/revisions/:revisionId - Update revision */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     // validate(paramValidation.updateMarker),
     revisionCtrl.update)
 
