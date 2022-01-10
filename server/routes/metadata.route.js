@@ -18,6 +18,7 @@ router.route('/')
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMetadata),
     metadataCtrl.create)
@@ -35,6 +36,7 @@ router.route('/:metadataId')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
     // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
 
@@ -42,6 +44,7 @@ router.route('/:metadataId')
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
     metadataCtrl.remove)
 
@@ -51,7 +54,7 @@ router.route('/:metadataId/single')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     // validate(paramValidation.updateSingle),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateSingle,
     revisionCtrl.addUpdateSingleRevision
     )
@@ -69,7 +72,7 @@ router.route('/:metadataId/addLink')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.updateLink),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(true)
   )
 
@@ -79,7 +82,7 @@ router.route('/:metadataId/removeLink')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     validate(paramValidation.updateLink),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(false)
   )
 
