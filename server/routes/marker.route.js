@@ -19,7 +19,7 @@ router.route('/')
   /** POST /v1/markers - Create new marker */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMarker),
     markerCtrl.create)
@@ -33,7 +33,7 @@ router.route('/:markerId')
   /** PUT /v1/markers/:markerId - Update marker */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     // validate(paramValidation.updateMarker),
     revisionCtrl.addUpdateRevision,
     markerCtrl.update)
@@ -41,7 +41,7 @@ router.route('/:markerId')
   /** DELETE /v1/markers/:markerId - Delete marker */
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    checkPrivilege.checkPrivilege(1),
+    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
     markerCtrl.remove)
 
