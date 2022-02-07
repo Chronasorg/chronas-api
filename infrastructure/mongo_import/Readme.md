@@ -100,3 +100,8 @@ If you want to dump and restore within the restore pod
    ```bash
    mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump
    ```
+   
+Or use 
+```
+kubectl create -f restore.yaml
+```
