@@ -24,7 +24,7 @@ router.route('/')
   /** POST /v1/areas - Create new area */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
-    //checkPrivilege.checkPrivilege(5),
+    checkPrivilege.checkPrivilege(5),
     // revisionCtrl.addCreateRevision,
     // validate(paramValidation.createArea),
     areaCtrl.create)
