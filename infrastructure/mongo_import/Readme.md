@@ -54,7 +54,7 @@ kubectl cp dump/dumpNov4 restore-64cc7968d5-pmz9d:/home/dump/
 ``kubectl exec -it restore-64cc7968d5-pmz9d /bin/bash
 ``
 
-``` mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump/dumpNov4/chronas-api-staging```
+``` mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump/dumpNov4/chronas-api-staging --writeConcern '{w:0}'```
 
 ---
 
@@ -69,7 +69,7 @@ If you want to restore from an gzip file from backup.
 2. restore the dump from the gz file
 
    ```bash
-   mongorestore --gzip --archive=test-1545717600.gz --host "mongo-0.mongo,mongo-1.mongo" --port 27017 --drop
+   mongorestore --gzip --archive=test-1545717600.gz --host "mongo-0.mongo,mongo-1.mongo" --port 27017 --drop --writeConcern '{w:0}'
    ```
 
 
@@ -98,7 +98,7 @@ If you want to dump and restore within the restore pod
 2. restore the database
 
    ```bash
-   mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump
+   mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump --writeConcern '{w:0}'
    ```
    
 Or use 
