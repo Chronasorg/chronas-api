@@ -18,6 +18,6 @@ kubectl cp dump/$1 $restorePodName:/home/dump/
 
 echo "*** copy done, now executing the mongorestore on pod"
 
-kubectl exec -it $restorePodName -- bash -c "mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump/$1/$2"
+kubectl exec -it $restorePodName -- bash -c "mongorestore --host mongo-0.mongo,mongo-1.mongo --port 27017 --drop -d chronas-api /home/dump/$1/$2 --writeConcern '{w:0}'"
 
 kubectl delete deployment restore
