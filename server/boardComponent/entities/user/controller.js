@@ -39,7 +39,7 @@ const getFullProfile = username => new Promise((resolve, reject) => {
         // TODO: add opinions!
         // we got the user, now we need all discussions by the user
         Opinion
-          .find({ user_id: foundUser._id })
+          .find({ user_id: foundUser._id || foundUser.id })
           .limit(10)
           .populate('discussion')
           .exec((error, opinions) => {
@@ -47,7 +47,7 @@ const getFullProfile = username => new Promise((resolve, reject) => {
               foundUser.opinions = opinions
             }
             Discussion
-            .find({ user_id: foundUser._id })
+            .find({ user_id: foundUser._id || foundUser.id })
             .limit(10)
             .populate('forum')
             .lean()

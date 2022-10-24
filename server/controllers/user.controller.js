@@ -4,6 +4,59 @@ import APIError from '../helpers/APIError'
 import { config } from '../../config/config'
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
+const axios = require('axios')
+
+//
+// function verifySubscription(user) {
+// return new Promise((resolve, reject) => {
+//       if (typeof user.subscription !== "undefined" && user.subscription.length > 4) {
+//       const subId = user.subscription
+//         axios(
+//            {
+//                method: 'post',
+//                url: 'https://api.sandbox.paypal.com/v1/oauth2/token',
+//                data: 'grant_type=client_credentials', // => this is mandatory x-www-form-urlencoded. DO NOT USE json format for this
+//                headers: {
+//                    'Accept': 'application/json',
+//                    'Content-Type': 'application/x-www-form-urlencoded',// => needed to handle data parameter
+//                    'Accept-Language': 'en_US',
+//                },
+//                auth: {
+//                    username: process.env.PAYPAL_CLIENT_ID,
+//                    password: process.env.PAYPAL_CLIENT_SECRET
+//                },
+//
+//            })
+//            .then((ress) => {
+//                  const accessToken = ress.data.access_token;
+//                  axios.get('https://api.sandbox.paypal.com/v1/billing/subscriptions/' + subId, {"reason": "Not satisfied with the service"},
+//                  { 'headers': { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' } })
+//                   .then((d) => {
+//                       if (d.data.status !== "ACTIVE") {
+//                         user.subscription = "-1"
+//                         console.debug(d)
+//                       }
+//                       else {
+//                         console.log("still active !!!!!!!")
+//                       }
+//                       resolve(user)
+//                     })
+//                   .catch((e) => {
+//
+//                     user.subscription = "-1"
+//                     resolve(user)
+//                   })
+//
+//             })
+//             .catch((e) => {
+//               user.subscription = "-1"
+//               resolve(user)
+//             })
+//       } else {
+//         resolve(user)
+//       }
+//     })
+// }
 
 /**
  * Load user and append to req.
@@ -54,6 +107,7 @@ function create(req, res, next) {
         if (req.body.thirdParty) {
           if (req.body.email === duplicatedUsername.email) {
             duplicatedUsername.loginCount += 1
+
             duplicatedUsername.save()
 
             const token = jwt.sign({
@@ -62,9 +116,11 @@ function create(req, res, next) {
               username: duplicatedUsername.username,
               lastUpdated: duplicatedUsername.lastUpdated,
               score: duplicatedUsername.karma,
-              privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1
+              privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1,
+              subscription: (duplicatedUsername.subscription !== 'undefined') ? duplicatedUsername.subscription : "-1"
             }, config.jwtSecret)
             return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+
           }
             // throw err?
           const err = new APIError('This username/ email already exists with a different email address!', 400)
@@ -94,12 +150,13 @@ function create(req, res, next) {
             res.json(savedUser)
           } else {
             const token = jwt.sign({
-              id: savedUser._id,
+              id: savedUser._id || savedUser.id,
               avatar: savedUser.avatar,
               username: savedUser.username,
               lastUpdated: savedUser.lastUpdated,
               score: savedUser.karma,
-              privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1
+              privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1,
+              subscription: (savedUser.subscription !== 'undefined') ? savedUser.subscription : "-1"
             }, config.jwtSecret)
             if (req.body.thirdParty) {
               return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
@@ -145,7 +202,8 @@ function update(req, res, next) {
   if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege
   if (typeof req.body.education !== 'undefined') user.education = req.body.education
   if (typeof req.body.email !== 'undefined') user.email = req.body.email
-  if (typeof req.body.patreon !== 'undefined') user.patreon = req.body.patreon
+  if (typeof req.body.patreon !== 'undefined' && isAdmin) user.patreon = req.body.patreon
+  if (typeof req.body.subscription !== 'undefined') user.subscription = req.body.subscription
   if (typeof req.body.karma !== 'undefined' && isAdmin) user.karma = req.body.karma
   if (typeof req.body.website !== 'undefined') user.website = req.body.website
   if (typeof req.body.password !== 'undefined') user.password = req.body.password
@@ -165,6 +223,122 @@ function changePoints(username, type, delta = 1) {
         user.save()
       }
     })
+}
+
+
+function optionallyCancelSub (doCancel,subId) {
+  return new Promise((resolve, reject) => {
+    console.debug("doCancel",doCancel)
+    return resolve();
+//     if (doCancel) {
+//      axios(
+//          {
+//              method: 'post',
+//              url: 'https://api.sandbox.paypal.com/v1/oauth2/token',
+//              data: 'grant_type=client_credentials', // => this is mandatory x-www-form-urlencoded. DO NOT USE json format for this
+//              headers: {
+//                  'Accept': 'application/json',
+//                  'Content-Type': 'application/x-www-form-urlencoded',// => needed to handle data parameter
+//                  'Accept-Language': 'en_US',
+//              },
+//              auth: {
+//                  username: process.env.PAYPAL_CLIENT_ID,
+//                  password: process.env.PAYPAL_CLIENT_SECRET
+//              },
+//
+//          })
+//          .then((res) => {
+//            console.debug(res)
+//                const accessToken = res.data.access_token;
+//                axios.post('https://api.sandbox.paypal.com/v1/billing/subscriptions/' + subId + '/cancel', {"reason": "Not satisfied with the service"},
+//                { 'headers': { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' } })
+//                 .then((d) => {
+//                   console.log(d)
+//                   return resolve()
+//                   })
+//                 .catch((e) => {
+//                   console.log(e)
+//                   return reject()
+//                 })
+//
+//           })
+//           .catch((e) => {
+//             console.log(e)
+//             return reject()
+//           })
+//     } else {
+//       return resolve()
+//     }
+  })
+
+}
+
+function updateSubscription(req, res, next) {
+  const doCancel = req.params.doCancel == "cancel"
+  const subId = req.params.subscriptionId
+  const user = req.user
+  const username = (req.user || {}).username
+  // check if user is same as auth.username
+console.debug("go1");
+  optionallyCancelSub(doCancel,subId).then(() => {
+     User.findOne({ username })
+        .exec()
+        .then((user) => {
+          if (typeof user !== 'undefined') {
+            if (!doCancel) {
+              user.subscription = subId
+              user.privilege = 5
+console.debug("set subscription to ", subId, "for user", user);
+            } else {
+console.debug("set subscription to -1 for user", user);
+              user.subscription = "-1"
+              user.privilege = 1
+            }
+            user.save()
+            if (doCancel) {
+                        const token = jwt.sign({
+                          id: user._id || user.id,
+                          avatar: user.avatar,
+                          username: user.username,
+                          lastUpdated: user.lastUpdated,
+                          score: user.karma,
+                          privilege: (user.privilege !== 'undefined') ? user.privilege : 1,
+                          subscription: "-1"
+                        }, config.jwtSecret)
+                        return res.json({
+                                      token,
+                                      username: user.username || (((user || {}).name || {}).first)
+                                    })
+            } else {
+            console.debug("encoding token with sub " + user.subscription);
+                      const token = jwt.sign({
+                        id: user.email || user._id || user.id,
+                        avatar: user.avatar || user.gravatar,
+                        username: user.username || (((user || {}).name || {}).first),
+                        score: user.karma,
+                        lastUpdated: user.lastUpdated || user.lastLogin,
+                        privilege: user.privilege ? user.privilege : 1,
+                        subscription: user.subscription ? user.subscription : "-1"
+                      }, config.jwtSecret)
+
+                      return res.json({
+                                    token,
+                                    username: user.username || (((user || {}).name || {}).first)
+                                  })
+            }
+          }
+          else {
+            return res.send(404)
+          }
+        })
+        .catch(() => {
+          res.send(500)
+        })
+  })
+  .catch((e) => {
+    console.debug(e)
+    res.send(500)
+  })
 }
 
 function incrementLoginCount(username) {
@@ -278,4 +452,4 @@ function remove(req, res, next) {
     .catch(e => next(e))
 }
 
-export default { changePoints, incrementLoginCount, load, get, create, update, list, remove }
+export default { changePoints, updateSubscription, incrementLoginCount, load, get, create, update, list, remove }

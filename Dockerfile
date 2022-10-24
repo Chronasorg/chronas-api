@@ -5,12 +5,12 @@ FROM node:10 AS base
 WORKDIR /app
 
 # ---- Dependencies ----
-FROM base AS dependencies  
+FROM base AS dependencies
 COPY package.json ./
 # install app dependencies including 'devDependencies'
 RUN npm install
 # ---- Copy Files/Build ----
-FROM dependencies AS build  
+FROM dependencies AS build
 WORKDIR /app
 COPY . /app
 
@@ -29,7 +29,7 @@ RUN npm run build \
 WORKDIR /app/dist
 
 # --- Release with Alpine ----
-FROM node:10-alpine AS release  
+FROM node:10-alpine AS release
 # Create app directory
 WORKDIR /app
 
@@ -55,7 +55,7 @@ ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
 # copy app from build
 COPY --from=build /app/dist/ ./
 
-#workaround to install python for bcrypt 
+#workaround to install python for bcrypt
 RUN apk update && apk upgrade \
 	&& apk add --no-cache git \
 	&& apk --no-cache add --virtual builds-deps build-base python \

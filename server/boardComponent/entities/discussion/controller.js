@@ -30,7 +30,7 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
           avatar: result.user.avatar,
           username: result.user.username,
           name: result.user.name,
-          _id: result.user._id
+          _id: result.user._id ||  result.user.id
         }
         // add opinions to the discussion object
         getAllOpinions(result._id).then(
@@ -43,7 +43,7 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
                   avatar: opinion.user.avatar,
                   username: opinion.user.username,
                   name: opinion.user.name,
-                  _id: opinion.user._id
+                  _id: opinion.user._id || opinion.user.id
                 }
               }
             })

@@ -52,6 +52,14 @@ router.route('/:userId')
     checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.remove)
 
+
+router.route('/:userId/subscription/:subscriptionId/:doCancel')
+  .put(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    checkPrivilege.checkPrivilegeOrOwnership(5),
+    // validate(paramValidation.updateUser),
+    userCtrl.updateSubscription)
+
 /** Load user when API with userId route parameter is hit */
 router.param('userId', userCtrl.load)
 

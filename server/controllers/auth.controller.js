@@ -29,21 +29,25 @@ function login(req, res, next) {
             return next(err2)
           }
           const token = jwt.sign({
-            id: user.email || user._id,
+            id: user.email || user._id || user.id,
             avatar: user.avatar || user.gravatar,
             username: user.username || (((user || {}).name || {}).first),
             score: user.karma,
             lastUpdated: user.lastUpdated || user.lastLogin,
-            privilege: user.privilege ? user.privilege : 1
+            privilege: user.privilege ? user.privilege : 1,
+            subscription: user.subscription ? user.subscription : "-1"
           }, config.jwtSecret)
 
-          user.loginCount += 1
-          user.save()
+          user.loginCount +=
 
-          return res.json({
-            token,
-            username: user.username || (((user || {}).name || {}).first)
-          })
+//           userCtrl.verifySubscription(user).then(() => {
+            user.save()
+
+            return res.json({
+              token,
+              username: user.username || (((user || {}).name || {}).first)
+            })
+//           })
         })
       }
       const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
