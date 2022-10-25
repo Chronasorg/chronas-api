@@ -11,7 +11,7 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   /** GET /v1/revisions - Get list of revisions */
   .get(
-   checkPrivilege.checkPrivilege(5),
+   checkPrivilege.checkPrivilege(3),
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
     revisionCtrl.list)
 
