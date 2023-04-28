@@ -11,6 +11,7 @@ import expressValidation from 'express-validation'
 import helmet from 'helmet'
 import passport from 'passport'
 import { Strategy } from 'passport-twitter'
+import AWSXRay from 'aws-xray-sdk';
 
 import winstonInstance from './winston'
 import routes from '../server/routes/index.route'
@@ -19,6 +20,8 @@ import APIError from '../server/helpers/APIError'
 import versionRoutes from '../server/routes/version.router'
 
 const app = express()
+
+app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
 const swaggerUi = require('swagger-ui-express')
 const YAML = require('yamljs')
@@ -169,5 +172,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}
   })
 })
+
+app.use(AWSXRay.express.closeSegment());
 
 export default app
