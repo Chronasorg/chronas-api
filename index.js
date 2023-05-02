@@ -43,10 +43,10 @@ client.getSecretValue({
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
-      .then(() => console.log('Connected to MongoDB'), )
+      .then(() => console.log('Connected to MongoDB  by mongoose.connect'), )
       .catch(err => console.log('ERORR MongoDB - ' + err.message));
 
-    mongoose.connection.on('error', () => console.log('ERORR MongoDB - ' + err.message));
+    mongoose.connection.on('error', () => console.log('ERORR MongoDB'));
 
     mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
 
