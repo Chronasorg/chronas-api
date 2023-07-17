@@ -37,7 +37,7 @@ WORKDIR /app
 #ENV NODE_ENV=production
 ENV MONGO_HOST=mongodb://localhost/chronas-api
 ENV MONGO_PORT=27017
-ENV PORT=80
+ENV PORT=8080
 
 ENV APPINSIGHTS_INSTRUMENTATIONKEY=placeholder
 ENV TWITTER_CONSUMER_KEY=placeholder
@@ -52,6 +52,9 @@ ENV GOOGLE_CALLBACK_URL=https://api.chronas.org/v1/auth/login/google?cb
 ENV GITHUB_CALLBACK_URL=https://api.chronas.org/v1/auth/login/github?cb
 ENV TWITTER_CALLBACK_URL=https://api.chronas.org/v1/auth/login/twitter
 
+#copy Lambda adapter https://github.com/awslabs/aws-lambda-web-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.7.0 /lambda-adapter /opt/extensions/lambda-adapter
+
 # copy app from build
 COPY --from=build /app/dist/ ./
 
@@ -63,7 +66,7 @@ RUN apk update && apk upgrade \
 	&& npm rebuild bcrypt --build-from-source \
 	&& apk del builds-deps
 
-EXPOSE 80
+EXPOSE 8080
 
 # cmd to start service
 CMD [ "node", "index.js" ]
