@@ -35,9 +35,12 @@ client.getSecretValue({
 
     console.log("DB_Input: " + DOCDB_ENDPOINT);
     const uri = `mongodb://${DOCDB_USERNAME}:${DOCDB_PASSWORD}@${DOCDB_ENDPOINT}:${DOCDB_PORT}/chronas-api?replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
+    console.log("DB_Output: " + uri);
 
     // plugin bluebird promise in mongoose
     mongoose.Promise = bluebird;
+
+    console.log("start connecting to mongoDB");
 
     mongoose.connect(uri, {
       useNewUrlParser: true,
@@ -45,7 +48,8 @@ client.getSecretValue({
     })
       .then(() => console.log('Connected to MongoDB  by mongoose.connect'), )
       .catch(err => console.log('ERORR MongoDB - ' + err.message));
-
+    
+    
     mongoose.connection.on('error', () => console.log('ERORR MongoDB'));
 
     mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
@@ -61,9 +65,12 @@ client.getSecretValue({
       process.exit(0);
     }));
 
+    console.log("mongoose.connection.readyState: " + mongoose.connection.readyState);
+
   } else {
-    console.log("secret is: undefined");
+    console.log("secret is: undefined"); 
   }
+
 });
 
 // module.parent check is required to support mocha watch
