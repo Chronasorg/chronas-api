@@ -1,0 +1,100 @@
+#Artillery configuration
+config:
+  target: https://n3ic0eiq81.execute-api.eu-west-1.amazonaws.com/v1
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up phase
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 10
+      name: Ramp up load
+    - duration: 300
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+  # https://docs.art/reference/extensions
+  plugins:
+    ensure: {}
+    apdex: {}
+    metrics-by-endpoint: {}
+  apdex:
+    threshold: 100
+  ensure:
+      thresholds:
+        - http.response_time.p99: 100
+        - http.response_time.p95: 75      
+scenarios:
+  - name: "List markers"
+    flow:
+      - get:
+          url: "/markers?count=1"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral"
+  - name: "Get area"
+    flow:
+      - get:
+          url: "/areas/2000"
+  - name: "Get version"
+    flow:
+      - get:
+          url: "/version/welcome"
+  - name: "Get area"
+    flow:
+      - get:
+          url: "/areas/-2000"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=e&end=3000&subtype=ei,es,ew"
+  - name: "Get markers"
+    flow:
+      - get:
+          url: "/markers?types=a,ar,at,b,c,ca,cp,e,l,m,o,op,p,r,s,si&year=2000&count=5500"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?year=2000&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=e&end=3000&subtype=ew"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=e&end=3000&subtype=ei"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=g&locale=tr&f=ruler_tr,culture_tr,religion_tr,capital_tr,province_tr,religionGeneral_tr"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=e&end=3000&subtype=es"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?year=953&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?type=g&locale=es&f=ruler_es,culture_es,religion_es,capital_es,province_es,religionGeneral_es"
+  - name: "Get metadata"
+    flow:
+      - get:
+          url: "/metadata?year=-2000&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+  - name: "Get markers"
+    flow:
+      - get:
+          url: "/markers?types=a,ar,at,b,c,ca,cp,e,l,m,o,op,p,r,s,si&year=-2000&count=5500"
+  - name: "Get area"
+    flow:
+      - get:
+          url: "/areas/953"
+  - name: "Get area"
+    flow:
+      - get:
+          url: "/areas/1942"
