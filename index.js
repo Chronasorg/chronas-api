@@ -42,28 +42,31 @@ client.getSecretValue({
 
     console.log("start connecting to mongoDB");
 
-    mongoose.connect(uri, {
+
+    const connectionOptions = {
       useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
-      .then(() => console.log('Connected to MongoDB  by mongoose.connect'), )
-      .catch(err => console.log('ERORR MongoDB - ' + err.message));
-    
-    
-    mongoose.connection.on('error', () => console.log('ERORR MongoDB'));
+      useUnifiedTopology: true,
+      poolSize: 5, // Adjust the poolSize based on your application's needs
+    };
 
-    mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
 
-    mongoose.connection.on('connected', () => console.log('Connected to MongoDB'));
+  // Create the connection using mongoose.createConnection()
+  const connection = mongoose.createConnection(uri, connectionOptions);
 
-    mongoose.connection.on('reconnected', () => console.log('Reconnected to MongoDB'));
+  connection.on('error', () => console.log('ERORR MongoDB'));
 
-    mongoose.connection.on('close', () => console.log('Connection to MongoDB closed'));
+  connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
 
-    mongoose.connection.on('SIGINT', () => mongoose.connection.close(() => {
-      console.log('Connection to MongoDB closed through app termination');
-      process.exit(0);
-    }));
+  connection.on('connected', () => console.log('Connected to MongoDB'));
+
+  connection.on('reconnected', () => console.log('Reconnected to MongoDB'));
+
+  connection.on('close', () => console.log('Connection to MongoDB closed'));
+
+  connection.on('SIGINT', () => connection.close(() => {
+    console.log('Connection to MongoDB closed through app termination');
+    process.exit(0);
+  }));
 
     console.log("mongoose.connection.readyState: " + mongoose.connection.readyState);
 
