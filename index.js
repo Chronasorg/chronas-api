@@ -3,7 +3,6 @@ import { config } from './config/config';
 import app from './config/express';
 import AWS from 'aws-sdk';
 import bluebird from 'bluebird';
-import { createPool } from 'generic-pool';
 
 const debug = require('debug')('chronas-api:index')
 

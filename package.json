@@ -42,7 +42,6 @@
     "express-validation": "1.0.2",
     "express-winston": "^4.0.4",
     "gulp-nodemon": "2.5.0",
-    "generic-pool": "3.9.0",
     "helmet": "3.14.0",
     "http-status": "^0.2.5",
     "joi": "11.0.2",
