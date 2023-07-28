@@ -45,8 +45,8 @@ client.getSecretValue({
 
     const connectionOptions = {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
-      poolSize: 5, // Adjust the poolSize based on your application's needs
+      //useUnifiedTopology: true,
+      poolSize: 10, // Adjust the poolSize based on your application's needs
     };
 
 
