@@ -36,7 +36,9 @@ client.getSecretValue({ SecretId: secretName }, (err, data) => {
     const mongooseOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      poolSize: 10, // Set the maximum number of connections in the pool
+      maxPoolSize: 10, // Set the maximum number of connections in the 
+      minPoolSize: 10, // Set the minimum number of connections in the 
+      //poolSize: 10, // Set the maximum number of connections in the pool
       keepAlive: true, // Set to true to enable keepAlive on the socket for long-running applications
       keepAliveInitialDelay: 300000, // The number of milliseconds to wait before initiating keepAlive on the socket
     };
