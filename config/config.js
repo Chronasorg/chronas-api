@@ -1,66 +1,19 @@
 import Joi from 'joi'
 export const cache = require('memory-cache')
-import AWS from 'aws-sdk';
-
-const secretName = process.env.secretDbName || '/chronas/secrets';
-const region = process.env.region || 'eu-west-1';
-
-const client = new AWS.SecretsManager({ region });
-
-const mergedSecrets = {};
+// import logger from './winston'
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 require('dotenv').config()
 
-//add process.env to the mergedSecrets object
-Object.assign(mergedSecrets, process.env);
+//parse json from the lambda environment variables
+//check if process.env.chronasConfig is not null
 
-client.getSecretValue({ SecretId: secretName }, (err, data) => {
-  if (err) {
-    throw new Error(`getSecret config error: ${err}`)
-  }
+const lambdaEnv = JSON.parse(process.env.chronasConfig)
 
-  if (typeof data.SecretString != "undefined") {
-    Object.assign(mergedSecrets, JSON.parse(data.SecretString));
-  } else {
+console.log("hier");
+console.log(lambdaEnv);
 
-    throw new Error("not able to recieve config secrets")
-  }
-});
-
-const secretNameDb = process.env.secretDbName || '/chronas/docdb/newpassword';
-client.getSecretValue({ SecretId: secretNameDb }, (err, data) => {
-  if (err) {
-    throw new Error(`getSecret db param error: ${err}`)
-  }
-
-  if (typeof data.SecretString != "undefined") {
-
-    const dbVariables = {};
-    const { host, password, username, port } = JSON.parse(data.SecretString);
-
-    dbVariables.DOCDB_ENDPOINT = host || 'DOCDBURL';
-    dbVariables.DOCDB_PASSWORD = encodeURIComponent(password) || 'DOCPASSWORD';
-    dbVariables.DOCDB_USERNAME = username || 'myuser';
-    dbVariables.DOCDB_PORT = port || 'myuser';
-
-    Object.assign(mergedSecrets, dbVariables);
-
-    console.log(mergedSecrets);
-  }
-  else {
-    throw new Error("not able to recieve db config secrets")
-  }
-});
-
-console.log(mergedSecrets);
-
-// import logger from './winston'
-
-
-
-// require and configure dotenv, will load vars in .env in PROCESS.ENV
-//require('dotenv').config()
+//define the default env vars
 
 // define validation for all the env vars
 const envVarsSchema = Joi.object({
@@ -84,10 +37,7 @@ const envVarsSchema = Joi.object({
 }).unknown()
   .required()
 
-
-const { error, value: envVars } = Joi.validate(mergedSecrets, envVarsSchema)
-
-
+const { error, value: envVars } = Joi.validate(process.env, envVarsSchema)
 if (error) {
   throw new Error(`Config validation error: ${error.message}`)
 }
@@ -102,11 +52,5 @@ export const config = {
   mongo: {
     host: envVars.MONGO_HOST,
     port: envVars.MONGO_PORT
-  },
-  docdb: {
-    endpoint: envVars.DOCDB_ENDPOINT,
-    port: envVars.DOCDB_PORT,
-    username: envVars.DOCDB_USERNAME,
-    password: envVars.DOCDB_PASSWORD
   }
 }
