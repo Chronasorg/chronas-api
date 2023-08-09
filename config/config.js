@@ -2,7 +2,7 @@ import Joi from 'joi'
 export const cache = require('memory-cache')
 import AWS from 'aws-sdk';
   
-const secretName = process.env.secretConfigName || '/chronas/secrets';
+const secretName = process.env.secretDbName || '/chronas/secrets';
 const region = process.env.region || 'eu-west-1';
 
 const client = new AWS.SecretsManager({ region });
@@ -11,7 +11,6 @@ const mergedSecrets = {};
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 //require('dotenv').config()
-
 
 //add process.env to the mergedSecrets object
 Object.assign(mergedSecrets, process.env);
@@ -30,7 +29,7 @@ client.getSecretValue({ SecretId: secretName }, (err, data) => {
   }
 });
 
-const secretNameDb = process.env.secretConfigDbName || '/chronas/docdb/newpassword';
+const secretNameDb = process.env.secretDbName || '/chronas/docdb/newpassword';
 client.getSecretValue({ SecretId: secretNameDb }, (err, data) => {
   if (err) {
     throw new Error(`getSecret db param error: ${err}`)
