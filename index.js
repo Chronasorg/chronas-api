@@ -6,7 +6,7 @@ import bluebird from 'bluebird';
 const debug = require('debug')('chronas-api:index')
 
 const uri = `mongodb://${config.docdb.username}:${config.docdb.password}@${config.docdb.endpoint}:${config.docdb.port}/chronas-api?replicaSet=rs0`;
-
+console.log("mongoUri: " + uri);
 // plugin bluebird promise in mongoose
 mongoose.Promise = bluebird;
 
