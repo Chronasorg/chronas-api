@@ -6,7 +6,7 @@ import bluebird from 'bluebird';
 
 const debug = require('debug')('chronas-api:index')
 
-const secretName = "/chronas/docdb/newpassword";
+const secretName = config.docDbsecretName;
 const region = "eu-west-1";
 
 const client = new AWS.SecretsManager({ region });
