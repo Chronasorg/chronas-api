@@ -1,4 +1,3 @@
-import { env } from 'gulp-util';
 import Joi from 'joi'
 export const cache = require('memory-cache')
 // import logger from './winston'
