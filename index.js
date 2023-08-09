@@ -7,7 +7,7 @@ import bluebird from 'bluebird';
 const debug = require('debug')('chronas-api:index')
 
 const secretName = config.docDbsecretName;
-const region = "eu-west-1";
+const region = config.region;
 
 const client = new AWS.SecretsManager({ region });
 
