@@ -1,9 +1,60 @@
 import Joi from 'joi'
 export const cache = require('memory-cache')
-// import logger from './winston'
+import AWS from 'aws-sdk';
+  
+const secretName = process.env.secretConfigName || '/chronas/secrets';
+const region = process.env.region || 'eu-west-1';
+
+const client = new AWS.SecretsManager({ region });
+
+const mergedSecrets = {};
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
-require('dotenv').config()
+//require('dotenv').config()
+
+
+//add process.env to the mergedSecrets object
+Object.assign(mergedSecrets, process.env);
+
+
+client.getSecretValue({ SecretId: secretName }, (err, data) => {
+  if (err) {
+    throw new Error(`getSecret config error: ${err}`)
+  }
+  
+  if (typeof data.SecretString != "undefined") {
+    Object.assign(mergedSecrets, JSON.parse(data.SecretString));
+    } else {
+
+    throw new Error("not able to recieve config secrets")
+  }
+});
+
+const secretNameDb = process.env.secretConfigDbName || '/chronas/docdb/newpassword';
+client.getSecretValue({ SecretId: secretNameDb }, (err, data) => {
+  if (err) {
+    throw new Error(`getSecret db param error: ${err}`)
+  }
+
+  if (typeof data.SecretString != "undefined") {
+    
+    Object.assign(mergedSecrets, JSON.parse(data.SecretString));
+    console.log(mergedSecrets);
+    
+    }
+   else {
+    throw new Error("not able to recieve db config secrets")
+  }
+});
+
+console.log(mergedSecrets);
+
+// import logger from './winston'
+
+
+
+// require and configure dotenv, will load vars in .env in PROCESS.ENV
+//require('dotenv').config()
 
 // define validation for all the env vars
 const envVarsSchema = Joi.object({
@@ -26,8 +77,11 @@ const envVarsSchema = Joi.object({
     .default(27017)
 }).unknown()
   .required()
+  
+  
+const { error, value: envVars } = Joi.validate(mergedSecrets, envVarsSchema)
 
-const { error, value: envVars } = Joi.validate(process.env, envVarsSchema)
+
 if (error) {
   throw new Error(`Config validation error: ${error.message}`)
 }
