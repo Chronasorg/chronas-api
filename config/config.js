@@ -1,7 +1,7 @@
 import Joi from 'joi'
 export const cache = require('memory-cache')
 import AWS from 'aws-sdk';
-  
+
 const secretName = process.env.secretDbName || '/chronas/secrets';
 const region = process.env.region || 'eu-west-1';
 
@@ -10,20 +10,19 @@ const client = new AWS.SecretsManager({ region });
 const mergedSecrets = {};
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
-//require('dotenv').config()
+require('dotenv').config()
 
 //add process.env to the mergedSecrets object
 Object.assign(mergedSecrets, process.env);
-
 
 client.getSecretValue({ SecretId: secretName }, (err, data) => {
   if (err) {
     throw new Error(`getSecret config error: ${err}`)
   }
-  
+
   if (typeof data.SecretString != "undefined") {
     Object.assign(mergedSecrets, JSON.parse(data.SecretString));
-    } else {
+  } else {
 
     throw new Error("not able to recieve config secrets")
   }
@@ -36,12 +35,20 @@ client.getSecretValue({ SecretId: secretNameDb }, (err, data) => {
   }
 
   if (typeof data.SecretString != "undefined") {
-    
-    Object.assign(mergedSecrets, JSON.parse(data.SecretString));
+
+    const dbVariables = {};
+    const { host, password, username, port } = JSON.parse(data.SecretString);
+
+    dbVariables.DOCDB_ENDPOINT = host || 'DOCDBURL';
+    dbVariables.DOCDB_PASSWORD = encodeURIComponent(password) || 'DOCPASSWORD';
+    dbVariables.DOCDB_USERNAME = username || 'myuser';
+    dbVariables.DOCDB_PORT = port || 'myuser';
+
+    Object.assign(mergedSecrets, dbVariables);
+
     console.log(mergedSecrets);
-    
-    }
-   else {
+  }
+  else {
     throw new Error("not able to recieve db config secrets")
   }
 });
@@ -76,8 +83,8 @@ const envVarsSchema = Joi.object({
     .default(27017)
 }).unknown()
   .required()
-  
-  
+
+
 const { error, value: envVars } = Joi.validate(mergedSecrets, envVarsSchema)
 
 
@@ -95,5 +102,11 @@ export const config = {
   mongo: {
     host: envVars.MONGO_HOST,
     port: envVars.MONGO_PORT
+  },
+  docdb: {
+    endpoint: envVars.DOCDB_ENDPOINT,
+    port: envVars.DOCDB_PORT,
+    username: envVars.DOCDB_USERNAME,
+    password: envVars.DOCDB_PASSWORD
   }
 }
