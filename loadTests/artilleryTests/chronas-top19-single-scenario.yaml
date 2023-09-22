@@ -1,0 +1,55 @@
+#Artillery configuration
+config:
+  target: https://n3ic0eiq81.execute-api.eu-west-1.amazonaws.com
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up phase
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 10
+      name: Ramp up load
+    - duration: 30
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+scenarios:
+  - name: "API Load Test"
+    flow:
+      - get:
+          url: "/v1/markers?count=1"
+      - get:
+          url: "/v1/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral"
+      - get:
+          url: "/v1/areas/2000"
+      - get:
+          url: "/v1/version/welcome"
+      - get:
+          url: "/v1/areas/-2000"
+      - get:
+          url: "/v1/metadata?type=e&end=3000&subtype=ei,es,ew"
+      - get:
+          url: "/v1/markers?types=a,ar,at,b,c,ca,cp,e,l,m,o,op,p,r,s,si&year=2000&count=5500"
+      - get:
+          url: "/v1/metadata?year=2000&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+      - get:
+          url: "/v1/metadata?type=e&end=3000&subtype=ew"
+      - get:
+          url: "/v1/metadata?type=e&end=3000&subtype=ei"
+      - get:
+          url: "/v1/metadata?type=g&locale=tr&f=ruler_tr,culture_tr,religion_tr,capital_tr,province_tr,religionGeneral_tr"
+      - get:
+          url: "/v1/metadata?type=e&end=3000&subtype=es"
+      - get:
+          url: "/v1/metadata?year=953&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+      - get:
+          url: "/v1/metadata?type=g&locale=es&f=ruler_es,culture_es,religion_es,capital_es,province_es,religionGeneral_es"
+      - get:
+          url: "/v1/metadata?year=-2000&end=300&subtype=artefacts,people,cities,battles,misc,ps,v,e&geo=true"
+      - get:
+          url: "/v1/markers?types=a,ar,at,b,c,ca,cp,e,l,m,o,op,p,r,s,si&year=-2000&count=5500"
+      - get:
+          url: "/v1/areas/953"
+      - get:
+          url: "/v1/areas/1942"
