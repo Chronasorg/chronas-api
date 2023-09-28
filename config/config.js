@@ -1,5 +1,4 @@
 import Joi from 'joi'
-import app from './express';
 export const cache = require('memory-cache')
 // import logger from './winston'
 
