@@ -30,7 +30,10 @@ const swaggerDocument = YAML.load('./swagger.yaml')
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 const appInsights = require('applicationinsights')
-appInsights.setup()
+
+console.log("appInsightsString" + config.appInsightsConnectionString);
+
+appInsights.setup(config.appInsightsConnectionString)
     .setAutoDependencyCorrelation(true)
     .setAutoCollectRequests(true)
     .setAutoCollectPerformance(true)
