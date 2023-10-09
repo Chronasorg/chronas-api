@@ -105,3 +105,28 @@ Or use
 ```
 kubectl create -f restore.yaml
 ```
+
+install mongo import on cloud9
+
+```bash
+sudo vim  /etc/yum.repos.d/mongodb-org-3.6.repo
+
+[mongodb-org-3.6]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/amazon/2/mongodb-org/3.6/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-3.6.asc
+
+sudo yum install -y mongodb-org
+```
+
+
+mongoimport on specific data:
+
+
+```bash
+
+mongoimport --host ".docdb.amazonaws.com" --username myuser --port 27017 --db chronas-api --collection metadatas --file links.json
+
+```
