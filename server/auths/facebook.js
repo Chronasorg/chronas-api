@@ -5,9 +5,7 @@ import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 
 
-console.log("facebookClientId:" + process.env.FACEBOOK_CLIENT_ID);
-
-
+console.log("facebookClientId:" + config.facebookClientId);
 
 const credentials = {
   clientID: process.env.FACEBOOK_CLIENT_ID,

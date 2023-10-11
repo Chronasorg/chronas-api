@@ -62,10 +62,32 @@ export const config = {
   mongooseDebug: envVars.MONGOOSE_DEBUG,
   jwtSecret: envVars.JWT_SECRET,
   mongo: {
-    host: envVars.MONGO_HOST,
+    host: envVars.MONGO_HOST, 
     port: envVars.MONGO_PORT
   },
-  docDbsecretName : envVars.SECRET_DB_NAME,
+  docDbsecretName: envVars.SECRET_DB_NAME,
   awsRegion: envVars.region,
-  appInsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING
+  appInsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
+  mailgunReceiver: envVars.MAILGUN_RECEIVER,
+  githubClientId: envVars.GITHUB_CLIENT_ID,
+  twitterConsumerSecret: envVars.TWITTER_CONSUMER_SECRET,
+  googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
+  mailgunKey: envVars.MAILGUN_KEY,
+  appinsightsInstrumentationkey: envVars.APPINSIGHTS_INSTRUMENTATIONKEY,
+  googleClientId: envVars.GOOGLE_CLIENT_ID,
+  githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
+  mailgunDomain: envVars.MAILGUN_DOMAIN,
+  paypalClientId: envVars.PAYPAL_CLIENT_ID,
+  twitterConsumerKey: envVars.TWITTER_CONSUMER_KEY,
+  facebookClientId: envVars.FACEBOOK_CLIENT_ID,
+  cloudinaryUrl: envVars.CLOUDINARY_URL,
+  facebookClientSecret: envVars.FACEBOOK_CLIENT_SECRET,
+  paypalClientSecret: envVars.PAYPAL_CLIENT_SECRET,
+  appinsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
+  rumEndpoint: envVars.RUMENDPOINT,
+  rumRoleArn: envVars.RUMROLEARN,
+  rumIdentityPool: envVars.RUMIDENTITYPOOL,
+  rumApplicationId: envVars.RUMAPPLICATIONID
 }
+
+console.log(config);

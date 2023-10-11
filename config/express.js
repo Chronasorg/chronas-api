@@ -75,7 +75,7 @@ app.use(cors())
 // with a user object, which will be set at `req.user` in route handlers after
 // authentication.
 
-console.log("consumerkey Twitter express -:" + process.env.TWITTER_CONSUMER_KEY);
+console.log("consumerkey Twitter express -:" + config.twitterConsumerKey);
 
 passport.use(new Strategy({
   consumerKey: process.env.TWITTER_CONSUMER_KEY,
