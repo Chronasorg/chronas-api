@@ -7,15 +7,15 @@ import userCtrl from '../controllers/user.controller'
 import APIError from '../helpers/APIError'
 
 const credentials = {
-  consumerKey: process.env.TWITTER_CONSUMER_KEY,
-  consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-  callbackURL: process.env.TWITTER_CALLBACK_URL
+  consumerKey: config.twitterConsumerKey,
+  consumerSecret: config.twitterConsumerSecret,
+  callbackURL: config.twitterCallbackUrl
 }
 
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = process.env.CHRONAS_HOST
+  let redirect = config.chronasHost
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -45,7 +45,6 @@ function authenticateUser(req, res, next) {
       if (err || !data) {
         console.log(`[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`)
         // return res.json({ errr: `[services.twitter] - Error retrieving Twitter account data - ${JSON.stringify(err)}`, data: data, info: info, cb: req.query})
-        // return res.redirect(process.env.CHRONAS_HOST + '/#/login?failed=true')
         const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         return next(err2)
       }
@@ -88,7 +87,6 @@ function authenticateUser(req, res, next) {
       // req.session.auth = auth
       //
       // const token = jwt.sign(auth, config.jwtSecret)
-      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 

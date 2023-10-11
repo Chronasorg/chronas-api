@@ -4,20 +4,18 @@ import jwt from 'jsonwebtoken'
 import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 
-
-console.log("facebookClientId:" + config.facebookClientId);
-
 const credentials = {
-  clientID: process.env.FACEBOOK_CLIENT_ID,
-  clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-  callbackURL: process.env.FACEBOOK_CALLBACK_URL,
+  clientID: config.facebookClientId,
+  clientSecret: config.facebookClientSecret,
+  callbackURL: config.facebookCallBackUrl,
+
   profileFields: ['id', 'displayName', 'photos', 'email']
 }
 
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = process.env.CHRONAS_HOST
+  let redirect = config.chronasHost
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -88,7 +86,6 @@ function authenticateUser(req, res, next) {
       //
       // const token = jwt.sign(auth, config.jwtSecret)
       //
-      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
     })(req, res, next)
 
     // Perform inital authentication request to Facebook

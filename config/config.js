@@ -87,7 +87,12 @@ export const config = {
   rumEndpoint: envVars.RUMENDPOINT,
   rumRoleArn: envVars.RUMROLEARN,
   rumIdentityPool: envVars.RUMIDENTITYPOOL,
-  rumApplicationId: envVars.RUMAPPLICATIONID
+  facebookCallBackUrl: envVars.FACEBOOK_CALLBACK_URL,
+  githubCallbackUrl: envVars.GITHUB_CALLBACK_URL,
+  googleCallbackUrl: envVars.GOOGLE_CALLBACK_URL,
+  twitterCallbackUrl: envVars.TWITTER_CALLBACK_URL,
+  rumApplicationId: envVars.RUMAPPLICATIONID,
+  chronasHost: envVars.CHRONAS_HOST
 }
 
 console.log(config);

@@ -7,7 +7,6 @@ import User from '../models/user.model'
 import userCtrl from '../controllers/user.controller'
 
 // TODO: add email service
-// var mandrill = require('node-mandrill')(process.env.MANRILL_API)
 
 /**
  * Returns jwt token if valid username and password is provided

@@ -6,57 +6,6 @@ import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
 const axios = require('axios')
 
-//
-// function verifySubscription(user) {
-// return new Promise((resolve, reject) => {
-//       if (typeof user.subscription !== "undefined" && user.subscription.length > 4) {
-//       const subId = user.subscription
-//         axios(
-//            {
-//                method: 'post',
-//                url: 'https://api.sandbox.paypal.com/v1/oauth2/token',
-//                data: 'grant_type=client_credentials', // => this is mandatory x-www-form-urlencoded. DO NOT USE json format for this
-//                headers: {
-//                    'Accept': 'application/json',
-//                    'Content-Type': 'application/x-www-form-urlencoded',// => needed to handle data parameter
-//                    'Accept-Language': 'en_US',
-//                },
-//                auth: {
-//                    username: process.env.PAYPAL_CLIENT_ID,
-//                    password: process.env.PAYPAL_CLIENT_SECRET
-//                },
-//
-//            })
-//            .then((ress) => {
-//                  const accessToken = ress.data.access_token;
-//                  axios.get('https://api.sandbox.paypal.com/v1/billing/subscriptions/' + subId, {"reason": "Not satisfied with the service"},
-//                  { 'headers': { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' } })
-//                   .then((d) => {
-//                       if (d.data.status !== "ACTIVE") {
-//                         user.subscription = "-1"
-//                         console.debug(d)
-//                       }
-//                       else {
-//                         console.log("still active !!!!!!!")
-//                       }
-//                       resolve(user)
-//                     })
-//                   .catch((e) => {
-//
-//                     user.subscription = "-1"
-//                     resolve(user)
-//                   })
-//
-//             })
-//             .catch((e) => {
-//               user.subscription = "-1"
-//               resolve(user)
-//             })
-//       } else {
-//         resolve(user)
-//       }
-//     })
-// }
 
 /**
  * Load user and append to req.
@@ -119,7 +68,7 @@ function create(req, res, next) {
               privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1,
               subscription: (duplicatedUsername.subscription !== 'undefined') ? duplicatedUsername.subscription : "-1"
             }, config.jwtSecret)
-            return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+            return res.redirect(`${config.chronasHost}/?token=${token}`)
 
           }
             // throw err?
@@ -159,7 +108,7 @@ function create(req, res, next) {
               subscription: (savedUser.subscription !== 'undefined') ? savedUser.subscription : "-1"
             }, config.jwtSecret)
             if (req.body.thirdParty) {
-              return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
+              return res.redirect(`${config.chronasHost}/?token=${token}`)
             }
             return res.json({
               token,
@@ -230,45 +179,6 @@ function optionallyCancelSub (doCancel,subId) {
   return new Promise((resolve, reject) => {
     console.debug("doCancel",doCancel)
     return resolve();
-//     if (doCancel) {
-//      axios(
-//          {
-//              method: 'post',
-//              url: 'https://api.sandbox.paypal.com/v1/oauth2/token',
-//              data: 'grant_type=client_credentials', // => this is mandatory x-www-form-urlencoded. DO NOT USE json format for this
-//              headers: {
-//                  'Accept': 'application/json',
-//                  'Content-Type': 'application/x-www-form-urlencoded',// => needed to handle data parameter
-//                  'Accept-Language': 'en_US',
-//              },
-//              auth: {
-//                  username: process.env.PAYPAL_CLIENT_ID,
-//                  password: process.env.PAYPAL_CLIENT_SECRET
-//              },
-//
-//          })
-//          .then((res) => {
-//            console.debug(res)
-//                const accessToken = res.data.access_token;
-//                axios.post('https://api.sandbox.paypal.com/v1/billing/subscriptions/' + subId + '/cancel', {"reason": "Not satisfied with the service"},
-//                { 'headers': { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' } })
-//                 .then((d) => {
-//                   console.log(d)
-//                   return resolve()
-//                   })
-//                 .catch((e) => {
-//                   console.log(e)
-//                   return reject()
-//                 })
-//
-//           })
-//           .catch((e) => {
-//             console.log(e)
-//             return reject()
-//           })
-//     } else {
-//       return resolve()
-//     }
   })
 
 }

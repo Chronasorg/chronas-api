@@ -7,8 +7,8 @@ const mg = require('nodemailer-mailgun-transport')
 // This is your API key that you retrieve from www.mailgun.com/cp (free up to 10K monthly emails)
 const auth = {
   auth: {
-    api_key: process.env.MAILGUN_KEY,
-    domain: process.env.MAILGUN_DOMAIN
+    api_key: config.mailgunKey,
+    domain: config.mailgunDomain
   },
   // proxy: 'http://user:pass@localhost:8080' // optional proxy, default is false
 }
@@ -19,7 +19,7 @@ const nodemailerMailgun = nodemailer.createTransport(mg(auth))
  * get current deployed version
  */
 function create(req, res, doReturn = true) {
-  const { from, to = (process.env.MAILGUN_RECEIVER || '').split(','), subject, html } = req.body
+  const { from, to = (config.mailgunReceiver || '').split(','), subject, html } = req.body
   if (!from || !to || !subject || !html) {
     return res.status(httpStatus.BAD_REQUEST).json({
       message: 'Body does not contain any or all of the following fields: from, to, subject, html'

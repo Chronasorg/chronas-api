@@ -7,9 +7,9 @@ import metadataCtrl from '../controllers/metadata.controller'
 import Promise from 'bluebird'
 
 const credentials = {
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL,
+  clientID: config.googleClientId,
+  clientSecret: config.googleClientSecret,
+  callbackURL: config.googleCallbackUrl,
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
   scope: 'profile email'
 }
@@ -17,7 +17,7 @@ const credentials = {
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = process.env.CHRONAS_HOST
+  let redirect = config.chronasHost
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -45,7 +45,7 @@ function authenticateUser(req, res, next) {
     passport.authenticate('google', { session: false }, (err, data, info) => {
       if (err || !data) {
         console.log(`[services.google] - Error retrieving Google account data - ${JSON.stringify(err)}`)
-        return res.redirect(`${process.env.CHRONAS_HOST}/#/login`)
+        return res.redirect(`${config.chronasHost}/#/login`)
         // const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
         // return next(err)
       }
@@ -87,7 +87,6 @@ function authenticateUser(req, res, next) {
       // }).then(() => {
       //   req.session.auth = auth
       //   const token = jwt.sign(auth, config.jwtSecret)
-      //   return res.redirect(`${process.env.CHRONAS_HOST}/?token=${token}`)
       // })
       // return res.redirect(redirect);
     })(req, res, next)

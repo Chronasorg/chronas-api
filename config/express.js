@@ -78,9 +78,9 @@ app.use(cors())
 console.log("consumerkey Twitter express -:" + config.twitterConsumerKey);
 
 passport.use(new Strategy({
-  consumerKey: process.env.TWITTER_CONSUMER_KEY,
-  consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-  callbackURL: process.env.TWITTER_CALLBACK_URL
+  consumerKey: config.twitterConsumerKey,
+  consumerSecret: config.twitterConsumerKey,
+  callbackURL: config.twitterCallbackUrl
 },
   (token, tokenSecret, profile, cb) =>
     // In this example, the user's Twitter profile is supplied as the user

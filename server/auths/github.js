@@ -5,15 +5,15 @@ import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 
 const credentials = {
-  clientID: process.env.GITHUB_CLIENT_ID,
-  clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: process.env.GITHUB_CALLBACK_URL
+  clientID: config.githubClientId,
+  clientSecret: config.githubClientSecret,
+  callbackURL: config.githubCallbackUrl
 }
 
 function authenticateUser(req, res, next) {
   const self = this
 
-  let redirect = process.env.CHRONAS_HOST
+  let redirect = config.chronasHost
   if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
 
   // Begin process
@@ -84,7 +84,6 @@ function authenticateUser(req, res, next) {
       //
       // const token = jwt.sign(auth, config.jwtSecret)
       //
-      // return res.redirect(process.env.CHRONAS_HOST + '/?token=' + token)
       // return res.redirect(redirect);
     })(req, res, next)
 
