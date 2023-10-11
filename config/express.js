@@ -74,6 +74,9 @@ app.use(cors())
 // user's behalf, along with the user's profile.  The function must invoke `cb`
 // with a user object, which will be set at `req.user` in route handlers after
 // authentication.
+
+console.log("consumerkey Twitter express -:" + process.env.TWITTER_CONSUMER_KEY);
+
 passport.use(new Strategy({
   consumerKey: process.env.TWITTER_CONSUMER_KEY,
   consumerSecret: process.env.TWITTER_CONSUMER_SECRET,

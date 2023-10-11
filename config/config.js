@@ -8,24 +8,17 @@ export const cache = require('memory-cache')
 //check if process.env.chronasConfig is not null
 const mergedSecrets = {};
 
-console.log("config there" + process.env.chronasConfig);
-
 if (process.env.chronasConfig != null)
 {
   const lambdaEnv = JSON.parse(process.env.chronasConfig)
-  console.log("config from lambda");
   Object.assign(mergedSecrets, process.env);
   Object.keys(lambdaEnv).forEach(key => mergedSecrets[key] = lambdaEnv[key]);
 
 }else
 {
   require('dotenv').config();
-    console.log("env config");
   Object.assign(mergedSecrets, process.env);
 }
-
-
-console.log(mergedSecrets);
 
 //define the default env vars
 

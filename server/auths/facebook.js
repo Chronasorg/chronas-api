@@ -4,6 +4,11 @@ import jwt from 'jsonwebtoken'
 import { config } from '../../config/config'
 import userCtrl from '../controllers/user.controller'
 
+
+console.log("facebookClientId:" + process.env.FACEBOOK_CLIENT_ID);
+
+
+
 const credentials = {
   clientID: process.env.FACEBOOK_CLIENT_ID,
   clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
