@@ -25,7 +25,7 @@ client.getSecretValue({ SecretId: secretName }, (err, data) => {
     const DOCDB_USERNAME = username || 'myuser';
     const DOCDB_PORT = port || 'myuser';
 
-    const uri = `mongodb://${DOCDB_USERNAME}:${DOCDB_PASSWORD}@${DOCDB_ENDPOINT}:${DOCDB_PORT}/chronas-api?replicaSet=rs0`;
+    const uri = `mongodb://${DOCDB_USERNAME}:${DOCDB_PASSWORD}@${DOCDB_ENDPOINT}:${DOCDB_PORT}/chronas-api?replicaSet=rs0&retryWrites=false&directConnection=true`;
 
     // plugin bluebird promise in mongoose
     mongoose.Promise = bluebird;
