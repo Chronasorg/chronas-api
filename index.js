@@ -11,6 +11,8 @@ const region = config.region;
 
 const client = new AWS.SecretsManager({ region });
 
+console.log("try getting secret-" + secretName);
+
 client.getSecretValue({ SecretId: secretName }, (err, data) => {
   if (err) {
     console.log("error in getSecretValue ");
@@ -73,6 +75,9 @@ client.getSecretValue({ SecretId: secretName }, (err, data) => {
 
 // module.parent check is required to support mocha watch
 // src: https://github.com/mochajs/mocha/issues/1912
+
+console.log("starting app");
+debug("starting #2");
 
 if (!module.parent) {
   // listen on port config.port

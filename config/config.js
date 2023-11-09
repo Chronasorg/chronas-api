@@ -94,5 +94,3 @@ export const config = {
   rumApplicationId: envVars.RUMAPPLICATIONID,
   chronasHost: envVars.CHRONAS_HOST
 }
-
-console.log(config);
