@@ -501,9 +501,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200, 400, or 401\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 401]);",
-                  "});"
+                  "pm.test(\"Status code is 200 or 401\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Metadata single field updated successfully\", function () {",
+                  "        pm.expect(pm.response.text()).to.include(\"successfully updated\");",
+                  "    });",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -523,7 +528,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"subEntityId\": \"test_field\",\n  \"nextBody\": \"test_value\"\n}"
+              "raw": "{\"subEntityId\": \"test_field\", \"nextBody\": [\"\", \"RGB(255,0,0)\"]}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/metadata/culture/single",
@@ -546,9 +551,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200, 400, or 401\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 401]);",
-                  "});"
+                  "pm.test(\"Status code is 200 or 401\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Metadata link added successfully\", function () {",
+                  "        pm.expect(pm.response.text()).to.include(\"successfully updated\");",
+                  "    });",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -568,7 +578,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"linkId\": \"test_link\",\n  \"linkType\": \"related\"\n}"
+              "raw": "{\"linkedItemType1\": \"metadata\", \"linkedItemType2\": \"metadata\", \"linkedItemKey1\": \"culture\", \"linkedItemKey2\": \"religion\"}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/metadata/culture/addLink",
@@ -591,9 +601,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200, 400, or 401\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 401]);",
-                  "});"
+                  "pm.test(\"Status code is 200 or 401\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Metadata link removed successfully\", function () {",
+                  "        pm.expect(pm.response.text()).to.include(\"successfully updated\");",
+                  "    });",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -613,7 +628,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"linkId\": \"test_link\",\n  \"linkType\": \"related\"\n}"
+              "raw": "{\"linkedItemType1\": \"metadata\", \"linkedItemType2\": \"metadata\", \"linkedItemKey1\": \"culture\", \"linkedItemKey2\": \"religion\"}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/metadata/culture/removeLink",
