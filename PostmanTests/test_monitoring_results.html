@@ -24,8 +24,8 @@
     <div class="container">
         <div class="header">
             <h1>🚀 Chronas API Test Monitoring Results</h1>
-            <p>Comprehensive API testing every 30 seconds for 5 minutes</p>
-            <p><strong>Test Suite:</strong> Enhanced Postman Collection (40 requests, 70 assertions)</p>
+            <p>Comprehensive API testing every 30 seconds for 3 minutes</p>
+            <p><strong>Test Suite:</strong> Enhanced Postman Collection (34 requests, 67 assertions)</p>
         </div>
         
         <div class="summary">
@@ -63,135 +63,331 @@
                 </tr>
             </thead>
             <tbody id="resultsBody">
+
+        <h2>⚡ Individual Test Response Times</h2>
+        <div id="responseTimesContainer">
+        </div>
                 <tr>
                     <td>1</td>
-                    <td>2025-09-12 14:55:21</td>
-                    <td>19186ms</td>
-                    <td>40</td>
-                    <td>70</td>
+                    <td>2025-09-12 16:13:00</td>
+                    <td>20742ms</td>
+                    <td>34</td>
+                    <td>67</td>
                     <td>0</td>
                     <td>100.0%</td>
-                    <td>357ms</td>
+                    <td>484ms</td>
                     <td class="success">✅ SUCCESS</td>
                 </tr>
+        <div class="performance-chart">
+            <h4>Run 1 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 1077ms</div>
+                <div>Version Info: 75ms</div>
+                <div>Welcome Endpoint: 469ms</div>
+                <div>Health Check: 83ms</div>
+                <div>Get Metadata List: 133ms</div>
+                <div>Get Metadata with Filters: 1255ms</div>
+                <div>Get Metadata with Type and End Parameters: 429ms</div>
+                <div>Get Specific Metadata by ID: 108ms</div>
+                <div>Get Linked Metadata: 3517ms</div>
+                <div>Create Metadata: 1205ms</div>
+                <div>Update Metadata: 138ms</div>
+                <div>Update Single Metadata Field: 210ms</div>
+                <div>Add Metadata Link: 411ms</div>
+                <div>Remove Metadata Link: 391ms</div>
+                <div>Delete Metadata: 98ms</div>
+                <div>Upvote Metadata: 163ms</div>
+                <div>Downvote Metadata: 222ms</div>
+                <div>Get Single Marker: 162ms</div>
+                <div>Get Markers with Types and Count: 789ms</div>
+                <div>Get Limited Markers: 108ms</div>
+                <div>Create Marker: 243ms</div>
+                <div>Update Marker: 117ms</div>
+                <div>Delete Marker: 121ms</div>
+                <div>Get Areas List: 2220ms</div>
+                <div>Get Area by Year (2000): 570ms</div>
+                <div>Get Area by Year (-2000): 372ms</div>
+                <div>Get Historical Areas (1947): 181ms</div>
+                <div>Get Forum Discussions: 226ms</div>
+                <div>Get User by Email: 89ms</div>
+                <div>Create User: 409ms</div>
+                <div>Update User: 80ms</div>
+                <div>Delete User: 80ms</div>
+                <div>Get Statistics: 642ms</div>
+                <div>Get Flags List: 82ms</div>
+            </div>
+        </div>
                 <tr>
                     <td>2</td>
-                    <td>2025-09-12 14:56:14</td>
-                    <td>19594ms</td>
-                    <td>40</td>
-                    <td>70</td>
+                    <td>2025-09-12 16:13:55</td>
+                    <td>19182ms</td>
+                    <td>34</td>
+                    <td>67</td>
                     <td>0</td>
                     <td>100.0%</td>
-                    <td>365ms</td>
+                    <td>439ms</td>
                     <td class="success">✅ SUCCESS</td>
                 </tr>
+        <div class="performance-chart">
+            <h4>Run 2 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 618ms</div>
+                <div>Version Info: 70ms</div>
+                <div>Welcome Endpoint: 121ms</div>
+                <div>Health Check: 68ms</div>
+                <div>Get Metadata List: 142ms</div>
+                <div>Get Metadata with Filters: 1036ms</div>
+                <div>Get Metadata with Type and End Parameters: 405ms</div>
+                <div>Get Specific Metadata by ID: 89ms</div>
+                <div>Get Linked Metadata: 4019ms</div>
+                <div>Create Metadata: 529ms</div>
+                <div>Update Metadata: 396ms</div>
+                <div>Update Single Metadata Field: 198ms</div>
+                <div>Add Metadata Link: 381ms</div>
+                <div>Remove Metadata Link: 388ms</div>
+                <div>Delete Metadata: 75ms</div>
+                <div>Upvote Metadata: 139ms</div>
+                <div>Downvote Metadata: 153ms</div>
+                <div>Get Single Marker: 159ms</div>
+                <div>Get Markers with Types and Count: 746ms</div>
+                <div>Get Limited Markers: 97ms</div>
+                <div>Create Marker: 200ms</div>
+                <div>Update Marker: 101ms</div>
+                <div>Delete Marker: 102ms</div>
+                <div>Get Areas List: 2240ms</div>
+                <div>Get Area by Year (2000): 166ms</div>
+                <div>Get Area by Year (-2000): 144ms</div>
+                <div>Get Historical Areas (1947): 177ms</div>
+                <div>Get Forum Discussions: 208ms</div>
+                <div>Get User by Email: 79ms</div>
+                <div>Create User: 513ms</div>
+                <div>Update User: 115ms</div>
+                <div>Delete User: 100ms</div>
+                <div>Get Statistics: 859ms</div>
+                <div>Get Flags List: 95ms</div>
+            </div>
+        </div>
                 <tr>
                     <td>3</td>
-                    <td>2025-09-12 15:05:11</td>
-                    <td>19875ms</td>
-                    <td>40</td>
-                    <td>70</td>
-                    <td>0</td>
-                    <td>100.0%</td>
-                    <td>373ms</td>
-                    <td class="success">✅ SUCCESS</td>
+                    <td>2025-09-12 16:14:49</td>
+                    <td>20550ms</td>
+                    <td>34</td>
+                    <td>67</td>
+                    <td>1</td>
+                    <td>98.5%</td>
+                    <td>478ms</td>
+                    <td class="error">❌ FAILED (1 failures)</td>
                 </tr>
+        <div class="performance-chart">
+            <h4>Run 3 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 741ms</div>
+                <div>Version Info: 64ms</div>
+                <div>Welcome Endpoint: 88ms</div>
+                <div>Health Check: 57ms</div>
+                <div>Get Metadata List: 119ms</div>
+                <div>Get Metadata with Filters: 1393ms</div>
+                <div>Get Metadata with Type and End Parameters: 361ms</div>
+                <div>Get Specific Metadata by ID: 83ms</div>
+                <div>Get Linked Metadata: 2700ms</div>
+                <div>Create Metadata: 113ms</div>
+                <div>Update Metadata: 114ms</div>
+                <div>Update Single Metadata Field: 208ms</div>
+                <div>Add Metadata Link: 604ms</div>
+                <div>Remove Metadata Link: 441ms</div>
+                <div>Delete Metadata: 121ms</div>
+                <div>Upvote Metadata: 204ms</div>
+                <div>Downvote Metadata: 385ms</div>
+                <div>Get Single Marker: 481ms</div>
+                <div>Get Markers with Types and Count: 3137ms</div>
+                <div>Get Limited Markers: 111ms</div>
+                <div>Create Marker: 132ms</div>
+                <div>Update Marker: 118ms</div>
+                <div>Delete Marker: 108ms</div>
+                <div>Get Areas List: 2181ms</div>
+                <div>Get Area by Year (2000): 236ms</div>
+                <div>Get Area by Year (-2000): 122ms</div>
+                <div>Get Historical Areas (1947): 172ms</div>
+                <div>Get Forum Discussions: 238ms</div>
+                <div>Get User by Email: 86ms</div>
+                <div>Create User: 471ms</div>
+                <div>Update User: 109ms</div>
+                <div>Delete User: 78ms</div>
+                <div>Get Statistics: 626ms</div>
+                <div>Get Flags List: 65ms</div>
+            </div>
+        </div>
                 <tr>
                     <td>4</td>
-                    <td>2025-09-12 15:06:05</td>
-                    <td>19665ms</td>
-                    <td>40</td>
-                    <td>70</td>
+                    <td>2025-09-12 16:15:44</td>
+                    <td>18288ms</td>
+                    <td>34</td>
+                    <td>67</td>
                     <td>0</td>
                     <td>100.0%</td>
-                    <td>367ms</td>
+                    <td>411ms</td>
                     <td class="success">✅ SUCCESS</td>
                 </tr>
+        <div class="performance-chart">
+            <h4>Run 4 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 674ms</div>
+                <div>Version Info: 62ms</div>
+                <div>Welcome Endpoint: 98ms</div>
+                <div>Health Check: 61ms</div>
+                <div>Get Metadata List: 121ms</div>
+                <div>Get Metadata with Filters: 1504ms</div>
+                <div>Get Metadata with Type and End Parameters: 274ms</div>
+                <div>Get Specific Metadata by ID: 96ms</div>
+                <div>Get Linked Metadata: 3802ms</div>
+                <div>Create Metadata: 95ms</div>
+                <div>Update Metadata: 109ms</div>
+                <div>Update Single Metadata Field: 152ms</div>
+                <div>Add Metadata Link: 327ms</div>
+                <div>Remove Metadata Link: 217ms</div>
+                <div>Delete Metadata: 91ms</div>
+                <div>Upvote Metadata: 132ms</div>
+                <div>Downvote Metadata: 146ms</div>
+                <div>Get Single Marker: 155ms</div>
+                <div>Get Markers with Types and Count: 669ms</div>
+                <div>Get Limited Markers: 92ms</div>
+                <div>Create Marker: 264ms</div>
+                <div>Update Marker: 106ms</div>
+                <div>Delete Marker: 98ms</div>
+                <div>Get Areas List: 1888ms</div>
+                <div>Get Area by Year (2000): 172ms</div>
+                <div>Get Area by Year (-2000): 122ms</div>
+                <div>Get Historical Areas (1947): 550ms</div>
+                <div>Get Forum Discussions: 380ms</div>
+                <div>Get User by Email: 93ms</div>
+                <div>Create User: 398ms</div>
+                <div>Update User: 77ms</div>
+                <div>Delete User: 87ms</div>
+                <div>Get Statistics: 787ms</div>
+                <div>Get Flags List: 78ms</div>
+            </div>
+        </div>
                 <tr>
                     <td>5</td>
-                    <td>2025-09-12 15:06:58</td>
-                    <td>18841ms</td>
-                    <td>40</td>
-                    <td>70</td>
+                    <td>2025-09-12 16:16:37</td>
+                    <td>18739ms</td>
+                    <td>34</td>
+                    <td>67</td>
                     <td>0</td>
                     <td>100.0%</td>
-                    <td>347ms</td>
+                    <td>425ms</td>
                     <td class="success">✅ SUCCESS</td>
                 </tr>
+        <div class="performance-chart">
+            <h4>Run 5 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 602ms</div>
+                <div>Version Info: 64ms</div>
+                <div>Welcome Endpoint: 120ms</div>
+                <div>Health Check: 68ms</div>
+                <div>Get Metadata List: 125ms</div>
+                <div>Get Metadata with Filters: 1407ms</div>
+                <div>Get Metadata with Type and End Parameters: 253ms</div>
+                <div>Get Specific Metadata by ID: 80ms</div>
+                <div>Get Linked Metadata: 3474ms</div>
+                <div>Create Metadata: 222ms</div>
+                <div>Update Metadata: 673ms</div>
+                <div>Update Single Metadata Field: 206ms</div>
+                <div>Add Metadata Link: 371ms</div>
+                <div>Remove Metadata Link: 181ms</div>
+                <div>Delete Metadata: 121ms</div>
+                <div>Upvote Metadata: 224ms</div>
+                <div>Downvote Metadata: 134ms</div>
+                <div>Get Single Marker: 173ms</div>
+                <div>Get Markers with Types and Count: 792ms</div>
+                <div>Get Limited Markers: 110ms</div>
+                <div>Create Marker: 123ms</div>
+                <div>Update Marker: 102ms</div>
+                <div>Delete Marker: 98ms</div>
+                <div>Get Areas List: 2435ms</div>
+                <div>Get Area by Year (2000): 292ms</div>
+                <div>Get Area by Year (-2000): 125ms</div>
+                <div>Get Historical Areas (1947): 197ms</div>
+                <div>Get Forum Discussions: 195ms</div>
+                <div>Get User by Email: 79ms</div>
+                <div>Create User: 495ms</div>
+                <div>Update User: 76ms</div>
+                <div>Delete User: 77ms</div>
+                <div>Get Statistics: 704ms</div>
+                <div>Get Flags List: 66ms</div>
+            </div>
+        </div>
                 <tr>
                     <td>6</td>
-                    <td>2025-09-12 15:07:51</td>
-                    <td>19669ms</td>
-                    <td>40</td>
-                    <td>70</td>
-                    <td>0</td>
-                    <td>100.0%</td>
-                    <td>364ms</td>
-                    <td class="success">✅ SUCCESS</td>
-                </tr>
-                <tr>
-                    <td>7</td>
-                    <td>2025-09-12 15:08:44</td>
-                    <td>19487ms</td>
-                    <td>40</td>
-                    <td>70</td>
-                    <td>0</td>
-                    <td>100.0%</td>
-                    <td>363ms</td>
-                    <td class="success">✅ SUCCESS</td>
-                </tr>
-                <tr>
-                    <td>8</td>
-                    <td>2025-09-12 15:09:38</td>
-                    <td>21710ms</td>
-                    <td>40</td>
-                    <td>70</td>
+                    <td>2025-09-12 16:17:31</td>
+                    <td>18578ms</td>
+                    <td>34</td>
+                    <td>67</td>
                     <td>0</td>
                     <td>100.0%</td>
                     <td>419ms</td>
                     <td class="success">✅ SUCCESS</td>
                 </tr>
-                <tr>
-                    <td>9</td>
-                    <td>2025-09-12 15:11:07</td>
-                    <td>21787ms</td>
-                    <td>40</td>
-                    <td>70</td>
-                    <td>0</td>
-                    <td>100.0%</td>
-                    <td>420ms</td>
-                    <td class="success">✅ SUCCESS</td>
-                </tr>
-                <tr>
-                    <td>10</td>
-                    <td>2025-09-12 15:12:03</td>
-                    <td>18831ms</td>
-                    <td>40</td>
-                    <td>70</td>
-                    <td>0</td>
-                    <td>100.0%</td>
-                    <td>347ms</td>
-                    <td class="success">✅ SUCCESS</td>
-                </tr>
+        <div class="performance-chart">
+            <h4>Run 6 - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+                <div>Login - Valid Credentials: 647ms</div>
+                <div>Version Info: 118ms</div>
+                <div>Welcome Endpoint: 144ms</div>
+                <div>Health Check: 61ms</div>
+                <div>Get Metadata List: 286ms</div>
+                <div>Get Metadata with Filters: 1668ms</div>
+                <div>Get Metadata with Type and End Parameters: 383ms</div>
+                <div>Get Specific Metadata by ID: 71ms</div>
+                <div>Get Linked Metadata: 3463ms</div>
+                <div>Create Metadata: 136ms</div>
+                <div>Update Metadata: 93ms</div>
+                <div>Update Single Metadata Field: 239ms</div>
+                <div>Add Metadata Link: 232ms</div>
+                <div>Remove Metadata Link: 175ms</div>
+                <div>Delete Metadata: 165ms</div>
+                <div>Upvote Metadata: 142ms</div>
+                <div>Downvote Metadata: 137ms</div>
+                <div>Get Single Marker: 158ms</div>
+                <div>Get Markers with Types and Count: 671ms</div>
+                <div>Get Limited Markers: 102ms</div>
+                <div>Create Marker: 97ms</div>
+                <div>Update Marker: 97ms</div>
+                <div>Delete Marker: 114ms</div>
+                <div>Get Areas List: 2096ms</div>
+                <div>Get Area by Year (2000): 537ms</div>
+                <div>Get Area by Year (-2000): 140ms</div>
+                <div>Get Historical Areas (1947): 246ms</div>
+                <div>Get Forum Discussions: 237ms</div>
+                <div>Get User by Email: 80ms</div>
+                <div>Create User: 483ms</div>
+                <div>Update User: 99ms</div>
+                <div>Delete User: 184ms</div>
+                <div>Get Statistics: 696ms</div>
+                <div>Get Flags List: 71ms</div>
+            </div>
+        </div>
             </tbody>
         </table>
+        
+        </div> <!-- Close responseTimesContainer -->
 
         <div class="chart-container">
             <h2>📊 Final Statistics</h2>
             <div class="performance-chart">
                 <h3>🎯 Overall Success Rate</h3>
-                <div style="font-size: 36px; color: #4CAF50; font-weight: bold;">100.0%</div>
-                <p>10 out of 10 test runs successful</p>
+                <div style="font-size: 36px; color: #4CAF50; font-weight: bold;">83.3%</div>
+                <p>5 out of 6 test runs successful</p>
             </div>
             <div class="performance-chart">
                 <h3>⚡ Performance</h3>
-                <div style="font-size: 24px; color: #2196F3; font-weight: bold;">372ms</div>
+                <div style="font-size: 24px; color: #2196F3; font-weight: bold;">443ms</div>
                 <p>Average response time across all runs</p>
             </div>
             <div class="performance-chart">
                 <h3>🔍 Total Coverage</h3>
-                <div style="font-size: 24px; color: #FF9800; font-weight: bold;">700</div>
-                <p>Total assertions executed (0 failures)</p>
+                <div style="font-size: 24px; color: #FF9800; font-weight: bold;">402</div>
+                <p>Total assertions executed (1 failures)</p>
             </div>
         </div>
 
@@ -201,26 +397,26 @@
                 <li><strong>Test Duration:</strong> 5 minutes (10 runs every 30 seconds)</li>
                 <li><strong>Test Suite:</strong> Enhanced Postman Collection</li>
                 <li><strong>API Endpoint:</strong> https://api.chronas.org</li>
-                <li><strong>Total Test Runs:</strong> 10</li>
-                <li><strong>Successful Runs:</strong> 10</li>
-                <li><strong>Failed Runs:</strong> 0</li>
-                <li><strong>Overall Success Rate:</strong> 100.0%</li>
-                <li><strong>Total Assertions:</strong> 700</li>
-                <li><strong>Total Failures:</strong> 0</li>
-                <li><strong>Average Response Time:</strong> 372ms</li>
+                <li><strong>Total Test Runs:</strong> 6</li>
+                <li><strong>Successful Runs:</strong> 5</li>
+                <li><strong>Failed Runs:</strong> 1</li>
+                <li><strong>Overall Success Rate:</strong> 83.3%</li>
+                <li><strong>Total Assertions:</strong> 402</li>
+                <li><strong>Total Failures:</strong> 1</li>
+                <li><strong>Average Response Time:</strong> 443ms</li>
             </ul>
         </div>
 
         <script>
             // Update summary metrics
-            document.getElementById('totalRuns').textContent = '10';
-            document.getElementById('successRate').textContent = '100.0%';
-            document.getElementById('avgResponseTime').textContent = '372ms';
-            document.getElementById('totalAssertions').textContent = '700';
+            document.getElementById('totalRuns').textContent = '6';
+            document.getElementById('successRate').textContent = '83.3%';
+            document.getElementById('avgResponseTime').textContent = '443ms';
+            document.getElementById('totalAssertions').textContent = '402';
         </script>
 
         <footer style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
-            <p>Generated on Fr 12 Sep 2025 15:12:26 CEST | Chronas API Test Monitoring</p>
+            <p>Generated on Fr 12 Sep 2025 16:17:54 CEST | Chronas API Test Monitoring</p>
         </footer>
     </div>
 </body>

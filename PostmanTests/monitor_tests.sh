@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Test monitoring script - runs tests every 30 seconds for 5 minutes
-echo "Starting API test monitoring - 5 minutes, every 30 seconds"
+# Test monitoring script - runs tests every 30 seconds for 3 minutes
+echo "Starting API test monitoring - 3 minutes, every 30 seconds"
 echo "Results will be saved to test_monitoring_results.html"
 
 # Initialize variables
@@ -37,8 +37,8 @@ cat > $RESULTS_FILE << 'EOF'
     <div class="container">
         <div class="header">
             <h1>🚀 Chronas API Test Monitoring Results</h1>
-            <p>Comprehensive API testing every 30 seconds for 5 minutes</p>
-            <p><strong>Test Suite:</strong> Enhanced Postman Collection (40 requests, 70 assertions)</p>
+            <p>Comprehensive API testing every 30 seconds for 3 minutes</p>
+            <p><strong>Test Suite:</strong> Enhanced Postman Collection (34 requests, 67 assertions)</p>
         </div>
         
         <div class="summary">
@@ -76,10 +76,14 @@ cat > $RESULTS_FILE << 'EOF'
                 </tr>
             </thead>
             <tbody id="resultsBody">
+
+        <h2>⚡ Individual Test Response Times</h2>
+        <div id="responseTimesContainer">
+        </div>
 EOF
 
-# Run tests for 5 minutes (10 runs, every 30 seconds)
-TOTAL_RUNS=10
+# Run tests for 3 minutes (6 runs, every 30 seconds)
+TOTAL_RUNS=6
 RUN_COUNT=0
 TOTAL_DURATION=0
 TOTAL_RESPONSE_TIME=0
@@ -129,6 +133,9 @@ for i in $(seq 1 $TOTAL_RUNS); do
         TOTAL_ASSERTIONS=$((TOTAL_ASSERTIONS + ASSERTIONS))
         TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
         
+        # Extract individual test response times
+        RESPONSE_TIMES=$(jq -r '.run.executions[] | "\(.item.name):\(.response.responseTime)"' $RESULT_FILE 2>/dev/null | tr '\n' '|' || echo "")
+        
         # Format duration
         DURATION_MS=$(echo "scale=0; $DURATION / 1" | bc -l 2>/dev/null || echo "0")
         AVG_RESPONSE_ROUNDED=$(echo "scale=0; $AVG_RESPONSE / 1" | bc -l 2>/dev/null || echo "0")
@@ -147,6 +154,26 @@ for i in $(seq 1 $TOTAL_RUNS); do
                     <td class="$STATUS_CLASS">$STATUS</td>
                 </tr>
 EOF
+
+        # Add response times details
+        if [ ! -z "$RESPONSE_TIMES" ]; then
+            cat >> $RESULTS_FILE << EOF
+        <div class="performance-chart">
+            <h4>Run $RUN_COUNT - Individual Response Times</h4>
+            <div style="font-size: 12px; text-align: left;">
+EOF
+            echo "$RESPONSE_TIMES" | tr '|' '\n' | while IFS=':' read -r test_name response_time; do
+                if [ ! -z "$test_name" ] && [ ! -z "$response_time" ]; then
+                    cat >> $RESULTS_FILE << EOF
+                <div>$test_name: ${response_time}ms</div>
+EOF
+                fi
+            done
+            cat >> $RESULTS_FILE << EOF
+            </div>
+        </div>
+EOF
+        fi
     else
         # Test failed to run
         cat >> $RESULTS_FILE << EOF
@@ -186,6 +213,8 @@ fi
 cat >> $RESULTS_FILE << EOF
             </tbody>
         </table>
+        
+        </div> <!-- Close responseTimesContainer -->
 
         <div class="chart-container">
             <h2>📊 Final Statistics</h2>
