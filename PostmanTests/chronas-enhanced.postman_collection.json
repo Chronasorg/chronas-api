@@ -896,43 +896,6 @@
           }
         },
         {
-          "name": "Get Specific Marker by ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200 or 404\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
-                  "});",
-                  "if (pm.response.code === 200) {",
-                  "    pm.test(\"Response contains marker data\", function () {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.not.be.empty;",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/markers/test_marker_id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "markers",
-                "test_marker_id"
-              ]
-            }
-          }
-        },
-        {
           "name": "Create Marker",
           "event": [
             {
@@ -1559,42 +1522,6 @@
     {
       "name": "Game Management",
       "item": [
-        {
-          "name": "Get Game State",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200 or 404\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
-                  "});",
-                  "if (pm.response.code === 200) {",
-                  "    pm.test(\"Response contains game data\", function () {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.not.be.empty;",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/game",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "game"
-              ]
-            }
-          }
-        },
         {
           "name": "Create Game Session",
           "event": [
