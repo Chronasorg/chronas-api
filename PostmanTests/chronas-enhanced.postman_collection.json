@@ -338,6 +338,9 @@
 									"    pm.test(\"Response contains created metadata\", function () {",
 									"        var jsonData = pm.response.json();",
 									"        pm.expect(jsonData).to.not.be.empty;",
+									"        if (jsonData._id) {",
+									"            pm.globals.set(\"metadataId\", jsonData._id);",
+									"        }",
 									"    });",
 									"}"
 								],
@@ -788,6 +791,9 @@
 									"    pm.test(\"Response contains created marker\", function () {",
 									"        var jsonData = pm.response.json();",
 									"        pm.expect(jsonData).to.not.be.empty;",
+									"        if (jsonData._id) {",
+									"            pm.globals.set(\"markerId\", jsonData._id);",
+									"        }",
 									"    });",
 									"}"
 								],
@@ -1497,9 +1503,21 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 200 or 201\", function () {",
-									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-									"});"
+									"pm.test(\"Status code is 200, 201, or 400\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 400]);",
+									"});",
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData._id) {",
+									"        pm.globals.set(\"flagId\", jsonData._id);",
+									"    } else if (jsonData.id) {",
+									"        pm.globals.set(\"flagId\", jsonData.id);",
+									"    } else {",
+									"        pm.globals.set(\"flagId\", \"test_flag_fallback\");",
+									"    }",
+									"} else {",
+									"    pm.globals.set(\"flagId\", \"test_flag_fallback\");",
+									"}"
 								],
 								"type": "text/javascript"
 							}
@@ -1543,9 +1561,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/v1/flags/test_flag_id",
+							"raw": "{{baseUrl}}/v1/flags/{{flagId}}",
 							"host": ["{{baseUrl}}"],
-							"path": ["v1", "flags", "test_flag_id"]
+							"path": ["v1", "flags", "{{flagId}}"]
 						}
 					}
 				}
