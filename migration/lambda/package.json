@@ -1,0 +1,28 @@
+{
+  "name": "chronas-migration-lambdas",
+  "version": "1.0.0",
+  "description": "Lambda functions for DocumentDB migration",
+  "type": "module",
+  "main": "migration-handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "zip -r migration-package.zip *.js package.json node_modules/",
+    "deploy": "aws lambda update-function-code --function-name chronas-migration-handler --zip-file fileb://migration-package.zip"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "aws-sdk": "^2.1366.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119"
+  },
+  "keywords": [
+    "mongodb",
+    "documentdb",
+    "migration",
+    "aws",
+    "lambda"
+  ],
+  "author": "Chronas Migration Team",
+  "license": "MIT"
+}
