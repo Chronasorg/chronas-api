@@ -1,9 +1,9 @@
 import express from 'express'
 import expressJwt from 'express-jwt'
-import areaCtrl from '../controllers/area.controller'
-import revisionCtrl from '../controllers/revision.controller'
-import { config } from '../../config/config'
-import checkPrivilege from '../helpers/privileges'
+import areaCtrl from '../controllers/area.controller.js'
+import revisionCtrl from '../controllers/revision.controller.js'
+import { config } from '../../config/config.js'
+import checkPrivilege from '../helpers/privileges.js'
 
 const router = express.Router() // eslint-disable-line new-cap
 

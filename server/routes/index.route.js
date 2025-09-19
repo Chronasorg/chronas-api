@@ -1,18 +1,18 @@
-import express from 'express'
-import areaRoutes from './area.route'
-import authRoutes from './auth.route'
-import collectionRoutes from './collection.route'
-import flagRoutes from './flag.route'
-import gameRoutes from './game.route'
-import userRoutes from './user.route'
-import contactRoutes from './contact.router'
-import markerRoutes from './marker.route'
-import metadataRoutes from './metadata.route'
-import staticRoutes from './static.route'
-import statisticsRoutes from './statistics.route'
-import revisionRoutes from './revision.route'
-import versionRoutes from './version.router'
-import boardRoutes from '../boardComponent/routes'
+import express from 'express';
+import areaRoutes from './area.route.js';
+import authRoutes from './auth.route.js';
+import collectionRoutes from './collection.route.js';
+import flagRoutes from './flag.route.js';
+import gameRoutes from './game.route.js';
+import userRoutes from './user.route.js';
+import contactRoutes from './contact.router.js';
+import markerRoutes from './marker.route.js';
+import metadataRoutes from './metadata.route.js';
+import staticRoutes from './static.route.js';
+import statisticsRoutes from './statistics.route.js';
+import revisionRoutes from './revision.route.js';
+import versionRoutes from './version.router.js';
+import boardRoutes from '../boardComponent/routes.js';
 
 const router = express.Router() // eslint-disable-line new-cap
 

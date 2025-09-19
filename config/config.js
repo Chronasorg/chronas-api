@@ -1,6 +1,9 @@
-import Joi from 'joi'
-export const cache = require('memory-cache')
-// import logger from './winston'
+import Joi from 'joi';
+import memoryCache from 'memory-cache';
+import dotenv from 'dotenv';
+// import logger from './winston.js'
+
+export const cache = memoryCache;
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 
@@ -16,7 +19,7 @@ if (process.env.chronasConfig != null)
 
 }else
 {
-  require('dotenv').config();
+  dotenv.config();
   Object.assign(mergedSecrets, process.env);
 }
 

@@ -1,8 +1,7 @@
-import httpStatus from 'http-status'
-import { config } from '../../config/config'
-
-const nodemailer = require('nodemailer')
-const mg = require('nodemailer-mailgun-transport')
+import httpStatus from 'http-status';
+import { config } from '../../config/config.js';
+import nodemailer from 'nodemailer';
+import mg from 'nodemailer-mailgun-transport';
 
 // This is your API key that you retrieve from www.mailgun.com/cp (free up to 10K monthly emails)
 const auth = {

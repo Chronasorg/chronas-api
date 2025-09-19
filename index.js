@@ -1,83 +1,54 @@
 import mongoose from 'mongoose';
-import { config } from './config/config';
-import app from './config/express';
-import AWS from 'aws-sdk';
+import { config } from './config/config.js';
+import app from './config/express.js';
 import bluebird from 'bluebird';
+import debug from 'debug';
 
-const debug = require('debug')('chronas-api:index')
+const debugLog = debug('chronas-api:index');
 
-const secretName = config.docDbsecretName;
-const region = config.region;
+// Simplified MongoDB connection for development/testing
+// TODO: Implement AWS SDK v3 Secrets Manager integration in task 6.1
+const mongoUri = process.env.MONGO_HOST || 'mongodb://localhost:27017/chronas-api';
 
-const client = new AWS.SecretsManager({ region });
+// plugin bluebird promise in mongoose
+mongoose.Promise = bluebird;
 
-client.getSecretValue({ SecretId: secretName }, (err, data) => {
-  if (err) {
-    console.log("error in getSecretValue ");
-    console.log(err);
-    return reject('SecretString not found');
-  }
+console.log("start connecting to mongoDB");
 
-  if (typeof data.SecretString != "undefined") {
-    const { host, password, username, port } = JSON.parse(data.SecretString);
-    const DOCDB_ENDPOINT = host || 'DOCDBURL';
-    const DOCDB_PASSWORD = encodeURIComponent(password) || 'DOCPASSWORD';
-    const DOCDB_USERNAME = username || 'myuser';
-    const DOCDB_PORT = port || 'myuser';
+// MongoDB connection options
+const mongooseOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  maxPoolSize: 10,
+  minPoolSize: 5,
+  keepAlive: true,
+  keepAliveInitialDelay: 300000,
+};
 
-    const uri = `mongodb://${DOCDB_USERNAME}:${DOCDB_PASSWORD}@${DOCDB_ENDPOINT}:${DOCDB_PORT}/chronas-api?replicaSet=rs0&retryWrites=false&directConnection=true`;
+// Connect to MongoDB
+mongoose.connect(mongoUri, mongooseOptions)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.log('ERROR MongoDB - ' + err.message));
 
-    // plugin bluebird promise in mongoose
-    mongoose.Promise = bluebird;
+mongoose.connection.on('error', () => console.log('ERROR MongoDB'));
+mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
+mongoose.connection.on('connected', () => console.log('Connected to MongoDB'));
+mongoose.connection.on('reconnected', () => console.log('Reconnected to MongoDB'));
+mongoose.connection.on('close', () => console.log('Connection to MongoDB closed'));
 
-    console.log("start connecting to mongoDB");
-
-    // MongoDB connection options with connection pooling
-    const mongooseOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Set the maximum number of connections in the 
-      minPoolSize: 10, // Set the minimum number of connections in the 
-      //poolSize: 10, // Set the maximum number of connections in the pool
-      keepAlive: true, // Set to true to enable keepAlive on the socket for long-running applications
-      keepAliveInitialDelay: 300000, // The number of milliseconds to wait before initiating keepAlive on the socket
-    };
-    
-    // Connect to MongoDB using the provided options
-    mongoose.connect(uri, mongooseOptions)
-      .then(() => console.log('Connected to MongoDB by mongoose.connect'))
-      .catch(err => console.log('ERROR MongoDB - ' + err.message));
-    
-    mongoose.connection.on('error', () => console.log('ERROR MongoDB'));
-    
-    mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
-    
-    mongoose.connection.on('connected', () => console.log('Connected to MongoDB'));
-    
-    mongoose.connection.on('reconnected', () => console.log('Reconnected to MongoDB'));
-    
-    mongoose.connection.on('close', () => console.log('Connection to MongoDB closed'));
-    
-    mongoose.connection.on('SIGINT', () => mongoose.connection.close(() => {
-      console.log('Connection to MongoDB closed through app termination');
-      process.exit(0);
-    }));
-    
-    console.log("mongoose.connection.readyState: " + mongoose.connection.readyState);
-    
-  } else {
-    console.log("secret is: undefined");
-    reject('SecretString is undefined');
-  }
+process.on('SIGINT', () => {
+  mongoose.connection.close(() => {
+    console.log('Connection to MongoDB closed through app termination');
+    process.exit(0);
+  });
 });
 
-// module.parent check is required to support mocha watch
-// src: https://github.com/mochajs/mocha/issues/1912
-
-if (!module.parent) {
+// ES6 modules don't have module.parent, use import.meta.main instead
+// Check if this module is being run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   // listen on port config.port
   app.listen(config.port, () => {
-    debug(`server started on port ${config.port} (${config.env})`)
+    debugLog(`server started on port ${config.port} (${config.env})`)
   })
 }
 

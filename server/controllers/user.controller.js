@@ -1,10 +1,10 @@
-import User from '../models/user.model'
-import logger from '../../config/winston'
-import APIError from '../helpers/APIError'
-import { config } from '../../config/config'
-import jwt from 'jsonwebtoken'
-import httpStatus from 'http-status'
-const axios = require('axios')
+import User from '../models/user.model.js';
+import logger from '../../config/winston.js';
+import APIError from '../helpers/APIError.js';
+import { config } from '../../config/config.js';
+import jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import axios from 'axios';
 
 
 /**

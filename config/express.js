@@ -13,23 +13,23 @@ import passport from 'passport'
 import { Strategy } from 'passport-twitter'
 import AWSXRay from 'aws-xray-sdk';
 
-import winstonInstance from './winston'
-import routes from '../server/routes/index.route'
-import { config } from './config'
-import APIError from '../server/helpers/APIError'
-import versionRoutes from '../server/routes/version.router'
+import winstonInstance from './winston.js';
+import routes from '../server/routes/index.route.js';
+import { config } from './config.js';
+import APIError from '../server/helpers/APIError.js';
+import versionRoutes from '../server/routes/version.router.js';
 
 const app = express()
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
-const swaggerUi = require('swagger-ui-express')
-const YAML = require('yamljs')
-const swaggerDocument = YAML.load('./swagger.yaml')
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+const swaggerDocument = YAML.load('./swagger.yaml');
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-const appInsights = require('applicationinsights')
+import appInsights from 'applicationinsights';
 
 console.log("appInsightsString" + config.appInsightsConnectionString);
 
@@ -106,7 +106,8 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /* key: 'sid', cookie: { secure: true }*/ }))
+import expressSession from 'express-session';
+app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /* key: 'sid', cookie: { secure: true }*/ }));
 
 app.use(passport.initialize())
 app.use(passport.session())

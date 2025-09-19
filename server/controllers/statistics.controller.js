@@ -1,10 +1,9 @@
-import Marker from '../models/marker.model'
-import Metadata from '../models/metadata.model'
-import User from '../models/user.model'
-import Revision from '../models/revision.model'
-
-const Discussion = require('../boardComponent/entities/discussion/model')
-const Opinion = require('../boardComponent/entities/opinion/model')
+import Marker from '../models/marker.model.js';
+import Metadata from '../models/metadata.model.js';
+import User from '../models/user.model.js';
+import Revision from '../models/revision.model.js';
+import Discussion from '../boardComponent/entities/discussion/model.js';
+import Opinion from '../boardComponent/entities/opinion/model.js';
 
 
 /**

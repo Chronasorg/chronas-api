@@ -1,17 +1,11 @@
 import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
 import chai, { expect } from 'chai'
-import app from '../../..'
-import mongoUnit from 'mongo-unit'
+import app from '../../../index.js'
 
 chai.config.includeStack = true
 
 describe('## Areas APIs', () => {
-  const testMongoUrl = process.env.MONGO_HOST
-  const testData = require('./fixtures/testData.json')
-
-  before(() => mongoUnit.initDb(testMongoUrl, testData))
-  after(() => mongoUnit.drop())
 
   const validUserCredentials = {
     email: 'test@test.de',

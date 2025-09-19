@@ -1,15 +1,7 @@
-const prepare = require('mocha-prepare')
-const mongoUnit = require('mongo-unit')
-
-// https://www.toptal.com/nodejs/integration-and-e2e-tests-nodejs-mongodb
-
-prepare(done => mongoUnit.start()
- .then((testMongoUrl) => {
-   process.env.MONGO_HOST = testMongoUrl
-   done()
- }))
-
-process.env.JWT_SECRET = 'placeholder'
+// Test environment setup
+process.env.NODE_ENV = 'test'
+process.env.MONGO_HOST = 'mongodb://localhost:27017/chronas-test'
+process.env.JWT_SECRET = 'test-secret-key'
 process.env.APPINSIGHTS_INSTRUMENTATIONKEY = 'placeholder'
 process.env.TWITTER_CONSUMER_KEY = 'placeholder'
 process.env.TWITTER_CONSUMER_SECRET = 'placeholder'

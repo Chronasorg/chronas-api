@@ -1,11 +1,11 @@
 import express from 'express'
 import validate from 'express-validation'
-import paramValidation from '../../config/param-validation'
-import authCtrl from '../controllers/auth.controller'
-import twitter from '../auths/twitter'
-import facebook from '../auths/facebook'
-import google from '../auths/google'
-import github from '../auths/github'
+import paramValidation from '../../config/param-validation.js'
+import authCtrl from '../controllers/auth.controller.js'
+import twitter from '../auths/twitter.js'
+import facebook from '../auths/facebook.js'
+import google from '../auths/google.js'
+import github from '../auths/github.js'
 
 const router = express.Router() // eslint-disable-line new-cap
 

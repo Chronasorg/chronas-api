@@ -1,8 +1,8 @@
 import { composePatternSync } from 'appversion'
-import User from '../models/user.model'
-import Revision from '../models/revision.model'
-import Promise from 'bluebird'
-import APIError from '../helpers/APIError'
+import User from '../models/user.model.js';
+import Revision from '../models/revision.model.js';
+import Promise from 'bluebird';
+import APIError from '../helpers/APIError.js';
 import httpStatus from 'http-status'
 
 

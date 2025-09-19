@@ -1,6 +1,6 @@
-import { pick, keys, isEqual, extendOwn } from 'underscore'
-const puppeteer = require('puppeteer')
-import { cache } from '../../config/config'
+import { pick, keys, isEqual, extendOwn } from 'underscore';
+import puppeteer from 'puppeteer';
+import { cache } from '../../config/config.js';
 
 const MAXCACHEDIMAGES = 2
 const CACHETTL = 1000 * 60 * 60 * 24 * 7 // 1 week

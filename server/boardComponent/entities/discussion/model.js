@@ -1,7 +1,7 @@
 /**
  * discussion model
  */
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 
 const discussionSchema = mongoose.Schema({
   forum_id: mongoose.Schema.ObjectId,
