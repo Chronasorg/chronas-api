@@ -1,46 +1,49 @@
-import mongoose from 'mongoose';
 import { config } from './config/config.js';
 import app from './config/express.js';
-import bluebird from 'bluebird';
+import { connectToDatabase, closeDatabaseConnection } from './config/database.js';
 import debug from 'debug';
 
 const debugLog = debug('chronas-api:index');
 
-// Simplified MongoDB connection for development/testing
+// Database connection URI
 // TODO: Implement AWS SDK v3 Secrets Manager integration in task 6.1
 const mongoUri = process.env.MONGO_HOST || 'mongodb://localhost:27017/chronas-api';
 
-// plugin bluebird promise in mongoose
-mongoose.Promise = bluebird;
+console.log("Initializing database connection...");
 
-console.log("start connecting to mongoDB");
-
-// MongoDB connection options
-const mongooseOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  maxPoolSize: 10,
-  minPoolSize: 5,
-  keepAlive: true,
-  keepAliveInitialDelay: 300000,
-};
-
-// Connect to MongoDB
-mongoose.connect(mongoUri, mongooseOptions)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.log('ERROR MongoDB - ' + err.message));
-
-mongoose.connection.on('error', () => console.log('ERROR MongoDB'));
-mongoose.connection.on('disconnected', () => console.log('Disconnected from MongoDB'));
-mongoose.connection.on('connected', () => console.log('Connected to MongoDB'));
-mongoose.connection.on('reconnected', () => console.log('Reconnected to MongoDB'));
-mongoose.connection.on('close', () => console.log('Connection to MongoDB closed'));
-
-process.on('SIGINT', () => {
-  mongoose.connection.close(() => {
-    console.log('Connection to MongoDB closed through app termination');
-    process.exit(0);
+// Initialize database connection with DocumentDB optimization
+connectToDatabase(mongoUri)
+  .then(() => {
+    console.log('Database connection initialized successfully');
+  })
+  .catch(err => {
+    console.error('ERROR: Failed to initialize database connection -', err.message);
+    process.exit(1);
   });
+
+// Graceful shutdown handling
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT, shutting down gracefully...');
+  try {
+    await closeDatabaseConnection();
+    console.log('Database connection closed through app termination');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error.message);
+    process.exit(1);
+  }
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Received SIGTERM, shutting down gracefully...');
+  try {
+    await closeDatabaseConnection();
+    console.log('Database connection closed through app termination');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error.message);
+    process.exit(1);
+  }
 });
 
 // ES6 modules don't have module.parent, use import.meta.main instead

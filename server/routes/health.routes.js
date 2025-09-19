@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import mongoose from 'mongoose';
+import { getConnectionStatus, testDatabaseConnectivity } from '../../config/database.js';
 import { cacheUtils } from '../middleware/cache.js';
 
 const router = express.Router();
@@ -38,26 +38,19 @@ router.get('/detailed', async (req, res) => {
 
   // Database health
   try {
-    const dbState = mongoose.connection.readyState;
-    const dbStates = {
-      0: 'disconnected',
-      1: 'connected',
-      2: 'connecting',
-      3: 'disconnecting'
-    };
+    const connectionStatus = getConnectionStatus();
     
     health.checks.database = {
-      status: dbState === 1 ? 'healthy' : 'unhealthy',
-      state: dbStates[dbState] || 'unknown',
-      host: mongoose.connection.host,
-      name: mongoose.connection.name
+      status: connectionStatus.isConnected ? 'healthy' : 'unhealthy',
+      state: connectionStatus.state,
+      host: connectionStatus.host,
+      name: connectionStatus.name
     };
     
-    if (dbState === 1) {
-      // Test database with a simple query
-      const adminDb = mongoose.connection.db.admin();
-      const result = await adminDb.ping();
-      health.checks.database.ping = result.ok === 1 ? 'success' : 'failed';
+    if (connectionStatus.isConnected) {
+      // Test database connectivity
+      const pingResult = await testDatabaseConnectivity();
+      health.checks.database.ping = pingResult ? 'success' : 'failed';
     }
   } catch (error) {
     health.checks.database = {
@@ -121,17 +114,25 @@ router.get('/detailed', async (req, res) => {
 router.get('/ready', async (req, res) => {
   try {
     // Check if database is ready
-    if (mongoose.connection.readyState !== 1) {
+    const connectionStatus = getConnectionStatus();
+    if (!connectionStatus.isConnected) {
       return res.status(503).json({
         status: 'not ready',
         reason: 'database not connected',
+        state: connectionStatus.state,
         timestamp: new Date().toISOString()
       });
     }
 
     // Test database connectivity
-    const adminDb = mongoose.connection.db.admin();
-    await adminDb.ping();
+    const isConnected = await testDatabaseConnectivity();
+    if (!isConnected) {
+      return res.status(503).json({
+        status: 'not ready',
+        reason: 'database ping failed',
+        timestamp: new Date().toISOString()
+      });
+    }
 
     res.json({
       status: 'ready',
