@@ -7,6 +7,7 @@
 
 import Joi from 'joi';
 import debug from 'debug';
+import { getApplicationConfig } from './secrets-manager.js';
 
 const debugLog = debug('chronas-api:lambda-config');
 
@@ -22,39 +23,59 @@ export const isLambdaEnvironment = () => {
 };
 
 /**
- * Get environment variables with Lambda-specific handling
+ * Get environment variables with Lambda-specific handling and Secrets Manager integration
  */
 async function getEnvironmentVariables() {
   const mergedSecrets = {};
+  
+  // Start with environment variables
+  Object.assign(mergedSecrets, process.env);
   
   // Lambda environment: Check for JSON-encoded configuration
   if (process.env.chronasConfig) {
     try {
       const lambdaEnv = JSON.parse(process.env.chronasConfig);
-      Object.assign(mergedSecrets, process.env);
       Object.keys(lambdaEnv).forEach(key => {
         mergedSecrets[key] = lambdaEnv[key];
       });
       debugLog('Loaded configuration from Lambda environment variable');
     } catch (error) {
       debugLog('Failed to parse chronasConfig JSON:', error.message);
-      // Fallback to regular environment variables
-      Object.assign(mergedSecrets, process.env);
     }
-  } else {
-    // Local development or standard environment
-    Object.assign(mergedSecrets, process.env);
+  }
+  
+  // Load additional configuration from Secrets Manager (if configured)
+  if (process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET) {
+    const secretId = process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET;
     
-    // Only load .env file in non-Lambda environments
-    if (!isLambdaEnvironment()) {
-      try {
-        const dotenv = await import('dotenv');
-        dotenv.config();
-        Object.assign(mergedSecrets, process.env);
-        debugLog('Loaded configuration from .env file');
-      } catch (error) {
-        debugLog('dotenv not available or failed to load:', error.message);
-      }
+    try {
+      debugLog(`Loading additional configuration from Secrets Manager: ${secretId}`);
+      const secretConfig = await getApplicationConfig(secretId);
+      
+      // Merge secrets manager config (don't override existing env vars)
+      Object.keys(secretConfig).forEach(key => {
+        if (!mergedSecrets[key]) {
+          mergedSecrets[key] = secretConfig[key];
+        }
+      });
+      
+      debugLog('Configuration loaded from Secrets Manager');
+    } catch (error) {
+      debugLog('Failed to load configuration from Secrets Manager:', error.message);
+      // Continue without Secrets Manager config (non-fatal)
+    }
+  }
+  
+  // Local development: Load .env file (non-Lambda environments only)
+  if (!isLambdaEnvironment()) {
+    try {
+      const dotenv = await import('dotenv');
+      dotenv.config();
+      // Re-merge environment variables (in case .env added new ones)
+      Object.assign(mergedSecrets, process.env);
+      debugLog('Loaded configuration from .env file');
+    } catch (error) {
+      debugLog('dotenv not available or failed to load:', error.message);
     }
   }
   
@@ -92,6 +113,14 @@ const getConfigSchema = () => {
     
     SECRET_DB_NAME: Joi.string()
       .default('/chronas/docdb/newpassword'),
+    
+    SECRET_CONFIG_NAME: Joi.string()
+      .allow('', null)
+      .default(''),
+    
+    CHRONAS_CONFIG_SECRET: Joi.string()
+      .allow('', null)
+      .default(''),
     
     region: Joi.string()
       .default('eu-west-1'),

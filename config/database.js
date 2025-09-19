@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import debug from 'debug';
+import { initializeDatabaseFromSecrets, getDatabaseCredentials } from './secrets-manager.js';
 
 const debugLog = debug('chronas-api:database');
 const __filename = fileURLToPath(import.meta.url);
@@ -146,6 +147,63 @@ export async function connectToDatabase(uri) {
   } catch (error) {
     debugLog('Database connection failed:', error.message);
     cachedConnection = null;
+    throw error;
+  }
+}
+
+/**
+ * Connect to database using Secrets Manager for credentials
+ * @param {string} secretId - Secrets Manager secret ID for database credentials
+ * @returns {Promise<mongoose.Connection>} Mongoose connection
+ */
+export async function connectToDatabaseWithSecrets(secretId) {
+  try {
+    debugLog(`Connecting to database using Secrets Manager: ${secretId}`);
+    
+    const uri = await initializeDatabaseFromSecrets(secretId);
+    return await connectToDatabase(uri);
+    
+  } catch (error) {
+    debugLog('Failed to connect to database with secrets:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Initialize database connection with automatic credential detection
+ * @param {object} config - Configuration object
+ * @returns {Promise<mongoose.Connection>} Mongoose connection
+ */
+export async function initializeDatabaseConnection(config) {
+  try {
+    // Try Secrets Manager first (if configured)
+    if (config.docDbsecretName && config.docDbsecretName !== '/chronas/docdb/newpassword') {
+      debugLog('Attempting database connection via Secrets Manager');
+      
+      try {
+        return await connectToDatabaseWithSecrets(config.docDbsecretName);
+      } catch (secretsError) {
+        debugLog('Secrets Manager connection failed, falling back to direct URI:', secretsError.message);
+        
+        // Fall back to direct URI if Secrets Manager fails
+        if (config.mongo && config.mongo.host) {
+          return await connectToDatabase(config.mongo.host);
+        }
+        
+        throw secretsError;
+      }
+    }
+    
+    // Use direct URI connection
+    if (config.mongo && config.mongo.host) {
+      debugLog('Using direct URI for database connection');
+      return await connectToDatabase(config.mongo.host);
+    }
+    
+    throw new Error('No database configuration found (neither Secrets Manager nor direct URI)');
+    
+  } catch (error) {
+    debugLog('Database initialization failed:', error.message);
     throw error;
   }
 }

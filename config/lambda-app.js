@@ -7,7 +7,7 @@
 
 import debug from 'debug';
 import { loadConfig, isLambdaEnvironment } from './lambda-config.js';
-import { connectToDatabase } from './database.js';
+import { initializeDatabaseConnection } from './database.js';
 
 const debugLog = debug('chronas-api:lambda-app');
 
@@ -52,7 +52,7 @@ async function preInitializeDependencies() {
 }
 
 /**
- * Initialize database connection with retry logic
+ * Initialize database connection with retry logic and Secrets Manager support
  */
 async function initializeDatabase(config) {
   const maxRetries = 3;
@@ -62,7 +62,7 @@ async function initializeDatabase(config) {
     try {
       debugLog(`Database connection attempt ${attempt}/${maxRetries}`);
       
-      await connectToDatabase(config.mongo.host);
+      await initializeDatabaseConnection(config);
       appState.dbConnected = true;
       debugLog('Database connection established');
       return true;
