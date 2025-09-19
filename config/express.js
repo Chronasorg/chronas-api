@@ -18,6 +18,7 @@ import routes from '../server/routes/index.route.js';
 import { config } from './config.js';
 import APIError from '../server/helpers/APIError.js';
 import versionRoutes from '../server/routes/version.router.js';
+import { createPerformanceMiddleware } from './performance.js';
 
 const app = express()
 
@@ -63,6 +64,9 @@ app.use(helmet())
 
 // enable CORS - Cross Origin Resource Sharing
 app.use(cors())
+
+// Add performance monitoring middleware
+app.use(createPerformanceMiddleware())
 
 
 /** Auth plans init **/
