@@ -16,18 +16,17 @@ const dimAccessor = {
 /**
  * Load area and append to req.
  */
-function load(req, res, next, id) {
-  Area.get(id, req.method)
-    .then((area) => {
-      req.entity = area // eslint-disable-line no-param-reassign
-      return next()
-    })
-    .catch((e) => {
-      res.status(httpStatus.NOT_FOUND).json({
-        message: e.isPublic ? e.message : httpStatus[e.status],
-        stack: config.env === 'development' ? e.stack : {}
-      })
-    })
+async function load(req, res, next, id) {
+  try {
+    const area = await Area.get(id, req.method);
+    req.entity = area; // eslint-disable-line no-param-reassign
+    return next();
+  } catch (e) {
+    res.status(httpStatus.NOT_FOUND).json({
+      message: e.isPublic ? e.message : httpStatus[e.status],
+      stack: config.env === 'development' ? e.stack : {}
+    });
+  }
 }
 
 /**
@@ -44,16 +43,19 @@ function get(req, res) {
  * @property {string} req.body.privilege - The privilege of area.
  * @returns {Area}
  */
-function create(req, res, next) {
+async function create(req, res, next) {
   const area = new Area({
     _id: req.body.year,
     year: +req.body.year,
     data: req.body.data
-  })
+  });
 
-  area.save()
-    .then(savedArea => res.json(savedArea))
-    .catch(e => next(e))
+  try {
+    const savedArea = await area.save();
+    res.json(savedArea);
+  } catch (e) {
+    next(e);
+  }
 }
 
 function aggregateProvinces(req, res, next, resolve=false) {
@@ -658,43 +660,48 @@ function update(req, res, next) {
  * @property {number} req.query.length - Limit number of areas to be returned.
  * @returns {Area[]}
  */
-function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query
-  const limit = end - start
-  Area.list({ start, limit, sort, order, filter })
-    .then((areas) => {
-      if (count) {
-        Area.count().exec().then((areaCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-          res.set('X-Total-Count', areaCount)
-          res.json(areas)
-        })
-      } else {
-        const areasTmp = JSON.parse(JSON.stringify(areas)) || []
-        const areasToList = []
+async function list(req, res, next) {
+  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
+  const limit = end - start;
+  
+  try {
+    const areas = await Area.list({ start, limit, sort, order, filter });
+    
+    if (count) {
+      const areaCount = await Area.countDocuments().exec();
+      res.set('Access-Control-Expose-Headers', 'X-Total-Count');
+      res.set('X-Total-Count', areaCount);
+      res.json(areas);
+    } else {
+      const areasTmp = JSON.parse(JSON.stringify(areas)) || [];
+      const areasToList = [];
 
-        // for (let i = 0; i < areasTmp.length; i++) {
-        //   if (areasTmp[i].owner === req.user.username
-        //     || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
-        //     areasToList.push(areasTmp[i])
-        //   }
-        // }
+      // for (let i = 0; i < areasTmp.length; i++) {
+      //   if (areasTmp[i].owner === req.user.username
+      //     || areasTmp[i].privilegeLevel.indexOf('public') > -1) {
+      //     areasToList.push(areasTmp[i])
+      //   }
+      // }
 
-        res.json(areasTmp)
-      }
-    })
-    .catch(e => next(e))
+      res.json(areasTmp);
+    }
+  } catch (e) {
+    next(e);
+  }
 }
 
 /**
  * Delete area.
  * @returns {Area}
  */
-function remove(req, res, next) {
-  const area = req.entity
-  area.remove()
-    .then(deletedArea => res.json(deletedArea))
-    .catch(e => next(e))
+async function remove(req, res, next) {
+  try {
+    const area = req.entity;
+    const deletedArea = await area.deleteOne();
+    res.json(deletedArea);
+  } catch (e) {
+    next(e);
+  }
 }
 
 function defineEntity(req, res, next) {

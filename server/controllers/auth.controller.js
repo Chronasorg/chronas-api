@@ -15,47 +15,45 @@ import userCtrl from '../controllers/user.controller'
  * @param next
  * @returns {*}
  */
-function login(req, res, next) {
-  User.findOne({ email: req.body.email })
-    .exec()
-    .then((user) => {
-      if (user && req.body.email === user.email) {
-        return user.comparePassword(req.body.password, (err, isMatch) => {
-          if (err) {
-            return next(err)
-          } else if (!isMatch) {
-            const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
-            return next(err2)
-          }
-          const token = jwt.sign({
-            id: user.email || user._id || user.id,
-            avatar: user.avatar || user.gravatar,
-            username: user.username || (((user || {}).name || {}).first),
-            score: user.karma,
-            lastUpdated: user.lastUpdated || user.lastLogin,
-            privilege: user.privilege ? user.privilege : 1,
-            subscription: user.subscription ? user.subscription : "-1"
-          }, config.jwtSecret)
+async function login(req, res, next) {
+  try {
+    const user = await User.findOne({ email: req.body.email }).exec();
+    
+    if (user && req.body.email === user.email) {
+      return user.comparePassword(req.body.password, async (err, isMatch) => {
+        if (err) {
+          return next(err);
+        } else if (!isMatch) {
+          const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+          return next(err2);
+        }
+        
+        const token = jwt.sign({
+          id: user.email || user._id || user.id,
+          avatar: user.avatar || user.gravatar,
+          username: user.username || (((user || {}).name || {}).first),
+          score: user.karma,
+          lastUpdated: user.lastUpdated || user.lastLogin,
+          privilege: user.privilege ? user.privilege : 1,
+          subscription: user.subscription ? user.subscription : "-1"
+        }, config.jwtSecret);
 
-          user.loginCount +=
+        user.loginCount += 1;
+        await user.save();
 
-//           userCtrl.verifySubscription(user).then(() => {
-            user.save()
-
-            return res.json({
-              token,
-              username: user.username || (((user || {}).name || {}).first)
-            })
-//           })
-        })
-      }
-      const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
-      return next(err)
-    })
-    .catch((e) => {
-      const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true)
-      return next(err)
-    })
+        return res.json({
+          token,
+          username: user.username || (((user || {}).name || {}).first)
+        });
+      });
+    }
+    
+    const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+    return next(err);
+  } catch (e) {
+    const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+    return next(err);
+  }
 }
 
 

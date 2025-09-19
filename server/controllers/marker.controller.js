@@ -7,18 +7,17 @@ import Metadata from '../models/metadata.model'
 /**
  * Load marker and append to req.
  */
-function load(req, res, next, id) {
-  Marker.get(id)
-    .then((marker) => {
-      req.entity = marker // eslint-disable-line no-param-reassign
-      return next()
-    })
-    .catch((e) => {
-      res.status(httpStatus.NOT_FOUND).json({
-        message: e.isPublic ? e.message : httpStatus[e.status],
-        stack: config.env === 'development' ? e.stack : {}
-      })
-    })
+async function load(req, res, next, id) {
+  try {
+    const marker = await Marker.get(id);
+    req.entity = marker; // eslint-disable-line no-param-reassign
+    return next();
+  } catch (e) {
+    res.status(httpStatus.NOT_FOUND).json({
+      message: e.isPublic ? e.message : httpStatus[e.status],
+      stack: config.env === 'development' ? e.stack : {}
+    });
+  }
 }
 
 /**
