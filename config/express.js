@@ -10,7 +10,7 @@ import expressWinston from 'express-winston'
 import expressValidation from 'express-validation'
 import helmet from 'helmet'
 import passport from 'passport'
-import { Strategy } from 'passport-twitter'
+// import { Strategy } from 'passport-twitter'
 import AWSXRay from 'aws-xray-sdk';
 
 import winstonInstance from './winston.js';
@@ -79,20 +79,21 @@ app.use(createPerformanceMiddleware())
 // with a user object, which will be set at `req.user` in route handlers after
 // authentication.
 
-console.log("consumerkey Twitter express -:" + config.twitterConsumerKey);
-
-passport.use(new Strategy({
-  consumerKey: config.twitterConsumerKey,
-  consumerSecret: config.twitterConsumerKey,
-  callbackURL: config.twitterCallbackUrl
-},
-  (token, tokenSecret, profile, cb) =>
-    // In this example, the user's Twitter profile is supplied as the user
-    // record.  In a production-quality application, the Twitter profile should
-    // be associated with a user record in the application's database, which
-    // allows for account linking and authentication with other identity
-    // providers.
-     cb(null, profile)))
+// Twitter authentication temporarily disabled during modernization
+// console.log("consumerkey Twitter express -:" + config.twitterConsumerKey);
+// 
+// passport.use(new Strategy({
+//   consumerKey: config.twitterConsumerKey,
+//   consumerSecret: config.twitterConsumerKey,
+//   callbackURL: config.twitterCallbackUrl
+// },
+//   (token, tokenSecret, profile, cb) =>
+//     // In this example, the user's Twitter profile is supplied as the user
+//     // record.  In a production-quality application, the Twitter profile should
+//     // be associated with a user record in the application's database, which
+//     // allows for account linking and authentication with other identity
+//     // providers.
+//      cb(null, profile)))
 // Configure Passport authenticated session persistence.
 //
 // In order to restore authentication state across HTTP requests, Passport needs

@@ -1,7 +1,7 @@
 import express from 'express'
 import validate from 'express-validation'
 import expressJwt from 'express-jwt'
-import paramValidation from '../../config/param-validation'
+import paramValidation from '../../config/param-validation.js'
 import userCtrl from '../controllers/user.controller'
 import { config } from '../../config/config'
 import checkPrivilege from '../helpers/privileges'

@@ -1,1 +1,0 @@
-kubectl create secret generic vsts --from-literal=VSTS_TOKEN=xxx --from-literal=VSTS_ACCOUNT=joausandbox

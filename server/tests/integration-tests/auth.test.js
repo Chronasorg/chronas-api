@@ -1,9 +1,10 @@
 import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
 import jwt from 'jsonwebtoken'
-import chai, { expect } from 'chai'
-import app from '../../../index'
-import { config } from '../../../config/config'
+import chai from 'chai'
+const { expect } = chai
+import app from '../../../index.js'
+import { config } from '../../../config/config.js'
 import mongoUnit from 'mongo-unit'
 
 chai.config.includeStack = true

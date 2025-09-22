@@ -1,7 +1,8 @@
 import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
-import chai, { expect } from 'chai'
-import app from '../../..'
+import chai from 'chai'
+const { expect } = chai
+import app from '../../../index.js'
 import mongoUnit from 'mongo-unit'
 
 chai.config.includeStack = true

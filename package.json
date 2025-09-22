@@ -9,16 +9,20 @@
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
+  "engineStrict": false,
+  "lambda": {
+    "runtime": "nodejs22.x",
+    "note": "Perfect match: Developed and deployed with Node.js 22.x"
+  },
   "scripts": {
     "start": "cross-env DEBUG=chronas-api:* node index.js",
     "start:debug": "cross-env DEBUG=chronas-api:* node --inspect index.js",
     "start:prodSim": "cross-env NODE_ENV=production node index.js",
     "build": "echo 'Build completed - using native Node.js 22.x runtime'",
+    "build:lambda": "node scripts/build-lambda.js",
     "setup:docdb-cert": "node scripts/download-docdb-cert.js",
     "lint": "eslint *.js server config --fix",
-    "lint:watch": "npm run lint -- --watch",
     "test": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests --recursive --exit",
-    "test:watch": "npm test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test c8 mocha --require server/tests/helpers.js server/tests --recursive --exit",
     "test:check-coverage": "npm run test:coverage && c8 check-coverage",
     "report-coverage": "c8 report --reporter=lcov && coveralls < ./coverage/lcov.info"
@@ -59,11 +63,10 @@
     "morgan": "^1.10.0",
     "nodemailer": "7.0.6",
     "nodemailer-mailgun-transport": "2.1.5",
-    "passport": "0.7.0",
-    "passport-facebook": "3.0.0",
-    "passport-github": "1.1.0",
-    "passport-google-oauth": "2.0.0",
-    "passport-twitter": "0.1.5",
+    "passport": "^0.7.0",
+    "passport-facebook": "^3.0.0",
+    "passport-github": "^1.1.0",
+    "passport-google-oauth20": "^2.0.0",
     "puppeteer": "1.20.0",
     "swagger-ui-express": "3.0.6",
     "underscore": "1.13.2",
@@ -74,28 +77,11 @@
     "c8": "^8.0.0",
     "chai": "^3.4.1",
     "cross-env": "10.0.0",
-    "del": "^2.2.0",
     "eslint": "^8.0.0",
-    "gulp": "5.0.1",
-    "gulp-load-plugins": "2.0.8",
     "mocha": "^10.0.0",
+    "mongo-unit": "3.4.0",
     "supertest": "^6.3.0",
     "supertest-as-promised": "4.0.2"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "babel": {
-    "presets": [
-      "es2015",
-      "stage-2"
-    ],
-    "plugins": [
-      "add-module-exports",
-      "transform-object-rest-spread"
-    ]
   },
   "bugs": {
     "url": "https://github.com/daumann/chronas-api/issues"
