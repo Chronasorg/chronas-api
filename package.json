@@ -32,6 +32,7 @@
     "url": "git+ssh://git@github.com/daumann/chronas-api.git"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "3.894.0",
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/client-secrets-manager": "^3.0.0",
     "@vendia/serverless-express": "4.12.6",

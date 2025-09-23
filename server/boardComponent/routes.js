@@ -2,14 +2,13 @@
  * module dependencies for routes configuration
  */
 
-import userRoutes from './entities/user/api'
-import forumRoutes from './entities/forum/api'
-import discussionRoutes from './entities/discussion/api'
-import opinionRoutes from './entities/opinion/api'
-import adminRoutes from './entities/admin/api'
-
-const path = require('path')
-const express = require('express')
+import userRoutes from './entities/user/api.js'
+import forumRoutes from './entities/forum/api.js'
+import discussionRoutes from './entities/discussion/api.js'
+import opinionRoutes from './entities/opinion/api.js'
+import adminRoutes from './entities/admin/api.js'
+import path from 'path'
+import express from 'express'
 
 const router = express.Router() // eslint-disable-line new-cap
 

@@ -1,6 +1,6 @@
 import express from 'express'
 import logger from 'morgan'
-import bodyParser from 'body-parser'
+// body-parser is now built into Express 4.16+
 import cookieParser from 'cookie-parser'
 import compress from 'compression'
 import methodOverride from 'method-override'
@@ -11,7 +11,11 @@ import expressValidation from 'express-validation'
 import helmet from 'helmet'
 import passport from 'passport'
 // import { Strategy } from 'passport-twitter'
-import AWSXRay from 'aws-xray-sdk';
+import AWSXRay from 'aws-xray-sdk'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs'
+import appInsights from 'applicationinsights'
+import expressSession from 'express-session'
 
 import winstonInstance from './winston.js';
 import routes from '../server/routes/index.route.js';
@@ -24,13 +28,9 @@ const app = express()
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
 const swaggerDocument = YAML.load('./swagger.yaml');
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-
-import appInsights from 'applicationinsights';
 
 console.log("appInsightsString" + config.appInsightsConnectionString);
 
@@ -48,12 +48,9 @@ if (config.env === 'development') {
   app.use(logger('dev'))
 }
 
-// set high enough limit
-app.use(bodyParser({ limit: '50mb' }))
-
-// parse body params and attache them to req.body
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+// parse body params and attach them to req.body (built into Express 4.16+)
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 app.use(cookieParser())
 app.use(compress())
@@ -111,7 +108,6 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-import expressSession from 'express-session';
 app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /* key: 'sid', cookie: { secure: true }*/ }));
 
 app.use(passport.initialize())

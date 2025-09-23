@@ -6,8 +6,9 @@
  */
 
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import { createNotFoundError, createValidationError } from '../middleware/errorHandler.js';
+import bcrypt from 'bcrypt';
+import APIError from '../helpers/APIError.js';
+import httpStatus from 'http-status';
 
 const { Schema } = mongoose;
 
@@ -253,4 +254,268 @@ const UserSchema = new Schema({
   timestamps: true, // Automatically manage createdAt and updatedAt
   versionKey: false,
   toJSON: {
-    transform: function(doc, ret) {\n      // Remove sensitive fields from JSON output\n      delete ret.password;\n      delete ret.emailVerificationToken;\n      delete ret.passwordResetToken;\n      delete ret.passwordResetExpires;\n      delete ret.twoFactorSecret;\n      return ret;\n    }\n  }\n});\n\n// Indexes for performance\nUserSchema.index({ email: 1 });\nUserSchema.index({ username: 1 });\nUserSchema.index({ createdAt: -1 });\nUserSchema.index({ lastLogin: -1 });\nUserSchema.index({ 'statistics.karma': -1 });\n\n// Virtual for full name\nUserSchema.virtual('fullName').get(function() {\n  if (this.firstName && this.lastName) {\n    return `${this.firstName} ${this.lastName}`;\n  }\n  return this.firstName || this.lastName || this.username;\n});\n\n// Virtual for display name\nUserSchema.virtual('displayName').get(function() {\n  return this.fullName || this.username;\n});\n\n// Pre-save middleware for password hashing\nUserSchema.pre('save', async function(next) {\n  // Only hash password if it's been modified\n  if (!this.isModified('password')) {\n    return next();\n  }\n  \n  try {\n    // Hash password with bcrypt\n    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;\n    this.password = await bcrypt.hash(this.password, saltRounds);\n    next();\n  } catch (error) {\n    next(error);\n  }\n});\n\n// Pre-save middleware for email verification\nUserSchema.pre('save', function(next) {\n  // If email is modified, mark as unverified\n  if (this.isModified('email') && !this.isNew) {\n    this.emailVerified = false;\n    this.emailVerificationToken = undefined;\n  }\n  next();\n});\n\n// Instance methods\nUserSchema.methods = {\n  /**\n   * Compare password with hash\n   */\n  async comparePassword(candidatePassword) {\n    if (!this.password) {\n      throw createValidationError('No password set for this user');\n    }\n    return bcrypt.compare(candidatePassword, this.password);\n  },\n  \n  /**\n   * Generate password reset token\n   */\n  generatePasswordResetToken() {\n    const crypto = require('crypto');\n    const token = crypto.randomBytes(32).toString('hex');\n    \n    this.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');\n    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes\n    \n    return token;\n  },\n  \n  /**\n   * Generate email verification token\n   */\n  generateEmailVerificationToken() {\n    const crypto = require('crypto');\n    const token = crypto.randomBytes(32).toString('hex');\n    \n    this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');\n    \n    return token;\n  },\n  \n  /**\n   * Check if user has permission\n   */\n  hasPermission(permission) {\n    if (this.role === 'admin') return true;\n    return this.permissions.includes(permission) || this.permissions.includes('*');\n  },\n  \n  /**\n   * Update login information\n   */\n  updateLoginInfo() {\n    this.loginCount += 1;\n    this.lastLogin = new Date();\n    return this.save();\n  },\n  \n  /**\n   * Increment statistic\n   */\n  incrementStat(statName, amount = 1) {\n    if (this.statistics[statName] !== undefined) {\n      this.statistics[statName] += amount;\n      return this.save();\n    }\n    throw createValidationError(`Invalid statistic name: ${statName}`);\n  }\n};\n\n// Static methods\nUserSchema.statics = {\n  /**\n   * Get user by ID with error handling\n   */\n  async get(id) {\n    try {\n      const user = await this.findById(id);\n      if (!user) {\n        throw createNotFoundError('User not found');\n      }\n      return user;\n    } catch (error) {\n      if (error.name === 'CastError') {\n        throw createValidationError('Invalid user ID format');\n      }\n      throw error;\n    }\n  },\n  \n  /**\n   * Find user by email\n   */\n  async findByEmail(email) {\n    return this.findOne({ email: email.toLowerCase() });\n  },\n  \n  /**\n   * Find user by username\n   */\n  async findByUsername(username) {\n    return this.findOne({ username: username.toLowerCase() });\n  },\n  \n  /**\n   * Find user by email or username\n   */\n  async findByEmailOrUsername(identifier) {\n    const query = identifier.includes('@') ? \n      { email: identifier.toLowerCase() } : \n      { username: identifier.toLowerCase() };\n    \n    return this.findOne(query);\n  },\n  \n  /**\n   * List users with pagination and filtering\n   */\n  async list(options = {}) {\n    const {\n      page = 1,\n      limit = 20,\n      sort = 'createdAt',\n      order = 'desc',\n      filter = {},\n      search\n    } = options;\n    \n    const skip = (page - 1) * limit;\n    const sortOrder = order === 'desc' ? -1 : 1;\n    \n    // Build query\n    const query = { ...filter };\n    \n    // Add search functionality\n    if (search) {\n      query.$or = [\n        { username: { $regex: search, $options: 'i' } },\n        { firstName: { $regex: search, $options: 'i' } },\n        { lastName: { $regex: search, $options: 'i' } },\n        { email: { $regex: search, $options: 'i' } }\n      ];\n    }\n    \n    const [users, total] = await Promise.all([\n      this.find(query)\n        .sort({ [sort]: sortOrder })\n        .skip(skip)\n        .limit(limit)\n        .lean(),\n      this.countDocuments(query)\n    ]);\n    \n    return {\n      users,\n      pagination: {\n        page,\n        limit,\n        total,\n        pages: Math.ceil(total / limit)\n      }\n    };\n  },\n  \n  /**\n   * Get user statistics\n   */\n  async getStatistics() {\n    const stats = await this.aggregate([\n      {\n        $group: {\n          _id: null,\n          totalUsers: { $sum: 1 },\n          activeUsers: {\n            $sum: {\n              $cond: [{ $eq: ['$status', 'active'] }, 1, 0]\n            }\n          },\n          verifiedUsers: {\n            $sum: {\n              $cond: ['$emailVerified', 1, 0]\n            }\n          },\n          avgKarma: { $avg: '$karma' },\n          totalContributions: {\n            $sum: {\n              $add: [\n                '$statistics.created',\n                '$statistics.updated',\n                '$statistics.voted'\n              ]\n            }\n          }\n        }\n      }\n    ]);\n    \n    return stats[0] || {\n      totalUsers: 0,\n      activeUsers: 0,\n      verifiedUsers: 0,\n      avgKarma: 0,\n      totalContributions: 0\n    };\n  }\n};\n\n// Create and export model\nconst User = mongoose.model('User', UserSchema);\nexport default User;"
+    transform: function(doc, ret) {
+      // Remove sensitive fields from JSON output
+      delete ret.password;
+      delete ret.emailVerificationToken;
+      delete ret.passwordResetToken;
+      delete ret.passwordResetExpires;
+      delete ret.twoFactorSecret;
+      return ret;
+    }
+  }
+});
+
+// Indexes for performance
+UserSchema.index({ email: 1 });
+UserSchema.index({ username: 1 });
+UserSchema.index({ createdAt: -1 });
+UserSchema.index({ lastLogin: -1 });
+UserSchema.index({ 'statistics.karma': -1 });
+
+// Virtual for full name
+UserSchema.virtual('fullName').get(function() {
+  if (this.firstName && this.lastName) {
+    return `${this.firstName} ${this.lastName}`;
+  }
+  return this.firstName || this.lastName || this.username;
+});
+
+// Virtual for display name
+UserSchema.virtual('displayName').get(function() {
+  return this.fullName || this.username;
+});
+
+// Pre-save middleware for password hashing
+UserSchema.pre('save', async function(next) {
+  // Only hash password if it's been modified
+  if (!this.isModified('password')) {
+    return next();
+  }
+  
+  try {
+    // Hash password with bcrypt
+    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+    this.password = await bcrypt.hash(this.password, saltRounds);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Pre-save middleware for email verification
+UserSchema.pre('save', function(next) {
+  // If email is modified, mark as unverified
+  if (this.isModified('email') && !this.isNew) {
+    this.emailVerified = false;
+    this.emailVerificationToken = undefined;
+  }
+  next();
+});
+
+// Instance methods
+UserSchema.methods = {
+  /**
+   * Compare password with hash
+   */
+  async comparePassword(candidatePassword) {
+    if (!this.password) {
+      throw new APIError('No password set for this user', httpStatus.BAD_REQUEST);
+    }
+    return bcrypt.compare(candidatePassword, this.password);
+  },
+  
+  /**
+   * Generate password reset token
+   */
+  generatePasswordResetToken() {
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    this.passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    
+    return token;
+  },
+  
+  /**
+   * Generate email verification token
+   */
+  generateEmailVerificationToken() {
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    
+    this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
+    
+    return token;
+  },
+  
+  /**
+   * Check if user has permission
+   */
+  hasPermission(permission) {
+    if (this.role === 'admin') return true;
+    return this.permissions.includes(permission) || this.permissions.includes('*');
+  },
+  
+  /**
+   * Update login information
+   */
+  updateLoginInfo() {
+    this.loginCount += 1;
+    this.lastLogin = new Date();
+    return this.save();
+  },
+  
+  /**
+   * Increment statistic
+   */
+  incrementStat(statName, amount = 1) {
+    if (this.statistics[statName] !== undefined) {
+      this.statistics[statName] += amount;
+      return this.save();
+    }
+    throw new APIError(`Invalid statistic name: ${statName}`, httpStatus.BAD_REQUEST);
+  }
+};
+
+// Static methods
+UserSchema.statics = {
+  /**
+   * Get user by ID with error handling
+   */
+  async get(id) {
+    try {
+      const user = await this.findById(id);
+      if (!user) {
+        throw new APIError('User not found', httpStatus.NOT_FOUND);
+      }
+      return user;
+    } catch (error) {
+      if (error.name === 'CastError') {
+        throw new APIError('Invalid user ID format', httpStatus.BAD_REQUEST);
+      }
+      throw error;
+    }
+  },
+  
+  /**
+   * Find user by email
+   */
+  async findByEmail(email) {
+    return this.findOne({ email: email.toLowerCase() });
+  },
+  
+  /**
+   * Find user by username
+   */
+  async findByUsername(username) {
+    return this.findOne({ username: username.toLowerCase() });
+  },
+  
+  /**
+   * Find user by email or username
+   */
+  async findByEmailOrUsername(identifier) {
+    const query = identifier.includes('@') ? 
+      { email: identifier.toLowerCase() } : 
+      { username: identifier.toLowerCase() };
+    
+    return this.findOne(query);
+  },
+  
+  /**
+   * List users with pagination and filtering
+   */
+  async list(options = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'desc',
+      filter = {},
+      search
+    } = options;
+    
+    const skip = (page - 1) * limit;
+    const sortOrder = order === 'desc' ? -1 : 1;
+    
+    // Build query
+    const query = { ...filter };
+    
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const [users, total] = await Promise.all([
+      this.find(query)
+        .sort({ [sort]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.countDocuments(query)
+    ]);
+    
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  },
+  
+  /**
+   * Get user statistics
+   */
+  async getStatistics() {
+    const stats = await this.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          activeUsers: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'active'] }, 1, 0]
+            }
+          },
+          verifiedUsers: {
+            $sum: {
+              $cond: ['$emailVerified', 1, 0]
+            }
+          },
+          avgKarma: { $avg: '$karma' },
+          totalContributions: {
+            $sum: {
+              $add: [
+                '$statistics.created',
+                '$statistics.updated',
+                '$statistics.voted'
+              ]
+            }
+          }
+        }
+      }
+    ]);
+    
+    return stats[0] || {
+      totalUsers: 0,
+      activeUsers: 0,
+      verifiedUsers: 0,
+      avgKarma: 0,
+      totalContributions: 0
+    };
+  }
+};
+
+// Create and export model
+const User = mongoose.model('User', UserSchema);
+export default User;

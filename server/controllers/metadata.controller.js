@@ -1,9 +1,9 @@
-import Metadata from '../models/metadata.model'
-import Marker from '../models/marker.model'
-import userCtrl from './user.controller'
-import APIError from '../helpers/APIError'
-import revisionCtrl from './revision.controller'
-import { config, cache, initItemsAndLinksToRefresh } from '../../config/config'
+import Metadata from '../models/metadata.model.js'
+import Marker from '../models/marker.model.js'
+import userCtrl from './user.controller.js'
+import APIError from '../helpers/APIError.js'
+import revisionCtrl from './revision.controller.js'
+import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js'
 import httpStatus from 'http-status'
 
 const linkedTypeAccessor = {

@@ -1,10 +1,10 @@
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
 import Moniker from 'moniker'
-import APIError from '../helpers/APIError'
-import { config } from '../../config/config'
-import User from '../models/user.model'
-import userCtrl from '../controllers/user.controller'
+import APIError from '../helpers/APIError.js'
+import { config } from '../../config/config.js'
+import User from '../models/user.model.js'
+import userCtrl from '../controllers/user.controller.js'
 
 // TODO: add email service
 

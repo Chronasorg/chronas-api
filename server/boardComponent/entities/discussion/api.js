@@ -1,7 +1,7 @@
 // discussion controllers
 import express from 'express'
 import expressJwt from 'express-jwt'
-import { config } from '../../../../config/config'
+import { config } from '../../config/config.js'
 
 const getDiscussion = require('./controller').getDiscussion
 const createDiscussion = require('./controller').createDiscussion

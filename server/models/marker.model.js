@@ -202,4 +202,645 @@ const MarkerSchema = new Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number], // [longitude, latitude]\n      index: '2dsphere'\n    }\n  },\n  \n  // Marker type and classification\n  type: {\n    type: String,\n    enum: ['city', 'town', 'village', 'battle', 'event', 'landmark', 'monument', 'fortress', 'temple', 'other'],\n    default: 'other',\n    required: true,\n    index: true\n  },\n  \n  // Importance/significance level\n  importance: {\n    type: Number,\n    min: [1, 'Importance must be between 1 and 5'],\n    max: [5, 'Importance must be between 1 and 5'],\n    default: 3,\n    index: true\n  },\n  \n  // Marker properties and metadata\n  properties: {\n    type: PropertiesSchema,\n    default: {}\n  },\n  \n  // Visual styling\n  style: {\n    color: {\n      type: String,\n      match: [/^#[0-9A-Fa-f]{6}$/, 'Color must be a valid hex color'],\n      default: '#FF0000'\n    },\n    size: {\n      type: Number,\n      min: [1, 'Size must be between 1 and 10'],\n      max: [10, 'Size must be between 1 and 10'],\n      default: 5\n    },\n    icon: {\n      type: String,\n      enum: ['circle', 'square', 'triangle', 'star', 'cross', 'diamond', 'custom'],\n      default: 'circle'\n    },\n    customIcon: {\n      type: String,\n      validate: {\n        validator: function(v) {\n          return !v || /^https?:\/\/.+\.(png|jpg|jpeg|svg|gif)$/i.test(v);\n        },\n        message: 'Custom icon must be a valid image URL'\n      }\n    }\n  },\n  \n  // Categorization\n  tags: [{\n    type: String,\n    trim: true,\n    lowercase: true,\n    maxlength: [50, 'Tag cannot exceed 50 characters']\n  }],\n  \n  category: {\n    type: String,\n    enum: ['political', 'military', 'religious', 'cultural', 'economic', 'geographical', 'other'],\n    default: 'other',\n    index: true\n  },\n  \n  // Content\n  description: {\n    type: String,\n    maxlength: [2000, 'Description cannot exceed 2000 characters'],\n    trim: true\n  },\n  \n  // Versioning and attribution\n  createdBy: {\n    type: Schema.Types.ObjectId,\n    ref: 'User',\n    required: [true, 'Creator is required'],\n    index: true\n  },\n  \n  lastModifiedBy: {\n    type: Schema.Types.ObjectId,\n    ref: 'User',\n    index: true\n  },\n  \n  version: {\n    type: Number,\n    default: 1,\n    min: [1, 'Version must be at least 1']\n  },\n  \n  // Status and moderation\n  status: {\n    type: String,\n    enum: ['draft', 'published', 'archived', 'flagged'],\n    default: 'published',\n    index: true\n  },\n  \n  visibility: {\n    type: String,\n    enum: ['public', 'private', 'unlisted'],\n    default: 'public',\n    index: true\n  },\n  \n  // Quality metrics\n  accuracy: {\n    type: Number,\n    min: [1, 'Accuracy rating must be between 1 and 5'],\n    max: [5, 'Accuracy rating must be between 1 and 5'],\n    default: 3\n  },\n  \n  votes: {\n    up: {\n      type: Number,\n      default: 0,\n      min: [0, 'Upvotes cannot be negative']\n    },\n    down: {\n      type: Number,\n      default: 0,\n      min: [0, 'Downvotes cannot be negative']\n    }\n  },\n  \n  // Relationships\n  relatedMarkers: [{\n    marker: {\n      type: Schema.Types.ObjectId,\n      ref: 'Marker',\n      required: true\n    },\n    relationship: {\n      type: String,\n      enum: ['successor', 'predecessor', 'contemporary', 'nearby', 'related'],\n      required: true\n    },\n    distance: {\n      type: Number,\n      min: [0, 'Distance cannot be negative']\n    }\n  }],\n  \n  // Associated areas\n  areas: [{\n    type: Schema.Types.ObjectId,\n    ref: 'Area'\n  }]\n}, {\n  timestamps: true,\n  versionKey: false,\n  toJSON: { virtuals: true },\n  toObject: { virtuals: true }\n});\n\n// Compound indexes for performance\nMarkerSchema.index({ year: 1, type: 1 });\nMarkerSchema.index({ year: 1, status: 1, visibility: 1 });\nMarkerSchema.index({ createdBy: 1, createdAt: -1 });\nMarkerSchema.index({ tags: 1 });\nMarkerSchema.index({ importance: -1, 'votes.up': -1 });\nMarkerSchema.index({ 'coordinates.latitude': 1, 'coordinates.longitude': 1 });\n\n// Text index for search\nMarkerSchema.index({\n  name: 'text',\n  description: 'text',\n  'properties.founder': 'text',\n  'properties.culture': 'text'\n});\n\n// Virtual for vote score\nMarkerSchema.virtual('voteScore').get(function() {\n  return this.votes.up - this.votes.down;\n});\n\n// Virtual for display coordinates\nMarkerSchema.virtual('displayCoordinates').get(function() {\n  return {\n    lat: this.coordinates.latitude,\n    lng: this.coordinates.longitude\n  };\n});\n\n// Pre-save middleware to sync location with coordinates\nMarkerSchema.pre('save', function(next) {\n  // Update GeoJSON location from coordinates\n  if (this.isModified('coordinates')) {\n    this.location = {\n      type: 'Point',\n      coordinates: [this.coordinates.longitude, this.coordinates.latitude]\n    };\n  }\n  \n  // Update version on modification\n  if (this.isModified() && !this.isNew) {\n    this.version += 1;\n  }\n  \n  // Validate battle information for battle markers\n  if (this.type === 'battle' && this.properties.battle) {\n    if (!this.properties.battle.date) {\n      return next(new Error('Battle markers must have a battle date'));\n    }\n  }\n  \n  next();\n});\n\n// Instance methods\nMarkerSchema.methods = {\n  /**\n   * Check if marker is visible to user\n   */\n  isVisibleTo(user) {\n    if (this.visibility === 'public') return true;\n    if (!user) return false;\n    if (this.visibility === 'private') {\n      return this.createdBy.toString() === user._id.toString() || user.role === 'admin';\n    }\n    return true; // unlisted\n  },\n  \n  /**\n   * Add vote\n   */\n  async addVote(userId, type) {\n    if (type === 'up') {\n      this.votes.up += 1;\n    } else if (type === 'down') {\n      this.votes.down += 1;\n    } else {\n      throw createValidationError('Vote type must be \"up\" or \"down\"');\n    }\n    \n    return this.save();\n  },\n  \n  /**\n   * Calculate distance to another marker\n   */\n  distanceTo(otherMarker) {\n    const R = 6371; // Earth's radius in kilometers\n    const dLat = (otherMarker.coordinates.latitude - this.coordinates.latitude) * Math.PI / 180;\n    const dLon = (otherMarker.coordinates.longitude - this.coordinates.longitude) * Math.PI / 180;\n    \n    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n              Math.cos(this.coordinates.latitude * Math.PI / 180) *\n              Math.cos(otherMarker.coordinates.latitude * Math.PI / 180) *\n              Math.sin(dLon / 2) * Math.sin(dLon / 2);\n    \n    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n    return R * c; // Distance in kilometers\n  },\n  \n  /**\n   * Add related marker\n   */\n  async addRelatedMarker(markerId, relationship, distance = null) {\n    const validRelationships = ['successor', 'predecessor', 'contemporary', 'nearby', 'related'];\n    \n    if (!validRelationships.includes(relationship)) {\n      throw createValidationError('Invalid relationship type');\n    }\n    \n    // Check if relationship already exists\n    const existingRelation = this.relatedMarkers.find(\n      rel => rel.marker.toString() === markerId.toString()\n    );\n    \n    if (existingRelation) {\n      existingRelation.relationship = relationship;\n      if (distance !== null) {\n        existingRelation.distance = distance;\n      }\n    } else {\n      const relation = { marker: markerId, relationship };\n      if (distance !== null) {\n        relation.distance = distance;\n      }\n      this.relatedMarkers.push(relation);\n    }\n    \n    return this.save();\n  },\n  \n  /**\n   * Get GeoJSON representation\n   */\n  toGeoJSON() {\n    return {\n      type: 'Feature',\n      geometry: this.location,\n      properties: {\n        id: this._id,\n        name: this.name,\n        year: this.year,\n        type: this.type,\n        importance: this.importance,\n        category: this.category,\n        description: this.description,\n        style: this.style,\n        ...this.properties.toObject()\n      }\n    };\n  }\n};\n\n// Static methods\nMarkerSchema.statics = {\n  /**\n   * Get marker by ID with error handling\n   */\n  async get(id, options = {}) {\n    try {\n      let query = this.findById(id);\n      \n      if (options.populate) {\n        query = query.populate(options.populate);\n      }\n      \n      const marker = await query;\n      \n      if (!marker) {\n        throw createNotFoundError('Marker not found');\n      }\n      \n      return marker;\n    } catch (error) {\n      if (error.name === 'CastError') {\n        throw createValidationError('Invalid marker ID format');\n      }\n      throw error;\n    }\n  },\n  \n  /**\n   * Find markers by year range\n   */\n  async findByYearRange(startYear, endYear, options = {}) {\n    const {\n      type,\n      category,\n      status = 'published',\n      visibility = 'public',\n      importance,\n      limit = 100,\n      skip = 0\n    } = options;\n    \n    const query = {\n      year: { $gte: startYear, $lte: endYear },\n      status,\n      visibility\n    };\n    \n    if (type) {\n      query.type = type;\n    }\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    if (importance) {\n      query.importance = { $gte: importance };\n    }\n    \n    return this.find(query)\n      .sort({ importance: -1, year: 1, name: 1 })\n      .limit(limit)\n      .skip(skip)\n      .lean();\n  },\n  \n  /**\n   * Find markers near a point\n   */\n  async findNear(longitude, latitude, maxDistance = 100000, options = {}) {\n    const {\n      year,\n      type,\n      status = 'published',\n      visibility = 'public',\n      limit = 50\n    } = options;\n    \n    const query = {\n      location: {\n        $near: {\n          $geometry: {\n            type: 'Point',\n            coordinates: [longitude, latitude]\n          },\n          $maxDistance: maxDistance // meters\n        }\n      },\n      status,\n      visibility\n    };\n    \n    if (year) {\n      query.year = year;\n    }\n    \n    if (type) {\n      query.type = type;\n    }\n    \n    return this.find(query)\n      .limit(limit)\n      .lean();\n  },\n  \n  /**\n   * Find markers within geographic bounds\n   */\n  async findWithinBounds(bounds, year = null, options = {}) {\n    const {\n      type,\n      category,\n      status = 'published',\n      visibility = 'public',\n      importance,\n      limit = 200\n    } = options;\n    \n    const query = {\n      location: {\n        $geoWithin: {\n          $geometry: {\n            type: 'Polygon',\n            coordinates: [bounds]\n          }\n        }\n      },\n      status,\n      visibility\n    };\n    \n    if (year !== null) {\n      query.year = year;\n    }\n    \n    if (type) {\n      query.type = type;\n    }\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    if (importance) {\n      query.importance = { $gte: importance };\n    }\n    \n    return this.find(query)\n      .sort({ importance: -1, 'votes.up': -1 })\n      .limit(limit)\n      .lean();\n  },\n  \n  /**\n   * Search markers with text and filters\n   */\n  async search(searchTerm, options = {}) {\n    const {\n      year,\n      type,\n      category,\n      tags,\n      importance,\n      status = 'published',\n      visibility = 'public',\n      page = 1,\n      limit = 20,\n      sort = 'relevance'\n    } = options;\n    \n    const skip = (page - 1) * limit;\n    \n    // Build query\n    const query = {\n      status,\n      visibility\n    };\n    \n    if (searchTerm) {\n      query.$text = { $search: searchTerm };\n    }\n    \n    if (year) {\n      query.year = year;\n    }\n    \n    if (type) {\n      query.type = type;\n    }\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    if (importance) {\n      query.importance = { $gte: importance };\n    }\n    \n    if (tags && tags.length > 0) {\n      query.tags = { $in: tags };\n    }\n    \n    // Build sort\n    let sortQuery = {};\n    if (searchTerm && sort === 'relevance') {\n      sortQuery = { score: { $meta: 'textScore' } };\n    } else if (sort === 'year') {\n      sortQuery = { year: -1 };\n    } else if (sort === 'name') {\n      sortQuery = { name: 1 };\n    } else if (sort === 'importance') {\n      sortQuery = { importance: -1 };\n    } else if (sort === 'votes') {\n      sortQuery = { 'votes.up': -1 };\n    } else {\n      sortQuery = { createdAt: -1 };\n    }\n    \n    const [markers, total] = await Promise.all([\n      this.find(query)\n        .sort(sortQuery)\n        .skip(skip)\n        .limit(limit)\n        .lean(),\n      this.countDocuments(query)\n    ]);\n    \n    return {\n      markers,\n      pagination: {\n        page,\n        limit,\n        total,\n        pages: Math.ceil(total / limit)\n      }\n    };\n  },\n  \n  /**\n   * Get markers by user\n   */\n  async getByUser(userId, options = {}) {\n    const {\n      status,\n      page = 1,\n      limit = 20\n    } = options;\n    \n    const skip = (page - 1) * limit;\n    const query = { createdBy: userId };\n    \n    if (status) {\n      query.status = status;\n    }\n    \n    const [markers, total] = await Promise.all([\n      this.find(query)\n        .sort({ createdAt: -1 })\n        .skip(skip)\n        .limit(limit)\n        .lean(),\n      this.countDocuments(query)\n    ]);\n    \n    return {\n      markers,\n      pagination: {\n        page,\n        limit,\n        total,\n        pages: Math.ceil(total / limit)\n      }\n    };\n  },\n  \n  /**\n   * Get marker statistics\n   */\n  async getStatistics() {\n    const stats = await this.aggregate([\n      {\n        $group: {\n          _id: null,\n          totalMarkers: { $sum: 1 },\n          publishedMarkers: {\n            $sum: {\n              $cond: [{ $eq: ['$status', 'published'] }, 1, 0]\n            }\n          },\n          typeCounts: {\n            $push: '$type'\n          },\n          categoryCounts: {\n            $push: '$category'\n          },\n          avgImportance: { $avg: '$importance' },\n          avgVoteScore: {\n            $avg: { $subtract: ['$votes.up', '$votes.down'] }\n          },\n          yearRange: {\n            min: { $min: '$year' },\n            max: { $max: '$year' }\n          }\n        }\n      }\n    ]);\n    \n    return stats[0] || {\n      totalMarkers: 0,\n      publishedMarkers: 0,\n      typeCounts: [],\n      categoryCounts: [],\n      avgImportance: 0,\n      avgVoteScore: 0,\n      yearRange: { min: null, max: null }\n    };\n  }\n};\n\n// Create and export model\nconst Marker = mongoose.model('Marker', MarkerSchema);\nexport default Marker;"
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere'
+    }
+  },
+  
+  // Marker type and classification
+  type: {
+    type: String,
+    enum: ['city', 'town', 'village', 'battle', 'event', 'landmark', 'monument', 'fortress', 'temple', 'other'],
+    default: 'other',
+    required: true,
+    index: true
+  },
+  
+  // Importance/significance level
+  importance: {
+    type: Number,
+    min: [1, 'Importance must be between 1 and 5'],
+    max: [5, 'Importance must be between 1 and 5'],
+    default: 3,
+    index: true
+  },
+  
+  // Marker properties and metadata
+  properties: {
+    type: PropertiesSchema,
+    default: {}
+  },
+  
+  // Visual styling
+  style: {
+    color: {
+      type: String,
+      match: [/^#[0-9A-Fa-f]{6}$/, 'Color must be a valid hex color'],
+      default: '#FF0000'
+    },
+    size: {
+      type: Number,
+      min: [1, 'Size must be between 1 and 10'],
+      max: [10, 'Size must be between 1 and 10'],
+      default: 5
+    },
+    icon: {
+      type: String,
+      enum: ['circle', 'square', 'triangle', 'star', 'cross', 'diamond', 'custom'],
+      default: 'circle'
+    },
+    customIcon: {
+      type: String,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/.+\.(png|jpg|jpeg|svg|gif)$/i.test(v);
+        },
+        message: 'Custom icon must be a valid image URL'
+      }
+    }
+  },
+  
+  // Categorization
+  tags: [{
+    type: String,
+    trim: true,
+    lowercase: true,
+    maxlength: [50, 'Tag cannot exceed 50 characters']
+  }],
+  
+  category: {
+    type: String,
+    enum: ['political', 'military', 'religious', 'cultural', 'economic', 'geographical', 'other'],
+    default: 'other',
+    index: true
+  },
+  
+  // Content
+  description: {
+    type: String,
+    maxlength: [2000, 'Description cannot exceed 2000 characters'],
+    trim: true
+  },
+  
+  // Versioning and attribution
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Creator is required'],
+    index: true
+  },
+  
+  lastModifiedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+  
+  version: {
+    type: Number,
+    default: 1,
+    min: [1, 'Version must be at least 1']
+  },
+  
+  // Status and moderation
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'archived', 'flagged'],
+    default: 'published',
+    index: true
+  },
+  
+  visibility: {
+    type: String,
+    enum: ['public', 'private', 'unlisted'],
+    default: 'public',
+    index: true
+  },
+  
+  // Quality metrics
+  accuracy: {
+    type: Number,
+    min: [1, 'Accuracy rating must be between 1 and 5'],
+    max: [5, 'Accuracy rating must be between 1 and 5'],
+    default: 3
+  },
+  
+  votes: {
+    up: {
+      type: Number,
+      default: 0,
+      min: [0, 'Upvotes cannot be negative']
+    },
+    down: {
+      type: Number,
+      default: 0,
+      min: [0, 'Downvotes cannot be negative']
+    }
+  },
+  
+  // Relationships
+  relatedMarkers: [{
+    marker: {
+      type: Schema.Types.ObjectId,
+      ref: 'Marker',
+      required: true
+    },
+    relationship: {
+      type: String,
+      enum: ['successor', 'predecessor', 'contemporary', 'nearby', 'related'],
+      required: true
+    },
+    distance: {
+      type: Number,
+      min: [0, 'Distance cannot be negative']
+    }
+  }],
+  
+  // Associated areas
+  areas: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Area'
+  }]
+}, {
+  timestamps: true,
+  versionKey: false,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Compound indexes for performance
+MarkerSchema.index({ year: 1, type: 1 });
+MarkerSchema.index({ year: 1, status: 1, visibility: 1 });
+MarkerSchema.index({ createdBy: 1, createdAt: -1 });
+MarkerSchema.index({ tags: 1 });
+MarkerSchema.index({ importance: -1, 'votes.up': -1 });
+MarkerSchema.index({ 'coordinates.latitude': 1, 'coordinates.longitude': 1 });
+
+// Text index for search
+MarkerSchema.index({
+  name: 'text',
+  description: 'text',
+  'properties.founder': 'text',
+  'properties.culture': 'text'
+});
+
+// Virtual for vote score
+MarkerSchema.virtual('voteScore').get(function() {
+  return this.votes.up - this.votes.down;
+});
+
+// Virtual for display coordinates
+MarkerSchema.virtual('displayCoordinates').get(function() {
+  return {
+    lat: this.coordinates.latitude,
+    lng: this.coordinates.longitude
+  };
+});
+
+// Pre-save middleware to sync location with coordinates
+MarkerSchema.pre('save', function(next) {
+  // Update GeoJSON location from coordinates
+  if (this.isModified('coordinates')) {
+    this.location = {
+      type: 'Point',
+      coordinates: [this.coordinates.longitude, this.coordinates.latitude]
+    };
+  }
+  
+  // Update version on modification
+  if (this.isModified() && !this.isNew) {
+    this.version += 1;
+  }
+  
+  // Validate battle information for battle markers
+  if (this.type === 'battle' && this.properties.battle) {
+    if (!this.properties.battle.date) {
+      return next(new Error('Battle markers must have a battle date'));
+    }
+  }
+  
+  next();
+});
+
+// Instance methods
+MarkerSchema.methods = {
+  /**
+   * Check if marker is visible to user
+   */
+  isVisibleTo(user) {
+    if (this.visibility === 'public') return true;
+    if (!user) return false;
+    if (this.visibility === 'private') {
+      return this.createdBy.toString() === user._id.toString() || user.role === 'admin';
+    }
+    return true; // unlisted
+  },
+  
+  /**
+   * Add vote
+   */
+  async addVote(userId, type) {
+    if (type === 'up') {
+      this.votes.up += 1;
+    } else if (type === 'down') {
+      this.votes.down += 1;
+    } else {
+      throw createValidationError('Vote type must be \"up\" or \"down\"');
+    }
+    
+    return this.save();
+  },
+  
+  /**
+   * Calculate distance to another marker
+   */
+  distanceTo(otherMarker) {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (otherMarker.coordinates.latitude - this.coordinates.latitude) * Math.PI / 180;
+    const dLon = (otherMarker.coordinates.longitude - this.coordinates.longitude) * Math.PI / 180;
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(this.coordinates.latitude * Math.PI / 180) *
+              Math.cos(otherMarker.coordinates.latitude * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in kilometers
+  },
+  
+  /**
+   * Add related marker
+   */
+  async addRelatedMarker(markerId, relationship, distance = null) {
+    const validRelationships = ['successor', 'predecessor', 'contemporary', 'nearby', 'related'];
+    
+    if (!validRelationships.includes(relationship)) {
+      throw createValidationError('Invalid relationship type');
+    }
+    
+    // Check if relationship already exists
+    const existingRelation = this.relatedMarkers.find(
+      rel => rel.marker.toString() === markerId.toString()
+    );
+    
+    if (existingRelation) {
+      existingRelation.relationship = relationship;
+      if (distance !== null) {
+        existingRelation.distance = distance;
+      }
+    } else {
+      const relation = { marker: markerId, relationship };
+      if (distance !== null) {
+        relation.distance = distance;
+      }
+      this.relatedMarkers.push(relation);
+    }
+    
+    return this.save();
+  },
+  
+  /**
+   * Get GeoJSON representation
+   */
+  toGeoJSON() {
+    return {
+      type: 'Feature',
+      geometry: this.location,
+      properties: {
+        id: this._id,
+        name: this.name,
+        year: this.year,
+        type: this.type,
+        importance: this.importance,
+        category: this.category,
+        description: this.description,
+        style: this.style,
+        ...this.properties.toObject()
+      }
+    };
+  }
+};
+
+// Static methods
+MarkerSchema.statics = {
+  /**
+   * Get marker by ID with error handling
+   */
+  async get(id, options = {}) {
+    try {
+      let query = this.findById(id);
+      
+      if (options.populate) {
+        query = query.populate(options.populate);
+      }
+      
+      const marker = await query;
+      
+      if (!marker) {
+        throw createNotFoundError('Marker not found');
+      }
+      
+      return marker;
+    } catch (error) {
+      if (error.name === 'CastError') {
+        throw createValidationError('Invalid marker ID format');
+      }
+      throw error;
+    }
+  },
+  
+  /**
+   * Find markers by year range
+   */
+  async findByYearRange(startYear, endYear, options = {}) {
+    const {
+      type,
+      category,
+      status = 'published',
+      visibility = 'public',
+      importance,
+      limit = 100,
+      skip = 0
+    } = options;
+    
+    const query = {
+      year: { $gte: startYear, $lte: endYear },
+      status,
+      visibility
+    };
+    
+    if (type) {
+      query.type = type;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    if (importance) {
+      query.importance = { $gte: importance };
+    }
+    
+    return this.find(query)
+      .sort({ importance: -1, year: 1, name: 1 })
+      .limit(limit)
+      .skip(skip)
+      .lean();
+  },
+  
+  /**
+   * Find markers near a point
+   */
+  async findNear(longitude, latitude, maxDistance = 100000, options = {}) {
+    const {
+      year,
+      type,
+      status = 'published',
+      visibility = 'public',
+      limit = 50
+    } = options;
+    
+    const query = {
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: maxDistance // meters
+        }
+      },
+      status,
+      visibility
+    };
+    
+    if (year) {
+      query.year = year;
+    }
+    
+    if (type) {
+      query.type = type;
+    }
+    
+    return this.find(query)
+      .limit(limit)
+      .lean();
+  },
+  
+  /**
+   * Find markers within geographic bounds
+   */
+  async findWithinBounds(bounds, year = null, options = {}) {
+    const {
+      type,
+      category,
+      status = 'published',
+      visibility = 'public',
+      importance,
+      limit = 200
+    } = options;
+    
+    const query = {
+      location: {
+        $geoWithin: {
+          $geometry: {
+            type: 'Polygon',
+            coordinates: [bounds]
+          }
+        }
+      },
+      status,
+      visibility
+    };
+    
+    if (year !== null) {
+      query.year = year;
+    }
+    
+    if (type) {
+      query.type = type;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    if (importance) {
+      query.importance = { $gte: importance };
+    }
+    
+    return this.find(query)
+      .sort({ importance: -1, 'votes.up': -1 })
+      .limit(limit)
+      .lean();
+  },
+  
+  /**
+   * Search markers with text and filters
+   */
+  async search(searchTerm, options = {}) {
+    const {
+      year,
+      type,
+      category,
+      tags,
+      importance,
+      status = 'published',
+      visibility = 'public',
+      page = 1,
+      limit = 20,
+      sort = 'relevance'
+    } = options;
+    
+    const skip = (page - 1) * limit;
+    
+    // Build query
+    const query = {
+      status,
+      visibility
+    };
+    
+    if (searchTerm) {
+      query.$text = { $search: searchTerm };
+    }
+    
+    if (year) {
+      query.year = year;
+    }
+    
+    if (type) {
+      query.type = type;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    if (importance) {
+      query.importance = { $gte: importance };
+    }
+    
+    if (tags && tags.length > 0) {
+      query.tags = { $in: tags };
+    }
+    
+    // Build sort
+    let sortQuery = {};
+    if (searchTerm && sort === 'relevance') {
+      sortQuery = { score: { $meta: 'textScore' } };
+    } else if (sort === 'year') {
+      sortQuery = { year: -1 };
+    } else if (sort === 'name') {
+      sortQuery = { name: 1 };
+    } else if (sort === 'importance') {
+      sortQuery = { importance: -1 };
+    } else if (sort === 'votes') {
+      sortQuery = { 'votes.up': -1 };
+    } else {
+      sortQuery = { createdAt: -1 };
+    }
+    
+    const [markers, total] = await Promise.all([
+      this.find(query)
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.countDocuments(query)
+    ]);
+    
+    return {
+      markers,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  },
+  
+  /**
+   * Get markers by user
+   */
+  async getByUser(userId, options = {}) {
+    const {
+      status,
+      page = 1,
+      limit = 20
+    } = options;
+    
+    const skip = (page - 1) * limit;
+    const query = { createdBy: userId };
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    const [markers, total] = await Promise.all([
+      this.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.countDocuments(query)
+    ]);
+    
+    return {
+      markers,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  },
+  
+  /**
+   * Get marker statistics
+   */
+  async getStatistics() {
+    const stats = await this.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalMarkers: { $sum: 1 },
+          publishedMarkers: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'published'] }, 1, 0]
+            }
+          },
+          typeCounts: {
+            $push: '$type'
+          },
+          categoryCounts: {
+            $push: '$category'
+          },
+          avgImportance: { $avg: '$importance' },
+          avgVoteScore: {
+            $avg: { $subtract: ['$votes.up', '$votes.down'] }
+          },
+          yearRange: {
+            min: { $min: '$year' },
+            max: { $max: '$year' }
+          }
+        }
+      }
+    ]);
+    
+    return stats[0] || {
+      totalMarkers: 0,
+      publishedMarkers: 0,
+      typeCounts: [],
+      categoryCounts: [],
+      avgImportance: 0,
+      avgVoteScore: 0,
+      yearRange: { min: null, max: null }
+    };
+  }
+};
+
+// Create and export model
+const Marker = mongoose.model('Marker', MarkerSchema);
+export default Marker;"

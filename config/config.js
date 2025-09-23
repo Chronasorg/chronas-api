@@ -19,7 +19,9 @@ if (process.env.chronasConfig != null)
 
 }else
 {
-  dotenv.config();
+  // Load environment-specific .env file
+  const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+  dotenv.config({ path: envFile });
   Object.assign(mergedSecrets, process.env);
 }
 
@@ -28,7 +30,7 @@ if (process.env.chronasConfig != null)
 // define validation for all the env vars
 const envVarsSchema = Joi.object({
   NODE_ENV: Joi.string()
-    .allow(['development', 'production', 'test', 'provision'])
+    .valid('development', 'production', 'test', 'provision')
     .default('development'),
   PORT: Joi.number()
     .default(4040),
@@ -52,7 +54,7 @@ const envVarsSchema = Joi.object({
 }).unknown()
   .required()
 
-const { error, value: envVars } = Joi.validate(mergedSecrets, envVarsSchema)
+const { error, value: envVars } = envVarsSchema.validate(mergedSecrets)
 if (error) {
   throw new Error(`Config validation error: ${error.message}`)
 }

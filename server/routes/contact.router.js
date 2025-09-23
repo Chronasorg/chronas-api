@@ -1,5 +1,5 @@
 import express from 'express'
-import contactCtrl from '../controllers/contact.controller'
+import contactCtrl from '../controllers/contact.controller.js'
 
 const router = express.Router() // eslint-disable-line new-cap
 

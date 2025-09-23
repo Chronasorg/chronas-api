@@ -1,7 +1,7 @@
-import Game from '../models/game.model'
-import logger from '../../config/winston'
-import APIError from '../helpers/APIError'
-import { config } from '../../config/config'
+import Game from '../models/game.model.js'
+import logger from '../../config/winston.js'
+import APIError from '../helpers/APIError.js'
+import { config } from '../../config/config.js'
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
 import Marker from "../models/marker.model";

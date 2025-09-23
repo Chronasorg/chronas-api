@@ -1,8 +1,8 @@
-import Marker from '../models/marker.model'
-import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import { config } from '../../config/config'
+import Marker from '../models/marker.model.js'
+import { APICustomResponse, APIError } from '../../server/helpers/APIError.js'
+import { config } from '../../config/config.js'
 import httpStatus from 'http-status'
-import Metadata from '../models/metadata.model'
+import Metadata from '../models/metadata.model.js'
 
 /**
  * Load marker and append to req.

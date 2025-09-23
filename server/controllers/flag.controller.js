@@ -1,7 +1,7 @@
 import { omit } from 'underscore'
-import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import Flag from '../models/flag.model'
-import { config } from '../../config/config'
+import { APICustomResponse, APIError } from '../../server/helpers/APIError.js'
+import Flag from '../models/flag.model.js'
+import { config } from '../../config/config.js'
 import httpStatus from 'http-status'
 
 /**

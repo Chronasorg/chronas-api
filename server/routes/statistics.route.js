@@ -1,5 +1,5 @@
 import express from 'express'
-import statisticsCtrl from '../controllers/statistics.controller'
+import statisticsCtrl from '../controllers/statistics.controller.js'
 
 const router = express.Router() // eslint-disable-line new-cap
 

@@ -1,8 +1,8 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore'
-import Area from '../models/area.model'
-import Metadata from '../models/metadata.model'
-import metadataCtrl from '../controllers/metadata.controller'
-import { config } from "../../config/config";
+import Area from '../models/area.model.js'
+import Metadata from '../models/metadata.model.js'
+import metadataCtrl from '../controllers/metadata.controller.js'
+import { config } from "../../config/config.js";
 import httpStatus from "http-status";
 import Promise from "bluebird";
 

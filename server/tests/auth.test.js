@@ -4,7 +4,7 @@
 // import chai from 'chai'
 // const { expect } = chai
 // import app from '../../index'
-// import { config } from '../../config/config'
+// import { config } from '../../config/config.js'
 //
 // chai.config.includeStack = true
 //

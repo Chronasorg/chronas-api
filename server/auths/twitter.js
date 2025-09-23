@@ -2,9 +2,9 @@ import passport from 'passport'
 import { Strategy } from 'passport-twitter'
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
-import { config } from '../../config/config'
+import { config } from '../../config/config.js'
 import userCtrl from '../controllers/user.controller'
-import APIError from '../helpers/APIError'
+import APIError from '../helpers/APIError.js'
 
 const credentials = {
   consumerKey: config.twitterConsumerKey,

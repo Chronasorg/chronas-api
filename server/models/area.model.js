@@ -334,4 +334,343 @@ AreaSchema.virtual('voteScore').get(function() {
 
 // Virtual for area calculation (approximate)
 AreaSchema.virtual('calculatedArea').get(function() {
-  if (this.geometry && this.geometry.type === 'Polygon') {\n    // This is a simplified calculation - in production you'd use a proper geospatial library\n    return this.properties.area || 0;\n  }\n  return 0;\n});\n\n// Pre-save middleware\nAreaSchema.pre('save', function(next) {\n  // Update version on modification\n  if (this.isModified() && !this.isNew) {\n    this.version += 1;\n  }\n  \n  // Validate year range based on category\n  if (this.category === 'political' && this.year > new Date().getFullYear()) {\n    return next(new Error('Political areas cannot be in the future'));\n  }\n  \n  next();\n});\n\n// Instance methods\nAreaSchema.methods = {\n  /**\n   * Check if area is visible to user\n   */\n  isVisibleTo(user) {\n    if (this.visibility === 'public') return true;\n    if (!user) return false;\n    if (this.visibility === 'private') {\n      return this.createdBy.toString() === user._id.toString() || user.role === 'admin';\n    }\n    return true; // unlisted\n  },\n  \n  /**\n   * Add vote\n   */\n  async addVote(userId, type) {\n    if (type === 'up') {\n      this.votes.up += 1;\n    } else if (type === 'down') {\n      this.votes.down += 1;\n    } else {\n      throw createValidationError('Vote type must be \"up\" or \"down\"');\n    }\n    \n    return this.save();\n  },\n  \n  /**\n   * Add related area\n   */\n  async addRelatedArea(areaId, relationship) {\n    const validRelationships = ['successor', 'predecessor', 'contemporary', 'vassal', 'overlord', 'ally', 'enemy'];\n    \n    if (!validRelationships.includes(relationship)) {\n      throw createValidationError('Invalid relationship type');\n    }\n    \n    // Check if relationship already exists\n    const existingRelation = this.relatedAreas.find(\n      rel => rel.area.toString() === areaId.toString()\n    );\n    \n    if (existingRelation) {\n      existingRelation.relationship = relationship;\n    } else {\n      this.relatedAreas.push({ area: areaId, relationship });\n    }\n    \n    return this.save();\n  },\n  \n  /**\n   * Get GeoJSON representation\n   */\n  toGeoJSON() {\n    return {\n      type: 'Feature',\n      geometry: this.geometry,\n      properties: {\n        id: this._id,\n        name: this.name,\n        year: this.year,\n        category: this.category,\n        description: this.description,\n        style: this.style,\n        ...this.properties.toObject()\n      }\n    };\n  }\n};\n\n// Static methods\nAreaSchema.statics = {\n  /**\n   * Get area by ID with error handling\n   */\n  async get(id, options = {}) {\n    try {\n      let query = this.findById(id);\n      \n      if (options.populate) {\n        query = query.populate(options.populate);\n      }\n      \n      const area = await query;\n      \n      if (!area) {\n        throw createNotFoundError('Area not found');\n      }\n      \n      return area;\n    } catch (error) {\n      if (error.name === 'CastError') {\n        throw createValidationError('Invalid area ID format');\n      }\n      throw error;\n    }\n  },\n  \n  /**\n   * Find areas by year range\n   */\n  async findByYearRange(startYear, endYear, options = {}) {\n    const {\n      category,\n      status = 'published',\n      visibility = 'public',\n      limit = 50,\n      skip = 0\n    } = options;\n    \n    const query = {\n      year: { $gte: startYear, $lte: endYear },\n      status,\n      visibility\n    };\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    return this.find(query)\n      .sort({ year: 1, name: 1 })\n      .limit(limit)\n      .skip(skip)\n      .lean();\n  },\n  \n  /**\n   * Find areas within geographic bounds\n   */\n  async findWithinBounds(bounds, year = null, options = {}) {\n    const {\n      category,\n      status = 'published',\n      visibility = 'public',\n      limit = 100\n    } = options;\n    \n    const query = {\n      geometry: {\n        $geoWithin: {\n          $geometry: {\n            type: 'Polygon',\n            coordinates: [bounds]\n          }\n        }\n      },\n      status,\n      visibility\n    };\n    \n    if (year !== null) {\n      query.year = year;\n    }\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    return this.find(query)\n      .limit(limit)\n      .lean();\n  },\n  \n  /**\n   * Search areas with text and filters\n   */\n  async search(searchTerm, options = {}) {\n    const {\n      year,\n      category,\n      tags,\n      status = 'published',\n      visibility = 'public',\n      page = 1,\n      limit = 20,\n      sort = 'relevance'\n    } = options;\n    \n    const skip = (page - 1) * limit;\n    \n    // Build query\n    const query = {\n      status,\n      visibility\n    };\n    \n    if (searchTerm) {\n      query.$text = { $search: searchTerm };\n    }\n    \n    if (year) {\n      query.year = year;\n    }\n    \n    if (category) {\n      query.category = category;\n    }\n    \n    if (tags && tags.length > 0) {\n      query.tags = { $in: tags };\n    }\n    \n    // Build sort\n    let sortQuery = {};\n    if (searchTerm && sort === 'relevance') {\n      sortQuery = { score: { $meta: 'textScore' } };\n    } else if (sort === 'year') {\n      sortQuery = { year: -1 };\n    } else if (sort === 'name') {\n      sortQuery = { name: 1 };\n    } else if (sort === 'votes') {\n      sortQuery = { 'votes.up': -1 };\n    } else {\n      sortQuery = { createdAt: -1 };\n    }\n    \n    const [areas, total] = await Promise.all([\n      this.find(query)\n        .sort(sortQuery)\n        .skip(skip)\n        .limit(limit)\n        .lean(),\n      this.countDocuments(query)\n    ]);\n    \n    return {\n      areas,\n      pagination: {\n        page,\n        limit,\n        total,\n        pages: Math.ceil(total / limit)\n      }\n    };\n  },\n  \n  /**\n   * Get areas by user\n   */\n  async getByUser(userId, options = {}) {\n    const {\n      status,\n      page = 1,\n      limit = 20\n    } = options;\n    \n    const skip = (page - 1) * limit;\n    const query = { createdBy: userId };\n    \n    if (status) {\n      query.status = status;\n    }\n    \n    const [areas, total] = await Promise.all([\n      this.find(query)\n        .sort({ createdAt: -1 })\n        .skip(skip)\n        .limit(limit)\n        .lean(),\n      this.countDocuments(query)\n    ]);\n    \n    return {\n      areas,\n      pagination: {\n        page,\n        limit,\n        total,\n        pages: Math.ceil(total / limit)\n      }\n    };\n  },\n  \n  /**\n   * Get area statistics\n   */\n  async getStatistics() {\n    const stats = await this.aggregate([\n      {\n        $group: {\n          _id: null,\n          totalAreas: { $sum: 1 },\n          publishedAreas: {\n            $sum: {\n              $cond: [{ $eq: ['$status', 'published'] }, 1, 0]\n            }\n          },\n          categoryCounts: {\n            $push: '$category'\n          },\n          avgVoteScore: {\n            $avg: { $subtract: ['$votes.up', '$votes.down'] }\n          },\n          yearRange: {\n            min: { $min: '$year' },\n            max: { $max: '$year' }\n          }\n        }\n      }\n    ]);\n    \n    return stats[0] || {\n      totalAreas: 0,\n      publishedAreas: 0,\n      categoryCounts: [],\n      avgVoteScore: 0,\n      yearRange: { min: null, max: null }\n    };\n  }\n};\n\n// Create and export model\nconst Area = mongoose.model('Area', AreaSchema);\nexport default Area;"
+  if (this.geometry && this.geometry.type === 'Polygon') {
+    // This is a simplified calculation - in production you'd use a proper geospatial library
+    return this.properties.area || 0;
+  }
+  return 0;
+});
+
+// Pre-save middleware
+AreaSchema.pre('save', function(next) {
+  // Update version on modification
+  if (this.isModified() && !this.isNew) {
+    this.version += 1;
+  }
+  
+  // Validate year range based on category
+  if (this.category === 'political' && this.year > new Date().getFullYear()) {
+    return next(new Error('Political areas cannot be in the future'));
+  }
+  
+  next();
+});
+
+// Instance methods
+AreaSchema.methods = {
+  /**
+   * Check if area is visible to user
+   */
+  isVisibleTo(user) {
+    if (this.visibility === 'public') return true;
+    if (!user) return false;
+    if (this.visibility === 'private') {
+      return this.createdBy.toString() === user._id.toString() || user.role === 'admin';
+    }
+    return true; // unlisted
+  },
+  
+  /**
+   * Add vote
+   */
+  async addVote(userId, type) {
+    if (type === 'up') {
+      this.votes.up += 1;
+    } else if (type === 'down') {
+      this.votes.down += 1;
+    } else {
+      throw createValidationError('Vote type must be \"up\" or \"down\"');
+    }
+    
+    return this.save();
+  },
+  
+  /**
+   * Add related area
+   */
+  async addRelatedArea(areaId, relationship) {
+    const validRelationships = ['successor', 'predecessor', 'contemporary', 'vassal', 'overlord', 'ally', 'enemy'];
+    
+    if (!validRelationships.includes(relationship)) {
+      throw createValidationError('Invalid relationship type');
+    }
+    
+    // Check if relationship already exists
+    const existingRelation = this.relatedAreas.find(
+      rel => rel.area.toString() === areaId.toString()
+    );
+    
+    if (existingRelation) {
+      existingRelation.relationship = relationship;
+    } else {
+      this.relatedAreas.push({ area: areaId, relationship });
+    }
+    
+    return this.save();
+  },
+  
+  /**
+   * Get GeoJSON representation
+   */
+  toGeoJSON() {
+    return {
+      type: 'Feature',
+      geometry: this.geometry,
+      properties: {
+        id: this._id,
+        name: this.name,
+        year: this.year,
+        category: this.category,
+        description: this.description,
+        style: this.style,
+        ...this.properties.toObject()
+      }
+    };
+  }
+};
+
+// Static methods
+AreaSchema.statics = {
+  /**
+   * Get area by ID with error handling
+   */
+  async get(id, options = {}) {
+    try {
+      let query = this.findById(id);
+      
+      if (options.populate) {
+        query = query.populate(options.populate);
+      }
+      
+      const area = await query;
+      
+      if (!area) {
+        throw createNotFoundError('Area not found');
+      }
+      
+      return area;
+    } catch (error) {
+      if (error.name === 'CastError') {
+        throw createValidationError('Invalid area ID format');
+      }
+      throw error;
+    }
+  },
+  
+  /**
+   * Find areas by year range
+   */
+  async findByYearRange(startYear, endYear, options = {}) {
+    const {
+      category,
+      status = 'published',
+      visibility = 'public',
+      limit = 50,
+      skip = 0
+    } = options;
+    
+    const query = {
+      year: { $gte: startYear, $lte: endYear },
+      status,
+      visibility
+    };
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    return this.find(query)
+      .sort({ year: 1, name: 1 })
+      .limit(limit)
+      .skip(skip)
+      .lean();
+  },
+  
+  /**
+   * Find areas within geographic bounds
+   */
+  async findWithinBounds(bounds, year = null, options = {}) {
+    const {
+      category,
+      status = 'published',
+      visibility = 'public',
+      limit = 100
+    } = options;
+    
+    const query = {
+      geometry: {
+        $geoWithin: {
+          $geometry: {
+            type: 'Polygon',
+            coordinates: [bounds]
+          }
+        }
+      },
+      status,
+      visibility
+    };
+    
+    if (year !== null) {
+      query.year = year;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    return this.find(query)
+      .limit(limit)
+      .lean();
+  },
+  
+  /**
+   * Search areas with text and filters
+   */
+  async search(searchTerm, options = {}) {
+    const {
+      year,
+      category,
+      tags,
+      status = 'published',
+      visibility = 'public',
+      page = 1,
+      limit = 20,
+      sort = 'relevance'
+    } = options;
+    
+    const skip = (page - 1) * limit;
+    
+    // Build query
+    const query = {
+      status,
+      visibility
+    };
+    
+    if (searchTerm) {
+      query.$text = { $search: searchTerm };
+    }
+    
+    if (year) {
+      query.year = year;
+    }
+    
+    if (category) {
+      query.category = category;
+    }
+    
+    if (tags && tags.length > 0) {
+      query.tags = { $in: tags };
+    }
+    
+    // Build sort
+    let sortQuery = {};
+    if (searchTerm && sort === 'relevance') {
+      sortQuery = { score: { $meta: 'textScore' } };
+    } else if (sort === 'year') {
+      sortQuery = { year: -1 };
+    } else if (sort === 'name') {
+      sortQuery = { name: 1 };
+    } else if (sort === 'votes') {
+      sortQuery = { 'votes.up': -1 };
+    } else {
+      sortQuery = { createdAt: -1 };
+    }
+    
+    const [areas, total] = await Promise.all([
+      this.find(query)
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.countDocuments(query)
+    ]);
+    
+    return {
+      areas,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  },
+  
+  /**
+   * Get areas by user
+   */
+  async getByUser(userId, options = {}) {
+    const {
+      status,
+      page = 1,
+      limit = 20
+    } = options;
+    
+    const skip = (page - 1) * limit;
+    const query = { createdBy: userId };
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    const [areas, total] = await Promise.all([
+      this.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.countDocuments(query)
+    ]);
+    
+    return {
+      areas,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  },
+  
+  /**
+   * Get area statistics
+   */
+  async getStatistics() {
+    const stats = await this.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalAreas: { $sum: 1 },
+          publishedAreas: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'published'] }, 1, 0]
+            }
+          },
+          categoryCounts: {
+            $push: '$category'
+          },
+          avgVoteScore: {
+            $avg: { $subtract: ['$votes.up', '$votes.down'] }
+          },
+          yearRange: {
+            min: { $min: '$year' },
+            max: { $max: '$year' }
+          }
+        }
+      }
+    ]);
+    
+    return stats[0] || {
+      totalAreas: 0,
+      publishedAreas: 0,
+      categoryCounts: [],
+      avgVoteScore: 0,
+      yearRange: { min: null, max: null }
+    };
+  }
+};
+
+// Create and export model
+const Area = mongoose.model('Area', AreaSchema);
+export default Area;"

@@ -1,7 +1,7 @@
 import { omit } from 'underscore'
-import { APICustomResponse, APIError } from '../../server/helpers/APIError'
-import Collection from '../models/collection.model'
-import { config } from '../../config/config'
+import { APICustomResponse, APIError } from '../../server/helpers/APIError.js'
+import Collection from '../models/collection.model.js'
+import { config } from '../../config/config.js'
 import httpStatus from 'http-status'
 import Marker from "../models/marker.model";
 import Metadata from "../models/metadata.model";

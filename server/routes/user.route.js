@@ -2,9 +2,9 @@ import express from 'express'
 import validate from 'express-validation'
 import expressJwt from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
-import userCtrl from '../controllers/user.controller'
-import { config } from '../../config/config'
-import checkPrivilege from '../helpers/privileges'
+import userCtrl from '../controllers/user.controller.js'
+import { config } from '../../config/config.js'
+import checkPrivilege from '../helpers/privileges.js'
 
 const router = express.Router() // eslint-disable-line new-cap
 
