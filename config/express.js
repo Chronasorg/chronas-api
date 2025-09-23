@@ -108,10 +108,21 @@ passport.deserializeUser((obj, cb) => {
   cb(null, obj)
 })
 
-app.use(expressSession({ secret: 'keyboard cat', resave: true, saveUninitialized: true, cookie: { secure: true }  /* key: 'sid', cookie: { secure: true }*/ }));
+// Only configure session in non-test environments to avoid issues
+if (config.env !== 'test') {
+  app.use(expressSession({ 
+    secret: config.jwtSecret || 'test-secret-key', 
+    resave: false, 
+    saveUninitialized: false, 
+    cookie: { secure: false }
+  }));
+}
 
 app.use(passport.initialize())
-app.use(passport.session())
+// Only use passport session in non-test environments
+if (config.env !== 'test') {
+  app.use(passport.session())
+}
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {

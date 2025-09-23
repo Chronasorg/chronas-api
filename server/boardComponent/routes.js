@@ -10,22 +10,21 @@ import adminRoutes from './entities/admin/api.js'
 import path from 'path'
 import express from 'express'
 
-const router = express.Router() // eslint-disable-line new-cap
+const routesConfig = (app) => {
+  // mount user routes at /users
+  app.use('/board/user', userRoutes)
 
-// mount user routes at /users
-router.use('/user', userRoutes)
+  // mount forum routes at /forum
+  app.use('/board/forum', forumRoutes)
 
-// mount forum routes at /forum
-router.use('/forum', forumRoutes)
+  // mount discussion routes at /discussion
+  app.use('/board/discussion', discussionRoutes)
 
-// mount discussion routes at /discussion
-router.use('/discussion', discussionRoutes)
+  // mount opinion routes at /opinion
+  app.use('/board/opinion', opinionRoutes)
 
-// mount opinion routes at /opinion
-router.use('/opinion', opinionRoutes)
+  // mount admin routes at /admin
+  app.use('/board/admin', adminRoutes)
+};
 
-// mount admin routes at /admin
-router.use('/admin', adminRoutes)
-
-
-export default router
+export default routesConfig;

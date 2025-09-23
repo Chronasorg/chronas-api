@@ -1,14 +1,16 @@
 /**
  * module dependencies for express configuration
  */
-const passport = require('passport')
-const morgan = require('morgan')
-const compress = require('compression')
-const cookieParser = require('cookie-parser')
-const bodyParser = require('body-parser')
-const session = require('express-session')
-const mongoStore = require('connect-mongo')(session)
-const flash = require('connect-flash')
+import passport from 'passport'
+import morgan from 'morgan'
+import compress from 'compression'
+import cookieParser from 'cookie-parser'
+import session from 'express-session'
+import MongoStore from 'connect-mongo'
+import flash from 'connect-flash'
+import passportConfig from './passport.js'
+import devConfig from './dev.js'
+import routesConfig from './routes.js'
 
 const DBBOARDURL = process.env.MONGO_BOARD_HOST
 /**
@@ -32,10 +34,10 @@ const expressConfig = (app, serverConfigs) => {
   app.use(session({
     resave: false,
     saveUninitialized: true,
-    secret: 'secret',
-    store: new mongoStore({
-      url: DBBOARDURL,
-      collection: 'sessions',
+    secret: process.env.JWT_SECRET || 'test-secret-key',
+    store: MongoStore.create({
+      mongoUrl: DBBOARDURL || process.env.MONGO_HOST || 'mongodb://localhost:27017/chronas-test',
+      collectionName: 'sessions',
     }),
   }))
 
@@ -44,18 +46,18 @@ const expressConfig = (app, serverConfigs) => {
   app.use(passport.session())
 
   // apply passport configs
-  require('./passport')(app)
+  passportConfig(app)
 
   // connect flash for flash messages (should be declared after sessions)
   app.use(flash())
 
   // apply development environment additionals
   if (!serverConfigs.PRODUCTION) {
-    require('./dev')(app)
+    devConfig(app)
   }
 
   // apply route configs
-  require('./routes')(app)
+  routesConfig(app)
 }
 
 export default expressConfig
