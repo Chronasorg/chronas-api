@@ -16,6 +16,11 @@ const { Schema } = mongoose;
  * User Schema with modern Mongoose features
  */
 const UserSchema = new Schema({
+  _id: {
+    type: Schema.Types.Mixed, // Allow both ObjectId and String for backward compatibility
+    required: true
+  },
+  
   username: {
     type: String,
     required: [true, 'Username is required'],
@@ -249,6 +254,15 @@ const UserSchema = new Schema({
   twoFactorSecret: {
     type: String,
     select: false
+  },
+  
+  // Legacy fields for backward compatibility
+  // TODO: Remove these once controllers are updated to use new format
+  privilege: {
+    type: Number,
+    default: 1,
+    min: [1, 'Privilege must be at least 1'],
+    max: [99, 'Privilege cannot exceed 99']
   }
 }, {
   timestamps: true, // Automatically manage createdAt and updatedAt

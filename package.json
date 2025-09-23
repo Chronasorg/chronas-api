@@ -51,7 +51,7 @@
     "express": "^4.18.0",
     "express-jwt": "8.5.1",
     "express-session": "1.18.2",
-    "express-validation": "1.0.2",
+    "express-validation": "4.1.1",
     "express-winston": "^4.0.4",
     "helmet": "^7.0.0",
     "http-status": "^0.2.5",

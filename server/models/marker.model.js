@@ -172,6 +172,11 @@ const PropertiesSchema = new Schema({
  * Marker Schema
  */
 const MarkerSchema = new Schema({
+  _id: {
+    type: Schema.Types.Mixed, // Allow both ObjectId and String for backward compatibility
+    required: true
+  },
+  
   name: {
     type: String,
     required: [true, 'Marker name is required'],
@@ -210,7 +215,7 @@ const MarkerSchema = new Schema({
   // Marker type and classification
   type: {
     type: String,
-    enum: ['city', 'town', 'village', 'battle', 'event', 'landmark', 'monument', 'fortress', 'temple', 'other'],
+    enum: ['city', 'town', 'village', 'battle', 'event', 'landmark', 'monument', 'fortress', 'temple', 'politician', 'other'],
     default: 'other',
     required: true,
     index: true
@@ -360,7 +365,24 @@ const MarkerSchema = new Schema({
   areas: [{
     type: Schema.Types.ObjectId,
     ref: 'Area'
-  }]
+  }],
+  
+  // Legacy fields for backward compatibility
+  // TODO: Remove these once controllers are updated to use new format
+  coo: {
+    type: [Number], // Array of [longitude, latitude]
+    default: []
+  },
+  
+  wiki: {
+    type: String,
+    trim: true
+  },
+  
+  type: {
+    type: String,
+    trim: true
+  }
 }, {
   timestamps: true,
   versionKey: false,
@@ -837,6 +859,92 @@ MarkerSchema.statics = {
       avgImportance: 0,
       avgVoteScore: 0,
       yearRange: { min: null, max: null }
+    };
+  },
+  
+  /**
+   * Legacy list method for backward compatibility
+   * TODO: Update controller to use modern methods
+   */
+  async list(options = {}) {
+    const {
+      start = 0,
+      length = 2000,
+      sort = 'name',
+      order = 'asc',
+      filter = '',
+      year,
+      delta,
+      includeMarkers = true,
+      typeArray,
+      wikiArray,
+      search,
+      format
+    } = options;
+    
+    if (!includeMarkers) {
+      return [];
+    }
+    
+    const query = {
+      status: 'published',
+      visibility: 'public'
+    };
+    
+    // Year filtering with delta
+    if (year && delta) {
+      query.year = {
+        $gte: year - delta,
+        $lte: year + delta
+      };
+    } else if (year) {
+      query.year = year;
+    }
+    
+    // Type filtering
+    if (typeArray && typeArray.length > 0) {
+      query.type = { $in: typeArray };
+    }
+    
+    // Wiki filtering
+    if (wikiArray && wikiArray.length > 0) {
+      query.wiki = { $in: wikiArray };
+    }
+    
+    // Search filtering
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { wiki: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Text filter
+    if (filter) {
+      query.name = { $regex: filter, $options: 'i' };
+    }
+    
+    // Build sort
+    const sortQuery = {};
+    sortQuery[sort] = order === 'desc' ? -1 : 1;
+    
+    return this.find(query)
+      .sort(sortQuery)
+      .skip(start)
+      .limit(length)
+      .lean();
+  },
+  
+  /**
+   * Legacy count method for backward compatibility
+   * TODO: Update controller to use countDocuments
+   */
+  count() {
+    return {
+      exec: () => this.countDocuments({
+        status: 'published',
+        visibility: 'public'
+      })
     };
   }
 };

@@ -148,6 +148,11 @@ const PropertiesSchema = new Schema({
  * Area Schema
  */
 const AreaSchema = new Schema({
+  _id: {
+    type: Schema.Types.Mixed, // Allow both ObjectId and String for backward compatibility
+    required: true
+  },
+  
   name: {
     type: String,
     required: [true, 'Area name is required'],
@@ -303,7 +308,14 @@ const AreaSchema = new Schema({
       enum: ['successor', 'predecessor', 'contemporary', 'vassal', 'overlord', 'ally', 'enemy'],
       required: true
     }
-  }]
+  }],
+  
+  // Legacy data field for backward compatibility with old controllers
+  // TODO: Remove this once controllers are updated to use new format
+  data: {
+    type: Schema.Types.Mixed,
+    default: {}
+  }
 }, {
   timestamps: true,
   versionKey: false,

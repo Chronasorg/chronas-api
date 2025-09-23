@@ -3,111 +3,112 @@ import Joi from 'joi'
 export default {
   // POST /v1/users
   createUser: {
-    body: {
+    body: Joi.object({
       username: Joi.string().required()
-    }
+    })
   },
 
   createGame: {
-    body: {
+    body: Joi.object({
       name: Joi.string().required()
-    }
+    })
   },
 
   // POST /v1/markers
   createMarker: {
-    body: {
+    body: Joi.object({
       name: Joi.string().required(),
       privilegeLevel: Joi.string().required(),
       layout: Joi.string().required()
-    }
+    })
   },
 
   // POST /v1/areas
   createArea: {
-    body: {
+    body: Joi.object({
       name: Joi.string().required(),
       privilegeLevel: Joi.string().required(),
       url: Joi.string().required(),
       format: Joi.string().required(),
       timeFormat: Joi.string().required(),
       dataSchema: Joi.string().required()
-    }
+    })
   },
 
   // UPDATE /v1/users/:userId
   updateUser: {
-    body: {
+    body: Joi.object({
       username: Joi.string(),
       privilege: Joi.string()
-    },
-    params: {
+    }),
+    params: Joi.object({
       userId: Joi.string().hex().required()
-    }
+    })
   },
 
   // UPDATE /v1/markers/:markerId
   updateMarker: {
-    body: {
+    body: Joi.object({
       name: Joi.string(),
       privilegeLevel: Joi.string(),
       layout: Joi.string()
-    },
-    params: {
+    }),
+    params: Joi.object({
       markerId: Joi.string().hex().required()
-    }
+    })
   },
 
   // UPDATE /v1/area/:areaId
   updateArea: {
-    body: {
+    body: Joi.object({
       name: Joi.string(),
       privilegeLevel: Joi.string(),
       url: Joi.string(),
       format: Joi.string(),
       timeFormat: Joi.string(),
       dataSchema: Joi.string()
-    },
-    params: {
+    }),
+    params: Joi.object({
       areaId: Joi.string().required()
-    }
+    })
   },
 
   updateSingle: {
-    body: {
+    body: Joi.object({
       subEntityId: Joi.string().required(),
       nextBody: Joi.array().required()
-    },
-    params: {
+    }),
+    params: Joi.object({
       metadataId: Joi.string().required()
-    }
+    })
   },
 
   updateLink: {
-    body: {
+    body: Joi.object({
       linkedItemKey1: Joi.string().required(),
       linkedItemKey2: Joi.string().required(),
       linkedItemType1: Joi.string().required(),
       linkedItemType2: Joi.string().required()
-    },
-    params: {
+    }),
+    params: Joi.object({
       metadataId: Joi.string().required()
-    }
+    })
   },
 
   // POST /v1/auth/login
   login: {
-    body: {
+    body: Joi.object({
       email: Joi.string().required(),
       password: Joi.string().required()
-    }
+    })
   },
 
-  // POST /v1/auth/login
+  // POST /v1/auth/signup
   signup: {
-    body: {
+    body: Joi.object({
       email: Joi.string().required(),
-      password: Joi.string().required()
-    }
+      password: Joi.string().required(),
+      username: Joi.string()
+    })
   }
 }

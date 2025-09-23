@@ -34,6 +34,11 @@ async function load(req, res, next, id) {
  * @returns {Area}
  */
 function get(req, res) {
+  // For backward compatibility, return the data property if it exists
+  // Otherwise return the full entity
+  if (req.entity.data && Object.keys(req.entity.data).length > 0) {
+    return res.json(req.entity.data)
+  }
   return res.json(req.entity)
 }
 

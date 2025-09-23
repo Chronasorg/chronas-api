@@ -1,5 +1,5 @@
 import express from 'express'
-import validate from 'express-validation'
+import { validate } from '../helpers/validation.js'
 import paramValidation from '../../config/param-validation.js'
 import authCtrl from '../controllers/auth.controller.js'
 import twitter from '../auths/twitter.js'

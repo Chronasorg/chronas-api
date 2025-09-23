@@ -14,4 +14,11 @@ import '../models/marker.model.js';
 import '../models/area.model.js';
 import '../models/metadata.model.js';
 
-console.log('📋 Test environment configured');
+// Mock mongoose for integration tests
+import { mockMongoose } from './helpers/mock-database.js';
+
+// Replace mongoose.model with our mock
+const originalModel = (await import('mongoose')).default.model;
+(await import('mongoose')).default.model = mockMongoose.model;
+
+console.log('📋 Test environment configured with mock database');

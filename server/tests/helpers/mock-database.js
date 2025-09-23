@@ -18,12 +18,18 @@ class MockModel {
     if (!this._id) {
       this._id = Math.random().toString(36).substr(2, 9);
     }
+    // Initialize default values for users
+    if (this.constructor.collection.name === 'users') {
+      this.loginCount = this.loginCount || 0;
+      this.karma = this.karma || 1;
+      this.privilege = this.privilege || 1;
+    }
   }
 
-  save() {
+  async save() {
     const collection = mockData[this.constructor.collection.name];
     if (collection) {
-      collection.set(this._id, this);
+      collection.set(this._id || this.email, this);
     }
     return Promise.resolve(this);
   }
@@ -105,9 +111,32 @@ class MockModel {
 class MockUser extends MockModel {
   static collection = { name: 'users' };
   
-  async comparePassword(candidatePassword) {
+  async comparePassword(candidatePassword, callback) {
     // Simple mock - in real tests, this would check bcrypt hash
-    return candidatePassword === 'asdf';
+    const isMatch = candidatePassword === 'asdf';
+    if (callback) {
+      callback(null, isMatch);
+    }
+    return isMatch;
+  }
+  
+  static findOne(query = {}) {
+    const collection = mockData[this.collection.name];
+    if (!collection) return { exec: () => Promise.resolve(null) };
+    
+    const results = Array.from(collection.values());
+    const filtered = results.filter(doc => {
+      return Object.entries(query).every(([key, value]) => {
+        return doc[key] === value;
+      });
+    });
+    
+    const result = filtered[0] || null;
+    
+    // Return an object with exec method to match Mongoose API
+    return {
+      exec: () => Promise.resolve(result ? new MockUser(result) : null)
+    };
   }
 }
 
