@@ -3,7 +3,7 @@ import httpStatus from 'http-status'
 import chai from 'chai'
 const { expect } = chai
 import app from '../helpers/test-app.js'
-import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js'
+import { setupMockDatabase, teardownMockDatabase, clearMockDatabase } from '../helpers/mock-database.js'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
@@ -16,18 +16,18 @@ chai.config.includeStack = true
 
 describe('## version', () => {
   before(async function() {
-    this.timeout(30000)
-    await setupTestDatabase()
-    console.log('📋 Test database ready for version tests')
+    this.timeout(10000)
+    await setupMockDatabase()
+    console.log('📋 Mock database ready for version tests')
   })
   
   after(async function() {
-    this.timeout(10000)
-    await teardownTestDatabase()
+    this.timeout(5000)
+    await teardownMockDatabase()
   })
   
   beforeEach(async () => {
-    await clearTestDatabase()
+    await clearMockDatabase()
   })
 
   it('should return OK and have properties version and commit', (done) => {

@@ -5,11 +5,11 @@ import chai from 'chai'
 const { expect } = chai
 import app from '../helpers/test-app.js'
 import { config } from '../../../config/config.js'
-import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js'
+import { setupMockDatabase, teardownMockDatabase, clearMockDatabase, populateMockData } from '../helpers/mock-database.js'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
-import mongoose from 'mongoose'
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -20,30 +20,20 @@ describe('## Auth APIs', () => {
   const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData-modern.json'), 'utf8'))
 
   before(async function() {
-    this.timeout(30000)
-    await setupTestDatabase()
-    
-    // Populate test data
-    if (testData.users) {
-      const User = mongoose.model('User')
-      await User.insertMany(testData.users)
-    }
-    
-    console.log('📋 Test data populated for auth tests')
+    this.timeout(10000)
+    await setupMockDatabase()
+    await populateMockData(testData)
+    console.log('📋 Mock database ready for auth tests')
   })
   
   after(async function() {
-    this.timeout(10000)
-    await teardownTestDatabase()
+    this.timeout(5000)
+    await teardownMockDatabase()
   })
   
   beforeEach(async () => {
-    // Clear and repopulate data for each test
-    await clearTestDatabase()
-    if (testData.users) {
-      const User = mongoose.model('User')
-      await User.insertMany(testData.users)
-    }
+    await clearMockDatabase()
+    await populateMockData(testData)
   })
 
   const validUserCredentials = {

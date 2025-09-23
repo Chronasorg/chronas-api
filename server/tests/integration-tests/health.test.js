@@ -2,30 +2,33 @@ import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
 import chai from 'chai'
 const { expect } = chai
-import app from '../../../index.js'
-import mongoUnit from 'mongo-unit'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
-import path from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+import app from '../helpers/test-app.js'
+import { setupMockDatabase, teardownMockDatabase, clearMockDatabase } from '../helpers/mock-database.js'
 
 chai.config.includeStack = true
 
 describe('## health', () => {
-  const testMongoUrl = process.env.MONGO_HOST
-  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'))
-
-  before(() => mongoUnit.initDb(testMongoUrl, testData))
-  after(() => mongoUnit.drop())
+  before(async function() {
+    this.timeout(10000)
+    await setupMockDatabase()
+    console.log('📋 Mock database ready for health tests')
+  })
+  
+  after(async function() {
+    this.timeout(5000)
+    await teardownMockDatabase()
+  })
+  
+  beforeEach(async () => {
+    await clearMockDatabase()
+  })
 
   it('should return OK', (done) => {
     request(app)
         .get('/v1/health')
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.text).to.equal('OK')
+          expect(res.text).to.equal('Health OK')
           done()
         })
         .catch(done)
