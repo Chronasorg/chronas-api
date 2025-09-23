@@ -673,4 +673,4 @@ AreaSchema.statics = {
 
 // Create and export model
 const Area = mongoose.model('Area', AreaSchema);
-export default Area;"
+export default Area;

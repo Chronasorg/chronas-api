@@ -21,4 +21,4 @@ const userSchema = mongoose.Schema({
   },
 }, { usePushEach: true })
 
-module.exports = mongoose.model('user', userSchema)
+export default mongoose.model('user', userSchema)

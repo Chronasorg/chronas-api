@@ -8,4 +8,4 @@ const forumSchema = mongoose.Schema({
   forum_name: String,
 }, { usePushEach: true })
 
-module.exports = mongoose.model('forum', forumSchema)
+export default mongoose.model('forum', forumSchema)

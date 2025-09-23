@@ -1,6 +1,6 @@
 import express from 'express'
 import validate from 'express-validation'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
 import metadataCtrl from '../controllers/metadata.controller.js'
 import revisionCtrl from '../controllers/revision.controller.js'
@@ -16,7 +16,7 @@ router.route('/')
 
   /** POST /v1/metadata - Create new metadata */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
@@ -28,12 +28,12 @@ router.route('/:metadataId')
   /** GET /v1/metadata/:metadataIds - Get metadata through semicolon delimited ids */
   .get(
     // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     metadataCtrl.get)
 
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // validate(paramValidation.updateSingle),
     // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
@@ -42,7 +42,7 @@ router.route('/:metadataId')
 
   /** DELETE /v1/metadata/:metadataId - Delete metadata */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
@@ -52,7 +52,7 @@ router.route('/:metadataId/single')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // validate(paramValidation.updateSingle),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateSingle,
@@ -70,7 +70,7 @@ router.route('/:metadataId/addLink')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     validate(paramValidation.updateLink),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(true)
@@ -80,7 +80,7 @@ router.route('/:metadataId/removeLink')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     validate(paramValidation.updateLink),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(false)
@@ -90,7 +90,7 @@ router.route('/:metadataId/upvote')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     metadataCtrl.vote(1)
   )
 
@@ -98,7 +98,7 @@ router.route('/:metadataId/downvote')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     metadataCtrl.vote(-1)
   )
 /** Load metadata when API with metadataId route parameter is hit */

@@ -1,7 +1,7 @@
 // discussion controllers
 import express from 'express'
-import expressJwt from 'express-jwt'
-import { config } from '../../config/config.js'
+import { expressjwt as expressJwt } from 'express-jwt'
+import { config } from '../../../../config/config.js'
 
 const getDiscussion = require('./controller').getDiscussion
 const createDiscussion = require('./controller').createDiscussion
@@ -14,7 +14,7 @@ const router = express.Router() // eslint-disable-line
  */
   // get signle discussion
 router.route('/:discussion_slug').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     const { discussion_slug } = req.params
     getDiscussion(discussion_slug).then(
@@ -25,7 +25,7 @@ router.route('/:discussion_slug').get(
 
   // toggle favorite to the discussion
 router.route('/toggleFavorite/:discussion_id').put(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     const { discussion_id } = req.params
   // if (req.user) {
@@ -46,7 +46,7 @@ router.route('/toggleFavorite/:discussion_id').put(
 
   // create a new discussion
 router.route('/newDiscussion').post(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
   // if (req.user) {
     createDiscussion(req.body, req, res).then(
@@ -59,7 +59,7 @@ router.route('/newDiscussion').post(
   })
 
 router.route('/newDiscussion/:discussion_slug').post(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     // if (req.user) {
     createDiscussion(req.body, req, res).then(
@@ -73,7 +73,7 @@ router.route('/newDiscussion/:discussion_slug').post(
 
   // delete a discussion
 router.route('/deleteDiscussion/:discussion_slug').delete(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
   // if (req.user) {
     deleteDiscussion(req.params.discussion_slug).then(

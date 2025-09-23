@@ -1,6 +1,6 @@
 import express from 'express'
-import { config } from '../../config/config.js'
-import expressJwt from 'express-jwt'
+import { config } from '../../../../config/config.js'
+import { expressjwt as expressJwt } from 'express-jwt'
 
 const passport = require('passport')
 const signIn = require('./controller').signIn
@@ -13,7 +13,7 @@ const router = express.Router() // eslint-disable-line
 
 // get authenticated user
 router.route('/getUser').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     res.send(req.auth)
   })
@@ -32,7 +32,7 @@ router.route('/authViaGitHub/callback').get(
 
 // get user full profile
 router.route('/profile/:username').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     getFullProfile(req.params.username).then(
     (result) => { res.send(result) },

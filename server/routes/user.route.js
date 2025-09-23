@@ -1,6 +1,6 @@
 import express from 'express'
 import validate from 'express-validation'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
 import userCtrl from '../controllers/user.controller.js'
 import { config } from '../../config/config.js'
@@ -11,7 +11,7 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
 //   /** GET /v1/users - Get list of users */
 //   .get(
-//     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+//     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
 //     checkPrivilege.checkPrivilege(5),
 //     userCtrl.list)
 
@@ -23,39 +23,39 @@ router.route('/')
 router.route('/sustainers')
 /** GET /v1/users - Get list of users */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     userCtrl.list)
 
 router.route('/highscore')
 /** GET /v1/users - Get list of users */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     userCtrl.list)
 
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.get)
 
   /** PUT /v1/users/:userId - Update user */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeOrOwnership(5),
     // validate(paramValidation.updateUser),
     userCtrl.update)
 
   /** DELETE /v1/users/:userId - Delete user */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeOrOwnership(5),
     userCtrl.remove)
 
 
 router.route('/:userId/subscription/:subscriptionId/:doCancel')
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeOrOwnership(5),
     // validate(paramValidation.updateUser),
     userCtrl.updateSubscription)

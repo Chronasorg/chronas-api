@@ -6,12 +6,18 @@ const { expect } = chai
 import app from '../../../index.js'
 import { config } from '../../../config/config.js'
 import mongoUnit from 'mongo-unit'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 chai.config.includeStack = true
 
 describe('## Auth APIs', () => {
   const testMongoUrl = process.env.MONGO_HOST
-  const testData = require('./fixtures/testData.json')
+  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'))
 
   before(() => mongoUnit.initDb(testMongoUrl, testData))
   after(() => mongoUnit.drop())

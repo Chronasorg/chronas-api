@@ -1,6 +1,6 @@
 import express from 'express'
 import validate from 'express-validation'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
 import gameCtrl from '../controllers/game.controller.js'
 import { config } from '../../config/config.js'

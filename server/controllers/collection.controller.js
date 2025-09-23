@@ -3,9 +3,9 @@ import { APICustomResponse, APIError } from '../../server/helpers/APIError.js'
 import Collection from '../models/collection.model.js'
 import { config } from '../../config/config.js'
 import httpStatus from 'http-status'
-import Marker from "../models/marker.model";
-import Metadata from "../models/metadata.model";
-import userCtrl from "./user.controller";
+import Marker from "../models/marker.model.js";
+import Metadata from "../models/metadata.model.js";
+import userCtrl from "./user.controller.js";
 
 const markersTypes = ['w', 'w|b', 'w|si', 'w|c', 'w|ca', 'w|m', 'w|p', 'w|e', 'w|s', 'w|a', 'w|r', 'w|at', 'w|op', 'w|h', 'w|l', 'w|o']
 const linkedTypeAccessor = {

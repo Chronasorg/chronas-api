@@ -3,7 +3,7 @@
 /**
  * Fix Test Import Script
  * 
- * This script fixes ES6 import issues in test files for CommonJS modules like chai.
+ * This script fixes require statements in test files to use ES6 imports
  */
 
 import fs from 'fs';
@@ -15,49 +15,58 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
 /**
- * Find all test files
- */
-function findTestFiles(dir, files = []) {
-  const items = fs.readdirSync(dir);
-  
-  items.forEach(item => {
-    const fullPath = path.join(dir, item);
-    const stats = fs.statSync(fullPath);
-    
-    if (stats.isDirectory()) {
-      findTestFiles(fullPath, files);
-    } else if (item.endsWith('.test.js')) {
-      files.push(fullPath);
-    }
-  });
-  
-  return files;
-}
-
-/**
  * Fix imports in a test file
  */
-function fixTestImports(filePath) {
+function fixTestFile(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
-    let modified = false;
     
-    // Fix chai imports
-    const chaiImportRegex = /import chai from 'chai'\\nconst { expect } = chai/g;
-    if (chaiImportRegex.test(content)) {
-      const newContent = content.replace(
-        chaiImportRegex,
-        "import chai from 'chai'\nconst { expect } = chai"
-      );
-      
-      fs.writeFileSync(filePath, newContent);
-      console.log(`✅ Fixed chai imports in: ${path.relative(projectRoot, filePath)}`);
-      modified = true;
+    // Check if it already has the fs import
+    if (content.includes('import fs from')) {
+      console.log(`✅ Already fixed: ${path.relative(projectRoot, filePath)}`);
+      return false;
     }
     
-    return modified;
+    // Check if it has the require statement we need to fix
+    if (!content.includes("require('./fixtures/testData.json')")) {
+      console.log(`ℹ️  No testData require: ${path.relative(projectRoot, filePath)}`);
+      return false;
+    }
+    
+    let newContent = content;
+    
+    // Add the necessary imports after the existing imports
+    const importSection = newContent.match(/(import.*\\n)+/);
+    if (importSection) {
+      const lastImportIndex = importSection.index + importSection[0].length;
+      const beforeImports = newContent.substring(0, lastImportIndex);
+      const afterImports = newContent.substring(lastImportIndex);
+      
+      // Add fs and path imports
+      const additionalImports = `import fs from 'fs'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+`;
+      
+      newContent = beforeImports + additionalImports + afterImports;
+    }
+    
+    // Replace the require statement
+    newContent = newContent.replace(
+      /const testData = require\\('\\.\/fixtures\/testData\\.json'\\)/g,
+      "const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'))"
+    );
+    
+    fs.writeFileSync(filePath, newContent);
+    console.log(`✅ Fixed: ${path.relative(projectRoot, filePath)}`);
+    return true;
+    
   } catch (error) {
-    console.error(`❌ Failed to fix imports in ${filePath}:`, error.message);
+    console.error(`❌ Failed to fix ${filePath}:`, error.message);
     return false;
   }
 }
@@ -66,21 +75,29 @@ function fixTestImports(filePath) {
  * Main function
  */
 function main() {
-  console.log('🔧 Fixing test imports...');
+  console.log('🔧 Fixing test file imports...');
   
-  const testsDir = path.join(projectRoot, 'server', 'tests');
-  const testFiles = findTestFiles(testsDir);
+  const testFiles = [
+    'server/tests/integration-tests/health.test.js',
+    'server/tests/integration-tests/marker.test.js', 
+    'server/tests/integration-tests/metadata.test.js',
+    'server/tests/integration-tests/user.test.js'
+  ];
   
-  console.log(`📁 Found ${testFiles.length} test files`);
+  let totalFixed = 0;
   
-  let fixedFiles = 0;
   testFiles.forEach(file => {
-    if (fixTestImports(file)) {
-      fixedFiles++;
+    const fullPath = path.join(projectRoot, file);
+    if (fs.existsSync(fullPath)) {
+      if (fixTestFile(fullPath)) {
+        totalFixed++;
+      }
+    } else {
+      console.log(`⚠️  File not found: ${file}`);
     }
   });
   
-  console.log(`\\n✅ Fixed imports in ${fixedFiles} test files`);
+  console.log(`\\n✅ Fixed ${totalFixed} test files`);
 }
 
 // Run if called directly

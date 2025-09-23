@@ -18,4 +18,4 @@ const discussionSchema = mongoose.Schema({
   pinned: Boolean,
 }, { usePushEach: true })
 
-module.exports = mongoose.model('discussion', discussionSchema)
+export default mongoose.model('discussion', discussionSchema);

@@ -1,7 +1,7 @@
 // controllers
 import express from 'express'
-import { config } from '../../config/config.js'
-import expressJwt from 'express-jwt'
+import { config } from '../../../../config/config.js'
+import { expressjwt as expressJwt } from 'express-jwt'
 
 const getAllOpinions = require('./controller').getAllOpinions
 const voteOpinion = require('./controller').voteOpinion
@@ -15,7 +15,7 @@ const router = express.Router() // eslint-disable-line
 
   // create an opinion
 router.route('/newOpinion').post(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
   // if (req.user) {
     createOpinion(req.body, req, res).then(
@@ -29,7 +29,7 @@ router.route('/newOpinion').post(
 
 // vote an opinion
 router.route('/voteOpinion/:opinion_id').put(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     // if (req.user) {
     const voteDelta = +req.query.delta || 0
@@ -42,7 +42,7 @@ router.route('/voteOpinion/:opinion_id').put(
 
   // remove an opinion
 router.route('/deleteOpinion/:opinion_id').delete(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
   // if (req.user) {
     deleteOpinion(req.params.opinion_id).then(

@@ -1,7 +1,7 @@
 // controllers
 import express from 'express'
-import { config } from '../../config/config.js'
-import expressJwt from 'express-jwt'
+import { config } from '../../../../config/config.js'
+import { expressjwt as expressJwt } from 'express-jwt'
 
 const getAdminDashInfo = require('./controller').getAdminDashInfo
 const createForum = require('./controller').createForum
@@ -17,7 +17,7 @@ const router = express.Router() // eslint-disable-line
 
   // get all info for admin dashboard
 router.route('/admin_dashboard_info').get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     (req, res) => {
       getAdminDashInfo().then(
         (data) => { res.send(data) },
@@ -27,7 +27,7 @@ router.route('/admin_dashboard_info').get(
 
   // create a forum
 router.route('/create_forum').post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     (req, res) => {
       const {
         title,
@@ -42,7 +42,7 @@ router.route('/create_forum').post(
 
   // delete a forum
 router.route('/delete_forum').post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     (req, res) => {
       deleteForum(req.body).then(
         (data) => { res.send(data) },

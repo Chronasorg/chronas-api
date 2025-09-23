@@ -2,7 +2,7 @@ import passport from 'passport'
 import { Strategy } from 'passport-github'
 import jwt from 'jsonwebtoken'
 import { config } from '../../config/config.js'
-import userCtrl from '../controllers/user.controller'
+import userCtrl from '../controllers/user.controller.js'
 
 const credentials = {
   clientID: config.githubClientId,

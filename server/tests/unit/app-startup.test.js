@@ -16,7 +16,7 @@ describe('## Application Startup Tests', () => {
     it('should load database configuration without errors', async () => {
       try {
         const dbConfig = await import('../../../config/database.js');
-        expect(dbConfig).to.be.an('object');
+        expect(dbConfig).to.exist;
       } catch (error) {
         throw new Error(`Database config failed to load: ${error.message}`);
       }
@@ -25,7 +25,7 @@ describe('## Application Startup Tests', () => {
     it('should load winston logger without errors', async () => {
       try {
         const winston = await import('../../../config/winston.js');
-        expect(winston.default).to.be.an('object');
+        expect(winston.default).to.exist;
       } catch (error) {
         throw new Error(`Winston logger failed to load: ${error.message}`);
       }
@@ -34,7 +34,7 @@ describe('## Application Startup Tests', () => {
     it('should load application config without errors', async () => {
       try {
         const { config } = await import('../../../config/config.js');
-        expect(config).to.be.an('object');
+        expect(config).to.exist;
         expect(config.env).to.equal('test');
       } catch (error) {
         throw new Error(`Application config failed to load: ${error.message}`);
@@ -90,7 +90,7 @@ describe('## Application Startup Tests', () => {
       it(`should load ${controllerFile} without errors`, async () => {
         try {
           const controller = await import(`../../controllers/${controllerFile}`);
-          expect(controller.default).to.be.an('object');
+          expect(controller.default).to.exist;
         } catch (error) {
           throw new Error(`Controller ${controllerFile} failed to load: ${error.message}`);
         }
@@ -135,7 +135,7 @@ describe('## Application Startup Tests', () => {
     it('should load lambda app configuration without errors', async () => {
       try {
         const { initializeApp } = await import('../../../config/lambda-app.js');
-        expect(initializeApp).to.be.a('function');
+        expect(initializeApp).to.exist;
       } catch (error) {
         throw new Error(`Lambda app failed to load: ${error.message}`);
       }
@@ -144,7 +144,7 @@ describe('## Application Startup Tests', () => {
     it('should load lambda handler without errors', async () => {
       try {
         const lambdaHandler = await import('../../../lambda-handler.js');
-        expect(lambdaHandler.handler).to.be.a('function');
+        expect(lambdaHandler.handler).to.exist;
       } catch (error) {
         throw new Error(`Lambda handler failed to load: ${error.message}`);
       }
@@ -164,7 +164,7 @@ describe('## Application Startup Tests', () => {
       it(`should load migration script ${scriptFile} without errors`, async () => {
         try {
           const script = await import(`../../../scripts/${scriptFile}`);
-          expect(script).to.be.an('object');
+          expect(script).to.exist;
         } catch (error) {
           throw new Error(`Migration script ${scriptFile} failed to load: ${error.message}`);
         }

@@ -1,7 +1,7 @@
 // forum controllers
 import express from 'express'
-import { config } from '../../config/config.js'
-import expressJwt from 'express-jwt'
+import { config } from '../../../../config/config.js'
+import { expressjwt as expressJwt } from 'express-jwt'
 
 const getAllForums = require('./controller').getAllForums
 const getDiscussions = require('./controller').getDiscussions
@@ -13,7 +13,7 @@ const router = express.Router() // eslint-disable-line
 
 // get all forums
 router.route('/').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     getAllForums().then(
       (result) => { res.send(result) },
@@ -23,7 +23,7 @@ router.route('/').get(
 
 // get discussions of a forum
 router.route('/:forum_slug/discussions').get(
-  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     const { q, offset, limit } = req.query
     getDiscussions(req.params.forum_slug, false, req.query.sorting_method, q, offset, limit).then(
@@ -43,7 +43,7 @@ router.route('/:forum_slug/discussions').get(
 
 // get pinned discussions of a forum
 router.route('/:forum_slug/pinned_discussions').get(
-  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     const { q, offset, limit } = req.query
     getDiscussions(req.params.forum_slug, true, false, false, offset, limit).then(

@@ -1,6 +1,6 @@
 import express from 'express'
 import validate from 'express-validation'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
 import flagCtrl from '../controllers/flag.controller.js'
 import { config } from '../../config/config.js'
@@ -20,7 +20,7 @@ router.route('/')
 
 router.route('/:flagId')
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     flagCtrl.update)
 
   /** DELETE /v1/flags/:flagId - Delete flag */

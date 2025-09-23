@@ -1,5 +1,5 @@
 import express from 'express'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import areaCtrl from '../controllers/area.controller.js'
 import revisionCtrl from '../controllers/revision.controller.js'
 import { config } from '../../config/config.js'
@@ -11,19 +11,19 @@ router.route('/')
   .all(areaCtrl.defineEntity)
   /** GET /v1/areas - Get list of areas */
   .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     areaCtrl.list)
 
   /** PUT /v1/areas/ - Update area */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     areaCtrl.updateMany,
     revisionCtrl.addUpdateManyRevision)
 
   /** POST /v1/areas - Create new area */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(5),
     // revisionCtrl.addCreateRevision,
     // validate(paramValidation.createArea),
@@ -33,7 +33,7 @@ router.route('/replace')
   .all(areaCtrl.defineEntity)
 /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     areaCtrl.replaceAll,
     revisionCtrl.addUpdateManyRevision)
@@ -41,19 +41,19 @@ router.route('/replace')
 router.route('/aggregateProvinces')
   /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     areaCtrl.aggregateProvinces)
 
 router.route('/aggregateMetaCoo')
 /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     areaCtrl.aggregateMetaCoo)
 
 router.route('/aggregateDimension')
 /** GET /v1/areas/aggregateDimension - Aggregate all years by selected dimension (ruler, religion, religionGeneral or culture) */
   .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     areaCtrl.aggregateDimension)
 
 router.route('/:areaId')
@@ -63,14 +63,14 @@ router.route('/:areaId')
 
   /** PUT /v1/areas/:areaId - Update area */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addUpdateRevision,
     areaCtrl.update)
 
   /** DELETE /v1/areas/:areaId - Delete area */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(5),
     revisionCtrl.addDeleteRevision,
     areaCtrl.remove)

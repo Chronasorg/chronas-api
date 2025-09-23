@@ -2,8 +2,8 @@ import passport from 'passport'
 import { OAuth2Strategy } from 'passport-google-oauth'
 import jwt from 'jsonwebtoken'
 import { config } from '../../config/config.js'
-import userCtrl from '../controllers/user.controller'
-import metadataCtrl from '../controllers/metadata.controller'
+import userCtrl from '../controllers/user.controller.js'
+import metadataCtrl from '../controllers/metadata.controller.js'
 import Promise from 'bluebird'
 
 const credentials = {

@@ -140,7 +140,7 @@ const deleteDiscussion = ({ discussion_id }) => new Promise((resolve, reject) =>
   })
 })
 
-module.exports = {
+export default {
   getAdminDashInfo,
   createForum,
   deleteForum,

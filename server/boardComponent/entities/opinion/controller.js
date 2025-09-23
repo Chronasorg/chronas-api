@@ -97,7 +97,7 @@ const voteOpinion = (req, res, opinion_id, delta = 0) => new Promise((resolve, r
       .catch(e => reject(e))
 })
 
-module.exports = {
+export default {
   getAllOpinions,
   createOpinion,
   updateOpinion,

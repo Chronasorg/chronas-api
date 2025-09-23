@@ -77,7 +77,7 @@ const getFullProfile = username => new Promise((resolve, reject) => {
     })
 })
 
-module.exports = {
+export default {
   getUser,
   getFullProfile,
 }

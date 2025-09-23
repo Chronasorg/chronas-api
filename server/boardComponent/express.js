@@ -58,4 +58,4 @@ const expressConfig = (app, serverConfigs) => {
   require('./routes')(app)
 }
 
-module.exports = expressConfig
+export default expressConfig

@@ -18,4 +18,4 @@ const opinionSchema = mongoose.Schema({
   content: Object,
 }, { usePushEach: true })
 
-module.exports = mongoose.model('opinion', opinionSchema)
+export default mongoose.model('opinion', opinionSchema)

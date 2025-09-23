@@ -3,7 +3,7 @@ import { Strategy } from 'passport-twitter'
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
 import { config } from '../../config/config.js'
-import userCtrl from '../controllers/user.controller'
+import userCtrl from '../controllers/user.controller.js'
 import APIError from '../helpers/APIError.js'
 
 const credentials = {

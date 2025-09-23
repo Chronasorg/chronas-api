@@ -204,7 +204,7 @@ const deleteDiscussion = discussion_slug => new Promise((resolve, reject) => {
     })
 })
 
-module.exports = {
+export default {
   getDiscussion,
   createDiscussion,
   updateDiscussion,

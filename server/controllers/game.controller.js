@@ -4,7 +4,7 @@ import APIError from '../helpers/APIError.js'
 import { config } from '../../config/config.js'
 import jwt from 'jsonwebtoken'
 import httpStatus from 'http-status'
-import Marker from "../models/marker.model";
+import Marker from "../models/marker.model.js";
 
 /**
  * Create new game

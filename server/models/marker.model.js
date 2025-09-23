@@ -843,4 +843,4 @@ MarkerSchema.statics = {
 
 // Create and export model
 const Marker = mongoose.model('Marker', MarkerSchema);
-export default Marker;"
+export default Marker;

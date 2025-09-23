@@ -1,6 +1,6 @@
 import express from 'express'
 import validate from 'express-validation'
-import expressJwt from 'express-jwt'
+import { expressjwt as expressJwt } from 'express-jwt'
 import paramValidation from '../../config/param-validation.js'
 import markerCtrl from '../controllers/marker.controller.js'
 import revisionCtrl from '../controllers/revision.controller.js'
@@ -13,12 +13,12 @@ router.route('/')
   .all(markerCtrl.defineEntity)
   /** GET /v1/markers - Get list of markers */
   .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     markerCtrl.list)
 
   /** POST /v1/markers - Create new marker */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMarker),
@@ -32,7 +32,7 @@ router.route('/:markerId')
 
   /** PUT /v1/markers/:markerId - Update marker */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     // validate(paramValidation.updateMarker),
     revisionCtrl.addUpdateRevision,
@@ -40,7 +40,7 @@ router.route('/:markerId')
 
   /** DELETE /v1/markers/:markerId - Delete marker */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth' }),
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
     markerCtrl.remove)

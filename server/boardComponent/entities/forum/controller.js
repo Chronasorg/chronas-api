@@ -77,7 +77,7 @@ const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = f
       })
 })
 
-module.exports = {
+export default {
   getAllForums,
   getDiscussions,
 }

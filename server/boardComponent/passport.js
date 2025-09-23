@@ -36,4 +36,4 @@ const passportConfig = (app) => {
   ))
 }
 
-module.exports = passportConfig
+export default passportConfig

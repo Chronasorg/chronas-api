@@ -40,7 +40,7 @@ const generateDiscussionSlug = (discussionTitle) => {
   return `${discussionTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${ObjectId}`
 }
 
-module.exports = {
+export default {
   deepPropSearch,
   generateDiscussionSlug,
 }
