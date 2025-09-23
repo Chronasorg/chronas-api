@@ -3,12 +3,13 @@ import httpStatus from 'http-status'
 import jwt from 'jsonwebtoken'
 import chai from 'chai'
 const { expect } = chai
-import app from '../../../index.js'
+import app from '../helpers/test-app.js'
 import { config } from '../../../config/config.js'
-import mongoUnit from 'mongo-unit'
+import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
+import mongoose from 'mongoose'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -16,11 +17,34 @@ const __dirname = path.dirname(__filename)
 chai.config.includeStack = true
 
 describe('## Auth APIs', () => {
-  const testMongoUrl = process.env.MONGO_HOST
-  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'))
+  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData-modern.json'), 'utf8'))
 
-  before(() => mongoUnit.initDb(testMongoUrl, testData))
-  after(() => mongoUnit.drop())
+  before(async function() {
+    this.timeout(30000)
+    await setupTestDatabase()
+    
+    // Populate test data
+    if (testData.users) {
+      const User = mongoose.model('User')
+      await User.insertMany(testData.users)
+    }
+    
+    console.log('📋 Test data populated for auth tests')
+  })
+  
+  after(async function() {
+    this.timeout(10000)
+    await teardownTestDatabase()
+  })
+  
+  beforeEach(async () => {
+    // Clear and repopulate data for each test
+    await clearTestDatabase()
+    if (testData.users) {
+      const User = mongoose.model('User')
+      await User.insertMany(testData.users)
+    }
+  })
 
   const validUserCredentials = {
     email: 'test@test.de',
@@ -30,7 +54,7 @@ describe('## Auth APIs', () => {
   const validSignUserCredentials = {
     email: 'testSign@test.de',
     password: 'asdffdsa',
-    username: 'signUserName'
+    username: 'sign_user_name'
   }
 
   const invalidUserCredentials = {
@@ -60,7 +84,7 @@ describe('## Auth APIs', () => {
                   expect(res.body).to.have.property('token')
                   jwt.verify(res.body.token, config.jwtSecret, (err, decoded) => {
                     expect(err).to.not.be.ok // eslint-disable-line no-unused-expressions
-                    expect(decoded.username).to.equal('doubtful-throne')
+                    expect(decoded.username).to.equal('doubtful_throne')
                     done()
                   })
                 })

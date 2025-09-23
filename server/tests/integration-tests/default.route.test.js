@@ -2,8 +2,8 @@ import request from 'supertest-as-promised'
 import httpStatus from 'http-status'
 import chai from 'chai'
 const { expect } = chai
-import app from '../../../index.js'
-import mongoUnit from 'mongo-unit'
+import app from '../helpers/test-app.js'
+import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import path from 'path'
@@ -15,10 +15,20 @@ const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testD
 chai.config.includeStack = true
 
 describe('## default route', () => {
-  const testMongoUrl = process.env.MONGO_HOST
-
-  before(() => mongoUnit.initDb(testMongoUrl, testData))
-  after(() => mongoUnit.drop())
+  before(async function() {
+    this.timeout(30000)
+    await setupTestDatabase()
+    console.log('📋 Test database ready for default route tests')
+  })
+  
+  after(async function() {
+    this.timeout(10000)
+    await teardownTestDatabase()
+  })
+  
+  beforeEach(async () => {
+    await clearTestDatabase()
+  })
 
   it('should return version endpoint', (done) => {
     request(app)

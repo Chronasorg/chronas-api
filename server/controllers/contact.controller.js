@@ -4,15 +4,21 @@ import nodemailer from 'nodemailer';
 import mg from 'nodemailer-mailgun-transport';
 
 // This is your API key that you retrieve from www.mailgun.com/cp (free up to 10K monthly emails)
-const auth = {
-  auth: {
-    api_key: config.mailgunKey,
-    domain: config.mailgunDomain
-  },
-  // proxy: 'http://user:pass@localhost:8080' // optional proxy, default is false
-}
+let nodemailerMailgun;
 
-const nodemailerMailgun = nodemailer.createTransport(mg(auth))
+// Only initialize Mailgun if we have the required config
+if (config.mailgunKey && config.mailgunDomain) {
+  const auth = {
+    auth: {
+      api_key: config.mailgunKey,
+      domain: config.mailgunDomain
+    },
+    // proxy: 'http://user:pass@localhost:8080' // optional proxy, default is false
+  }
+  nodemailerMailgun = nodemailer.createTransport(mg(auth));
+} else {
+  console.log('⚠️  Mailgun not configured, email functionality disabled');
+}
 
 /**
  * get current deployed version
@@ -23,6 +29,16 @@ function create(req, res, doReturn = true) {
     return res.status(httpStatus.BAD_REQUEST).json({
       message: 'Body does not contain any or all of the following fields: from, to, subject, html'
     })
+  }
+
+  // Check if Mailgun is configured
+  if (!nodemailerMailgun) {
+    if (doReturn) {
+      return res.status(httpStatus.SERVICE_UNAVAILABLE).json({
+        message: 'Email service not configured'
+      })
+    }
+    return
   }
 
   const toSendBody = {

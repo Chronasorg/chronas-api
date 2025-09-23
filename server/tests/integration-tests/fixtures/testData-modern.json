@@ -1,0 +1,214 @@
+{
+  "users": [
+    {
+      "username": "doubtful_throne",
+      "email": "test@test.de",
+      "password": "$2b$10$fQArL3PolKBwaZAw6mp33.YMOuDb7PyIDx3Adq2X2OeqX5dGqgM9O",
+      "firstName": "Test",
+      "lastName": "User",
+      "authType": "local",
+      "role": "user",
+      "status": "active",
+      "karma": 99,
+      "loginCount": 1,
+      "emailVerified": true,
+      "statistics": {
+        "created": 0,
+        "updated": 0,
+        "deleted": 0,
+        "voted": 0,
+        "linked": 0,
+        "reverted": 0,
+        "mistakes": 0
+      },
+      "preferences": {
+        "theme": "auto",
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": false
+        },
+        "privacy": {
+          "showEmail": false,
+          "showStatistics": true
+        }
+      }
+    }
+  ],
+  "metadatas": [
+    {
+      "_id": "culture",
+      "data": {
+        "sapmi": [
+          "sapmi",
+          "rgb(157,51,167)",
+          "SÃ¡pmi"
+        ],
+        "samoyed": [
+          "samoyed",
+          "rgb(220,220,103)",
+          "Samoyedic peoples"
+        ],
+        "yakut": [
+          "yakut",
+          "rgb(100,94,155)",
+          "Yakuts"
+        ],
+        "norwegian": [
+          "norwegian",
+          "rgb(73,150,76)",
+          "Norwegians"
+        ],
+        "swedish": [
+          "swedish",
+          "rgb(181,0,20)",
+          "Swedes"
+        ],
+        "finnish": [
+          "finnish",
+          "rgb(40,110,140)",
+          "Finns"
+        ],
+        "russian": [
+          "russian",
+          "rgb(145,30,75)",
+          "Russians"
+        ]
+      },
+      "type": "g",
+      "coo": []
+    },
+    {
+      "_id": "religion",
+      "data": {
+        "undefined": [
+          "undefined",
+          "rgb(191,191,191)",
+          "",
+          "na"
+        ],
+        "catholic": [
+          "Catholicism",
+          "rgb(204,204,0)",
+          "History_of_the_Catholic_Church",
+          "Christianity"
+        ],
+        "protestant": [
+          "Protestantism",
+          "rgb(0,0,178)",
+          "History_of_Protestantism",
+          "Christianity"
+        ],
+        "orthodox": [
+          "Orthodox",
+          "rgb(178,128,0)",
+          "History_of_the_Orthodox_Church",
+          "Christianity"
+        ],
+        "sunni": [
+          "Sunni",
+          "rgb(0,153,0)",
+          "Sunni_Islam",
+          "Islam"
+        ],
+        "shiite": [
+          "Shia",
+          "rgb(0,245,0)",
+          "Shia_Islam",
+          "Islam"
+        ],
+        "buddhism": [
+          "Buddhism",
+          "rgb(204,76,0)",
+          "History_of_Buddhism",
+          "Buddhism"
+        ],
+        "hinduism": [
+          "Hinduism",
+          "rgb(0,204,204)",
+          "History_of_Hinduism",
+          "Hinduism"
+        ]
+      },
+      "type": "g",
+      "coo": []
+    }
+  ],
+  "areas": [
+    {
+      "_id": "1000",
+      "year": 1000,
+      "data": {
+        "Mentawai": [
+          "SWE",
+          "swedish",
+          "protestant",
+          "Stockholm",
+          1000
+        ],
+        "Belitung": [
+          "GBR",
+          "norwegian",
+          "sunni",
+          "Bangka",
+          1000
+        ]
+      }
+    },
+    {
+      "_id": "1001",
+      "year": 1001,
+      "data": {
+        "Lingga": [
+          "undefined",
+          "finnish",
+          "sunni",
+          "Lingga",
+          1000
+        ],
+        "Sogn": [
+          "DAN",
+          "norwegian",
+          "protestant",
+          "Sogndal",
+          15240
+        ]
+      }
+    }
+  ],
+  "markers": [
+    {
+      "_id": "Gaius Caesar",
+      "name": "Gaius Caesar",
+      "wiki": "Gaius%20Caesar",
+      "type": "politician",
+      "year": -20,
+      "coo": [
+        12.5,
+        41.9
+      ]
+    },
+    {
+      "_id": "Mamurra",
+      "name": "Mamurra",
+      "wiki": "Mamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
+    },
+    {
+      "_id": "deleteMamurra",
+      "name": "deleteMamurra",
+      "wiki": "deleteMamurra",
+      "type": "politician",
+      "year": -91,
+      "coo": [
+        13.616666666667,
+        41.266666666667
+      ]
+    }
+  ]
+}
