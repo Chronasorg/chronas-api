@@ -1,11 +1,14 @@
-import contactCtrl from '../../../controllers/contact.controller'
+import contactCtrl from '../../../controllers/contact.controller.js'
 
-const generateDiscussionSlug = require('../../utilities/tools').generateDiscussionSlug
-const getAllOpinions = require('../opinion/controller').getAllOpinions
-const getUser = require('../user/controller').getUser
+import toolsModule from '../../utilities/tools.js'
+const { generateDiscussionSlug } = toolsModule
+import opinionController from '../opinion/controller.js'
+const { getAllOpinions } = opinionController
+import userController from '../user/controller.js'
+const { getUser } = userController
 
-const Discussion = require('./model')
-const Opinion = require('../opinion/model')
+import Discussion from './model.js'
+import Opinion from '../opinion/model.js'
 
 /**
  * get a single discussion

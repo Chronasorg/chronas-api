@@ -3,8 +3,8 @@ import express from 'express'
 import { config } from '../../../../config/config.js'
 import { expressjwt as expressJwt } from 'express-jwt'
 
-const getAllForums = require('./controller').getAllForums
-const getDiscussions = require('./controller').getDiscussions
+import forumController from './controller.js'
+const { getAllForums, getDiscussions } = forumController
 
 /**
  * forum apis

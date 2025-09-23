@@ -1,15 +1,17 @@
-import Marker from '../../../models/marker.model'
+import Marker from '../../../models/marker.model.js'
 
-const asyncEach = require('async/each')
+import { each as asyncEach } from 'async'
 
 // models
-const Forum = require('./model')
-const Discussion = require('../discussion/model')
+import Forum from './model.js'
+import Discussion from '../discussion/model.js'
 
 // controllers
-const getAllOpinions = require('../opinion/controller').getAllOpinions
-const getUser = require('../user/controller').getUser
-const mongoose = require('mongoose')
+import opinionController from '../opinion/controller.js'
+const { getAllOpinions } = opinionController
+import userController from '../user/controller.js'
+const { getUser } = userController
+import mongoose from 'mongoose'
 
 /**
  * get all forums list

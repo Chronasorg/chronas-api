@@ -1,8 +1,8 @@
 // models
-import userCtrl from '../../../controllers/user.controller'
-import contactCtrl from '../../../controllers/contact.controller'
+import userCtrl from '../../../controllers/user.controller.js'
+import contactCtrl from '../../../controllers/contact.controller.js'
 
-const Opinion = require('./model')
+import Opinion from './model.js'
 
 /**
  * get all opinion regarding a single discussion

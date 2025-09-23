@@ -1,7 +1,7 @@
 /**
  * opinion model
  */
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const opinionSchema = mongoose.Schema({
   forum_id: mongoose.Schema.ObjectId,

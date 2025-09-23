@@ -2,9 +2,9 @@ import express from 'express'
 import { config } from '../../../../config/config.js'
 import { expressjwt as expressJwt } from 'express-jwt'
 
-const passport = require('passport')
-const signIn = require('./controller').signIn
-const getFullProfile = require('./controller').getFullProfile
+import passport from 'passport'
+import userController from './controller.js'
+const { signIn, getFullProfile } = userController
 
 const router = express.Router() // eslint-disable-line
 /**

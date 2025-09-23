@@ -3,11 +3,8 @@ import express from 'express'
 import { config } from '../../../../config/config.js'
 import { expressjwt as expressJwt } from 'express-jwt'
 
-const getAdminDashInfo = require('./controller').getAdminDashInfo
-const createForum = require('./controller').createForum
-const deleteForum = require('./controller').deleteForum
-const deleteUser = require('./controller').deleteUser
-const deleteDiscussion = require('./controller').deleteDiscussion
+import adminController from './controller.js'
+const { getAdminDashInfo, createForum, deleteForum, deleteUser, deleteDiscussion } = adminController
 
 /**
  * admin apis

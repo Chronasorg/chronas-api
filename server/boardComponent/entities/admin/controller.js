@@ -1,12 +1,12 @@
 import mongoose from 'mongoose'
 
-const waterfall = require('async/waterfall')
+import { waterfall as waterfall } from 'async'
 
 // models
-const Discussion = require('../discussion/model')
-const Opinion = require('../opinion/model')
-const Forum = require('../forum/model')
-const User = require('../user/model')
+import Discussion from '../discussion/model.js'
+import Opinion from '../opinion/model.js'
+import Forum from '../forum/model.js'
+import User from '../user/model.js'
 
 /**
  * get the information for admin dashboard

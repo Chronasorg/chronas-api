@@ -1,14 +1,15 @@
-const _ = require('lodash')
-const asyncEach = require('async/each')
+import _ from 'lodash'
+import { each as asyncEach } from 'async'
 
 // controllers
-const getAllOpinions = require('../opinion/controller').getAllOpinions
+import opinionController from '../opinion/controller.js'
+const { getAllOpinions } = opinionController
 
 // models
-// const User = require('./model');
-const User = require('../../../models/user.model')
-const Discussion = require('../discussion/model')
-const Opinion = require('../opinion/model')
+// import User from './model.js';
+import User from '../../../models/user.model.js'
+import Discussion from '../discussion/model.js'
+import Opinion from '../opinion/model.js'
 
 /**
  * get user doc by user id

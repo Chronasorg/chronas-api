@@ -3,10 +3,8 @@ import express from 'express'
 import { config } from '../../../../config/config.js'
 import { expressjwt as expressJwt } from 'express-jwt'
 
-const getAllOpinions = require('./controller').getAllOpinions
-const voteOpinion = require('./controller').voteOpinion
-const createOpinion = require('./controller').createOpinion
-const deleteOpinion = require('./controller').deleteOpinion
+import opinionController from './controller.js'
+const { getAllOpinions, voteOpinion, createOpinion, deleteOpinion } = opinionController
 
 const router = express.Router() // eslint-disable-line
 /**

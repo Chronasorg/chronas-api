@@ -1,7 +1,7 @@
 /**
  * forum model
  */
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const forumSchema = mongoose.Schema({
   forum_slug: String,
