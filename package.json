@@ -25,7 +25,15 @@
     "test": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests --recursive --exit",
     "test:coverage": "cross-env NODE_ENV=test c8 mocha --require server/tests/helpers.js server/tests --recursive --exit",
     "test:check-coverage": "npm run test:coverage && c8 check-coverage",
-    "report-coverage": "c8 report --reporter=lcov && coveralls < ./coverage/lcov.info"
+    "report-coverage": "c8 report --reporter=lcov && coveralls < ./coverage/lcov.info",
+    "test:postman": "node scripts/run-postman-tests.js local enhanced --auto-start",
+    "test:postman:basic": "node scripts/run-postman-tests.js local basic --auto-start",
+    "test:postman:dev": "node scripts/run-postman-tests.js dev enhanced",
+    "test:postman:prod": "node scripts/run-postman-tests.js prod enhanced",
+    "test:postman:manual": "newman run PostmanTests/chronas-enhanced.postman_collection.json -e PostmanTests/chronas-local.postman_environment.json --reporters cli,json,htmlextra --reporter-json-export postman-results-manual.json --reporter-htmlextra-export postman-results-manual.html",
+    "test:setup": "node scripts/setup-test-environment.js",
+    "test:ci": "node scripts/ci-postman-tests.js local enhanced",
+    "test:ci:basic": "node scripts/ci-postman-tests.js local basic"
   },
   "repository": {
     "type": "git",
@@ -85,6 +93,8 @@
     "mocha": "^10.0.0",
     "mongo-unit": "3.4.0",
     "mongodb-memory-server": "10.2.1",
+    "newman": "6.2.1",
+    "newman-reporter-htmlextra": "1.23.1",
     "supertest": "^6.3.0",
     "supertest-as-promised": "4.0.2"
   },
