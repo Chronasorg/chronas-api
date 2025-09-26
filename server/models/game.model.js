@@ -1,7 +1,7 @@
 import Promise from 'bluebird'
 import mongoose from 'mongoose'
 import httpStatus from 'http-status'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import APIError from '../helpers/APIError.js'
 
 /**

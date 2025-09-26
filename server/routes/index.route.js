@@ -8,10 +8,10 @@ import userRoutes from './user.route.js';
 import contactRoutes from './contact.router.js';
 import markerRoutes from './marker.route.js';
 import metadataRoutes from './metadata.route.js';
-import staticRoutes from './static.route.js';
+// import staticRoutes from './static.route.js'; // Disabled for Lambda - requires puppeteer
 import statisticsRoutes from './statistics.route.js';
 import revisionRoutes from './revision.route.js';
-import versionRoutes from './version.router.js';
+// import versionRoutes from './version.router.js'; // Disabled for Lambda - uses app-root-path
 import boardRoutes from '../boardComponent/routes.js';
 
 const router = express.Router() // eslint-disable-line new-cap
@@ -52,15 +52,17 @@ router.use('/metadata', metadataRoutes)
 // mount user routes at /revisions
 router.use('/revisions', revisionRoutes)
 
-// mount version routes at /version and on blank
+// mount version routes at /version - Re-enabled for Lambda with compatible controller
+import versionCtrl from '../controllers/version.controller.js';
+router.get('/welcome', versionCtrl.getPlusUser)
+import versionRoutes from './version.router.js';
 router.use('/version', versionRoutes)
-router.use('/', versionRoutes)
 
 // Third Party ReForum App
 // mount board routes at /board
 router.use('/board', boardRoutes)
 
-router.use('/image', staticRoutes)
+// router.use('/image', staticRoutes) // Disabled for Lambda - requires puppeteer
 
 router.use('/statistics', statisticsRoutes)
 

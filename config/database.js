@@ -45,14 +45,24 @@ function getTLSCertificatePath() {
 }
 
 /**
- * Determine if TLS should be used based on connection URI
+ * Determine if TLS should be used based on connection URI and environment
  * @param {string} uri - MongoDB connection URI
  * @returns {boolean} True if TLS should be used
  */
 function shouldUseTLS(uri) {
-  // Use TLS for DocumentDB clusters (contains 'docdb' in hostname)
-  // or when explicitly configured via environment variable
-  return uri.includes('docdb') || process.env.MONGODB_USE_TLS === 'true';
+  // Check environment variable first (explicit override)
+  if (process.env.MONGODB_USE_TLS === 'true') return true;
+  if (process.env.MONGODB_USE_TLS === 'false') return false;
+  
+  // For our DocumentDB cluster, TLS is disabled in the parameter group
+  // So we default to false for DocumentDB clusters unless explicitly enabled
+  if (uri.includes('docdb')) {
+    // Check if TLS is explicitly enabled for DocumentDB
+    return process.env.DOCDB_TLS_ENABLED === 'true';
+  }
+  
+  // For other MongoDB instances, default to false (local development)
+  return false;
 }
 
 /**
@@ -177,7 +187,7 @@ export async function connectToDatabaseWithSecrets(secretId) {
 export async function initializeDatabaseConnection(config) {
   try {
     // Try Secrets Manager first (if configured)
-    if (config.docDbsecretName && config.docDbsecretName !== '/chronas/docdb/newpassword') {
+    if (config.docDbsecretName) {
       debugLog('Attempting database connection via Secrets Manager');
       
       try {

@@ -21,7 +21,7 @@ import winstonInstance from './winston.js';
 import routes from '../server/routes/index.route.js';
 import { config } from './config.js';
 import APIError from '../server/helpers/APIError.js';
-import versionRoutes from '../server/routes/version.router.js';
+// import versionRoutes from '../server/routes/version.router.js'; // Disabled for Lambda
 import { createPerformanceMiddleware } from './performance.js';
 
 const app = express()
@@ -34,15 +34,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 console.log("appInsightsString" + config.appInsightsConnectionString);
 
-appInsights.setup(config.appInsightsConnectionString)
-    .setAutoDependencyCorrelation(true)
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true)
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true)
-    .setUseDiskRetryCaching(true)
-    .start()
+// Only initialize Application Insights if connection string is provided
+if (config.appInsightsConnectionString) {
+  appInsights.setup(config.appInsightsConnectionString)
+      .setAutoDependencyCorrelation(true)
+      .setAutoCollectRequests(true)
+      .setAutoCollectPerformance(true)
+      .setAutoCollectExceptions(true)
+      .setAutoCollectDependencies(true)
+      .setAutoCollectConsole(true)
+      .setUseDiskRetryCaching(true)
+      .start()
+  console.log("✅ Application Insights initialized");
+} else {
+  console.log("⚠️  Application Insights not configured, telemetry disabled");
+}
 
 if (config.env === 'development') {
   app.use(logger('dev'))
@@ -139,8 +145,8 @@ if (config.env === 'development') {
 // route for v1 (current) requests
 app.use('/v1', routes)
 
-// for the default route return the version
-app.use('/', versionRoutes)
+// for the default route return the version - Disabled for Lambda
+// app.use('/', versionRoutes)
 
 // if error is not an instanceOf APIError, convert it.
 app.use((err, req, res, next) => {
@@ -179,13 +185,18 @@ function removeStackTraces(envelope, context) {
   return true
 }
 
-
-appInsights.defaultClient.addTelemetryProcessor(removeStackTraces)
+// Only add telemetry processor if Application Insights is configured
+if (config.appInsightsConnectionString && appInsights.defaultClient) {
+  appInsights.defaultClient.addTelemetryProcessor(removeStackTraces)
+}
 
 
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  appInsights.defaultClient.trackException({ exception: err })
+  // Only track exceptions if Application Insights is configured
+  if (config.appInsightsConnectionString && appInsights.defaultClient) {
+    appInsights.defaultClient.trackException({ exception: err })
+  }
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}

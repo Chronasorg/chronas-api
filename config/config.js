@@ -46,8 +46,13 @@ const envVarsSchema = Joi.object({
     .default('/chronas/docdb/newpassword'),    
   region: Joi.string()
     .default('eu-west-1'),       
-  MONGO_HOST: Joi.string().required()
-    .description('Mongo DB host url'),
+  MONGO_HOST: Joi.string()
+    .when('SECRET_DB_NAME', {
+      is: Joi.exist(),
+      then: Joi.string().optional(),
+      otherwise: Joi.string().required()
+    })
+    .description('Mongo DB host url (optional when using Secrets Manager)'),
   MONGO_PORT: Joi.number()
     .default(27017)
     
@@ -67,7 +72,7 @@ export const config = {
   mongooseDebug: envVars.MONGOOSE_DEBUG,
   jwtSecret: envVars.JWT_SECRET,
   mongo: {
-    host: envVars.MONGO_HOST, 
+    host: envVars.MONGO_HOST || null, 
     port: envVars.MONGO_PORT
   },
   docDbsecretName: envVars.SECRET_DB_NAME,

@@ -6,7 +6,7 @@
  */
 
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import APIError from '../helpers/APIError.js';
 import httpStatus from 'http-status';
 

@@ -114,6 +114,10 @@ const getConfigSchema = () => {
     SECRET_DB_NAME: Joi.string()
       .default('/chronas/docdb/newpassword'),
     
+    SECRET_MODERNIZED_DB_NAME: Joi.string()
+      .allow('', null)
+      .default(''),
+    
     SECRET_CONFIG_NAME: Joi.string()
       .allow('', null)
       .default(''),
@@ -221,8 +225,8 @@ function buildConfig(envVars) {
     // Security
     jwtSecret: envVars.JWT_SECRET,
     
-    // AWS
-    docDbsecretName: envVars.SECRET_DB_NAME,
+    // AWS - prefer modernized database secret if available
+    docDbsecretName: envVars.SECRET_MODERNIZED_DB_NAME || envVars.SECRET_DB_NAME,
     awsRegion: envVars.region,
     
     // Lambda-specific

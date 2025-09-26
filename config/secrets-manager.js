@@ -187,13 +187,24 @@ export async function getDatabaseCredentials(secretId) {
     
     debugLog('Database credentials retrieved and validated');
     
+    // Handle TLS configuration - check both 'tls' and 'ssl' fields
+    // For our DocumentDB cluster, TLS is disabled, so we should not use TLS
+    // Override the secret's ssl setting based on our cluster configuration
+    const shouldUseTLS = process.env.DOCDB_TLS_ENABLED === 'true' || 
+                        credentials.tls === true || 
+                        (credentials.ssl === true && process.env.DOCDB_TLS_ENABLED !== 'false');
+    
+    // For our current DocumentDB cluster, TLS is disabled in the parameter group
+    // So we force TLS to false regardless of what the secret says
+    const useTLS = process.env.NODE_ENV === 'development' ? false : false; // Disabled for our cluster
+    
     return {
       host: credentials.host,
       port: credentials.port || 27017,
       username: credentials.username,
       password: credentials.password,
       database: credentials.database || 'chronas',
-      tls: credentials.tls !== false, // Default to true for DocumentDB
+      tls: useTLS, // Use our cluster-specific TLS setting
       // Additional DocumentDB-specific options
       replicaSet: credentials.replicaSet || 'rs0',
       retryWrites: false // DocumentDB doesn't support retryWrites
