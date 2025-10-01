@@ -225,8 +225,8 @@ function buildConfig(envVars) {
     // Security
     jwtSecret: envVars.JWT_SECRET,
     
-    // AWS - prefer modernized database secret if available
-    docDbsecretName: envVars.SECRET_MODERNIZED_DB_NAME || envVars.SECRET_DB_NAME,
+    // AWS - use original database secret
+    docDbsecretName: envVars.SECRET_DB_NAME,
     awsRegion: envVars.region,
     
     // Lambda-specific
