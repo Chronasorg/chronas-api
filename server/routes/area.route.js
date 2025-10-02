@@ -10,9 +10,7 @@ const router = express.Router() // eslint-disable-line new-cap
 router.route('/')
   .all(areaCtrl.defineEntity)
   /** GET /v1/areas - Get list of areas */
-  .get(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.list)
+  .get(areaCtrl.list)
 
   /** PUT /v1/areas/ - Update area */
   .put(

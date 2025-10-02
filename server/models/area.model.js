@@ -646,6 +646,41 @@ AreaSchema.statics = {
   },
   
   /**
+   * List areas with pagination and filtering
+   */
+  async list(options = {}) {
+    const {
+      start = 0,
+      limit = 50,
+      sort = 'createdAt',
+      order = 'asc',
+      filter = '',
+      status = 'published',
+      visibility = 'public'
+    } = options;
+    
+    const query = {
+      status,
+      visibility
+    };
+    
+    // Add text search if filter is provided
+    if (filter) {
+      query.$text = { $search: filter };
+    }
+    
+    // Build sort object
+    const sortQuery = {};
+    sortQuery[sort] = order === 'desc' ? -1 : 1;
+    
+    return this.find(query)
+      .sort(sortQuery)
+      .skip(start)
+      .limit(limit)
+      .lean();
+  },
+
+  /**
    * Get area statistics
    */
   async getStatistics() {

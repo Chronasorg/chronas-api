@@ -17,14 +17,15 @@ import mongoose from 'mongoose'
  * get all forums list
  * @type {Promise}
  */
-const getAllForums = () => new Promise((resolve, reject) => {
-  Forum
-      .find({})
-      .exec((error, results) => {
-        if (error) { console.log(error); reject(error) } else if (!results) reject(null)
-        else resolve(results)
-      })
-})
+const getAllForums = async () => {
+  try {
+    const results = await Forum.find({}).exec();
+    return results || [];
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 
 /**
  * get discussions of a forum
@@ -32,52 +33,60 @@ const getAllForums = () => new Promise((resolve, reject) => {
  * @param  {Boolean} pinned
  * @return {Promise}
  */
-const getDiscussions = (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 10) => new Promise((resolve, reject) => {
-    // define sorthing method
-  const sortWith = { }
-  if (sorting_method === 'date') sortWith.date = -1
-  if (sorting_method === 'popularity') sortWith.favorites = -1
+const getDiscussions = async (forum_slug, pinned, sorting_method = 'date', qEntity = false, offset = 0, limit = 10) => {
+  try {
+    // define sorting method
+    const sortWith = {};
+    if (sorting_method === 'date') sortWith.date = -1;
+    if (sorting_method === 'popularity') sortWith.favorites = -1;
 
-  Forum
-      .findOne({ forum_slug })
-      .exec((error, forumFound) => {
-        const searchObj = { pinned }
-        if (qEntity) searchObj.qa_id = qEntity
-        else searchObj.forum_id = (forumFound || {})._id
+    const forumFound = await Forum.findOne({ forum_slug }).exec();
+    
+    const searchObj = { pinned };
+    if (qEntity) {
+      searchObj.qa_id = qEntity;
+    } else {
+      searchObj.forum_id = (forumFound || {})._id;
+    }
 
-        Discussion
-          .find(searchObj)
-          .sort(sortWith)
-          .populate('forum')
-          .populate('user')
-          .lean()
-          .skip(+offset)
-          .limit(+limit)
-          .exec((error, discussions) => {
-            if (error) { console.error(error); reject(error) } else if (!discussions) reject(null)
-            else {
-              Discussion
-                .find(searchObj)
-                .count().exec().then((discussionCount) => {
-                // attach opinion count to each discussion
-                  asyncEach(discussions, (eachDiscussion, callback) => {
-                  // add opinion count
-                    getAllOpinions((eachDiscussion || {})._id).then(
-                    (opinions) => {
-                      // add opinion count to discussion doc
-                      eachDiscussion.opinion_count = opinions ? opinions.length : 0
-                      callback()
-                    },
-                    (error) => { console.error(error); callback(error) }
-                  )
-                  }, (error) => {
-                    if (error) { console.error(error); reject(error) } else resolve([discussions, discussionCount])
-                  })
-                })
-            }
-          })
+    const [discussions, discussionCount] = await Promise.all([
+      Discussion
+        .find(searchObj)
+        .sort(sortWith)
+        .populate('forum')
+        .populate('user')
+        .lean()
+        .skip(+offset)
+        .limit(+limit)
+        .exec(),
+      Discussion.countDocuments(searchObj).exec()
+    ]);
+
+    if (!discussions) {
+      return [[], 0];
+    }
+
+    // Attach opinion count to each discussion
+    const discussionsWithOpinions = await Promise.all(
+      discussions.map(async (discussion) => {
+        try {
+          const opinions = await getAllOpinions(discussion._id);
+          discussion.opinion_count = opinions ? opinions.length : 0;
+          return discussion;
+        } catch (error) {
+          console.error('Error getting opinions for discussion:', error);
+          discussion.opinion_count = 0;
+          return discussion;
+        }
       })
-})
+    );
+
+    return [discussionsWithOpinions, discussionCount];
+  } catch (error) {
+    console.error('Error in getDiscussions:', error);
+    throw error;
+  }
+}
 
 export default {
   getAllForums,
