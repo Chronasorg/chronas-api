@@ -12,7 +12,7 @@ import metadataRoutes from './metadata.route.js';
 import statisticsRoutes from './statistics.route.js';
 import revisionRoutes from './revision.route.js';
 // import versionRoutes from './version.router.js'; // Disabled for Lambda - uses app-root-path
-import boardRoutes from '../boardComponent/routes.js';
+import forumRoutes from '../boardComponent/entities/forum/api.js';
 
 const router = express.Router() // eslint-disable-line new-cap
 
@@ -59,8 +59,8 @@ import versionRoutes from './version.router.js';
 router.use('/version', versionRoutes)
 
 // Third Party ReForum App
-// mount board routes at /board
-router.use('/board', boardRoutes)
+// mount forum routes at /board/forum
+router.use('/board/forum', forumRoutes)
 
 // router.use('/image', staticRoutes) // Disabled for Lambda - requires puppeteer
 

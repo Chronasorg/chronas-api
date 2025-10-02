@@ -50,7 +50,7 @@ async function create(req, res, next) {
 
   try {
     const duplicatedUsername = await User.findById(req.body.email || req.body.id || req.body.username).exec();
-    
+
     if (duplicatedUsername) {
       if (req.body.thirdParty) {
         if (req.body.email === duplicatedUsername.email) {
@@ -174,9 +174,9 @@ async function changePoints(username, type, delta = 1) {
 }
 
 
-function optionallyCancelSub (doCancel,subId) {
+function optionallyCancelSub(doCancel, subId) {
   return new Promise((resolve, reject) => {
-    console.debug("doCancel",doCancel)
+    console.debug("doCancel", doCancel)
     return resolve();
   })
 
@@ -189,10 +189,10 @@ async function updateSubscription(req, res, next) {
   const username = (req.user || {}).username;
   // check if user is same as auth.username
   console.debug("go1");
-  
+
   try {
     await optionallyCancelSub(doCancel, subId);
-    
+
     const foundUser = await User.findOne({ username }).exec();
     if (typeof foundUser !== 'undefined') {
       if (!doCancel) {
@@ -205,7 +205,7 @@ async function updateSubscription(req, res, next) {
         foundUser.privilege = 1;
       }
       await foundUser.save();
-      
+
       if (doCancel) {
         const token = jwt.sign({
           id: foundUser._id || foundUser.id,
@@ -278,7 +278,7 @@ async function list(req, res, next) {
         .limit(+highscoreCount)
         .lean()
         .exec();
-      
+
       return res.json(users.map(u => ({
         avatar: u.avatar,
         name: u.name,
@@ -303,7 +303,7 @@ async function list(req, res, next) {
         .limit(+highscoreCount)
         .lean()
         .exec();
-      
+
       return res.json(users.map(u => ({
         avatar: u.avatar,
         name: u.name,
@@ -338,8 +338,9 @@ async function list(req, res, next) {
 async function remove(req, res, next) {
   try {
     const user = req.user;
-    const deletedUser = await user.deleteOne();
-    res.json(deletedUser);
+    const userToReturn = user.toObject(); // Get the user document before deletion
+    await user.deleteOne();
+    res.json(userToReturn);
   } catch (e) {
     next(e);
   }
