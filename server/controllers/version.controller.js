@@ -43,13 +43,38 @@ function getPlusUser(req, res) {
         .exec()
         .catch(() => []) // Return empty array if database query fails
     })
-    .then((rev) => {
-      // Try to get user count (using countDocuments instead of deprecated count)
-      return User.countDocuments().exec()
-        .then((userCount) => ({ rev, userCount }))
-        .catch(() => ({ rev, userCount: 0 })) // Return 0 if user count query fails
+    .then(async (rev) => {
+      try {
+        // Debug: Check database connection and collections
+        const mongoose = await import('mongoose');
+        const db = mongoose.default.connection.db;
+        console.log('🔍 Debug - Database name:', db ? db.databaseName : 'No database connection');
+        console.log('🔍 Debug - Mongoose connection state:', mongoose.default.connection.readyState);
+        
+        if (db) {
+          // List all collections
+          const collections = await db.listCollections().toArray();
+          console.log('🔍 Debug - Available collections:', collections.map(c => c.name));
+          
+          // Try to find any collection that might contain users
+          for (const collection of collections) {
+            const count = await db.collection(collection.name).countDocuments();
+            console.log(`🔍 Debug - Collection '${collection.name}' has ${count} documents`);
+          }
+        }
+        
+        // Try to get user count (using countDocuments instead of deprecated count)
+        const userCount = await User.countDocuments().exec();
+        console.log('🔍 Debug - User.countDocuments() result:', userCount);
+        
+        return { rev, userCount };
+      } catch (error) {
+        console.log('🔍 Debug - User.countDocuments() error:', error.message);
+        return { rev, userCount: 0 };
+      }
     })
     .then(({ rev, userCount }) => {
+      console.log('Debug - User count query result:', userCount);
       res.json({
         lastDataEdit: (rev[0] || {}).timestamp || 'n/a',
         version: VERSION_INFO.version,

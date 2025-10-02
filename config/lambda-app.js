@@ -53,35 +53,40 @@ async function preInitializeDependencies() {
 
 /**
  * Initialize database connection with retry logic and Secrets Manager support
+ * Database connection is REQUIRED - Lambda will fail if database is not available
  */
 async function initializeDatabase(config) {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
   
+  console.log('🔌 Initializing database connection (REQUIRED)...');
+  
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      console.log(`🔄 Database connection attempt ${attempt}/${maxRetries}`);
       debugLog(`Database connection attempt ${attempt}/${maxRetries}`);
       
       await initializeDatabaseConnection(config);
       appState.dbConnected = true;
+      console.log('✅ Database connection established successfully');
       debugLog('Database connection established');
       return true;
       
     } catch (error) {
+      console.error(`❌ Database connection attempt ${attempt} failed:`, error.message);
       debugLog(`Database connection attempt ${attempt} failed:`, error.message);
       
       if (attempt === maxRetries) {
-        // On final attempt, decide whether to fail or continue
-        if (isLambdaEnvironment()) {
-          console.error('Database connection failed after all retries, continuing without DB');
-          appState.dbConnected = false;
-          return false;
-        } else {
-          throw error;
-        }
+        // Database connection is REQUIRED - fail the Lambda initialization
+        const finalError = new Error(`Database connection failed after ${maxRetries} attempts. Lambda cannot start without database. Last error: ${error.message}`);
+        console.error('💥 CRITICAL: Database connection failed after all retries. Lambda initialization FAILED.');
+        console.error('🚫 The API cannot function without database access. Terminating Lambda initialization.');
+        appState.dbConnected = false;
+        throw finalError;
       }
       
       // Wait before retry
+      console.log(`⏳ Waiting ${retryDelay * attempt}ms before retry...`);
       await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
     }
   }
@@ -148,11 +153,13 @@ export async function initializeApp(forceReload = false) {
     
     appState.config = config;
     
-    // Step 2: Initialize database connection (can be done in parallel with Express app creation)
-    const [dbResult, expressApp] = await Promise.all([
-      initializeDatabase(config),
-      createExpressApp(config)
-    ]);
+    // Step 2: Initialize database connection FIRST (required for API functionality)
+    console.log('🔌 Database connection is required for API functionality');
+    const dbResult = await initializeDatabase(config);
+    
+    // Step 3: Create Express app only after database is connected
+    console.log('🚀 Creating Express application...');
+    const expressApp = await createExpressApp(config);
     
     appState.expressApp = expressApp;
     appState.dbConnected = dbResult;
@@ -176,26 +183,9 @@ export async function initializeApp(forceReload = false) {
     
     debugLog(`Application initialization failed after ${appState.initTime}ms:`, error.message);
     
-    // In Lambda, try to provide a minimal working app
-    if (isLambdaEnvironment()) {
-      console.error('Application initialization failed, attempting minimal setup');
-      
-      try {
-        const minimalConfig = await loadConfig();
-        const { default: expressApp } = await import('./express.js');
-        
-        return {
-          app: expressApp,
-          config: minimalConfig,
-          dbConnected: false,
-          initTime: appState.initTime,
-          error: error.message
-        };
-      } catch (minimalError) {
-        console.error('Minimal setup also failed:', minimalError.message);
-        throw error;
-      }
-    }
+    // Database connection is required - no fallback app
+    console.error('💥 Application initialization failed. Database connection is required for API functionality.');
+    console.error('🚫 Lambda will not start without database access.');
     
     throw error;
   }

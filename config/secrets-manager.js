@@ -23,17 +23,17 @@ let secretsManagerClient = null;
 function getSecretsManagerClient() {
   if (!secretsManagerClient) {
     const region = process.env.AWS_REGION || process.env.region || 'eu-west-1';
-    
+
     secretsManagerClient = new SecretsManagerClient({
       region,
       // Lambda optimization: reuse connections
       maxAttempts: 3,
       requestTimeout: 10000, // 10 seconds timeout
     });
-    
+
     debugLog(`Secrets Manager client created for region: ${region}`);
   }
-  
+
   return secretsManagerClient;
 }
 
@@ -50,18 +50,18 @@ function isCacheValid(cacheEntry) {
  */
 function getCachedSecret(secretId) {
   const cacheEntry = secretsCache.get(secretId);
-  
+
   if (isCacheValid(cacheEntry)) {
     debugLog(`Using cached secret: ${secretId}`);
     return cacheEntry.value;
   }
-  
+
   // Remove expired cache entry
   if (cacheEntry) {
     secretsCache.delete(secretId);
     debugLog(`Expired cache entry removed: ${secretId}`);
   }
-  
+
   return null;
 }
 
@@ -73,7 +73,7 @@ function cacheSecret(secretId, value) {
     value,
     timestamp: Date.now()
   });
-  
+
   debugLog(`Secret cached: ${secretId}`);
 }
 
@@ -90,7 +90,7 @@ export async function getSecret(secretId, options = {}) {
     retryAttempts = 3,
     retryDelay = 1000
   } = options;
-  
+
   try {
     // Check cache first (if enabled)
     if (useCache) {
@@ -99,27 +99,27 @@ export async function getSecret(secretId, options = {}) {
         return cachedValue;
       }
     }
-    
+
     debugLog(`Retrieving secret from AWS: ${secretId}`);
-    
+
     const client = getSecretsManagerClient();
     const command = new GetSecretValueCommand({
       SecretId: secretId
     });
-    
+
     let lastError;
-    
+
     // Retry logic for transient failures
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
         const response = await client.send(command);
-        
+
         if (!response.SecretString) {
           throw new Error('SecretString not found in response');
         }
-        
+
         let secretValue;
-        
+
         if (parseJson) {
           try {
             secretValue = JSON.parse(response.SecretString);
@@ -130,35 +130,35 @@ export async function getSecret(secretId, options = {}) {
         } else {
           secretValue = response.SecretString;
         }
-        
+
         // Cache the secret (if caching enabled)
         if (useCache) {
           cacheSecret(secretId, secretValue);
         }
-        
+
         debugLog(`Secret retrieved successfully: ${secretId}`);
         return secretValue;
-        
+
       } catch (error) {
         lastError = error;
         debugLog(`Attempt ${attempt} failed for secret ${secretId}: ${error.message}`);
-        
+
         // Don't retry on certain errors
-        if (error.name === 'ResourceNotFoundException' || 
-            error.name === 'AccessDeniedException' ||
-            error.name === 'InvalidParameterException') {
+        if (error.name === 'ResourceNotFoundException' ||
+          error.name === 'AccessDeniedException' ||
+          error.name === 'InvalidParameterException') {
           break;
         }
-        
+
         // Wait before retry (except on last attempt)
         if (attempt < retryAttempts) {
           await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
         }
       }
     }
-    
+
     throw lastError;
-    
+
   } catch (error) {
     debugLog(`Failed to retrieve secret ${secretId}: ${error.message}`);
     throw new Error(`Failed to retrieve secret ${secretId}: ${error.message}`);
@@ -172,45 +172,78 @@ export async function getSecret(secretId, options = {}) {
  */
 export async function getDatabaseCredentials(secretId) {
   try {
+    console.log(`🔐 Retrieving database credentials from secret: ${secretId}`);
+
     const credentials = await getSecret(secretId, {
       useCache: true,
       parseJson: true
     });
-    
+
+    console.log('📋 Retrieved credentials structure:', {
+      host: credentials.host ? '[PRESENT]' : '[MISSING]',
+      username: credentials.username ? '[PRESENT]' : '[MISSING]',
+      password: credentials.password ? '[PRESENT]' : '[MISSING]',
+      port: credentials.port || 'default',
+      database: credentials.database || 'default',
+      ssl: credentials.ssl,
+      tls: credentials.tls
+    });
+
     // Validate required fields
     const requiredFields = ['host', 'username', 'password'];
     const missingFields = requiredFields.filter(field => !credentials[field]);
-    
+
     if (missingFields.length > 0) {
-      throw new Error(`Missing required database credential fields: ${missingFields.join(', ')}`);
+      const error = new Error(`Missing required database credential fields: ${missingFields.join(', ')}`);
+      console.error('❌ Database credentials validation failed:', error.message);
+      throw error;
     }
-    
+
+    console.log('✅ Database credentials retrieved and validated');
     debugLog('Database credentials retrieved and validated');
-    
+
     // Handle TLS configuration - check both 'tls' and 'ssl' fields
     // For our DocumentDB cluster, TLS is disabled, so we should not use TLS
     // Override the secret's ssl setting based on our cluster configuration
-    const shouldUseTLS = process.env.DOCDB_TLS_ENABLED === 'true' || 
-                        credentials.tls === true || 
-                        (credentials.ssl === true && process.env.DOCDB_TLS_ENABLED !== 'false');
-    
-    // For our current DocumentDB cluster, TLS is disabled in the parameter group
-    // So we force TLS to false regardless of what the secret says
-    const useTLS = process.env.NODE_ENV === 'development' ? false : false; // Disabled for our cluster
-    
-    return {
+    const shouldUseTLS = process.env.DOCDB_TLS_ENABLED === 'true' ||
+      credentials.tls === true ||
+      (credentials.ssl === true && process.env.DOCDB_TLS_ENABLED !== 'false');
+
+    // DocumentDB 5.0 cluster has TLS enabled in parameter group
+    // Check if TLS should be enabled based on environment or secret configuration
+    const useTLS = process.env.DOCDB_TLS_ENABLED === 'true' ||
+      credentials.ssl === true ||
+      shouldUseTLS; // Enable TLS for DocumentDB 5.0
+
+    console.log(`🔒 TLS configuration: useTLS=${useTLS}, shouldUseTLS=${shouldUseTLS}`);
+
+    const processedCredentials = {
       host: credentials.host,
       port: credentials.port || 27017,
       username: credentials.username,
       password: credentials.password,
-      database: credentials.database || 'chronas',
+      database: credentials.database || 'chronas-api',
       tls: useTLS, // Use our cluster-specific TLS setting
       // Additional DocumentDB-specific options
-      replicaSet: credentials.replicaSet || 'rs0',
-      retryWrites: false // DocumentDB doesn't support retryWrites
+      replicaSet: credentials.replicaSet, // Let DocumentDB determine the replica set name
+      retryWrites: false, // DocumentDB doesn't support retryWrites
+      directConnection: false // Use cluster connection for DocumentDB
     };
-    
+
+    console.log('🔧 Processed credentials:', {
+      host: processedCredentials.host,
+      port: processedCredentials.port,
+      database: processedCredentials.database,
+      tls: processedCredentials.tls,
+      replicaSet: processedCredentials.replicaSet,
+      retryWrites: processedCredentials.retryWrites
+    });
+
+    return processedCredentials;
+
   } catch (error) {
+    console.error('❌ Failed to get database credentials:', error.message);
+    console.error('🔍 Credentials error details:', error);
     debugLog(`Failed to get database credentials: ${error.message}`);
     throw error;
   }
@@ -227,13 +260,13 @@ export async function getApplicationConfig(secretId) {
       useCache: true,
       parseJson: true
     });
-    
+
     debugLog('Application configuration retrieved from Secrets Manager');
     return config;
-    
+
   } catch (error) {
     debugLog(`Failed to get application config: ${error.message}`);
-    
+
     // Return empty config as fallback (don't throw)
     console.warn(`Warning: Could not retrieve application config from ${secretId}: ${error.message}`);
     return {};
@@ -251,27 +284,47 @@ export function buildMongoUri(credentials) {
     password,
     host,
     port = 27017,
-    database = 'chronas',
-    replicaSet = 'rs0',
-    retryWrites = false
+    database = 'chronas-api',
+    replicaSet,
+    retryWrites = false,
+    directConnection = false
   } = credentials;
-  
+
+  console.log('🔗 Building MongoDB URI with credentials:', {
+    host,
+    port,
+    database,
+    replicaSet: replicaSet || '[NOT SET]',
+    retryWrites,
+    directConnection
+  });
+
   // Encode username and password for URI
   const encodedUsername = encodeURIComponent(username);
   const encodedPassword = encodeURIComponent(password);
-  
+
   // Build connection URI
   let uri = `mongodb://${encodedUsername}:${encodedPassword}@${host}:${port}/${database}`;
-  
+
   // Add query parameters
   const params = new URLSearchParams();
-  if (replicaSet) params.append('replicaSet', replicaSet);
+
+  // Only add replicaSet if it's explicitly provided
+  if (replicaSet) {
+    params.append('replicaSet', replicaSet);
+    console.log(`🔗 Using replica set: ${replicaSet}`);
+  } else {
+    console.log('🔗 No replica set specified - using direct connection');
+  }
+
   if (!retryWrites) params.append('retryWrites', 'false');
-  
+  if (directConnection !== undefined) params.append('directConnection', directConnection.toString());
+
   if (params.toString()) {
     uri += `?${params.toString()}`;
   }
-  
+
+  console.log('🔗 Final MongoDB URI (masked):', uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
   debugLog('MongoDB URI built from credentials');
   return uri;
 }
@@ -284,13 +337,13 @@ export function buildMongoUri(credentials) {
 export async function initializeDatabaseFromSecrets(secretId) {
   try {
     debugLog(`Initializing database connection from secret: ${secretId}`);
-    
+
     const credentials = await getDatabaseCredentials(secretId);
     const mongoUri = buildMongoUri(credentials);
-    
+
     debugLog('Database connection URI created from Secrets Manager');
     return mongoUri;
-    
+
   } catch (error) {
     debugLog(`Failed to initialize database from secrets: ${error.message}`);
     throw error;
@@ -314,7 +367,7 @@ export function getCacheStats() {
     entries: Array.from(secretsCache.keys()),
     ttl: CACHE_TTL
   };
-  
+
   debugLog('Cache stats:', stats);
   return stats;
 }
@@ -325,13 +378,13 @@ export function getCacheStats() {
 export async function healthCheck() {
   try {
     const client = getSecretsManagerClient();
-    
+
     // Try to list secrets (this will fail if no permissions, but validates connectivity)
     // We don't actually need the result, just want to test the connection
     const testCommand = new GetSecretValueCommand({
       SecretId: 'non-existent-secret-for-health-check'
     });
-    
+
     try {
       await client.send(testCommand);
     } catch (error) {
@@ -344,12 +397,12 @@ export async function healthCheck() {
       }
       throw error;
     }
-    
+
     return {
       healthy: true,
       message: 'Secrets Manager connectivity verified'
     };
-    
+
   } catch (error) {
     return {
       healthy: false,

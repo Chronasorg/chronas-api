@@ -12,8 +12,6 @@ import helmet from 'helmet'
 import passport from 'passport'
 // import { Strategy } from 'passport-twitter'
 import AWSXRay from 'aws-xray-sdk'
-import swaggerUi from 'swagger-ui-express'
-import YAML from 'yamljs'
 import appInsights from 'applicationinsights'
 import expressSession from 'express-session'
 
@@ -28,9 +26,21 @@ const app = express()
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
-const swaggerDocument = YAML.load('./swagger.yaml');
+// Set up Swagger documentation with graceful fallback
+async function setupSwaggerDocs() {
+  try {
+    const swaggerUi = (await import('swagger-ui-express')).default;
+    const YAML = (await import('yamljs')).default;
+    const swaggerDocument = YAML.load('./swagger.yaml');
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    console.log('✅ Swagger API documentation enabled at /api-docs');
+  } catch (error) {
+    console.log('⚠️  Swagger UI not available, API documentation disabled');
+  }
+}
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+// Initialize Swagger docs asynchronously
+setupSwaggerDocs();
 
 console.log("appInsightsString" + config.appInsightsConnectionString);
 

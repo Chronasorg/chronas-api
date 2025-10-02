@@ -133,9 +133,13 @@ const getConfigSchema = () => {
       .when('NODE_ENV', {
         is: Joi.string().equal('development'),
         then: Joi.string().default('mongodb://localhost:27017/chronas-api'),
-        otherwise: Joi.string().required()
+        otherwise: Joi.string().when('SECRET_DB_NAME', {
+          is: Joi.string().min(1),
+          then: Joi.string().optional(), // Optional when Secrets Manager is configured
+          otherwise: Joi.string().required()
+        })
       })
-      .description('MongoDB/DocumentDB host URL'),
+      .description('MongoDB/DocumentDB host URL (optional when using Secrets Manager)'),
     
     MONGO_PORT: Joi.number()
       .default(27017),
@@ -218,7 +222,7 @@ function buildConfig(envVars) {
     // Database
     mongooseDebug: envVars.MONGOOSE_DEBUG,
     mongo: {
-      host: envVars.MONGO_HOST,
+      host: envVars.MONGO_HOST || null, // Allow null when using Secrets Manager
       port: envVars.MONGO_PORT
     },
     

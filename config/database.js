@@ -21,10 +21,12 @@ let cachedConnection = null;
 
 /**
  * DocumentDB TLS Certificate paths
+ * Using the latest AWS global certificate bundle for DocumentDB
  */
 const TLS_CERT_PATHS = [
-  '/opt/rds-ca-2019-root.pem',  // Lambda layer path
-  path.join(__dirname, '../certs/rds-ca-2019-root.pem'),  // Local development
+  '/opt/global-bundle.pem',  // Lambda layer path
+  path.join(__dirname, '../certs/global-bundle.pem'),  // Local development (new bundle)
+  path.join(__dirname, '../certs/rds-ca-2019-root.pem'),  // Fallback to old certificate
   path.join(__dirname, '../migration/rds-ca-2019-root.pem')  // Migration script path
 ];
 
@@ -54,11 +56,10 @@ function shouldUseTLS(uri) {
   if (process.env.MONGODB_USE_TLS === 'true') return true;
   if (process.env.MONGODB_USE_TLS === 'false') return false;
   
-  // For our DocumentDB cluster, TLS is disabled in the parameter group
-  // So we default to false for DocumentDB clusters unless explicitly enabled
+  // For DocumentDB clusters, TLS is required by default with the new certificate bundle
   if (uri.includes('docdb')) {
-    // Check if TLS is explicitly enabled for DocumentDB
-    return process.env.DOCDB_TLS_ENABLED === 'true';
+    // TLS is now enabled by default for DocumentDB with proper certificate
+    return process.env.DOCDB_TLS_ENABLED !== 'false';  // Default to true unless explicitly disabled
   }
   
   // For other MongoDB instances, default to false (local development)
@@ -74,27 +75,40 @@ function getConnectionOptions(uri) {
   const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
   const useTLS = shouldUseTLS(uri);
   
-  // Base connection options
+  // Base connection options optimized for DocumentDB 5.0
   const options = {
     // Connection pooling - optimized for Lambda
     maxPoolSize: isLambda ? 1 : 10,  // Single connection for Lambda
     minPoolSize: isLambda ? 0 : 2,   // No minimum for Lambda
     
-    // Timeouts
-    serverSelectionTimeoutMS: 5000,   // 5 seconds
+    // Timeouts - increased for DocumentDB 5.0
+    serverSelectionTimeoutMS: 10000,  // 10 seconds (increased for DocumentDB)
     socketTimeoutMS: 45000,           // 45 seconds (Lambda timeout consideration)
-    connectTimeoutMS: 10000,          // 10 seconds
-    
-    // Keep alive settings (removed deprecated keepAlive options)
-    // keepAlive is now handled automatically by the driver
+    connectTimeoutMS: 15000,          // 15 seconds (increased for DocumentDB)
     
     // Buffer settings for Lambda
     bufferCommands: !isLambda,        // Disable buffering in Lambda
     
-    // DocumentDB specific settings
+    // DocumentDB 5.0 specific settings
     retryWrites: false,               // DocumentDB doesn't support retryWrites
-    directConnection: false,          // Use replica set connection
+    directConnection: false,          // Use cluster connection for DocumentDB
+    readPreference: 'primary',        // Ensure we read from primary
+    readConcern: { level: 'local' },  // DocumentDB compatible read concern
+    
+    // Authentication mechanism - DocumentDB requires SCRAM-SHA-1
+    authMechanism: 'SCRAM-SHA-1',     // DocumentDB doesn't support SCRAM-SHA-256
   };
+  
+  console.log('🔧 Connection options configured:', {
+    isLambda,
+    useTLS,
+    maxPoolSize: options.maxPoolSize,
+    serverSelectionTimeoutMS: options.serverSelectionTimeoutMS,
+    connectTimeoutMS: options.connectTimeoutMS,
+    bufferCommands: options.bufferCommands,
+    directConnection: options.directConnection,
+    readPreference: options.readPreference
+  });
 
   // Add TLS configuration for DocumentDB
   if (useTLS) {
@@ -168,12 +182,19 @@ export async function connectToDatabase(uri) {
  */
 export async function connectToDatabaseWithSecrets(secretId) {
   try {
+    console.log(`🔐 Connecting to database using Secrets Manager: ${secretId}`);
     debugLog(`Connecting to database using Secrets Manager: ${secretId}`);
     
     const uri = await initializeDatabaseFromSecrets(secretId);
-    return await connectToDatabase(uri);
+    console.log('🔗 Database URI created from secrets (masked):', uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
+    
+    const connection = await connectToDatabase(uri);
+    console.log('✅ Database connection established via Secrets Manager');
+    return connection;
     
   } catch (error) {
+    console.error('❌ Failed to connect to database with secrets:', error.message);
+    console.error('🔍 Secrets connection error details:', error);
     debugLog('Failed to connect to database with secrets:', error.message);
     throw error;
   }
@@ -186,17 +207,30 @@ export async function connectToDatabaseWithSecrets(secretId) {
  */
 export async function initializeDatabaseConnection(config) {
   try {
+    console.log('🔌 Starting database initialization...');
+    console.log('📋 Database config:', {
+      docDbsecretName: config.docDbsecretName,
+      mongoHost: config.mongo?.host,
+      mongoPort: config.mongo?.port
+    });
+    
     // Try Secrets Manager first (if configured)
     if (config.docDbsecretName) {
+      console.log(`🔐 Attempting database connection via Secrets Manager: ${config.docDbsecretName}`);
       debugLog('Attempting database connection via Secrets Manager');
       
       try {
-        return await connectToDatabaseWithSecrets(config.docDbsecretName);
+        const connection = await connectToDatabaseWithSecrets(config.docDbsecretName);
+        console.log('✅ Database connected successfully via Secrets Manager');
+        return connection;
       } catch (secretsError) {
+        console.error('❌ Secrets Manager connection failed:', secretsError.message);
+        console.error('🔍 Secrets error details:', secretsError);
         debugLog('Secrets Manager connection failed, falling back to direct URI:', secretsError.message);
         
         // Fall back to direct URI if Secrets Manager fails
         if (config.mongo && config.mongo.host) {
+          console.log('🔄 Falling back to direct URI connection');
           return await connectToDatabase(config.mongo.host);
         }
         
@@ -206,13 +240,18 @@ export async function initializeDatabaseConnection(config) {
     
     // Use direct URI connection
     if (config.mongo && config.mongo.host) {
+      console.log('🔗 Using direct URI for database connection');
       debugLog('Using direct URI for database connection');
       return await connectToDatabase(config.mongo.host);
     }
     
-    throw new Error('No database configuration found (neither Secrets Manager nor direct URI)');
+    const error = new Error('No database configuration found (neither Secrets Manager nor direct URI)');
+    console.error('❌ Database initialization failed: No configuration found');
+    throw error;
     
   } catch (error) {
+    console.error('💥 Database initialization failed:', error.message);
+    console.error('🔍 Full error:', error);
     debugLog('Database initialization failed:', error.message);
     throw error;
   }

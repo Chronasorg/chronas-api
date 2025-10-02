@@ -12,6 +12,8 @@ import debug from 'debug';
 
 const debugLog = debug('chronas-api:lambda-handler');
 
+// Force cold start for debugging - v1.0.1
+
 // Cached serverless express instance for connection reuse
 let serverlessExpressInstance = null;
 let appInitialized = false;
