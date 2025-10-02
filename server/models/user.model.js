@@ -123,14 +123,14 @@ UserSchema.virtual('fullName').get(function() {
 // Instance methods
 UserSchema.methods = {
   /**
-   * Compare password with hash - Legacy compatible
+   * Compare password with hash - Modern async/await
    */
-  comparePassword(candidatePassword, callback) {
+  async comparePassword(candidatePassword) {
     if (!this.password) {
-      return callback(new APIError('No password set for this user', httpStatus.BAD_REQUEST));
+      throw new APIError('No password set for this user', httpStatus.BAD_REQUEST);
     }
     
-    bcrypt.compare(candidatePassword, this.password, callback);
+    return await bcrypt.compare(candidatePassword, this.password);
   }
 };
 

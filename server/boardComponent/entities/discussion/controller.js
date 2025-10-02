@@ -26,8 +26,9 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
     .populate('forum')
     .populate('user')
     .lean()
-    .exec((error, result) => {
-      if (error) { console.log(error); reject(error) } else if (!result) reject(null)
+    .exec()
+    .then(result => {
+      if (!result) reject(null)
       else {
         result.user = {
           avatar: result.user.avatar,
@@ -56,6 +57,7 @@ const getDiscussion = (discussion_slug, discussion_id) => new Promise((resolve, 
         )
       }
     })
+    .catch(error => { console.log(error); reject(error) })
 })
 
 /**
@@ -68,11 +70,8 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
   if (potentialDiscussionSlug) {
     Discussion
       .findOne({ discussion_slug: potentialDiscussionSlug })
-      .exec((error, discussionFound) => {
-        if (error) {
-          console.log(error)
-          return reject(error)
-        }
+      .exec()
+      .then(discussionFound => {
         if (!discussionFound) {
           return reject('not found')
         }
@@ -84,13 +83,18 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
         if (discussion.favorites) discussionFound.favorites = []
         if (discussion.tags) discussionFound.tags = discussion.tags
 
-        discussionFound.save((error2) => {
-          if (error2) {
-            console.log(error2)
-            return reject(error2)
-          }
+        discussionFound.save()
+          .then(() => {
           return resolve(discussion)
         })
+          .catch(error2 => {
+            console.log(error2)
+            return reject(error2)
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        return reject(error)
       })
   } else {
     const newDiscussion = new Discussion({
@@ -108,32 +112,33 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
       pinned: discussion.pinned,
     })
 
-    newDiscussion.save((error) => {
-      if (error) {
+    newDiscussion.save()
+      .then(() => {
+        req.body = {
+          subject: 'Chronas: New Post added',
+          from: 'noreply@chronas.org',
+          html: `Full payload: ${JSON.stringify({
+            forum_id: discussion.forumId,
+            forum: discussion.forumId,
+            user_id: discussion.userId,
+            user: discussion.userId,
+            discussion_slug: generateDiscussionSlug(discussion.title),
+            date: new Date(),
+            title: discussion.title,
+            qa_id: discussion.qa_id,
+            content: discussion.content,
+            favorites: [],
+            tags: discussion.tags,
+            pinned: discussion.pinned,
+          }, undefined, '<br />')}`,
+        }
+        contactCtrl.create(req, res, false)
+        return resolve(newDiscussion)
+      })
+      .catch(error => {
         console.log(error)
         reject(error)
-      }
-
-      req.body = {
-        subject: 'Chronas: New Post added',
-        from: 'noreply@chronas.org',
-        html: `Full payload: ${JSON.stringify({
-          forum_id: discussion.forumId,
-          forum: discussion.forumId,
-          user_id: discussion.userId,
-          user: discussion.userId,
-          discussion_slug: generateDiscussionSlug(discussion.title),
-          date: new Date(),
-          title: discussion.title,
-          qa_id: discussion.qa_id,
-          content: discussion.content,
-          favorites: [],
-          tags: discussion.tags,
-          pinned: discussion.pinned,
-        }, undefined, '<br />')}`,
-      }
-      contactCtrl.create(req, res, false)
-      return resolve(newDiscussion)
+      })
     })
   }
 })
@@ -145,30 +150,33 @@ const createDiscussion = (discussion, req, res) => new Promise((resolve, reject)
  * @return {Promise}
  */
 const toggleFavorite = (discussion_id, user_id) => new Promise((resolve, reject) => {
-  Discussion.findById(discussion_id, (error, discussion) => {
-    if (error) { console.log(error); reject(error) } else if (!discussion) reject(null)
-    else {
+  Discussion.findById(discussion_id)
+    .then(discussion => {
+      if (!discussion) reject(null)
+      else {
         // add or remove favorite
-      let matched = null
-      for (let i = 0; i < discussion.favorites.length; i++) {
-        if (String(discussion.favorites[i]) === String(user_id)) {
-          matched = i
+        let matched = null
+        for (let i = 0; i < discussion.favorites.length; i++) {
+          if (String(discussion.favorites[i]) === String(user_id)) {
+            matched = i
+          }
         }
-      }
-      if (matched === null) {
-        discussion.favorites.push(user_id)
-      } else {
-        discussion.favorites = [
-          ...discussion.favorites.slice(0, matched),
-          ...discussion.favorites.slice(matched + 1, discussion.favorites.length),
-        ]
-      }
+        if (matched === null) {
+          discussion.favorites.push(user_id)
+        } else {
+          discussion.favorites = [
+            ...discussion.favorites.slice(0, matched),
+            ...discussion.favorites.slice(matched + 1, discussion.favorites.length),
+          ]
+        }
 
-
-      discussion.save((error, updatedDiscussion) => {
-        if (error) { console.log(error); reject(error) }
-        resolve(updatedDiscussion)
-      })
+        return discussion.save()
+          .then(updatedDiscussion => {
+            resolve(updatedDiscussion)
+          })
+      }
+    })
+    .catch(error => { console.log(error); reject(error) })
     }
   })
 })
@@ -181,8 +189,8 @@ const deleteDiscussion = discussion_slug => new Promise((resolve, reject) => {
     // find the discussion id first
   Discussion
     .findOne({ discussion_slug })
-    .exec((error, discussion) => {
-      if (error) { console.log(error); reject(error) }
+    .exec()
+    .then(discussion => {
 
       // get the discussion id
       const discussion_id = discussion._id
@@ -190,21 +198,20 @@ const deleteDiscussion = discussion_slug => new Promise((resolve, reject) => {
       // remove any opinion regarding the discussion
       Opinion
       .remove({ discussion_id })
-      .exec((error) => {
-        if (error) { console.log(error); reject(error) }
-
+      .exec()
+      .then(() => {
         // finally remove the discussion
-        else {
-          Discussion
+        return Discussion
           .remove({ discussion_slug })
-          .exec((error) => {
-            if (error) { console.log(error); reject(error) } else {
-              resolve({ deleted: true })
-            }
+          .exec()
+          .then(() => {
+            resolve({ deleted: true })
           })
-        }
+          .catch(error => { console.log(error); reject(error) })
       })
+      .catch(error => { console.log(error); reject(error) })
     })
+    .catch(error => { console.log(error); reject(error) })
 })
 
 export default {

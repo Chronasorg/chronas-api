@@ -23,7 +23,7 @@ if (config.mailgunKey && config.mailgunDomain) {
 /**
  * get current deployed version
  */
-function create(req, res, doReturn = true) {
+async function create(req, res, doReturn = true) {
   const { from, to = (config.mailgunReceiver || '').split(','), subject, html } = req.body
   if (!from || !to || !subject || !html) {
     return res.status(httpStatus.BAD_REQUEST).json({
@@ -55,32 +55,18 @@ function create(req, res, doReturn = true) {
     toSendBody.to = to
   }
 
-  nodemailerMailgun.sendMail(
-    toSendBody
-  , (err, info) => {
+  try {
+    const info = await nodemailerMailgun.sendMail(toSendBody);
     if (doReturn) {
-      if (err) {
-        return res.json(err.message)
-      }
-      return res.json(info.message)
+      return res.json(info.message);
     }
-  })
-
-  /*
-  const mailOptions = {
-    from: 'sender@email.com', // sender address
-    to: 'dietmar.aumann@gmail.com', // list of receivers
-    subject: 'Subject of your email', // Subject line
-    html: '<p>Your html here</p>'// plain text body
+  } catch (err) {
+    if (doReturn) {
+      return res.json(err.message);
+    }
   }
 
-  transporter.sendMail(mailOptions, function (err, info) {
-    if(err)
-      return res.json(err)
-    else
-      return res.json(info)
-  });
-  */
+
 }
 
 export default { create }

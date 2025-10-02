@@ -20,10 +20,10 @@ async function login(req, res, next) {
     const user = await User.findOne({ email: req.body.email }).select('+password').exec();
     
     if (user && req.body.email === user.email) {
-      return user.comparePassword(req.body.password, async (err, isMatch) => {
-        if (err) {
-          return next(err);
-        } else if (!isMatch) {
+      try {
+        const isMatch = await user.comparePassword(req.body.password);
+        
+        if (!isMatch) {
           const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
           return next(err2);
         }
@@ -45,7 +45,9 @@ async function login(req, res, next) {
           token,
           username: user.username || (typeof user.name === 'string' ? user.name : (((user || {}).name || {}).first))
         });
-      });
+      } catch (err) {
+        return next(err);
+      }
     }
     
     const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
