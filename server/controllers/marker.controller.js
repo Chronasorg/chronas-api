@@ -226,7 +226,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next, fromRevision = false) {
   const marker = req.entity
-  marker.remove()
+  marker.deleteOne()
     .then((deletedMarker) => {
       if (!fromRevision) {
         res.json(deletedMarker)

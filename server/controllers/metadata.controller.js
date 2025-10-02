@@ -469,7 +469,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next, fromRevision = false) {
   const metadata = req.entity
-  metadata.remove()
+  metadata.deleteOne()
     .then((deletedMarker) => {
       if (!fromRevision) {
         res.json(deletedMarker)
