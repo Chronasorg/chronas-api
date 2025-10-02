@@ -17,7 +17,7 @@ import userCtrl from '../controllers/user.controller.js'
  */
 async function login(req, res, next) {
   try {
-    const user = await User.findOne({ email: req.body.email }).exec();
+    const user = await User.findOne({ email: req.body.email }).select('+password').exec();
     
     if (user && req.body.email === user.email) {
       return user.comparePassword(req.body.password, async (err, isMatch) => {
@@ -31,7 +31,7 @@ async function login(req, res, next) {
         const token = jwt.sign({
           id: user.email || user._id || user.id,
           avatar: user.avatar || user.gravatar,
-          username: user.username || (((user || {}).name || {}).first),
+          username: user.username || (typeof user.name === 'string' ? user.name : (((user || {}).name || {}).first)),
           score: user.karma,
           lastUpdated: user.lastUpdated || user.lastLogin,
           privilege: user.privilege ? user.privilege : 1,
@@ -43,7 +43,7 @@ async function login(req, res, next) {
 
         return res.json({
           token,
-          username: user.username || (((user || {}).name || {}).first)
+          username: user.username || (typeof user.name === 'string' ? user.name : (((user || {}).name || {}).first))
         });
       });
     }

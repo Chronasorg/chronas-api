@@ -38,16 +38,10 @@ const UserSchema = new mongoose.Schema({
     select: false // Don't include password in queries by default
   },
   
-  // Profile information
+  // Profile information - flexible to handle legacy data
   name: {
-    first: {
-      type: String,
-      trim: true
-    },
-    last: {
-      type: String,
-      trim: true
-    }
+    type: mongoose.Schema.Types.Mixed, // Allow both string and object for backward compatibility
+    default: {}
   },
   
   avatar: {
@@ -110,12 +104,20 @@ UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 UserSchema.index({ karma: -1 });
 
-// Virtual for full name
+// Virtual for full name - handles both string and object formats
 UserSchema.virtual('fullName').get(function() {
-  if (this.name && this.name.first && this.name.last) {
+  // Handle legacy string format
+  if (typeof this.name === 'string') {
+    return this.name;
+  }
+  // Handle object format
+  if (this.name && typeof this.name === 'object' && this.name.first && this.name.last) {
     return `${this.name.first} ${this.name.last}`;
   }
-  return (this.name && this.name.first) || this.username;
+  if (this.name && typeof this.name === 'object' && this.name.first) {
+    return this.name.first;
+  }
+  return this.username;
 });
 
 // Instance methods
