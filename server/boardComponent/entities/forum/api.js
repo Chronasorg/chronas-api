@@ -1,10 +1,11 @@
 // forum controllers
-import express from 'express'
-import { config } from '../../../../config/config.js'
-import { expressjwt as expressJwt } from 'express-jwt'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-import forumController from './controller.js'
-const { getAllForums, getDiscussions } = forumController
+import { config } from '../../../../config/config.js';
+
+import forumController from './controller.js';
+const { getAllForums, getDiscussions } = forumController;
 
 /**
  * forum apis
@@ -16,40 +17,40 @@ router.route('/').get(
   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
     getAllForums().then(
-      (result) => { res.send(result) },
-      (error) => { res.send(error) }
-    )
-  })
+      (result) => { res.send(result); },
+      (error) => { res.send(error); }
+    );
+  });
 
 // get discussions of a forum
 router.route('/:forum_slug/discussions').get(
   // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
-    const { q, offset, limit } = req.query
+    const { q, offset, limit } = req.query;
     getDiscussions(req.params.forum_slug, false, req.query.sorting_method, q, offset, limit).then(
       (result) => {
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-        res.set('X-Total-Count', result[1])
-        res.json(result[0])
+        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
+        res.set('X-Total-Count', result[1]);
+        res.json(result[0]);
         // res.send(result)
       },
       (error) => {
-        res.set('X-Total-Count', 0)
-        res.json(result[0])
+        res.set('X-Total-Count', 0);
+        res.json(result[0]);
         // res.send([])
       }
-    )
-  })
+    );
+  });
 
 // get pinned discussions of a forum
 router.route('/:forum_slug/pinned_discussions').get(
   // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
-    const { q, offset, limit } = req.query
+    const { q, offset, limit } = req.query;
     getDiscussions(req.params.forum_slug, true, false, false, offset, limit).then(
-      (result) => { res.send(result[0]) },
-      (error) => { res.send([]) }
-    )
-  })
+      (result) => { res.send(result[0]); },
+      (error) => { res.send([]); }
+    );
+  });
 
-export default router
+export default router;

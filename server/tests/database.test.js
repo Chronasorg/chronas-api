@@ -1,24 +1,24 @@
 /**
  * Database Connection Tests
- * 
+ *
  * Tests for the DocumentDB connection module
  */
 
 import chai from 'chai';
-const { expect } = chai;
-import { 
-  connectToDatabase, 
-  closeDatabaseConnection, 
-  getConnectionStatus, 
-  testDatabaseConnectivity 
+
+import {
+  connectToDatabase,
+  closeDatabaseConnection,
+  getConnectionStatus,
+  testDatabaseConnectivity
 } from '../../config/database.js';
+const { expect } = chai;
 
 describe('Database Connection', () => {
-  
   describe('Connection Status', () => {
     it('should return connection status information', () => {
       const status = getConnectionStatus();
-      
+
       expect(status).to.be.an('object');
       expect(status).to.have.property('readyState');
       expect(status).to.have.property('state');
@@ -33,7 +33,7 @@ describe('Database Connection', () => {
       // The shouldUseTLS function should return true for docdb URIs
       const docdbUri = 'mongodb://user:pass@cluster.docdb.amazonaws.com:27017/db';
       const localUri = 'mongodb://localhost:27017/test';
-      
+
       // We can't directly test the private function, but we can test the behavior
       expect(docdbUri).to.include('docdb');
       expect(localUri).to.not.include('docdb');
@@ -56,17 +56,17 @@ describe('Database Connection', () => {
   describe('Lambda Environment Detection', () => {
     it('should detect Lambda environment', () => {
       const originalEnv = process.env.AWS_LAMBDA_FUNCTION_NAME;
-      
+
       // Test without Lambda environment
       delete process.env.AWS_LAMBDA_FUNCTION_NAME;
       const status1 = getConnectionStatus();
       expect(status1).to.be.an('object');
-      
+
       // Test with Lambda environment
       process.env.AWS_LAMBDA_FUNCTION_NAME = 'test-function';
       const status2 = getConnectionStatus();
       expect(status2).to.be.an('object');
-      
+
       // Restore original environment
       if (originalEnv) {
         process.env.AWS_LAMBDA_FUNCTION_NAME = originalEnv;
@@ -80,7 +80,7 @@ describe('Database Connection', () => {
     it('should handle connection close gracefully', async () => {
       // Test that close doesn't throw when no connection exists
       await closeDatabaseConnection();
-      
+
       const status = getConnectionStatus();
       expect(status.isConnected).to.be.false;
     });
@@ -92,5 +92,4 @@ describe('Database Connection', () => {
       expect(result).to.be.false;
     });
   });
-
 });

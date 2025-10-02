@@ -1,28 +1,29 @@
 import { pick, keys, isEqual, extendOwn } from 'underscore';
 import puppeteer from 'puppeteer';
+
 import { cache } from '../../config/config.js';
 
-const MAXCACHEDIMAGES = 2
-const CACHETTL = 1000 * 60 * 60 * 24 * 7 // 1 week
+const MAXCACHEDIMAGES = 2;
+const CACHETTL = 1000 * 60 * 60 * 24 * 7; // 1 week
 /**
  * Get static image
  * @returns {image}
  */
 function get(req, res) {
-  const selectedYearAndFormat = (req.params.year || '').split('.')
+  const selectedYearAndFormat = (req.params.year || '').split('.');
 
   if (selectedYearAndFormat[1] !== 'png' && selectedYearAndFormat[1] !== 'jpeg') {
-    return res.status(400).send('Image format must be either jpeg or png')
+    return res.status(400).send('Image format must be either jpeg or png');
   }
 
   if (+selectedYearAndFormat[0] < -2000 && selectedYearAndFormat[0] > 2000) {
-    return res.status(400).send('Year must be between -2000 and 2000')
+    return res.status(400).send('Year must be between -2000 and 2000');
   }
 
-  const cachedImage = cache.get(`image_${req.params.year}`)
+  const cachedImage = cache.get(`image_${req.params.year}`);
   if (cachedImage) {
-    res.contentType(`image/${selectedYearAndFormat[1]}`)
-    return res.send(cachedImage)
+    res.contentType(`image/${selectedYearAndFormat[1]}`);
+    return res.send(cachedImage);
   }
 
   puppeteer.launch().then((browser) => {
@@ -33,22 +34,22 @@ function get(req, res) {
           .then(resp => page.waitFor(3000))
           .then(resp => page.screenshot({ type: selectedYearAndFormat[1] }))
           .then((buffer) => {
-            browser.close()
+            browser.close();
 
-            const currImageKeys = cache.keys().filter(el => el.substr(0, 6) === 'image_')
+            const currImageKeys = cache.keys().filter(el => el.substr(0, 6) === 'image_');
             if (currImageKeys.length > MAXCACHEDIMAGES) {
               // max cached items reached, delete first in
               if (cache.del(currImageKeys[0])) {
-                cache.put(`image_${req.params.year}`, buffer, CACHETTL)
+                cache.put(`image_${req.params.year}`, buffer, CACHETTL);
               }
             } else {
-              cache.put(`image_${req.params.year}`, buffer, CACHETTL)
+              cache.put(`image_${req.params.year}`, buffer, CACHETTL);
             }
-            res.contentType(`image/${selectedYearAndFormat[1]}`)
-            res.send(buffer)
-          })
-      })
-  })
+            res.contentType(`image/${selectedYearAndFormat[1]}`);
+            res.send(buffer);
+          });
+      });
+  });
 }
 
-export default { get }
+export default { get };

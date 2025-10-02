@@ -1,8 +1,8 @@
 // models
-import userCtrl from '../../../controllers/user.controller.js'
-import contactCtrl from '../../../controllers/contact.controller.js'
+import userCtrl from '../../../controllers/user.controller.js';
+import contactCtrl from '../../../controllers/contact.controller.js';
 
-import Opinion from './model.js'
+import Opinion from './model.js';
 
 /**
  * get all opinion regarding a single discussion
@@ -16,13 +16,13 @@ const getAllOpinions = async (discussion_id) => {
       .populate('user')
       .sort({ date: -1 })
       .exec();
-    
+
     return opinions || [];
   } catch (error) {
     console.log(error);
     throw error;
   }
-}
+};
 
 /**
  * create an opinion regarding a discussion
@@ -41,11 +41,11 @@ const createOpinion = async ({ forum_id, discussion_id, user_id, content }, req,
       user_id,
       user: user_id,
       content,
-      date: new Date(),
+      date: new Date()
     });
 
     const savedOpinion = await newOpinion.save();
-    
+
     req.body = {
       subject: 'Chronas: New Comment added',
       from: 'noreply@chronas.org',
@@ -56,21 +56,21 @@ const createOpinion = async ({ forum_id, discussion_id, user_id, content }, req,
         user_id,
         user: user_id,
         content,
-        date: new Date(),
+        date: new Date()
       }, undefined, '<br />')}`
     };
-    
+
     contactCtrl.create(req, res, false);
     return savedOpinion;
   } catch (error) {
     console.log(error);
     throw error;
   }
-}
+};
 
 const updateOpinion = (opinion_id) => {
   // TODO: implement update for opinion
-}
+};
 
 /**
  * delete a single opinion
@@ -85,32 +85,32 @@ const deleteOpinion = async (opinion_id) => {
     console.log(error);
     throw error;
   }
-}
+};
 
 const voteOpinion = (req, res, opinion_id, delta = 0) => new Promise((resolve, reject) => {
-  const username = (req.auth || {}).username
+  const { username } = req.auth || {};
   Opinion
-      .findOne({ _id: opinion_id })
-      .exec()
-      .then((opinion) => {
-        if (username === opinion.user) {
-          reject('Cannot vote on own opinion.')
-        }
-        opinion.score += delta
-        opinion.save()
-          .then((savedOpinion) => {
-            if (username) userCtrl.changePoints(username, 'voted', 1)
-            resolve(savedOpinion)
-          })
-          .catch(e => reject(e))
-      })
-      .catch(e => reject(e))
-})
+    .findOne({ _id: opinion_id })
+    .exec()
+    .then((opinion) => {
+      if (username === opinion.user) {
+        reject('Cannot vote on own opinion.');
+      }
+      opinion.score += delta;
+      opinion.save()
+        .then((savedOpinion) => {
+          if (username) userCtrl.changePoints(username, 'voted', 1);
+          resolve(savedOpinion);
+        })
+        .catch(e => reject(e));
+    })
+    .catch(e => reject(e));
+});
 
 export default {
   getAllOpinions,
   createOpinion,
   updateOpinion,
   voteOpinion,
-  deleteOpinion,
-}
+  deleteOpinion
+};

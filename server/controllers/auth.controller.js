@@ -1,10 +1,11 @@
-import jwt from 'jsonwebtoken'
-import httpStatus from 'http-status'
-import Moniker from 'moniker'
-import APIError from '../helpers/APIError.js'
-import { config } from '../../config/config.js'
-import User from '../models/user.model.js'
-import userCtrl from '../controllers/user.controller.js'
+import jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import Moniker from 'moniker';
+
+import APIError from '../helpers/APIError.js';
+import { config } from '../../config/config.js';
+import User from '../models/user.model.js';
+import userCtrl from '../controllers/user.controller.js';
 
 // TODO: add email service
 
@@ -18,16 +19,16 @@ import userCtrl from '../controllers/user.controller.js'
 async function login(req, res, next) {
   try {
     const user = await User.findOne({ email: req.body.email }).select('+password').exec();
-    
+
     if (user && req.body.email === user.email) {
       try {
         const isMatch = await user.comparePassword(req.body.password);
-        
+
         if (!isMatch) {
           const err2 = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
           return next(err2);
         }
-        
+
         const token = jwt.sign({
           id: user.email || user._id || user.id,
           avatar: user.avatar || user.gravatar,
@@ -35,7 +36,7 @@ async function login(req, res, next) {
           score: user.karma,
           lastUpdated: user.lastUpdated || user.lastLogin,
           privilege: user.privilege ? user.privilege : 1,
-          subscription: user.subscription ? user.subscription : "-1"
+          subscription: user.subscription ? user.subscription : '-1'
         }, config.jwtSecret);
 
         user.loginCount += 1;
@@ -49,7 +50,7 @@ async function login(req, res, next) {
         return next(err);
       }
     }
-    
+
     const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
     return next(err);
   } catch (e) {
@@ -68,10 +69,12 @@ async function login(req, res, next) {
  */
 
 function signup(req, res, next) {
-  req.body.signup = true
-  req.body.username = req.body.username || ((req.body.first_name && req.body.last_name) ? `${req.body.first_name} ${req.body.last_name}`
-    : (req.body.first_name) ? req.body.first_name
-      : (req.body.last_name) ? req.body.last_name : Moniker.choose())
+  req.body.signup = true;
+  req.body.username = req.body.username || ((req.body.first_name && req.body.last_name)
+    ? `${req.body.first_name} ${req.body.last_name}`
+    : (req.body.first_name)
+      ? req.body.first_name
+      : (req.body.last_name) ? req.body.last_name : Moniker.choose());
 
   // TODO: add email service
   // mandrill('/messages/send', {
@@ -90,7 +93,7 @@ function signup(req, res, next) {
   //   else console.log(response);
   // });
 
-  userCtrl.create(req, res, next)
+  userCtrl.create(req, res, next);
 }
 
-export default { login, signup }
+export default { login, signup };

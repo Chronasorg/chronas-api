@@ -15,7 +15,7 @@ const discussionSchema = mongoose.Schema({
   content: Object,
   favorites: Array,
   tags: Array,
-  pinned: Boolean,
-}, { usePushEach: true })
+  pinned: Boolean
+}, { usePushEach: true });
 
 export default mongoose.model('discussion', discussionSchema);

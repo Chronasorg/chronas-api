@@ -1,7 +1,8 @@
-import Promise from 'bluebird'
-import mongoose from 'mongoose'
-import httpStatus from 'http-status'
-import APIError from '../helpers/APIError.js'
+import Promise from 'bluebird';
+import mongoose from 'mongoose';
+import httpStatus from 'http-status';
+
+import APIError from '../helpers/APIError.js';
 
 /**
  * Revision Schema
@@ -20,7 +21,7 @@ const RevisionSchema = new mongoose.Schema({
     required: true
   },
   subEntityId: { // accessId used for metadata
-    type: String,
+    type: String
   },
   resource: { // Marker, AREA, ...
     type: String,
@@ -31,20 +32,20 @@ const RevisionSchema = new mongoose.Schema({
     required: true
   },
   nextBody: {
-    type: String,
+    type: String
   },
   prevBody: {
-    type: String,
+    type: String
   },
   timestamp: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   reverted: {
     type: Boolean,
     default: false
   }
-}, { versionKey: false })
+}, { versionKey: false });
 
 /**
  * Add your
@@ -57,7 +58,7 @@ const RevisionSchema = new mongoose.Schema({
  * Methods
  */
 RevisionSchema.method({
-})
+});
 
 /**
  * Statics
@@ -73,11 +74,11 @@ RevisionSchema.statics = {
       .exec()
       .then((revision) => {
         if (revision) {
-          return revision
+          return revision;
         }
-        const err = new APIError('No such revision exists!', httpStatus.NOT_FOUND)
-        return Promise.reject(err)
-      })
+        const err = new APIError('No such revision exists!', httpStatus.NOT_FOUND);
+        return Promise.reject(err);
+      });
   },
 
   /**
@@ -87,15 +88,15 @@ RevisionSchema.statics = {
    * @returns {Promise<Revision[]>}
    */
   list({ start = 0, end = 50, entity, user, order, subentity, reverted, sort = 'timestamp' } = {}) {
-    const optionalFind = (entity) ? { entityId: entity } : {}
+    const optionalFind = (entity) ? { entityId: entity } : {};
     if (subentity) {
-      optionalFind.subEntityId = subentity
+      optionalFind.subEntityId = subentity;
     }
-    if (typeof reverted !== "undefined") {
-      optionalFind.reverted = reverted
+    if (typeof reverted !== 'undefined') {
+      optionalFind.reverted = reverted;
     }
-    if (typeof user !== "undefined") {
-      optionalFind.user = user
+    if (typeof user !== 'undefined') {
+      optionalFind.user = user;
     }
 
     return this.find(optionalFind)
@@ -105,17 +106,17 @@ RevisionSchema.statics = {
       .lean()
       .exec()
       .then(revisions => revisions.map((obj) => {
-        const nextBodyString = (JSON.stringify(obj.nextBody) || '').substring(0, 400)
-        const prevBodyString = (JSON.stringify(obj.prevBody) || '').substring(0, 400)
+        const nextBodyString = (JSON.stringify(obj.nextBody) || '').substring(0, 400);
+        const prevBodyString = (JSON.stringify(obj.prevBody) || '').substring(0, 400);
 
-        if (typeof obj.nextBody !== 'undefined') { obj.nextBody = nextBodyString + ((nextBodyString.length === 403) ? '...' : '') }
-        if (typeof obj.prevBody !== 'undefined') { obj.prevBody = prevBodyString + ((prevBodyString.length === 403) ? '...' : '') }
-        return obj
-      }))
+        if (typeof obj.nextBody !== 'undefined') { obj.nextBody = nextBodyString + ((nextBodyString.length === 403) ? '...' : ''); }
+        if (typeof obj.prevBody !== 'undefined') { obj.prevBody = prevBodyString + ((prevBodyString.length === 403) ? '...' : ''); }
+        return obj;
+      }));
   }
-}
+};
 
 /**
  * @typedef Revision
  */
-export default mongoose.model('Revision', RevisionSchema)
+export default mongoose.model('Revision', RevisionSchema);

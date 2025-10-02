@@ -1,38 +1,40 @@
-import request from 'supertest-as-promised'
-import httpStatus from 'http-status'
-import chai from 'chai'
-const { expect } = chai
-import app from '../helpers/test-app.js'
-import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js'
-import Area from '../../models/area.model.js'
-import User from '../../models/user.model.js'
-import Metadata from '../../models/metadata.model.js'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
-import path from 'path'
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+import request from 'supertest-as-promised';
+import httpStatus from 'http-status';
+import chai from 'chai';
+
+import app from '../helpers/test-app.js';
+import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js';
+import Area from '../../models/area.model.js';
+import User from '../../models/user.model.js';
+import Metadata from '../../models/metadata.model.js';
+const { expect } = chai;
 
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-chai.config.includeStack = true
+chai.config.includeStack = true;
 
 describe('## Areas APIs', () => {
-  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'))
+  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'));
 
   before(async function () {
-    this.timeout(30000)
-    await setupTestDatabase()
-    console.log('📋 In-memory database ready for areas tests')
-  })
+    this.timeout(30000);
+    await setupTestDatabase();
+    console.log('📋 In-memory database ready for areas tests');
+  });
 
   after(async function () {
-    this.timeout(10000)
-    await teardownTestDatabase()
-  })
+    this.timeout(10000);
+    await teardownTestDatabase();
+  });
 
   beforeEach(async () => {
-    await clearTestDatabase()
+    await clearTestDatabase();
 
     // Create test user for authentication
     const testUser = new User({
@@ -40,8 +42,8 @@ describe('## Areas APIs', () => {
       email: 'test@test.de',
       password: 'password123', // Must be at least 8 characters
       privilege: 5
-    })
-    const savedUser = await testUser.save()
+    });
+    const savedUser = await testUser.save();
 
     // Create test areas with required fields and legacy data format
     const testAreas = [
@@ -97,28 +99,28 @@ describe('## Areas APIs', () => {
           ]
         }
       }
-    ]
+    ];
 
-    await Area.insertMany(testAreas)
+    await Area.insertMany(testAreas);
 
     // Create religion metadata that aggregateProvinces expects
     const religionMetadata = new Metadata({
       _id: 'religion',
       data: {
-        'protestant': ['protestant', '#FF0000', 'Protestant'],
-        'sunni': ['sunni', '#00FF00', 'Sunni Islam'],
-        'redo': ['redo', '#0000FF', 'Redo Religion']
+        protestant: ['protestant', '#FF0000', 'Protestant'],
+        sunni: ['sunni', '#00FF00', 'Sunni Islam'],
+        redo: ['redo', '#0000FF', 'Redo Religion']
       }
-    })
-    await religionMetadata.save()
+    });
+    await religionMetadata.save();
 
-    console.log('📋 Test data populated')
-  })
+    console.log('📋 Test data populated');
+  });
 
   const validUserCredentials = {
     email: 'test@test.de',
     password: 'password123'
-  }
+  };
 
   const area = {
     _id: '1887',
@@ -139,7 +141,7 @@ describe('## Areas APIs', () => {
         1000
       ]
     }
-  }
+  };
 
   const updateArea = {
     _id: '1001',
@@ -160,9 +162,9 @@ describe('## Areas APIs', () => {
         15240
       ]
     }
-  }
+  };
 
-  let jwtToken
+  let jwtToken;
 
   describe('# GET /v1/area', () => {
     // Skip JWT token test for now - auth system needs fixing
@@ -172,12 +174,12 @@ describe('## Areas APIs', () => {
         .send(validUserCredentials)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body).to.have.property('token')
-          jwtToken = `Bearer ${res.body.token}`
-          done()
+          expect(res.body).to.have.property('token');
+          jwtToken = `Bearer ${res.body.token}`;
+          done();
         })
-        .catch(done)
-    })
+        .catch(done);
+    });
 
     describe('# POST /v1/areas', () => {
       it('should create a new area', (done) => {
@@ -187,24 +189,24 @@ describe('## Areas APIs', () => {
           .send(area)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body.id).to.equal(area.id)
-            expect(res.body.year).to.equal(area.year)
-            done()
+            expect(res.body.id).to.equal(area.id);
+            expect(res.body.year).to.equal(area.year);
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should fail to post areas because of missing token', (done) => {
         request(app)
           .post('/v1/areas')
           .expect(httpStatus.UNAUTHORIZED)
           .then((res) => {
-            expect(res.body.message).to.equal('Unauthorized')
-            done()
+            expect(res.body.message).to.equal('Unauthorized');
+            done();
           })
-          .catch(done)
-      })
-    })
+          .catch(done);
+      });
+    });
 
     describe('# Get /v1/areas', () => {
       it('should get array of areas', (done) => {
@@ -213,54 +215,54 @@ describe('## Areas APIs', () => {
           .set('Authorization', jwtToken)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body).to.be.an('array')
-            expect(res.body[0]).to.have.property('year')
-            expect(res.body[0]).to.have.property('data')
-            done()
+            expect(res.body).to.be.an('array');
+            expect(res.body[0]).to.have.property('year');
+            expect(res.body[0]).to.have.property('data');
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should get unauthorized when no token is send ', (done) => {
         request(app)
           .get('/v1/areas')
           .expect(httpStatus.UNAUTHORIZED)
           .then((res) => {
-            expect(res.body.message).to.equal('Unauthorized')
-            done()
+            expect(res.body.message).to.equal('Unauthorized');
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should aggregateProvinces', (done) => {
         request(app)
           .get('/v1/areas/aggregateProvinces')
           .expect(httpStatus.OK)
           .then((res) => {
-            done()
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should fail to aggreagteDiminsion as nothing is specified', (done) => {
         request(app)
           .get('/v1/areas/aggregateDimension')
           .expect(httpStatus.BAD_REQUEST)
           .then((res) => {
-            done()
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should  aggreagteDiminsion', (done) => {
         request(app)
           .get('/v1/areas/aggregateDimension?dimension=religion')
           .expect(httpStatus.OK)
           .then((res) => {
-            done()
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
 
       it('should get specifc area', (done) => {
@@ -268,13 +270,13 @@ describe('## Areas APIs', () => {
           .get('/v1/areas/1001')
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body).to.be.an('object')
-            expect(res.body.Sogn).to.be.an('array')
-            done()
+            expect(res.body).to.be.an('object');
+            expect(res.body.Sogn).to.be.an('array');
+            done();
           })
-          .catch(done)
-      })
-    })
+          .catch(done);
+      });
+    });
 
     describe('# Put /v1/areas', () => {
       it('should fail to put area because of wrong token', (done) => {
@@ -283,14 +285,14 @@ describe('## Areas APIs', () => {
           .set('Authorization', 'Bearer inValidToken')
           .expect(httpStatus.UNAUTHORIZED)
           .then((res) => {
-            expect(res.body.message).to.equal('Unauthorized')
-            done()
+            expect(res.body.message).to.equal('Unauthorized');
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should update a area', (done) => {
-        updateArea.year = 1987
+        updateArea.year = 1987;
 
         request(app)
           .put(`/v1/areas/${updateArea._id}`)
@@ -298,13 +300,13 @@ describe('## Areas APIs', () => {
           .send(updateArea)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal(updateArea._id)
-            expect(res.body.year).to.equal(1987)
-            done()
+            expect(res.body._id).to.equal(updateArea._id);
+            expect(res.body.year).to.equal(1987);
+            done();
           })
-          .catch(done)
-      })
-    })
+          .catch(done);
+      });
+    });
 
     describe('# delete /v1/areas', () => {
       it('should fail to delete area because of wrong token', (done) => {
@@ -313,11 +315,11 @@ describe('## Areas APIs', () => {
           .set('Authorization', 'Bearer inValidToken')
           .expect(httpStatus.UNAUTHORIZED)
           .then((res) => {
-            expect(res.body.message).to.equal('Unauthorized')
-            done()
+            expect(res.body.message).to.equal('Unauthorized');
+            done();
           })
-          .catch(done)
-      })
+          .catch(done);
+      });
 
       it('should delete a area', (done) => {
         request(app)
@@ -325,12 +327,12 @@ describe('## Areas APIs', () => {
           .set('Authorization', jwtToken)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal('1000')
-            expect(res.body.year).to.equal(1000)
-            done()
+            expect(res.body._id).to.equal('1000');
+            expect(res.body.year).to.equal(1000);
+            done();
           })
-          .catch(done)
-      })
-    })
-  })
-})
+          .catch(done);
+      });
+    });
+  });
+});

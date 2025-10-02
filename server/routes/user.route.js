@@ -1,12 +1,13 @@
-import express from 'express'
-import { validate } from '../helpers/validation.js'
-import { expressjwt as expressJwt } from 'express-jwt'
-import paramValidation from '../../config/param-validation.js'
-import userCtrl from '../controllers/user.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import { validate } from '../helpers/validation.js';
+import paramValidation from '../../config/param-validation.js';
+import userCtrl from '../controllers/user.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
 //   /** GET /v1/users - Get list of users */
@@ -18,19 +19,19 @@ router.route('/')
   /** POST /v1/users - Create new user */
   .post(
     validate(paramValidation.createUser),
-    userCtrl.create)
+    userCtrl.create);
 
 router.route('/sustainers')
 /** GET /v1/users - Get list of users */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    userCtrl.list)
+    userCtrl.list);
 
 router.route('/highscore')
 /** GET /v1/users - Get list of users */
   .get(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    userCtrl.list)
+    userCtrl.list);
 
 router.route('/:userId')
   /** GET /v1/users/:userId - Get user */
@@ -50,7 +51,7 @@ router.route('/:userId')
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeOrOwnership(5),
-    userCtrl.remove)
+    userCtrl.remove);
 
 
 router.route('/:userId/subscription/:subscriptionId/:doCancel')
@@ -58,9 +59,9 @@ router.route('/:userId/subscription/:subscriptionId/:doCancel')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilegeOrOwnership(5),
     // validate(paramValidation.updateUser),
-    userCtrl.updateSubscription)
+    userCtrl.updateSubscription);
 
 /** Load user when API with userId route parameter is hit */
-router.param('userId', userCtrl.load)
+router.param('userId', userCtrl.load);
 
-export default router
+export default router;

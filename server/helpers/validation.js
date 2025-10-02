@@ -2,6 +2,7 @@
  * Simple validation middleware compatible with modern Joi
  */
 import httpStatus from 'http-status';
+
 import APIError from './APIError.js';
 
 /**
@@ -12,19 +13,19 @@ import APIError from './APIError.js';
 export function validate(schema) {
   return (req, res, next) => {
     const toValidate = {};
-    
+
     if (schema.body) {
       toValidate.body = req.body;
     }
-    
+
     if (schema.params) {
       toValidate.params = req.params;
     }
-    
+
     if (schema.query) {
       toValidate.query = req.query;
     }
-    
+
     // Validate each part
     for (const [key, value] of Object.entries(toValidate)) {
       if (schema[key]) {
@@ -35,7 +36,7 @@ export function validate(schema) {
         }
       }
     }
-    
+
     next();
   };
 }

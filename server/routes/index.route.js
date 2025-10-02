@@ -1,4 +1,8 @@
 import express from 'express';
+
+import forumRoutes from '../boardComponent/entities/forum/api.js';
+import versionCtrl from '../controllers/version.controller.js';
+
 import areaRoutes from './area.route.js';
 import authRoutes from './auth.route.js';
 import collectionRoutes from './collection.route.js';
@@ -12,58 +16,57 @@ import metadataRoutes from './metadata.route.js';
 import statisticsRoutes from './statistics.route.js';
 import revisionRoutes from './revision.route.js';
 // import versionRoutes from './version.router.js'; // Disabled for Lambda - uses app-root-path
-import forumRoutes from '../boardComponent/entities/forum/api.js';
 
-const router = express.Router() // eslint-disable-line new-cap
+// mount version routes at /version - Re-enabled for Lambda with compatible controller
+
+import versionRoutes from './version.router.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 /** GET /health - Check service health */
 router.get('/health', (req, res) =>
   res.send('Health OK')
-)
+);
 
 // mount auth routes at /auth
-router.use('/auth', authRoutes)
+router.use('/auth', authRoutes);
 
 // mount user routes at /areas
-router.use('/areas', areaRoutes)
+router.use('/areas', areaRoutes);
 
 // mount email send routes at /contact
-router.use('/contact', contactRoutes)
+router.use('/contact', contactRoutes);
 
 // mount user routes at /collections
-router.use('/collections', collectionRoutes)
+router.use('/collections', collectionRoutes);
 
 // mount user routes at /flags
-router.use('/flags', flagRoutes)
+router.use('/flags', flagRoutes);
 
 // mount user routes at /game
-router.use('/game', gameRoutes)
+router.use('/game', gameRoutes);
 
 // mount user routes at /users
-router.use('/users', userRoutes)
+router.use('/users', userRoutes);
 
 
 // mount user routes at /markers
-router.use('/markers', markerRoutes)
+router.use('/markers', markerRoutes);
 
 // mount user routes at /metadata
-router.use('/metadata', metadataRoutes)
+router.use('/metadata', metadataRoutes);
 
 // mount user routes at /revisions
-router.use('/revisions', revisionRoutes)
-
-// mount version routes at /version - Re-enabled for Lambda with compatible controller
-import versionCtrl from '../controllers/version.controller.js';
-router.get('/welcome', versionCtrl.getPlusUser)
-import versionRoutes from './version.router.js';
-router.use('/version', versionRoutes)
+router.use('/revisions', revisionRoutes);
+router.get('/welcome', versionCtrl.getPlusUser);
+router.use('/version', versionRoutes);
 
 // Third Party ReForum App
 // mount forum routes at /board/forum
-router.use('/board/forum', forumRoutes)
+router.use('/board/forum', forumRoutes);
 
 // router.use('/image', staticRoutes) // Disabled for Lambda - requires puppeteer
 
-router.use('/statistics', statisticsRoutes)
+router.use('/statistics', statisticsRoutes);
 
-export default router
+export default router;

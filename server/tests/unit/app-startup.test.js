@@ -64,7 +64,7 @@ describe('## Application Startup Tests', () => {
 
   describe('# Model Loading', () => {
     const models = ['user.model.js', 'area.model.js', 'marker.model.js', 'metadata.model.js'];
-    
+
     models.forEach(modelFile => {
       it(`should load ${modelFile} without errors`, async () => {
         try {
@@ -80,12 +80,12 @@ describe('## Application Startup Tests', () => {
   describe('# Controller Loading', () => {
     const controllers = [
       'user.controller.js',
-      'area.controller.js', 
+      'area.controller.js',
       'marker.controller.js',
       'metadata.controller.js',
       'auth.controller.js'
     ];
-    
+
     controllers.forEach(controllerFile => {
       it(`should load ${controllerFile} without errors`, async () => {
         try {
@@ -102,12 +102,12 @@ describe('## Application Startup Tests', () => {
     const routes = [
       'user.route.js',
       'area.route.js',
-      'marker.route.js', 
+      'marker.route.js',
       'metadata.route.js',
       'auth.route.js',
       'version.router.js'
     ];
-    
+
     routes.forEach(routeFile => {
       it(`should load ${routeFile} without errors`, async () => {
         try {
@@ -159,7 +159,7 @@ describe('## Application Startup Tests', () => {
       'update-app-config.js',
       'orchestrate-migration.js'
     ];
-    
+
     migrationScripts.forEach(scriptFile => {
       it(`should load migration script ${scriptFile} without errors`, async () => {
         try {

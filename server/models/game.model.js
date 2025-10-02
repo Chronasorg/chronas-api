@@ -1,8 +1,9 @@
-import Promise from 'bluebird'
-import mongoose from 'mongoose'
-import httpStatus from 'http-status'
-import bcrypt from 'bcryptjs'
-import APIError from '../helpers/APIError.js'
+import Promise from 'bluebird';
+import mongoose from 'mongoose';
+import httpStatus from 'http-status';
+import bcrypt from 'bcryptjs';
+
+import APIError from '../helpers/APIError.js';
 
 /**
  * Game Schema
@@ -16,7 +17,7 @@ const GameSchema = new mongoose.Schema({
   //   required: true
   // },
   name: {
-    type: String,
+    type: String
   },
   gold: {
     type: Number,
@@ -38,7 +39,7 @@ const GameSchema = new mongoose.Schema({
     default: 1,
     required: true
   }
-}, { versionKey: false })
+}, { versionKey: false });
 
 /**
  * Add your
@@ -51,7 +52,7 @@ const GameSchema = new mongoose.Schema({
  * Methods
  */
 GameSchema.method({
-})
+});
 
 /**
  * Statics
@@ -64,32 +65,32 @@ GameSchema.statics = {
    * @returns {Promise<Game[]>}
    */
   list({ start, limit, sort, order, filter } = {}) {
-    const findObject = filter ? saveJSONparse(filter) : {}
-    const sortObject = {}
-    sortObject[sort] = order.toLowerCase()
+    const findObject = filter ? saveJSONparse(filter) : {};
+    const sortObject = {};
+    sortObject[sort] = order.toLowerCase();
 
     if (Object.prototype.hasOwnProperty.call(findObject, 'q')) {
-      findObject.gamename = new RegExp(findObject.q, 'i')
-      delete findObject.q
+      findObject.gamename = new RegExp(findObject.q, 'i');
+      delete findObject.q;
     }
     return this.find(findObject)
       .sort(sortObject)
       .skip(+start)
       .limit(+limit)
       .lean()
-      .exec()
+      .exec();
   }
-}
+};
 
 function saveJSONparse(str) {
   try {
-    return JSON.parse(str)
+    return JSON.parse(str);
   } catch (e) {
-    return {}
+    return {};
   }
 }
 
 /**
  * @typedef Game
  */
-export default mongoose.model('Game', GameSchema)
+export default mongoose.model('Game', GameSchema);

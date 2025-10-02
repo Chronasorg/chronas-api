@@ -1,9 +1,10 @@
-import express from 'express'
-import staticCtrl from '../controllers/static.controller.js'
+import express from 'express';
 
-const router = express.Router() // eslint-disable-line new-cap
+import staticCtrl from '../controllers/static.controller.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/:year')
-  .get(staticCtrl.get)
+  .get(staticCtrl.get);
 
-export default router
+export default router;

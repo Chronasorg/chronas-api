@@ -1,13 +1,14 @@
-import express from 'express'
-import { validate } from '../helpers/validation.js'
-import { expressjwt as expressJwt } from 'express-jwt'
-import paramValidation from '../../config/param-validation.js'
-import metadataCtrl from '../controllers/metadata.controller.js'
-import revisionCtrl from '../controllers/revision.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import { validate } from '../helpers/validation.js';
+import paramValidation from '../../config/param-validation.js';
+import metadataCtrl from '../controllers/metadata.controller.js';
+import revisionCtrl from '../controllers/revision.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
   .all(metadataCtrl.defineEntity)
@@ -21,7 +22,7 @@ router.route('/')
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMetadata),
-    metadataCtrl.create)
+    metadataCtrl.create);
 
 router.route('/:metadataId')
   .all(metadataCtrl.defineEntity)
@@ -46,7 +47,7 @@ router.route('/:metadataId')
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
-    metadataCtrl.remove)
+    metadataCtrl.remove);
 
 router.route('/:metadataId/single')
   .all(metadataCtrl.defineEntity)
@@ -57,14 +58,14 @@ router.route('/:metadataId/single')
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateSingle,
     revisionCtrl.addUpdateSingleRevision
-    )
+  );
 
 router.route('/:metadataId/getLinked')
   .all(metadataCtrl.defineEntity)
   /** PUT /v1/metadata/:metadataId - Update metadata */
   .get(
     metadataCtrl.getLinked
-  )
+  );
 
 router.route('/:metadataId/addLink')
   .all(metadataCtrl.defineEntity)
@@ -74,7 +75,7 @@ router.route('/:metadataId/addLink')
     validate(paramValidation.updateLink),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(true)
-  )
+  );
 
 router.route('/:metadataId/removeLink')
   .all(metadataCtrl.defineEntity)
@@ -84,7 +85,7 @@ router.route('/:metadataId/removeLink')
     validate(paramValidation.updateLink),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateLink(false)
-  )
+  );
 
 router.route('/:metadataId/upvote')
   .all(metadataCtrl.defineEntity)
@@ -92,7 +93,7 @@ router.route('/:metadataId/upvote')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     metadataCtrl.vote(1)
-  )
+  );
 
 router.route('/:metadataId/downvote')
   .all(metadataCtrl.defineEntity)
@@ -100,8 +101,8 @@ router.route('/:metadataId/downvote')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     metadataCtrl.vote(-1)
-  )
+  );
 /** Load metadata when API with metadataId route parameter is hit */
-router.param('metadataId', metadataCtrl.load)
+router.param('metadataId', metadataCtrl.load);
 
-export default router
+export default router;

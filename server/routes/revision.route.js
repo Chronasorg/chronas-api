@@ -1,25 +1,26 @@
-import express from 'express'
-import { validate } from '../helpers/validation.js'
-import { expressjwt as expressJwt } from 'express-jwt'
-import paramValidation from '../../config/param-validation.js'
-import revisionCtrl from '../controllers/revision.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import { validate } from '../helpers/validation.js';
+import paramValidation from '../../config/param-validation.js';
+import revisionCtrl from '../controllers/revision.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/revisions - Get list of revisions */
   .get(
-   checkPrivilege.checkPrivilege(3),
+    checkPrivilege.checkPrivilege(3),
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    revisionCtrl.list)
+    revisionCtrl.list);
 
-  // /** POST /v1/revisions - Create new revision */
-  // .post(
-  //   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-  //   // validate(paramValidation.createMarker),
-  //   revisionCtrl.create)
+// /** POST /v1/revisions - Create new revision */
+// .post(
+//   expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
+//   // validate(paramValidation.createMarker),
+//   revisionCtrl.create)
 
 router.route('/:revisionId')
   /** GET /v1/revisions/:revisionId - Get revision */
@@ -38,10 +39,10 @@ router.route('/:revisionId')
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(5),
-    revisionCtrl.remove)
+    revisionCtrl.remove);
 
 /** Load revision when API with revisionId route parameter is hit */
-router.param('revisionId', revisionCtrl.load)
+router.param('revisionId', revisionCtrl.load);
 // router.param('revisionId', revisionCtrl.loadEntity)
 
-export default router
+export default router;

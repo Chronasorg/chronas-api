@@ -1,17 +1,20 @@
-import Marker from '../../../models/marker.model.js'
+import { each as asyncEach } from 'async';
+import mongoose from 'mongoose';
 
-import { each as asyncEach } from 'async'
+import Marker from '../../../models/marker.model.js';
+
 
 // models
-import Forum from './model.js'
-import Discussion from '../discussion/model.js'
+import Discussion from '../discussion/model.js';
+
 
 // controllers
-import opinionController from '../opinion/controller.js'
-const { getAllOpinions } = opinionController
-import userController from '../user/controller.js'
-const { getUser } = userController
-import mongoose from 'mongoose'
+import opinionController from '../opinion/controller.js';
+import userController from '../user/controller.js';
+
+import Forum from './model.js';
+const { getAllOpinions } = opinionController;
+const { getUser } = userController;
 
 /**
  * get all forums list
@@ -25,7 +28,7 @@ const getAllForums = async () => {
     console.log(error);
     throw error;
   }
-}
+};
 
 /**
  * get discussions of a forum
@@ -41,7 +44,7 @@ const getDiscussions = async (forum_slug, pinned, sorting_method = 'date', qEnti
     if (sorting_method === 'popularity') sortWith.favorites = -1;
 
     const forumFound = await Forum.findOne({ forum_slug }).exec();
-    
+
     const searchObj = { pinned };
     if (qEntity) {
       searchObj.qa_id = qEntity;
@@ -86,9 +89,9 @@ const getDiscussions = async (forum_slug, pinned, sorting_method = 'date', qEnti
     console.error('Error in getDiscussions:', error);
     throw error;
   }
-}
+};
 
 export default {
   getAllForums,
-  getDiscussions,
-}
+  getDiscussions
+};

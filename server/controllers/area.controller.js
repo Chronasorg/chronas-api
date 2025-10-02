@@ -1,17 +1,18 @@
-import { pick, keys, isEqual, extendOwn } from 'underscore'
-import Area from '../models/area.model.js'
-import Metadata from '../models/metadata.model.js'
-import metadataCtrl from '../controllers/metadata.controller.js'
-import { config } from "../../config/config.js";
-import httpStatus from "http-status";
-import Promise from "bluebird";
+import { pick, keys, isEqual, extendOwn } from 'underscore';
+import httpStatus from 'http-status';
+import Promise from 'bluebird';
+
+import Area from '../models/area.model.js';
+import Metadata from '../models/metadata.model.js';
+import metadataCtrl from '../controllers/metadata.controller.js';
+import { config } from '../../config/config.js';
 
 const dimAccessor = {
   ruler: 0,
   culture: 1,
   religion: 2,
   religionGeneral: 2
-}
+};
 
 /**
  * Load area and append to req.
@@ -37,9 +38,9 @@ function get(req, res) {
   // For backward compatibility, return the data property if it exists
   // Otherwise return the full entity
   if (req.entity.data && Object.keys(req.entity.data).length > 0) {
-    return res.json(req.entity.data)
+    return res.json(req.entity.data);
   }
-  return res.json(req.entity)
+  return res.json(req.entity);
 }
 
 /**
@@ -63,28 +64,28 @@ async function create(req, res, next) {
   }
 }
 
-function aggregateProvinces(req, res, next, resolve=false) {
-  const province = req.query.province || false
+function aggregateProvinces(req, res, next, resolve = false) {
+  const province = req.query.province || false;
   // TODO: allow for aggregation of single provinces upon change
 
   Metadata.findById('religion')
     .lean()
     .exec()
     .then((religion) => {
-      const religionMap = religion.data
-      const aggregatedData = {}
-      const prevData = {}
+      const religionMap = religion.data;
+      const aggregatedData = {};
+      const prevData = {};
 
       const areaStream = Area
         .find()
         .sort({ year: 1 })
-        .cursor()
+        .cursor();
 
-      let setUp = false
+      let setUp = false;
 
       areaStream.on('data', (area) => {
-        const currData = area.data
-        const currYear = area.year
+        const currData = area.data;
+        const currYear = area.year;
 
         if (!setUp) {
           Object.keys(currData).forEach((currProv) => {
@@ -94,8 +95,8 @@ function aggregateProvinces(req, res, next, resolve=false) {
               religionGeneral: [],
               culture: [],
               capital: [],
-              population: [],
-            }
+              population: []
+            };
             prevData[currProv] = {
               ruler: '',
               religion: '',
@@ -103,543 +104,540 @@ function aggregateProvinces(req, res, next, resolve=false) {
               culture: '',
               capital: '',
               population: ''
-            }
-          })
-          setUp = true
+            };
+          });
+          setUp = true;
         }
 
         Object.keys(currData).forEach((currProv) => {
-          if (typeof aggregatedData[currProv] === 'undefined') return
-          const currProvData = currData[currProv]
+          if (typeof aggregatedData[currProv] === 'undefined') return;
+          const currProvData = currData[currProv];
           if (typeof currProvData === 'undefined' || currProvData === null) return;
           if (currProvData[0] !== prevData[currProv].ruler) {
-            aggregatedData[currProv].ruler.push({ [currYear]: currProvData[0] })
-            prevData[currProv].ruler = currProvData[0]
+            aggregatedData[currProv].ruler.push({ [currYear]: currProvData[0] });
+            prevData[currProv].ruler = currProvData[0];
           }
           if (currProvData[1] !== prevData[currProv].culture) {
-            aggregatedData[currProv].culture.push({ [currYear]: currProvData[1] })
-            prevData[currProv].culture = currProvData[1]
+            aggregatedData[currProv].culture.push({ [currYear]: currProvData[1] });
+            prevData[currProv].culture = currProvData[1];
           }
           if (currProvData[2] !== prevData[currProv].religion) {
-            aggregatedData[currProv].religion.push({ [currYear]: currProvData[2] })
-            prevData[currProv].religion = currProvData[2]
+            aggregatedData[currProv].religion.push({ [currYear]: currProvData[2] });
+            prevData[currProv].religion = currProvData[2];
             if (religionMap[currProvData[2]] && prevData[currProv].religionGeneral !== religionMap[currProvData[2]][3]) {
-              aggregatedData[currProv].religionGeneral.push({ [currYear]: religionMap[currProvData[2]][3] })
-              prevData[currProv].religionGeneral = religionMap[currProvData[2]][3]
+              aggregatedData[currProv].religionGeneral.push({ [currYear]: religionMap[currProvData[2]][3] });
+              prevData[currProv].religionGeneral = religionMap[currProvData[2]][3];
             }
           }
           if (currProvData[3] !== prevData[currProv].capital) {
-            aggregatedData[currProv].capital.push({ [currYear]: currProvData[3] })
-            prevData[currProv].capital = currProvData[3]
+            aggregatedData[currProv].capital.push({ [currYear]: currProvData[3] });
+            prevData[currProv].capital = currProvData[3];
           }
           if (currYear % 100 === 0) {
-            aggregatedData[currProv].population.push({ [currYear]: currProvData[4] })
+            aggregatedData[currProv].population.push({ [currYear]: currProvData[4] });
           }
-        })
+        });
       }).on('error', (e) => {
-        res.status(500).send(e)
+        res.status(500).send(e);
       }).on('close', () => {
         // the stream is closed
 
         Object.keys(aggregatedData).forEach((currProv) => {
-          if (province && currProv.toLowerCase() !== province.toLowerCase()) return
+          if (province && currProv.toLowerCase() !== province.toLowerCase()) return;
 
-          const metadataId = 'ap_' + currProv.toLowerCase()
+          const metadataId = `ap_${currProv.toLowerCase()}`;
           Metadata.findById(metadataId)
             .exec()
             .then((foundMetadataEntity) => {
               if (foundMetadataEntity) {
                 // already exists -> update
-                foundMetadataEntity.data = aggregatedData[currProv]
-                foundMetadataEntity.markModified('data')
-                foundMetadataEntity.save()
+                foundMetadataEntity.data = aggregatedData[currProv];
+                foundMetadataEntity.markModified('data');
+                foundMetadataEntity.save();
               } else {
                 // does not exist -> create
                 const metadata = new Metadata({
                   _id: metadataId,
                   data: aggregatedData[currProv],
                   type: 'ap'
-                })
+                });
 
                 metadata.save({ checkKeys: false })
-                  .then(() => Promise.resolve())
+                  .then(() => Promise.resolve());
               }
             })
-            .catch(e => res.status(500).send(e))
-        })
+            .catch(e => res.status(500).send(e));
+        });
 
-        if(resolve) return resolve()
-        res.send('OK')
-      })
+        if (resolve) return resolve();
+        res.send('OK');
+      });
     })
-    .catch(e => res.status(500).send(e))
+    .catch(e => res.status(500).send(e));
 }
 
 function aggregateMetaCoo(req, res, next, resolve = false) {
-  Metadata.get("links", req.method)
+  Metadata.get('links', req.method)
     .then((linkObj) => {
-      req.entity = linkObj // eslint-disable-line no-param-reassign
+      req.entity = linkObj; // eslint-disable-line no-param-reassign
 
-      const { start = 0, end = 1, type = "i" } = req.query
-    const metadataStream = Metadata
-      .find({
-        coo: { $exists: false },
-        type: type,
+      const { start = 0, end = 1, type = 'i' } = req.query;
+      const metadataStream = Metadata
+        .find({
+          coo: { $exists: false },
+          type
         // $and: [
         //   { 'data.poster':  { $exists: true } },
         //   { 'data.poster':  {$ne : false} },
         // ]
-      })
-      .skip(+start)
-      .limit(end - start)
+        })
+        .skip(+start)
+        .limit(end - start)
       // .limit(100)
-      .cursor()
+        .cursor();
       metadataStream.on('data', (_metadata) => {
         // const allMetadata = dimensionMetaRes.data
-        req.query.source = '1:' + _metadata._id
+        req.query.source = `1:${_metadata._id}`;
 
         // const linkedItems = req.entity.data[ '1:' + _metadata._id] || false
 
         new Promise((resolve) => {
-          metadataCtrl.getLinked(req, res, next, resolve)
+          metadataCtrl.getLinked(req, res, next, resolve);
         }).then((linkedItems) => {
-          const elCoo = linkedItems["map"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2) || linkedItems["media"].find(el => (((el || {}).geometry || {}).coordinates || []).length == 2)
+          const elCoo = linkedItems.map.find(el => (((el || {}).geometry || {}).coordinates || []).length == 2) || linkedItems.media.find(el => (((el || {}).geometry || {}).coordinates || []).length == 2);
           if (elCoo) {
-            _metadata.coo = elCoo.geometry.coordinates
-            _metadata.markModified('coo')
-            _metadata.save()
+            _metadata.coo = elCoo.geometry.coordinates;
+            _metadata.markModified('coo');
+            _metadata.save();
           }
-        })
+        });
       })
-      .on('error', (e) => {
-        res.status(500).send(e)
-      }).on('close', () => {
+        .on('error', (e) => {
+          res.status(500).send(e);
+        }).on('close', () => {
         // the stream is closed
 
-        // if(resolve) return resolve()
-        res.send((end - start) + 'updated')
-      })
-
-    })
+          // if(resolve) return resolve()
+          res.send(`${end - start}updated`);
+        });
+    });
 }
 
-function aggregateDimension(req, res, next, resolve=false) {
-  const dimension = req.query.dimension || false
-  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.')
+function aggregateDimension(req, res, next, resolve = false) {
+  const dimension = req.query.dimension || false;
+  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.');
 
   Metadata.findById((dimension === 'religionGeneral') ? 'religion' : dimension)
     .lean()
     .exec()
     .then((dimensionMetaRes) => {
-      const dimensionMeta = dimensionMetaRes.data
+      const dimensionMeta = dimensionMetaRes.data;
       const dimEntityList = (dimension === 'religionGeneral')
         ? Object.values(dimensionMeta).map(entity => entity[3]).filter((el, i, a) => i === a.indexOf(el))
-        : Object.keys(dimensionMeta)
+        : Object.keys(dimensionMeta);
 
-      const aggregatedData = {}
-      const prevData = {}
-      const dimIndex = dimAccessor[dimension]
+      const aggregatedData = {};
+      const prevData = {};
+      const dimIndex = dimAccessor[dimension];
 
       const areaStream = Area
         .find()
         .sort({ year: 1 })
-        .cursor()
+        .cursor();
 
-      let setUp = false
+      let setUp = false;
 
       areaStream.on('data', (area) => {
-        const currData = area.data
-        const currYear = area.year
+        const currData = area.data;
+        const currYear = area.year;
 
-        let popTotal = 0
+        let popTotal = 0;
 
         if (!setUp) {
           dimEntityList.forEach((currDimEntity) => {
-            aggregatedData[currDimEntity] = []
+            aggregatedData[currDimEntity] = [];
             prevData[currDimEntity] = {
               provCount: 0,
               popCount: 0,
               popShare: 0
-            }
-          })
-          setUp = true
+            };
+          });
+          setUp = true;
         }
 
-        const currYearAggregates = {}
+        const currYearAggregates = {};
         dimEntityList.forEach((currDimEntity) => {
           currYearAggregates[currDimEntity] = {
             provCount: 0,
             popCount: 0
-          }
-        })
+          };
+        });
 
         Object.values(currData).forEach((currProvData) => {
-          if (typeof currProvData === "undefined" || currProvData === null) return
-          const currProvDim = (dimension === 'religionGeneral') ? (dimensionMeta[currProvData[dimIndex]] || {})[3] : currProvData[dimIndex]
-          const currProvPop = (isNaN(currProvData[4]) ? 0 : currProvData[4])
+          if (typeof currProvData === 'undefined' || currProvData === null) return;
+          const currProvDim = (dimension === 'religionGeneral') ? (dimensionMeta[currProvData[dimIndex]] || {})[3] : currProvData[dimIndex];
+          const currProvPop = (isNaN(currProvData[4]) ? 0 : currProvData[4]);
 
-          popTotal += +currProvPop
+          popTotal += +currProvPop;
 
           if (currYearAggregates[currProvDim]) {
             currYearAggregates[currProvDim] = {
               provCount: currYearAggregates[currProvDim].provCount + 1,
               popCount: currYearAggregates[currProvDim].popCount + currProvPop
-            }
+            };
           }
-        })
+        });
 
         Object.keys(currYearAggregates).forEach((currDimEntity) => {
-          if (typeof aggregatedData[currDimEntity] === 'undefined') return
-          const currValue = currYearAggregates[currDimEntity]
-          const currpopShare = currValue.popCount / popTotal * 100
-          const prevDataValue = prevData[currDimEntity]
+          if (typeof aggregatedData[currDimEntity] === 'undefined') return;
+          const currValue = currYearAggregates[currDimEntity];
+          const currpopShare = currValue.popCount / popTotal * 100;
+          const prevDataValue = prevData[currDimEntity];
 
           if (prevDataValue.provCount !== currValue.provCount) {
             // add provCount entry
-            if (prevDataValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes((currYear-1)+'')) {
-              aggregatedData[currDimEntity].push({ [currYear-1]: [0, 0, 0] })
+            if (prevDataValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes(`${currYear - 1}`)) {
+              aggregatedData[currDimEntity].push({ [currYear - 1]: [0, 0, 0] });
             }
-            if (currValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes((currYear-1)+'')) {
-              aggregatedData[currDimEntity].push({ [currYear-1]: [prevDataValue.provCount, prevDataValue.popCount, prevDataValue.popShare] })
+            if (currValue.provCount === 0 && !aggregatedData[currDimEntity].map(el => Object.keys(el)[0]).includes(`${currYear - 1}`)) {
+              aggregatedData[currDimEntity].push({ [currYear - 1]: [prevDataValue.provCount, prevDataValue.popCount, prevDataValue.popShare] });
             }
-            prevData[currDimEntity].provCount = currValue.provCount
-            prevData[currDimEntity].popShare = currpopShare
-            prevData[currDimEntity].popCount = currValue.popCount
+            prevData[currDimEntity].provCount = currValue.provCount;
+            prevData[currDimEntity].popShare = currpopShare;
+            prevData[currDimEntity].popCount = currValue.popCount;
 
-            aggregatedData[currDimEntity].push({ [currYear]: [currValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] })
+            aggregatedData[currDimEntity].push({ [currYear]: [currValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] });
           } else if (+currYear === 2000 && prevDataValue.provCount !== 0) {
-            aggregatedData[currDimEntity].push({ [currYear]: [prevDataValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] })
+            aggregatedData[currDimEntity].push({ [currYear]: [prevDataValue.provCount, currValue.popCount, Math.round(currpopShare * 100) / 100] });
           }
-        })
+        });
         // popTotal
       }).on('error', (e) => {
-        res.status(500).send(e)
+        res.status(500).send(e);
       }).on('close', () => {
         // the stream is closed
 
         Object.keys(aggregatedData).forEach((currDimEntity) => {
-
-          const metadataId = 'a_' + dimension + '_' + currDimEntity
+          const metadataId = `a_${dimension}_${currDimEntity}`;
           Metadata.findById(metadataId)
             .exec()
             .then((foundMetadataEntity) => {
               if (foundMetadataEntity) {
                 // already exists -> update
-                foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] }
-                foundMetadataEntity.markModified('data')
-                return foundMetadataEntity.save()
+                foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] };
+                foundMetadataEntity.markModified('data');
+                return foundMetadataEntity.save();
               } else {
                 // does not exist -> create
                 const metadata = new Metadata({
                   _id: metadataId,
-                  data: {  influence: aggregatedData[currDimEntity] },
-                  type: 'a_' + dimension
-                })
+                  data: { influence: aggregatedData[currDimEntity] },
+                  type: `a_${dimension}`
+                });
 
                 return metadata.save({ checkKeys: false })
-                  .then(() => Promise.resolve())
+                  .then(() => Promise.resolve());
               }
             })
-            .catch(e => res.status(500).send(e))
-        })
+            .catch(e => res.status(500).send(e));
+        });
 
-        if(resolve) return resolve()
-        res.send('OK')
-      })
+        if (resolve) return resolve();
+        res.send('OK');
+      });
     })
-    .catch(e => res.status(500).send(e))
+    .catch(e => res.status(500).send(e));
 }
 
-var s = 0
+let s = 0;
 function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
   return new Promise((resolve) => {
-    s++
+    s++;
     req.body = {
       linkedItemType1: el.properties.ct,
-      linkedItemType2: "metadata", // because replace only affects area entities
+      linkedItemType2: 'metadata', // because replace only affects area entities
       linkedItemKey1: el.properties.id || el.properties.w,
       linkedItemKey2: replaceWithId,
       type1: eORa, // is for map
-      type2: eORa, // is for map
-    }
+      type2: eORa // is for map
+    };
     new Promise((resolve, reject) => {
-      metadataCtrl.updateLinkAtom(req, res, next, true, resolve)
+      metadataCtrl.updateLinkAtom(req, res, next, true, resolve);
     }).then(() => {
       req.body = {
         linkedItemType1: el.properties.ct,
-        linkedItemType2: "metadata", // because replace only affects area entities
+        linkedItemType2: 'metadata', // because replace only affects area entities
         linkedItemKey1: el.properties.id || el.properties.w,
-        linkedItemKey2: toReplaceLinkId,
-      }
+        linkedItemKey2: toReplaceLinkId
+      };
 
       new Promise((resolve, reject) => {
-        metadataCtrl.updateLinkAtom(req, res, next, false, resolve)
+        metadataCtrl.updateLinkAtom(req, res, next, false, resolve);
       })
         .then(() => {
-          return resolve()
+          return resolve();
         })
-        .catch(() => resolve())
+        .catch(() => resolve());
     })
-      .catch(() => resolve())
-  })
+      .catch(() => resolve());
+  });
 }
 
 function replaceAll(req, res, next) {
-  const { start, end = start, ruler, culture, religion,  replaceWith } = req.body
-  const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
+  const { start, end = start, ruler, culture, religion, replaceWith } = req.body;
+  const nextBody = []; // "SWE","swedish","redo","Stockholm",1000
 
-  nextBody[0] = ruler
-  nextBody[1] = culture
-  nextBody[2] = religion
+  nextBody[0] = ruler;
+  nextBody[1] = culture;
+  nextBody[2] = religion;
 
-  const typeId = ruler ? 0 : culture ? 1 : religion ? 2 : -1
-  const toReplace = ruler || culture || religion
+  const typeId = ruler ? 0 : culture ? 1 : religion ? 2 : -1;
+  const toReplace = ruler || culture || religion;
 
-  if (typeof replaceWith === "undefined" || typeId === -1) return res.send('OK')
-  if (typeof replaceWith !== "undefined") nextBody[typeId] = replaceWith
+  if (typeof replaceWith === 'undefined' || typeId === -1) return res.send('OK');
+  if (typeof replaceWith !== 'undefined') nextBody[typeId] = replaceWith;
 
-  const typeDim = (ruler ? 'ruler' : culture ? 'culture' : 'religion')
-  const toReplaceLinkId = 'ae|' + typeDim + '|' + toReplace
-  const replaceWithId = 'ae|' + typeDim + '|' + replaceWith
+  const typeDim = (ruler ? 'ruler' : culture ? 'culture' : 'religion');
+  const toReplaceLinkId = `ae|${typeDim}|${toReplace}`;
+  const replaceWithId = `ae|${typeDim}|${replaceWith}`;
 
-  const prevBody = {}
-  const trimmedNextBody = {}
+  const prevBody = {};
+  const trimmedNextBody = {};
 
-  const yearToUpdate = []
-  for (var i = start; i<(end+1); i++) {
-    yearToUpdate.push(i)
+  const yearToUpdate = [];
+  for (let i = start; i < (end + 1); i++) {
+    yearToUpdate.push(i);
   }
 
-  const waitForCompletion = (end - start) < 11
+  const waitForCompletion = (end - start) < 11;
   yearToUpdate.reduce(
     (p, x) => p.then(_ => new Promise((resolve) => {
-      Area.findOne({year: x})
+      Area.findOne({ year: x })
         .exec()
         .then((area) => {
-          const currYear = +area.year
-          const areaData = area.data
-          const provincesList = Object.keys(areaData)
+          const currYear = +area.year;
+          const areaData = area.data;
+          const provincesList = Object.keys(areaData);
           const provincesIncluding = provincesList.filter((el) => {
-            return areaData[el][typeId] === toReplace
-          })
+            return areaData[el][typeId] === toReplace;
+          });
 
-          if (provincesIncluding.length === 0) return resolve()
+          if (provincesIncluding.length === 0) return resolve();
 
           provincesIncluding.forEach((province) => {
             nextBody.forEach((singleValue, index) => {
               if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
-                if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
-                if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = []
-                if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
-                if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = []
+                if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {};
+                if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = [];
+                if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {};
+                if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = [];
 
-                prevBody[currYear][province][index] = area.data[province][index]
-                trimmedNextBody[currYear][province][index] = nextBody[index]
-                area.data[province][index] = nextBody[index]
-                area.markModified('data')
+                prevBody[currYear][province][index] = area.data[province][index];
+                trimmedNextBody[currYear][province][index] = nextBody[index];
+                area.data[province][index] = nextBody[index];
+                area.markModified('data');
               }
-            })
-          })
+            });
+          });
 
           if (typeof prevBody[currYear] !== 'undefined') {
             // need to update
             area.save()
               .then((ar) => {
-                resolve()
+                resolve();
               })
-              .catch(e => reject(e))
+              .catch(e => reject(e));
           } else {
-            resolve()
+            resolve();
           }
-        })
+        });
       // Promise.all(areaPromises).then(() => {
-      }))
-      // })
-      // .catch(e => next(e))
-  , Promise.resolve()
+    }))
+    // })
+    // .catch(e => next(e))
+    , Promise.resolve()
   ).then(() => {
     // Promise.all(mapItemsPromises).then(() => {.
-    Metadata.get("links", req.method)
+    Metadata.get('links', req.method)
       .then((linkObj) => {
-        req.entity = linkObj // eslint-disable-line no-param-reassign
-        req.query.source = '1:' + toReplaceLinkId
+        req.entity = linkObj; // eslint-disable-line no-param-reassign
+        req.query.source = `1:${toReplaceLinkId}`;
         new Promise((resolve) => {
-          metadataCtrl.getLinked(req, res, next, resolve)
+          metadataCtrl.getLinked(req, res, next, resolve);
         }).then((linkedItems) => {
-          const filteredMapItems = linkedItems["map"].filter(el => {
-            const itemYear = ((el || {}).properties || {}).y
-            return itemYear >= start && itemYear <= end
-          })
-          const filteredMediaItems = linkedItems["media"].filter(el => {
-            const itemYear = ((el || {}).properties || {}).y
-            return itemYear >= start && itemYear <= end
-          })
+          const filteredMapItems = linkedItems.map.filter(el => {
+            const itemYear = ((el || {}).properties || {}).y;
+            return itemYear >= start && itemYear <= end;
+          });
+          const filteredMediaItems = linkedItems.media.filter(el => {
+            const itemYear = ((el || {}).properties || {}).y;
+            return itemYear >= start && itemYear <= end;
+          });
 
           const mapItemsPromises = filteredMapItems.map(el => {
-            return [el, 'a', replaceWithId, toReplaceLinkId]
-          })
+            return [el, 'a', replaceWithId, toReplaceLinkId];
+          });
           const mediaItemsPromises = filteredMediaItems.map(el => {
-            return [el, 'e', replaceWithId, toReplaceLinkId]
-          })
+            return [el, 'e', replaceWithId, toReplaceLinkId];
+          });
           mapItemsPromises.concat(mediaItemsPromises).reduce(
-            (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3]) ),
+            (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3])),
             Promise.resolve()
           ).then(() => {
-            Metadata.find({ subtype: "ew", year: { $gt: start, $lt: end } })
+            Metadata.find({ subtype: 'ew', year: { $gt: start, $lt: end } })
               .then((warMetadatas) => {
                 warMetadatas.forEach((warMetadata) => {
-                  const attackersDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[0] || []).findIndex(el => el === toReplace)
-                  const defenderDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[1] || []).findIndex(el => el === toReplace)
+                  const attackersDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[0] || []).findIndex(el => el === toReplace);
+                  const defenderDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[1] || []).findIndex(el => el === toReplace);
 
                   if (attackersDirtyIndex !== -1) {
-                    warMetadata.data.participants[0][attackersDirtyIndex] = replaceWith
+                    warMetadata.data.participants[0][attackersDirtyIndex] = replaceWith;
                   }
                   if (defenderDirtyIndex !== -1) {
-                    warMetadata.data.participants[1][defenderDirtyIndex] = replaceWith
+                    warMetadata.data.participants[1][defenderDirtyIndex] = replaceWith;
                   }
 
                   if (attackersDirtyIndex !== -1 || defenderDirtyIndex !== -1) {
-                    warMetadata.markModified('data')
-                    warMetadata.save()
+                    warMetadata.markModified('data');
+                    warMetadata.save();
                   }
-                })
+                });
 
                 if (waitForCompletion) {
-                  return res.send('OK')
+                  return res.send('OK');
                 } else {
                   new Promise((resolve, reject) => {
-                    req.query.dimension = typeDim
-                    aggregateDimension(req, res, next, resolve)
+                    req.query.dimension = typeDim;
+                    aggregateDimension(req, res, next, resolve);
                   }).then(() => {
                     new Promise((resolve, reject) => {
-                      aggregateProvinces(req, res, next, resolve)
+                      aggregateProvinces(req, res, next, resolve);
                     }).then(() => {
-                    })
-                  })
+                    });
+                  });
                 }
-              })
+              });
             // Promise.all(mapItemsPromises).then(() => {
           }, (error) => {
-            if (waitForCompletion) return res.send('NOTOK')
-          })
-
-        })
-      })
+            if (waitForCompletion) return res.send('NOTOK');
+          });
+        });
+      });
 
     // optimize prevBody and add revision record
-    req.body.prevBody = getRanges(prevBody)
-    req.body.nextBody = getRanges(trimmedNextBody)
+    req.body.prevBody = getRanges(prevBody);
+    req.body.nextBody = getRanges(trimmedNextBody);
 
-    next()
+    next();
   }, (error) => {
-    next(error)
-  })
+    next(error);
+  });
 
-  if (!waitForCompletion) return res.send('OK')
+  if (!waitForCompletion) return res.send('OK');
 }
 
 function updateMany(req, res, next) {
-  const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body
-  const nextBody = [] // "SWE","swedish","redo","Stockholm",1000
+  const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body;
+  const nextBody = []; // "SWE","swedish","redo","Stockholm",1000
 
-  nextBody[0] = ruler
-  nextBody[1] = culture
-  nextBody[2] = religion
-  nextBody[3] = capital
-  nextBody[4] = population
+  nextBody[0] = ruler;
+  nextBody[1] = culture;
+  nextBody[2] = religion;
+  nextBody[3] = capital;
+  nextBody[4] = population;
 
-  const prevBody = {}
-  const trimmedNextBody = {}
+  const prevBody = {};
+  const trimmedNextBody = {};
 
-  const yearToUpdate = []
-  for (var i = start; i<(end+1); i++) {
-    yearToUpdate.push(i)
+  const yearToUpdate = [];
+  for (let i = start; i < (end + 1); i++) {
+    yearToUpdate.push(i);
   }
 
-  const waitForCompletion = (end - start) < 11
+  const waitForCompletion = (end - start) < 11;
   yearToUpdate.reduce(
     (p, x) => p.then(_ => new Promise((resolve) => {
-      Area.findOne({year: x})
+      Area.findOne({ year: x })
         .exec()
         .then((area) => {
-          const currYear = +area.year
-        provinces.forEach((province) => {
-          nextBody.forEach((singleValue, index) => {
-            if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
-              if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {}
-              if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = []
-              if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {}
-              if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = []
+          const currYear = +area.year;
+          provinces.forEach((province) => {
+            nextBody.forEach((singleValue, index) => {
+              if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
+                if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {};
+                if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = [];
+                if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {};
+                if (typeof trimmedNextBody[currYear][province] === 'undefined') trimmedNextBody[currYear][province] = [];
 
-              prevBody[currYear][province][index] = area.data[province][index]
-              trimmedNextBody[currYear][province][index] = nextBody[index]
-              area.data[province][index] = nextBody[index]
-              area.markModified('data')
-            }
-          })
-        })
+                prevBody[currYear][province][index] = area.data[province][index];
+                trimmedNextBody[currYear][province][index] = nextBody[index];
+                area.data[province][index] = nextBody[index];
+                area.markModified('data');
+              }
+            });
+          });
           if (typeof prevBody[currYear] !== 'undefined') {
             // need to update
             area.save()
               .then((ar) => {
-                resolve()
+                resolve();
               })
-              .catch(e => reject(e))
+              .catch(e => reject(e));
           } else {
-            resolve()
+            resolve();
           }
-        })
-          // Promise.all(areaPromises).then(() => {
-        }))
-      // })
-      // .catch(e => next(e))
-      , Promise.resolve()
-    ).then(() => {
-        // optimize prevBody and add revision record
-        req.body.prevBody = getRanges(prevBody)
-        req.body.nextBody = getRanges(trimmedNextBody)
+        });
+      // Promise.all(areaPromises).then(() => {
+    }))
+    // })
+    // .catch(e => next(e))
+    , Promise.resolve()
+  ).then(() => {
+    // optimize prevBody and add revision record
+    req.body.prevBody = getRanges(prevBody);
+    req.body.nextBody = getRanges(trimmedNextBody);
 
-        if (waitForCompletion) {
-          return next()
-        } else {
-          new Promise((resolve, reject) => {
-            req.query.dimension = typeDim
-            aggregateDimension(req, res, next, resolve)
-          }).then(() => {
-            new Promise((resolve, reject) => {
-              aggregateProvinces(req, res, next, resolve)
-            }).then(() => {
-            })
-          })
-        }
-      }, (error) => {
-        next(error)
-      })
+    if (waitForCompletion) {
+      return next();
+    } else {
+      new Promise((resolve, reject) => {
+        req.query.dimension = typeDim;
+        aggregateDimension(req, res, next, resolve);
+      }).then(() => {
+        new Promise((resolve, reject) => {
+          aggregateProvinces(req, res, next, resolve);
+        }).then(() => {
+        });
+      });
+    }
+  }, (error) => {
+    next(error);
+  });
 
-      if (!waitForCompletion) return next()
+  if (!waitForCompletion) return next();
 }
 
 function revertSingle(req, res, next, year, newBody) {
   return new Promise((resolve, reject) => {
-    const provinces = Object.keys(newBody)
+    const provinces = Object.keys(newBody);
     Area.findOne({ year })
       .exec()
       .then((area) => {
         provinces.forEach((province) => {
-          const provinceValues = newBody[province]
+          const provinceValues = newBody[province];
           provinceValues.forEach((singleValue, index) => {
             if (typeof newBody[province][index] !== 'undefined' && area.data[province][index] !== newBody[province][index]) {
-              area.data[province][index] = newBody[province][index]
-              area.markModified('data')
+              area.data[province][index] = newBody[province][index];
+              area.markModified('data');
             }
-          })
-        })
+          });
+        });
         area.save()
           .then(() => resolve())
-          .catch(e => reject(e))
+          .catch(e => reject(e));
       })
-      .catch(e => reject(e))
-  })
+      .catch(e => reject(e));
+  });
 }
 
 /**
@@ -649,14 +647,14 @@ function revertSingle(req, res, next, year, newBody) {
  * @returns {Area}
  */
 function update(req, res, next) {
-  const area = req.entity
+  const area = req.entity;
 
-  if (typeof req.body.year !== 'undefined') area.year = +req.body.year
-  if (typeof req.body.data !== 'undefined') area.data = req.body.data
+  if (typeof req.body.year !== 'undefined') area.year = +req.body.year;
+  if (typeof req.body.data !== 'undefined') area.data = req.body.data;
 
   area.save()
     .then(savedArea => res.json(savedArea))
-    .catch(e => next(e))
+    .catch(e => next(e));
 }
 
 /**
@@ -690,30 +688,30 @@ async function remove(req, res, next) {
 }
 
 function defineEntity(req, res, next) {
-  req.resource = 'areas'
-  next()
+  req.resource = 'areas';
+  next();
 }
 
 function getRanges(obj) {
-  const array = Object.keys(obj)
-  const compressedObj = {}
-  const ranges = []
+  const array = Object.keys(obj);
+  const compressedObj = {};
+  const ranges = [];
   let rstart,
-    rend
+    rend;
   for (let i = 0; i < array.length; i++) {
-    rstart = array[i]
-    rend = rstart
+    rstart = array[i];
+    rend = rstart;
     while (array[i + 1] - array[i] === 1 && isEqual(obj[array[i + 1]], obj[array[i]])) {
-      rend = array[i + 1] // increment the index if the numbers sequential
-      i++
+      rend = array[i + 1]; // increment the index if the numbers sequential
+      i++;
     }
     if (rstart === rend) {
-      compressedObj[rstart.toString()] = obj[rstart]
+      compressedObj[rstart.toString()] = obj[rstart];
     } else {
-      compressedObj[`${rstart}-${rend}`] = obj[rstart]
+      compressedObj[`${rstart}-${rend}`] = obj[rstart];
     }
   }
-  return compressedObj
+  return compressedObj;
 }
 
-export default { aggregateProvinces, aggregateDimension, aggregateMetaCoo, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity }
+export default { aggregateProvinces, aggregateDimension, aggregateMetaCoo, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity };

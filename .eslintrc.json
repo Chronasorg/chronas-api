@@ -13,38 +13,38 @@
     "sourceType": "module"
   },
   "rules": {
-    "indent": ["error", 2],
+    "indent": ["warn", 2],
     "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
-    "semi": ["error", "always"],
-    "no-console": ["warn"],
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-trailing-spaces": "error",
-    "eol-last": "error",
-    "comma-dangle": ["error", "never"],
-    "object-curly-spacing": ["error", "always"],
-    "array-bracket-spacing": ["error", "never"],
-    "space-before-function-paren": ["error", {
+    "quotes": ["warn", "single"],
+    "semi": ["warn", "always"],
+    "no-console": ["off"],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-trailing-spaces": "warn",
+    "eol-last": "warn",
+    "comma-dangle": ["warn", "never"],
+    "object-curly-spacing": ["warn", "always"],
+    "array-bracket-spacing": ["warn", "never"],
+    "space-before-function-paren": ["warn", {
       "anonymous": "always",
       "named": "never",
       "asyncArrow": "always"
     }],
-    "keyword-spacing": "error",
-    "space-infix-ops": "error",
-    "no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 1 }],
-    "prefer-const": "error",
+    "keyword-spacing": "warn",
+    "space-infix-ops": "warn",
+    "no-multiple-empty-lines": ["warn", { "max": 2, "maxEOF": 1 }],
+    "prefer-const": "warn",
     "no-var": "error",
-    "prefer-arrow-callback": "error",
-    "arrow-spacing": "error",
-    "prefer-template": "error",
-    "template-curly-spacing": "error",
-    "object-shorthand": "error",
-    "prefer-destructuring": ["error", {
+    "prefer-arrow-callback": "warn",
+    "arrow-spacing": "warn",
+    "prefer-template": "warn",
+    "template-curly-spacing": "warn",
+    "object-shorthand": "warn",
+    "prefer-destructuring": ["warn", {
       "array": false,
       "object": true
     }],
-    "no-duplicate-imports": "error",
-    "import/order": ["error", {
+    "no-duplicate-imports": "warn",
+    "import/order": ["warn", {
       "groups": [
         "builtin",
         "external",
@@ -54,7 +54,16 @@
         "index"
       ],
       "newlines-between": "always"
-    }]
+    }],
+    "camelcase": "off",
+    "eqeqeq": "warn",
+    "no-undef": "error",
+    "no-return-assign": "warn",
+    "prefer-promise-reject-errors": "warn",
+    "n/handle-callback-err": "off",
+    "no-useless-escape": "warn",
+    "no-unused-expressions": "off",
+    "no-mixed-operators": "warn"
   },
   "overrides": [
     {

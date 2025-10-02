@@ -1,28 +1,31 @@
-import express from 'express'
-import logger from 'morgan'
+import express from 'express';
+import logger from 'morgan';
 // body-parser is now built into Express 4.16+
-import cookieParser from 'cookie-parser'
-import compress from 'compression'
-import methodOverride from 'method-override'
-import cors from 'cors'
-import httpStatus from 'http-status'
-import expressWinston from 'express-winston'
-import expressValidation from 'express-validation'
-import helmet from 'helmet'
-import passport from 'passport'
+import cookieParser from 'cookie-parser';
+import compress from 'compression';
+import methodOverride from 'method-override';
+import cors from 'cors';
+import httpStatus from 'http-status';
+import expressWinston from 'express-winston';
+import expressValidation from 'express-validation';
+import helmet from 'helmet';
+import passport from 'passport';
 // import { Strategy } from 'passport-twitter'
-import AWSXRay from 'aws-xray-sdk'
-import appInsights from 'applicationinsights'
-import expressSession from 'express-session'
+import AWSXRay from 'aws-xray-sdk';
+import appInsights from 'applicationinsights';
+import expressSession from 'express-session';
+
+import routes from '../server/routes/index.route.js';
+import APIError from '../server/helpers/APIError.js';
 
 import winstonInstance from './winston.js';
-import routes from '../server/routes/index.route.js';
 import { config } from './config.js';
-import APIError from '../server/helpers/APIError.js';
+
+
 // import versionRoutes from '../server/routes/version.router.js'; // Disabled for Lambda
 import { createPerformanceMiddleware } from './performance.js';
 
-const app = express()
+const app = express();
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
@@ -42,44 +45,44 @@ async function setupSwaggerDocs() {
 // Initialize Swagger docs asynchronously
 setupSwaggerDocs();
 
-console.log("appInsightsString" + config.appInsightsConnectionString);
+console.log(`appInsightsString${config.appInsightsConnectionString}`);
 
 // Only initialize Application Insights if connection string is provided
 if (config.appInsightsConnectionString) {
   appInsights.setup(config.appInsightsConnectionString)
-      .setAutoDependencyCorrelation(true)
-      .setAutoCollectRequests(true)
-      .setAutoCollectPerformance(true)
-      .setAutoCollectExceptions(true)
-      .setAutoCollectDependencies(true)
-      .setAutoCollectConsole(true)
-      .setUseDiskRetryCaching(true)
-      .start()
-  console.log("✅ Application Insights initialized");
+    .setAutoDependencyCorrelation(true)
+    .setAutoCollectRequests(true)
+    .setAutoCollectPerformance(true)
+    .setAutoCollectExceptions(true)
+    .setAutoCollectDependencies(true)
+    .setAutoCollectConsole(true)
+    .setUseDiskRetryCaching(true)
+    .start();
+  console.log('✅ Application Insights initialized');
 } else {
-  console.log("⚠️  Application Insights not configured, telemetry disabled");
+  console.log('⚠️  Application Insights not configured, telemetry disabled');
 }
 
 if (config.env === 'development') {
-  app.use(logger('dev'))
+  app.use(logger('dev'));
 }
 
 // parse body params and attach them to req.body (built into Express 4.16+)
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '50mb' }))
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-app.use(cookieParser())
-app.use(compress())
-app.use(methodOverride())
+app.use(cookieParser());
+app.use(compress());
+app.use(methodOverride());
 
 // secure apps by setting various HTTP headers
-app.use(helmet())
+app.use(helmet());
 
 // enable CORS - Cross Origin Resource Sharing
-app.use(cors())
+app.use(cors());
 
 // Add performance monitoring middleware
-app.use(createPerformanceMiddleware())
+app.use(createPerformanceMiddleware());
 
 
 /** Auth plans init **/
@@ -94,7 +97,7 @@ app.use(createPerformanceMiddleware())
 
 // Twitter authentication temporarily disabled during modernization
 // console.log("consumerkey Twitter express -:" + config.twitterConsumerKey);
-// 
+//
 // passport.use(new Strategy({
 //   consumerKey: config.twitterConsumerKey,
 //   consumerSecret: config.twitterConsumerKey,
@@ -117,43 +120,43 @@ app.use(createPerformanceMiddleware())
 // example does not have a database, the complete Twitter profile is serialized
 // and deserialized.
 passport.serializeUser((user, cb) => {
-  cb(null, user)
-})
+  cb(null, user);
+});
 
 passport.deserializeUser((obj, cb) => {
-  cb(null, obj)
-})
+  cb(null, obj);
+});
 
 // Only configure session in non-test environments to avoid issues
 if (config.env !== 'test') {
-  app.use(expressSession({ 
-    secret: config.jwtSecret || 'test-secret-key', 
-    resave: false, 
-    saveUninitialized: false, 
+  app.use(expressSession({
+    secret: config.jwtSecret || 'test-secret-key',
+    resave: false,
+    saveUninitialized: false,
     cookie: { secure: false }
   }));
 }
 
-app.use(passport.initialize())
+app.use(passport.initialize());
 // Only use passport session in non-test environments
 if (config.env !== 'test') {
-  app.use(passport.session())
+  app.use(passport.session());
 }
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {
-  expressWinston.requestWhitelist.push('body')
-  expressWinston.responseWhitelist.push('body')
+  expressWinston.requestWhitelist.push('body');
+  expressWinston.responseWhitelist.push('body');
   app.use(expressWinston.logger({
     winstonInstance,
     meta: true, // optional: log meta data about request (defaults to true)
     msg: 'HTTP {{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms',
     colorStatus: true // Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
-  }))
+  }));
 }
 
 // route for v1 (current) requests
-app.use('/v1', routes)
+app.use('/v1', routes);
 
 // for the default route return the version - Disabled for Lambda
 // app.use('/', versionRoutes)
@@ -162,42 +165,42 @@ app.use('/v1', routes)
 app.use((err, req, res, next) => {
   if (err instanceof expressValidation.ValidationError) {
     // validation error contains errors which is an array of error each containing message[]
-    const unifiedErrorMessage = err.errors.map(error => error.messages.join('. ')).join(' and ')
-    const error = new APIError(unifiedErrorMessage, err.status, true)
-    return next(error)
+    const unifiedErrorMessage = err.errors.map(error => error.messages.join('. ')).join(' and ');
+    const error = new APIError(unifiedErrorMessage, err.status, true);
+    return next(error);
   } else if (!(err instanceof APIError)) {
-    const apiError = new APIError(err.message, err.status, err.isPublic)
-    return next(apiError)
+    const apiError = new APIError(err.message, err.status, err.isPublic);
+    return next(apiError);
   }
-  return next(err)
-})
+  return next(err);
+});
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const err = new APIError(req.url +  ' - ' + 'API not found. Check the url, example: /v1/health', httpStatus.NOT_FOUND)
-  return next(err)
-})
+  const err = new APIError(`${req.url} - ` + 'API not found. Check the url, example: /v1/health', httpStatus.NOT_FOUND);
+  return next(err);
+});
 
 // log error in winston transports except when executing test suite
 if (config.env !== 'test') {
   app.use(expressWinston.errorLogger({
     winstonInstance
-  }))
+  }));
 }
 
 
 function removeStackTraces(envelope, context) {
-  const data = envelope.data.baseData
+  const data = envelope.data.baseData;
   if (data.url && data.url.includes('health')) {
-    return false
+    return false;
   }
 
-  return true
+  return true;
 }
 
 // Only add telemetry processor if Application Insights is configured
 if (config.appInsightsConnectionString && appInsights.defaultClient) {
-  appInsights.defaultClient.addTelemetryProcessor(removeStackTraces)
+  appInsights.defaultClient.addTelemetryProcessor(removeStackTraces);
 }
 
 
@@ -205,14 +208,14 @@ if (config.appInsightsConnectionString && appInsights.defaultClient) {
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   // Only track exceptions if Application Insights is configured
   if (config.appInsightsConnectionString && appInsights.defaultClient) {
-    appInsights.defaultClient.trackException({ exception: err })
+    appInsights.defaultClient.trackException({ exception: err });
   }
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}
-  })
-})
+  });
+});
 
 app.use(AWSXRay.express.closeSegment());
 
-export default app
+export default app;

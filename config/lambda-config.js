@@ -1,13 +1,17 @@
 /**
  * Lambda-Optimized Configuration Module
- * 
+ *
  * This module provides optimized configuration loading for AWS Lambda
  * with caching, validation, and graceful fallbacks.
  */
 
 import Joi from 'joi';
 import debug from 'debug';
+import memoryCache from 'memory-cache';
+
 import { getApplicationConfig } from './secrets-manager.js';
+
+// Memory cache export for backward compatibility
 
 const debugLog = debug('chronas-api:lambda-config');
 
@@ -27,10 +31,10 @@ export const isLambdaEnvironment = () => {
  */
 async function getEnvironmentVariables() {
   const mergedSecrets = {};
-  
+
   // Start with environment variables
   Object.assign(mergedSecrets, process.env);
-  
+
   // Lambda environment: Check for JSON-encoded configuration
   if (process.env.chronasConfig) {
     try {
@@ -43,29 +47,29 @@ async function getEnvironmentVariables() {
       debugLog('Failed to parse chronasConfig JSON:', error.message);
     }
   }
-  
+
   // Load additional configuration from Secrets Manager (if configured)
   if (process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET) {
     const secretId = process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET;
-    
+
     try {
       debugLog(`Loading additional configuration from Secrets Manager: ${secretId}`);
       const secretConfig = await getApplicationConfig(secretId);
-      
+
       // Merge secrets manager config (don't override existing env vars)
       Object.keys(secretConfig).forEach(key => {
         if (!mergedSecrets[key]) {
           mergedSecrets[key] = secretConfig[key];
         }
       });
-      
+
       debugLog('Configuration loaded from Secrets Manager');
     } catch (error) {
       debugLog('Failed to load configuration from Secrets Manager:', error.message);
       // Continue without Secrets Manager config (non-fatal)
     }
   }
-  
+
   // Local development: Load .env file (non-Lambda environments only)
   if (!isLambdaEnvironment()) {
     try {
@@ -78,7 +82,7 @@ async function getEnvironmentVariables() {
       debugLog('dotenv not available or failed to load:', error.message);
     }
   }
-  
+
   return mergedSecrets;
 }
 
@@ -87,22 +91,22 @@ async function getEnvironmentVariables() {
  */
 const getConfigSchema = () => {
   const isLambda = isLambdaEnvironment();
-  
+
   return Joi.object({
     NODE_ENV: Joi.string()
       .valid('development', 'production', 'test', 'provision')
       .default(isLambda ? 'production' : 'development'),
-    
+
     PORT: Joi.number()
       .default(isLambda ? 3000 : 4040), // Lambda uses port 3000 by default
-    
+
     MONGOOSE_DEBUG: Joi.boolean()
       .when('NODE_ENV', {
         is: Joi.string().equal('development'),
         then: Joi.boolean().default(true),
         otherwise: Joi.boolean().default(false)
       }),
-    
+
     JWT_SECRET: Joi.string()
       .when('NODE_ENV', {
         is: Joi.string().equal('development'),
@@ -110,25 +114,25 @@ const getConfigSchema = () => {
         otherwise: Joi.string().required()
       })
       .description('JWT Secret required to sign'),
-    
+
     SECRET_DB_NAME: Joi.string()
       .default('/chronas/docdb/newpassword'),
-    
+
     SECRET_MODERNIZED_DB_NAME: Joi.string()
       .allow('', null)
       .default(''),
-    
+
     SECRET_CONFIG_NAME: Joi.string()
       .allow('', null)
       .default(''),
-    
+
     CHRONAS_CONFIG_SECRET: Joi.string()
       .allow('', null)
       .default(''),
-    
+
     region: Joi.string()
       .default('eu-west-1'),
-    
+
     MONGO_HOST: Joi.string()
       .when('NODE_ENV', {
         is: Joi.string().equal('development'),
@@ -140,17 +144,17 @@ const getConfigSchema = () => {
         })
       })
       .description('MongoDB/DocumentDB host URL (optional when using Secrets Manager)'),
-    
+
     MONGO_PORT: Joi.number()
       .default(27017),
-    
+
     // Lambda-specific optimizations
     LAMBDA_TIMEOUT: Joi.number()
       .default(30000), // 30 seconds default timeout
-    
+
     LAMBDA_MEMORY: Joi.number()
       .default(512), // 512MB default memory
-    
+
     // Optional configuration with graceful fallbacks
     APPINSIGHTS_CONNECTION_STRING: Joi.string().allow('', null).default(''),
     MAILGUN_RECEIVER: Joi.string().allow('', null).default(''),
@@ -177,7 +181,7 @@ const getConfigSchema = () => {
     TWITTER_CALLBACK_URL: Joi.string().allow('', null).default(''),
     RUMAPPLICATIONID: Joi.string().allow('', null).default(''),
     CHRONAS_HOST: Joi.string().allow('', null).default('')
-    
+
   }).unknown(true) // Allow unknown environment variables
     .required();
 };
@@ -191,11 +195,11 @@ function validateConfiguration(envVars) {
     allowUnknown: true,
     stripUnknown: false
   });
-  
+
   if (error) {
     const errorMessage = `Configuration validation error: ${error.message}`;
     debugLog(errorMessage);
-    
+
     // In Lambda, log error but don't crash immediately
     if (isLambdaEnvironment()) {
       console.error(errorMessage);
@@ -205,7 +209,7 @@ function validateConfiguration(envVars) {
       throw new Error(errorMessage);
     }
   }
-  
+
   return value;
 }
 
@@ -218,27 +222,27 @@ function buildConfig(envVars) {
     env: envVars.NODE_ENV,
     port: envVars.PORT,
     isLambda: isLambdaEnvironment(),
-    
+
     // Database
     mongooseDebug: envVars.MONGOOSE_DEBUG,
     mongo: {
       host: envVars.MONGO_HOST || null, // Allow null when using Secrets Manager
       port: envVars.MONGO_PORT
     },
-    
+
     // Security
     jwtSecret: envVars.JWT_SECRET,
-    
+
     // AWS - use original database secret
     docDbsecretName: envVars.SECRET_DB_NAME,
     awsRegion: envVars.region,
-    
+
     // Lambda-specific
     lambda: {
       timeout: envVars.LAMBDA_TIMEOUT,
       memory: envVars.LAMBDA_MEMORY
     },
-    
+
     // External services (with fallbacks)
     appInsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
     mailgunReceiver: envVars.MAILGUN_RECEIVER,
@@ -278,24 +282,24 @@ export async function loadConfig(forceReload = false) {
     debugLog('Using cached configuration');
     return cachedConfig;
   }
-  
+
   const startTime = Date.now();
-  
+
   try {
     debugLog('Loading configuration...');
-    
+
     // Get environment variables
     const envVars = await getEnvironmentVariables();
-    
+
     // Validate configuration
     const validatedVars = validateConfiguration(envVars);
-    
+
     // Build configuration object
     cachedConfig = buildConfig(validatedVars);
     configLoadTime = Date.now() - startTime;
-    
+
     debugLog(`Configuration loaded successfully in ${configLoadTime}ms`);
-    
+
     // Log configuration summary (without sensitive data)
     if (debugLog.enabled) {
       const configSummary = {
@@ -307,12 +311,11 @@ export async function loadConfig(forceReload = false) {
       };
       debugLog('Configuration summary:', configSummary);
     }
-    
+
     return cachedConfig;
-    
   } catch (error) {
     debugLog('Configuration loading failed:', error.message);
-    
+
     // In Lambda, provide minimal fallback configuration
     if (isLambdaEnvironment()) {
       console.error('Configuration loading failed, using minimal fallback');
@@ -329,7 +332,7 @@ export async function loadConfig(forceReload = false) {
       };
       return cachedConfig;
     }
-    
+
     throw error;
   }
 }
@@ -366,10 +369,7 @@ export function getConfigMetrics() {
 
 // Initialize items and links to refresh (from original config)
 export const initItemsAndLinksToRefresh = [
-  'provinces', 'links', 'ruler', 'culture', 'religion', 
+  'provinces', 'links', 'ruler', 'culture', 'religion',
   'capital', 'province', 'religionGeneral'
 ];
-
-// Memory cache export for backward compatibility
-import memoryCache from 'memory-cache';
 export const cache = memoryCache;

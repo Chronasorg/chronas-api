@@ -1,11 +1,12 @@
 /**
  * Error Handler Middleware
- * 
+ *
  * Provides utility functions for creating standardized errors
  */
 
-import APIError from '../helpers/APIError.js';
 import httpStatus from 'http-status';
+
+import APIError from '../helpers/APIError.js';
 
 /**
  * Create a not found error

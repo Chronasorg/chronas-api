@@ -1,10 +1,11 @@
-import express from 'express'
-import statisticsCtrl from '../controllers/statistics.controller.js'
+import express from 'express';
 
-const router = express.Router() // eslint-disable-line new-cap
+import statisticsCtrl from '../controllers/statistics.controller.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 // get general data statistics
 router.route('/')
-  .get(statisticsCtrl.list)
+  .get(statisticsCtrl.list);
 
-export default router
+export default router;

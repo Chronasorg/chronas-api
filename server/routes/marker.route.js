@@ -1,13 +1,14 @@
-import express from 'express'
-import { validate } from '../helpers/validation.js'
-import { expressjwt as expressJwt } from 'express-jwt'
-import paramValidation from '../../config/param-validation.js'
-import markerCtrl from '../controllers/marker.controller.js'
-import revisionCtrl from '../controllers/revision.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import { validate } from '../helpers/validation.js';
+import paramValidation from '../../config/param-validation.js';
+import markerCtrl from '../controllers/marker.controller.js';
+import revisionCtrl from '../controllers/revision.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
   .all(markerCtrl.defineEntity)
@@ -22,7 +23,7 @@ router.route('/')
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMarker),
-    markerCtrl.create)
+    markerCtrl.create);
 
 router.route('/:markerId')
   .all(markerCtrl.defineEntity)
@@ -43,9 +44,9 @@ router.route('/:markerId')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
-    markerCtrl.remove)
+    markerCtrl.remove);
 
 /** Load marker when API with markerId route parameter is hit */
-router.param('markerId', markerCtrl.load)
+router.param('markerId', markerCtrl.load);
 
-export default router
+export default router;

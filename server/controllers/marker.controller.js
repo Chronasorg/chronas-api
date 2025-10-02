@@ -1,8 +1,9 @@
-import Marker from '../models/marker.model.js'
-import { APICustomResponse, APIError } from '../../server/helpers/APIError.js'
-import { config } from '../../config/config.js'
-import httpStatus from 'http-status'
-import Metadata from '../models/metadata.model.js'
+import httpStatus from 'http-status';
+
+import Marker from '../models/marker.model.js';
+import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
+import { config } from '../../config/config.js';
+import Metadata from '../models/metadata.model.js';
 
 /**
  * Load marker and append to req.
@@ -25,7 +26,7 @@ async function load(req, res, next, id) {
  * @returns {Marker}
  */
 function get(req, res) {
-  return res.json(req.entity)
+  return res.json(req.entity);
 }
 
 /**
@@ -35,14 +36,14 @@ function get(req, res) {
  * @returns {Marker}
  */
 function create(req, res, next, fromRevision = false) {
-  const markerId = decodeURIComponent(req.body._id || req.body.wiki)
+  const markerId = decodeURIComponent(req.body._id || req.body.wiki);
   Marker.findById(markerId)
     .lean()
     .exec()
     .then((duplicatedMarker) => {
       if (duplicatedMarker) {
-        const err = new APIError('A marker with this wiki already exists!', 400)
-        next(err)
+        const err = new APIError('A marker with this wiki already exists!', 400);
+        next(err);
       }
 
       const marker = new Marker({
@@ -55,18 +56,18 @@ function create(req, res, next, fromRevision = false) {
         capital: req.body.capital,
         html: req.body.html,
         partOf: req.body.partOf,
-        end: req.body.end,
-      })
+        end: req.body.end
+      });
 
       marker.save()
         .then((savedMarker) => {
           if (!fromRevision) {
-            res.json(savedMarker)
+            res.json(savedMarker);
           }
         })
-        .catch(e => next(e))
+        .catch(e => next(e));
     })
-    .catch(e => next(e))
+    .catch(e => next(e));
 }
 
 /**
@@ -76,21 +77,21 @@ function create(req, res, next, fromRevision = false) {
  * @returns {Marker}
  */
 function update(req, res, next, fromRevision = false) {
-  const marker = req.entity
-  if (typeof req.body.name !== 'undefined') marker.name = req.body.name
-  if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo
-  if (typeof req.body.coo2 !== 'undefined') marker.coo2 = req.body.coo2
-  if (typeof req.body.type !== 'undefined') marker.type = req.body.type
-  if (typeof req.body.year !== 'undefined') marker.year = req.body.year
-  if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital
-  if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf
-  if (typeof req.body.html !== 'undefined') marker.html = req.body.html
-  if (typeof req.body.end !== 'undefined') marker.end = req.body.end
+  const marker = req.entity;
+  if (typeof req.body.name !== 'undefined') marker.name = req.body.name;
+  if (typeof req.body.coo !== 'undefined') marker.coo = req.body.coo;
+  if (typeof req.body.coo2 !== 'undefined') marker.coo2 = req.body.coo2;
+  if (typeof req.body.type !== 'undefined') marker.type = req.body.type;
+  if (typeof req.body.year !== 'undefined') marker.year = req.body.year;
+  if (typeof req.body.capital !== 'undefined') marker.capital = req.body.capital;
+  if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf;
+  if (typeof req.body.html !== 'undefined') marker.html = req.body.html;
+  if (typeof req.body.end !== 'undefined') marker.end = req.body.end;
 
-  const newId = decodeURIComponent(req.body.wiki || req.body._id)
+  const newId = decodeURIComponent(req.body.wiki || req.body._id);
   if (typeof newId !== 'undefined' && newId !== 'undefined' && newId !== marker._id) {
-    const oldId = marker._id
-    marker._id = newId
+    const oldId = marker._id;
+    marker._id = newId;
     // changing wiki (id!)
     // migrate links
     // create copy and remove old
@@ -105,8 +106,8 @@ function update(req, res, next, fromRevision = false) {
       capital: marker.capital,
       html: marker.html,
       partOf: marker.partOf,
-      end: marker.end,
-    })
+      end: marker.end
+    });
 
     markerNew.save()
       .then((savedMarker) => {
@@ -118,68 +119,68 @@ function update(req, res, next, fromRevision = false) {
                 Metadata.get('links', req.method)
                   .then((links) => {
                     if (links) {
-                      const linkedItems = links.data[(`0:${oldId}`)]
+                      const linkedItems = links.data[(`0:${oldId}`)];
                       if (linkedItems) {
-                        const linkedMarkers = linkedItems[0]
-                        const linkedMetadata = linkedItems[1]
+                        const linkedMarkers = linkedItems[0];
+                        const linkedMetadata = linkedItems[1];
 
                         linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
-                          const currVal = links.data[key]
+                          const currVal = links.data[key];
                           if (currVal) {
-                            const mediaIndex = currVal[0].findIndex(el => el[0] === oldId)
-                            const mapIndex = currVal[1].findIndex(el => el[0] === oldId)
-                            const dirtyMedia = mediaIndex > -1
-                            const dirtyMap = mapIndex > -1
+                            const mediaIndex = currVal[0].findIndex(el => el[0] === oldId);
+                            const mapIndex = currVal[1].findIndex(el => el[0] === oldId);
+                            const dirtyMedia = mediaIndex > -1;
+                            const dirtyMap = mapIndex > -1;
 
                             if (dirtyMedia) {
-                              currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]]
+                              currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]];
                             }
                             if (dirtyMap) {
-                              currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]]
+                              currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]];
                             }
                             if (dirtyMap || dirtyMedia) {
-                              links.data[key] = currVal
+                              links.data[key] = currVal;
                             }
                           }
-                        })
+                        });
 
-                        links.data[(`0:${newId}`)] = linkedItems
-                        delete links.data[(`0:${oldId}`)]
-                        links.markModified('data')
+                        links.data[(`0:${newId}`)] = linkedItems;
+                        delete links.data[(`0:${oldId}`)];
+                        links.markModified('data');
                       }
 
                       links.save()
                         .then(() => {
                           if (!fromRevision) {
-                            res.json(savedMarker)
+                            res.json(savedMarker);
                           }
                         })
                         .catch((err) => {
                           if (!fromRevision) {
-                            res.send('NOTOK')
+                            res.send('NOTOK');
                           }
-                        })
+                        });
                     }
                   })
                   .catch((err) => {
                     if (!fromRevision) {
-                      res.send('NOTOK')
+                      res.send('NOTOK');
                     }
-                  })
+                  });
               })
               // .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
-              .catch(e => next(e))
-          }).catch(e => next(e))
+              .catch(e => next(e));
+          }).catch(e => next(e));
       })
-      .catch(e => next(e))
+      .catch(e => next(e));
   } else {
     marker.save()
       .then((savedMarker) => {
         if (!fromRevision) {
-          res.json(savedMarker)
+          res.json(savedMarker);
         }
       })
-      .catch(e => next(e))
+      .catch(e => next(e));
   }
 }
 
@@ -190,34 +191,34 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { offset = 0, count = 2000, sort = 'name', order = 'asc', filter = '' } = req.query
-  const length = +count
-  const typeArray = req.query.types || false
-  const wikiArray = req.query.wikis || false
-  const format = req.query.format || false
-  const year = isNaN(req.query.year) ? false : +req.query.year
-  const end = isNaN(req.query.year) ? false : +req.query.year
-  const delta = +req.query.delta
-  const includeMarkers = req.query.includeMarkers !== 'false'
-  const search = req.query.search || false
-  const both = req.query.both || false
-  const start = offset
-  const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10
-  const migrationDelta = req.query.migration ? ((year > 1950) ? 1000 : (year > 1860) ? 50 : (year > 1820) ? 30 : (year > 1700) ? 20 : (year > 1500) ? 30 : (year > 1400) ? 50 : (year > 1200) ? 100 : (year > 1000) ? 250 : (year > 500) ? 300 : (year > -200) ? 200 : (year > -500) ? 250 : (year > -1000) ? 300 : (year > -1200) ? 400 : (year > -1500) ? 500 : 10) : false
+  const { offset = 0, count = 2000, sort = 'name', order = 'asc', filter = '' } = req.query;
+  const length = +count;
+  const typeArray = req.query.types || false;
+  const wikiArray = req.query.wikis || false;
+  const format = req.query.format || false;
+  const year = isNaN(req.query.year) ? false : +req.query.year;
+  const end = isNaN(req.query.year) ? false : +req.query.year;
+  const delta = +req.query.delta;
+  const includeMarkers = req.query.includeMarkers !== 'false';
+  const search = req.query.search || false;
+  const both = req.query.both || false;
+  const start = offset;
+  const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10;
+  const migrationDelta = req.query.migration ? ((year > 1950) ? 1000 : (year > 1860) ? 50 : (year > 1820) ? 30 : (year > 1700) ? 20 : (year > 1500) ? 30 : (year > 1400) ? 50 : (year > 1200) ? 100 : (year > 1000) ? 250 : (year > 500) ? 300 : (year > -200) ? 200 : (year > -500) ? 250 : (year > -1000) ? 300 : (year > -1200) ? 400 : (year > -1500) ? 500 : 10) : false;
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
         Marker.count().exec().then((markerCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-          res.set('X-Total-Count', markerCount)
-          res.json(markers)
-        })
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
+          res.set('X-Total-Count', markerCount);
+          res.json(markers);
+        });
       } else {
-        res.json(markers)
+        res.json(markers);
       }
     })
-    .catch(e => next(e))
+    .catch(e => next(e));
 }
 
 /**
@@ -225,20 +226,20 @@ function list(req, res, next) {
  * @returns {Marker}
  */
 function remove(req, res, next, fromRevision = false) {
-  const marker = req.entity
+  const marker = req.entity;
   marker.deleteOne()
     .then((deletedMarker) => {
       if (!fromRevision) {
-        res.json(deletedMarker)
+        res.json(deletedMarker);
       }
     })
     // .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
-    .catch(e => next(e))
+    .catch(e => next(e));
 }
 
 function defineEntity(req, res, next) {
-  req.resource = 'markers'
-  next()
+  req.resource = 'markers';
+  next();
 }
 
-export default { defineEntity, load, get, create, update, list, remove }
+export default { defineEntity, load, get, create, update, list, remove };

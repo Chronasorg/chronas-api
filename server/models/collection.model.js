@@ -1,7 +1,8 @@
-import Promise from 'bluebird'
-import mongoose from 'mongoose'
-import httpStatus from 'http-status'
-import APIError from '../helpers/APIError.js'
+import Promise from 'bluebird';
+import mongoose from 'mongoose';
+import httpStatus from 'http-status';
+
+import APIError from '../helpers/APIError.js';
 
 /**
  * Collection Schema
@@ -12,16 +13,16 @@ const CollectionSchema = new mongoose.Schema({
   //   required: true
   // },
   avatar: {
-    type: String,
+    type: String
   },
   title: {
-    type: String,
+    type: String
   },
   description: {
-    type: String,
+    type: String
   },
   owner: {
-    type: String,
+    type: String
   },
   coo: {
     type: [Number],
@@ -47,15 +48,15 @@ const CollectionSchema = new mongoose.Schema({
   },
   created: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   slides: {
     type: Array,
-    default: [],
+    default: []
   },
   quiz: {
     type: Array,
-    default: undefined,
+    default: undefined
   },
   allowClickAway: {
     type: Boolean,
@@ -77,7 +78,7 @@ const CollectionSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   }
-}, { versionKey: false })
+}, { versionKey: false });
 
 /**
  * Add your
@@ -90,7 +91,7 @@ const CollectionSchema = new mongoose.Schema({
  * Methods
  */
 CollectionSchema.method({
-})
+});
 
 /**
  * Statics
@@ -106,11 +107,11 @@ CollectionSchema.statics = {
       .exec()
       .then((collection) => {
         if (collection) {
-          return collection
+          return collection;
         }
-        const err = new APIError('No such collection exists!', httpStatus.NOT_FOUND)
-        return Promise.reject(err)
-      })
+        const err = new APIError('No such collection exists!', httpStatus.NOT_FOUND);
+        return Promise.reject(err);
+      });
   },
 
   /**
@@ -120,16 +121,16 @@ CollectionSchema.statics = {
    * @returns {Promise<Collection[]>}
    */
   list({ start = 0, end = 50, entity, order, subentity, sort = 'timestamp', username = false } = {}) {
-    const optionalFind = (entity) ? { entityId: entity } : {}
+    const optionalFind = (entity) ? { entityId: entity } : {};
     if (subentity) {
-      optionalFind.subEntityId = subentity
+      optionalFind.subEntityId = subentity;
     }
 
     if (username) {
-      optionalFind.isPublic = false
-      optionalFind.owner = username
+      optionalFind.isPublic = false;
+      optionalFind.owner = username;
     } else {
-      optionalFind.isPublic = true
+      optionalFind.isPublic = true;
     }
     return this.find(optionalFind)
       .sort({ [sort]: order })
@@ -137,11 +138,11 @@ CollectionSchema.statics = {
       .limit(end - start)
       .lean()
       .exec()
-      .then(collections => collections)
+      .then(collections => collections);
   }
-}
+};
 
 /**
  * @typedef Collection
  */
-export default mongoose.model('Collection', CollectionSchema)
+export default mongoose.model('Collection', CollectionSchema);

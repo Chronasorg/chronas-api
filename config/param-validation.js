@@ -1,4 +1,4 @@
-import Joi from 'joi'
+import Joi from 'joi';
 
 export default {
   // POST /v1/users
@@ -122,4 +122,4 @@ export default {
       username: Joi.string()
     })
   }
-}
+};

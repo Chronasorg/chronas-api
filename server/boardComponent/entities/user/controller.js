@@ -1,15 +1,15 @@
-import _ from 'lodash'
-import { each as asyncEach } from 'async'
+import _ from 'lodash';
+import { each as asyncEach } from 'async';
 
 // controllers
-import opinionController from '../opinion/controller.js'
-const { getAllOpinions } = opinionController
+import opinionController from '../opinion/controller.js';
 
 // models
 // import User from './model.js';
-import User from '../../../models/user.model.js'
-import Discussion from '../discussion/model.js'
-import Opinion from '../opinion/model.js'
+import User from '../../../models/user.model.js';
+import Discussion from '../discussion/model.js';
+import Opinion from '../opinion/model.js';
+const { getAllOpinions } = opinionController;
 
 /**
  * get user doc by user id
@@ -27,7 +27,7 @@ const getUser = async (user_id) => {
     console.log(error);
     throw error;
   }
-}
+};
 
 
 /**
@@ -38,7 +38,7 @@ const getUser = async (user_id) => {
 const getFullProfile = async (username) => {
   try {
     const foundUser = await User.findOne({ username }).lean().exec();
-    
+
     if (!foundUser) {
       throw new Error('not_found');
     }
@@ -85,9 +85,9 @@ const getFullProfile = async (username) => {
     console.log(error);
     throw error;
   }
-}
+};
 
 export default {
   getUser,
-  getFullProfile,
-}
+  getFullProfile
+};

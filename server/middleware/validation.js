@@ -1,13 +1,14 @@
 /**
  * Modern Validation Middleware
- * 
+ *
  * Provides comprehensive request validation using Joi schemas
  * with proper error handling and sanitization.
  */
 
 import Joi from 'joi';
-import { ValidationError } from './errorHandler.js';
 import winston from 'winston';
+
+import { ValidationError } from './errorHandler.js';
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -59,7 +60,7 @@ export const areaSchemas = {
     tags: Joi.array().items(Joi.string().trim()).default([]),
     description: Joi.string().max(1000).allow('').default('')
   }),
-  
+
   update: Joi.object({
     name: Joi.string().trim().max(200),
     year: Joi.number().integer().min(-3000).max(3000),
@@ -70,7 +71,7 @@ export const areaSchemas = {
     tags: Joi.array().items(Joi.string().trim()),
     description: Joi.string().max(1000).allow('')
   }).min(1),
-  
+
   query: Joi.object({
     year: Joi.number().integer().min(-3000).max(3000),
     name: Joi.string().trim(),
@@ -98,7 +99,7 @@ export const markerSchemas = {
     tags: Joi.array().items(Joi.string().trim()).default([]),
     metadata: Joi.object().default({})
   }),
-  
+
   update: Joi.object({
     name: Joi.string().trim().max(200),
     year: Joi.number().integer().min(-3000).max(3000),
@@ -110,7 +111,7 @@ export const markerSchemas = {
     tags: Joi.array().items(Joi.string().trim()),
     metadata: Joi.object()
   }).min(1),
-  
+
   query: Joi.object({
     year: Joi.number().integer().min(-3000).max(3000),
     name: Joi.string().trim(),
@@ -142,7 +143,7 @@ export const userSchemas = {
       'any.only': 'You must accept the terms and conditions'
     })
   }),
-  
+
   login: Joi.object({
     username: Joi.alternatives().try(
       commonSchemas.username,
@@ -150,7 +151,7 @@ export const userSchemas = {
     ).required(),
     password: Joi.string().required()
   }),
-  
+
   update: Joi.object({
     firstName: Joi.string().trim().max(50).allow(''),
     lastName: Joi.string().trim().max(50).allow(''),
@@ -167,7 +168,7 @@ export const userSchemas = {
       }).default({})
     }).default({})
   }).min(1),
-  
+
   changePassword: Joi.object({
     currentPassword: Joi.string().required(),
     newPassword: commonSchemas.password.required(),
@@ -192,7 +193,7 @@ export const collectionSchemas = {
       note: Joi.string().max(500).allow('').default('')
     })).default([])
   }),
-  
+
   update: Joi.object({
     name: Joi.string().trim().max(200),
     description: Joi.string().max(1000).allow(''),
@@ -204,7 +205,7 @@ export const collectionSchemas = {
       note: Joi.string().max(500).allow('').default('')
     }))
   }).min(1),
-  
+
   query: Joi.object({
     name: Joi.string().trim(),
     isPublic: Joi.boolean(),
@@ -224,30 +225,30 @@ export const validate = (schema, source = 'body') => {
   return (req, res, next) => {
     try {
       let dataToValidate;
-      
+
       switch (source) {
-        case 'body':
-          dataToValidate = req.body;
-          break;
-        case 'query':
-          dataToValidate = req.query;
-          break;
-        case 'params':
-          dataToValidate = req.params;
-          break;
-        case 'headers':
-          dataToValidate = req.headers;
-          break;
-        default:
-          dataToValidate = req.body;
+      case 'body':
+        dataToValidate = req.body;
+        break;
+      case 'query':
+        dataToValidate = req.query;
+        break;
+      case 'params':
+        dataToValidate = req.params;
+        break;
+      case 'headers':
+        dataToValidate = req.headers;
+        break;
+      default:
+        dataToValidate = req.body;
       }
-      
+
       const { error, value } = schema.validate(dataToValidate, {
         abortEarly: false,
         stripUnknown: true,
         convert: true
       });
-      
+
       if (error) {
         const validationError = new ValidationError('Validation failed');
         validationError.details = error.details.map(detail => ({
@@ -255,31 +256,30 @@ export const validate = (schema, source = 'body') => {
           message: detail.message,
           value: detail.context?.value
         }));
-        
+
         logger.debug('Validation failed', {
           source,
           errors: validationError.details,
           requestId: req.lambda?.context?.awsRequestId || req.id
         });
-        
+
         return next(validationError);
       }
-      
+
       // Replace the source data with validated and sanitized data
       switch (source) {
-        case 'body':
-          req.body = value;
-          break;
-        case 'query':
-          req.query = value;
-          break;
-        case 'params':
-          req.params = value;
-          break;
+      case 'body':
+        req.body = value;
+        break;
+      case 'query':
+        req.query = value;
+        break;
+      case 'params':
+        req.params = value;
+        break;
       }
-      
+
       next();
-      
     } catch (err) {
       next(err);
     }
@@ -298,11 +298,11 @@ export const sanitizeInput = (req, res, next) => {
         .replace(/<[^>]*>/g, '') // Remove HTML tags
         .trim();
     }
-    
+
     if (Array.isArray(obj)) {
       return obj.map(sanitize);
     }
-    
+
     if (obj && typeof obj === 'object') {
       const sanitized = {};
       for (const [key, value] of Object.entries(obj)) {
@@ -310,13 +310,13 @@ export const sanitizeInput = (req, res, next) => {
       }
       return sanitized;
     }
-    
+
     return obj;
   };
-  
+
   req.body = sanitize(req.body);
   req.query = sanitize(req.query);
-  
+
   next();
 };
 
@@ -327,13 +327,13 @@ export const validateRateLimit = (req, res, next) => {
   // Add rate limiting headers
   const limit = 100; // requests per window
   const window = 15 * 60 * 1000; // 15 minutes
-  
+
   res.set({
     'X-RateLimit-Limit': limit,
     'X-RateLimit-Window': window,
     'X-RateLimit-Remaining': limit - 1 // This would be calculated based on actual usage
   });
-  
+
   next();
 };
 
@@ -344,7 +344,7 @@ export const validationMiddleware = (req, res, next) => {
   // Apply sanitization
   sanitizeInput(req, res, (err) => {
     if (err) return next(err);
-    
+
     // Apply rate limit headers
     validateRateLimit(req, res, next);
   });
@@ -375,7 +375,7 @@ export const createValidator = (schema, options = {}) => {
       convert: true,
       ...options
     });
-    
+
     if (error) {
       const validationError = new ValidationError('Validation failed');
       validationError.details = error.details.map(detail => ({
@@ -383,10 +383,10 @@ export const createValidator = (schema, options = {}) => {
         message: detail.message,
         value: detail.context?.value
       }));
-      
+
       return next(validationError);
     }
-    
+
     req.body = value;
     next();
   };

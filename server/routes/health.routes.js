@@ -1,10 +1,11 @@
 /**
  * Health Check Routes
- * 
+ *
  * Provides comprehensive health monitoring endpoints
  */
 
 import express from 'express';
+
 import { getConnectionStatus, testDatabaseConnectivity } from '../../config/database.js';
 import { cacheUtils } from '../middleware/cache.js';
 
@@ -39,14 +40,14 @@ router.get('/detailed', async (req, res) => {
   // Database health
   try {
     const connectionStatus = getConnectionStatus();
-    
+
     health.checks.database = {
       status: connectionStatus.isConnected ? 'healthy' : 'unhealthy',
       state: connectionStatus.state,
       host: connectionStatus.host,
       name: connectionStatus.name
     };
-    
+
     if (connectionStatus.isConnected) {
       // Test database connectivity
       const pingResult = await testDatabaseConnectivity();
@@ -67,13 +68,13 @@ router.get('/detailed', async (req, res) => {
       type: cacheUtils.isRedisConnected() ? 'redis' : 'memory',
       stats: cacheUtils.getStats()
     };
-    
+
     // Test cache with a simple operation
-    const testKey = 'health-check-' + Date.now();
+    const testKey = `health-check-${Date.now()}`;
     await cacheUtils.set(testKey, 'test', 10);
     const testValue = await cacheUtils.get(testKey);
     await cacheUtils.del(testKey);
-    
+
     health.checks.cache.test = testValue === 'test' ? 'success' : 'failed';
   } catch (error) {
     health.checks.cache = {
@@ -88,10 +89,10 @@ router.get('/detailed', async (req, res) => {
   health.checks.memory = {
     status: 'healthy',
     usage: {
-      rss: Math.round(memUsage.rss / 1024 / 1024) + ' MB',
-      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + ' MB',
-      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + ' MB',
-      external: Math.round(memUsage.external / 1024 / 1024) + ' MB'
+      rss: `${Math.round(memUsage.rss / 1024 / 1024)} MB`,
+      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)} MB`,
+      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)} MB`,
+      external: `${Math.round(memUsage.external / 1024 / 1024)} MB`
     }
   };
 
@@ -102,8 +103,9 @@ router.get('/detailed', async (req, res) => {
   }
 
   // Set appropriate HTTP status
-  const statusCode = health.status === 'healthy' ? 200 : 
-                    health.status === 'degraded' ? 200 : 503;
+  const statusCode = health.status === 'healthy'
+    ? 200
+    : health.status === 'degraded' ? 200 : 503;
 
   res.status(statusCode).json(health);
 });

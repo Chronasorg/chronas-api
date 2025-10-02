@@ -1,11 +1,12 @@
-import express from 'express'
-import { expressjwt as expressJwt } from 'express-jwt'
-import areaCtrl from '../controllers/area.controller.js'
-import revisionCtrl from '../controllers/revision.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import areaCtrl from '../controllers/area.controller.js';
+import revisionCtrl from '../controllers/revision.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
   .all(areaCtrl.defineEntity)
@@ -25,7 +26,7 @@ router.route('/')
     checkPrivilege.checkPrivilege(5),
     // revisionCtrl.addCreateRevision,
     // validate(paramValidation.createArea),
-    areaCtrl.create)
+    areaCtrl.create);
 
 router.route('/replace')
   .all(areaCtrl.defineEntity)
@@ -34,25 +35,25 @@ router.route('/replace')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     areaCtrl.replaceAll,
-    revisionCtrl.addUpdateManyRevision)
+    revisionCtrl.addUpdateManyRevision);
 
 router.route('/aggregateProvinces')
   /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .get(
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateProvinces)
+    areaCtrl.aggregateProvinces);
 
 router.route('/aggregateMetaCoo')
 /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
   .get(
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateMetaCoo)
+    areaCtrl.aggregateMetaCoo);
 
 router.route('/aggregateDimension')
 /** GET /v1/areas/aggregateDimension - Aggregate all years by selected dimension (ruler, religion, religionGeneral or culture) */
   .get(
     // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateDimension)
+    areaCtrl.aggregateDimension);
 
 router.route('/:areaId')
   .all(areaCtrl.defineEntity)
@@ -71,10 +72,10 @@ router.route('/:areaId')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(5),
     revisionCtrl.addDeleteRevision,
-    areaCtrl.remove)
+    areaCtrl.remove);
 
 
 /** Load area when API with areaId route parameter is hit */
-router.param('areaId', areaCtrl.load)
+router.param('areaId', areaCtrl.load);
 
-export default router
+export default router;

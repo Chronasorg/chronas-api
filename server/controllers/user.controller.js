@@ -1,10 +1,11 @@
+import jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import axios from 'axios';
+
 import User from '../models/user.model.js';
 import logger from '../../config/winston.js';
 import APIError from '../helpers/APIError.js';
 import { config } from '../../config/config.js';
-import jwt from 'jsonwebtoken';
-import httpStatus from 'http-status';
-import axios from 'axios';
 
 
 /**
@@ -33,9 +34,9 @@ async function load(req, res, next, id) {
  * @returns {User}
  */
 function get(req, res) {
-  const userPlus = req.user.toObject()
-  userPlus.id = userPlus._id
-  return res.json(userPlus)
+  const userPlus = req.user.toObject();
+  userPlus.id = userPlus._id;
+  return res.json(userPlus);
 }
 
 /**
@@ -64,7 +65,7 @@ async function create(req, res, next) {
             lastUpdated: duplicatedUsername.lastUpdated,
             score: duplicatedUsername.karma,
             privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1,
-            subscription: (duplicatedUsername.subscription !== 'undefined') ? duplicatedUsername.subscription : "-1"
+            subscription: (duplicatedUsername.subscription !== 'undefined') ? duplicatedUsername.subscription : '-1'
           }, config.jwtSecret);
           return res.redirect(`${config.chronasHost}/?token=${token}`);
         }
@@ -102,7 +103,7 @@ async function create(req, res, next) {
           lastUpdated: savedUser.lastUpdated,
           score: savedUser.karma,
           privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1,
-          subscription: (savedUser.subscription !== 'undefined') ? savedUser.subscription : "-1"
+          subscription: (savedUser.subscription !== 'undefined') ? savedUser.subscription : '-1'
         }, config.jwtSecret);
         if (req.body.thirdParty) {
           return res.redirect(`${config.chronasHost}/?token=${token}`);
@@ -137,7 +138,7 @@ async function create(req, res, next) {
  * @returns {User}
  */
 async function update(req, res, next) {
-  const user = req.user;
+  const { user } = req;
   const isAdmin = (req.auth && req.auth.privilege >= 5);
   if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar;
   if (typeof req.body.username !== 'undefined') user.username = req.body.username;
@@ -176,19 +177,18 @@ async function changePoints(username, type, delta = 1) {
 
 function optionallyCancelSub(doCancel, subId) {
   return new Promise((resolve, reject) => {
-    console.debug("doCancel", doCancel)
+    console.debug('doCancel', doCancel);
     return resolve();
-  })
-
+  });
 }
 
 async function updateSubscription(req, res, next) {
-  const doCancel = req.params.doCancel == "cancel";
+  const doCancel = req.params.doCancel == 'cancel';
   const subId = req.params.subscriptionId;
-  const user = req.user;
-  const username = (req.user || {}).username;
+  const { user } = req;
+  const { username } = req.user || {};
   // check if user is same as auth.username
-  console.debug("go1");
+  console.debug('go1');
 
   try {
     await optionallyCancelSub(doCancel, subId);
@@ -198,10 +198,10 @@ async function updateSubscription(req, res, next) {
       if (!doCancel) {
         foundUser.subscription = subId;
         foundUser.privilege = 5;
-        console.debug("set subscription to ", subId, "for user", foundUser);
+        console.debug('set subscription to ', subId, 'for user', foundUser);
       } else {
-        console.debug("set subscription to -1 for user", foundUser);
-        foundUser.subscription = "-1";
+        console.debug('set subscription to -1 for user', foundUser);
+        foundUser.subscription = '-1';
         foundUser.privilege = 1;
       }
       await foundUser.save();
@@ -214,14 +214,14 @@ async function updateSubscription(req, res, next) {
           lastUpdated: foundUser.lastUpdated,
           score: foundUser.karma,
           privilege: (foundUser.privilege !== 'undefined') ? foundUser.privilege : 1,
-          subscription: "-1"
+          subscription: '-1'
         }, config.jwtSecret);
         return res.json({
           token,
           username: foundUser.username || (((foundUser || {}).name || {}).first)
         });
       } else {
-        console.debug("encoding token with sub " + foundUser.subscription);
+        console.debug(`encoding token with sub ${foundUser.subscription}`);
         const token = jwt.sign({
           id: foundUser.email || foundUser._id || foundUser.id,
           avatar: foundUser.avatar || foundUser.gravatar,
@@ -229,7 +229,7 @@ async function updateSubscription(req, res, next) {
           score: foundUser.karma,
           lastUpdated: foundUser.lastUpdated || foundUser.lastLogin,
           privilege: foundUser.privilege ? foundUser.privilege : 1,
-          subscription: foundUser.subscription ? foundUser.subscription : "-1"
+          subscription: foundUser.subscription ? foundUser.subscription : '-1'
         }, config.jwtSecret);
 
         return res.json({
@@ -293,7 +293,7 @@ async function list(req, res, next) {
         count_voted: u.count_voted,
         lastUpdated: u.lastUpdated,
         createdAt: u.createdAt,
-        loginCount: u.loginCount,
+        loginCount: u.loginCount
       })));
     }
 
@@ -318,7 +318,7 @@ async function list(req, res, next) {
         count_voted: u.count_voted,
         lastUpdated: u.lastUpdated,
         createdAt: u.createdAt,
-        loginCount: u.loginCount,
+        loginCount: u.loginCount
       })));
     } else if (countOnly !== false) {
       const userCount = await User.countDocuments().exec();
@@ -337,7 +337,7 @@ async function list(req, res, next) {
  */
 async function remove(req, res, next) {
   try {
-    const user = req.user;
+    const { user } = req;
     const userToReturn = user.toObject(); // Get the user document before deletion
     await user.deleteOne();
     res.json(userToReturn);
@@ -346,4 +346,4 @@ async function remove(req, res, next) {
   }
 }
 
-export default { changePoints, updateSubscription, incrementLoginCount, load, get, create, update, list, remove }
+export default { changePoints, updateSubscription, incrementLoginCount, load, get, create, update, list, remove };

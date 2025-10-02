@@ -1,6 +1,6 @@
 /**
  * Modern Cache Middleware
- * 
+ *
  * Provides intelligent caching with Redis support and memory fallback
  */
 
@@ -34,9 +34,9 @@ let redisConnected = false;
 async function initializeRedis() {
   if (process.env.REDIS_URL || process.env.REDIS_HOST) {
     try {
-      const redisConfig = process.env.REDIS_URL ? 
-        { url: process.env.REDIS_URL } : 
-        {
+      const redisConfig = process.env.REDIS_URL
+        ? { url: process.env.REDIS_URL }
+        : {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT) || 6379,
           password: process.env.REDIS_PASSWORD,
@@ -44,24 +44,23 @@ async function initializeRedis() {
         };
 
       redisClient = createClient(redisConfig);
-      
+
       redisClient.on('error', (err) => {
         logger.error('Redis connection error:', err);
         redisConnected = false;
       });
-      
+
       redisClient.on('connect', () => {
         logger.info('Connected to Redis');
         redisConnected = true;
       });
-      
+
       redisClient.on('disconnect', () => {
         logger.warn('Disconnected from Redis');
         redisConnected = false;
       });
-      
+
       await redisClient.connect();
-      
     } catch (error) {
       logger.warn('Failed to initialize Redis, using memory cache:', error.message);
       redisClient = null;
@@ -88,10 +87,10 @@ class CacheManager {
     } catch (error) {
       logger.warn('Redis get error, falling back to memory cache:', error.message);
     }
-    
+
     return memoryCache.get(key) || null;
   }
-  
+
   async set(key, value, ttl = 300) {
     try {
       if (redisConnected && redisClient) {
@@ -101,10 +100,10 @@ class CacheManager {
     } catch (error) {
       logger.warn('Redis set error, falling back to memory cache:', error.message);
     }
-    
+
     return memoryCache.set(key, value, ttl);
   }
-  
+
   async del(key) {
     try {
       if (redisConnected && redisClient) {
@@ -113,10 +112,10 @@ class CacheManager {
     } catch (error) {
       logger.warn('Redis delete error:', error.message);
     }
-    
+
     memoryCache.del(key);
   }
-  
+
   async flush() {
     try {
       if (redisConnected && redisClient) {
@@ -125,10 +124,10 @@ class CacheManager {
     } catch (error) {
       logger.warn('Redis flush error:', error.message);
     }
-    
+
     memoryCache.flushAll();
   }
-  
+
   async exists(key) {
     try {
       if (redisConnected && redisClient) {
@@ -137,7 +136,7 @@ class CacheManager {
     } catch (error) {
       logger.warn('Redis exists error:', error.message);
     }
-    
+
     return memoryCache.has(key);
   }
 }
@@ -149,9 +148,9 @@ const cache = new CacheManager();
  */
 function generateCacheKey(req, options = {}) {
   const { prefix = 'api', includeUser = false, includeQuery = true } = options;
-  
+
   let key = `${prefix}:${req.method}:${req.path}`;
-  
+
   if (includeQuery && Object.keys(req.query).length > 0) {
     const sortedQuery = Object.keys(req.query)
       .sort()
@@ -159,11 +158,11 @@ function generateCacheKey(req, options = {}) {
       .join('&');
     key += `:${Buffer.from(sortedQuery).toString('base64')}`;
   }
-  
+
   if (includeUser && req.user) {
     key += `:user:${req.user.id}`;
   }
-  
+
   return key;
 }
 
@@ -179,64 +178,64 @@ export const cacheResponse = (options = {}) => {
     condition = null, // Function to determine if response should be cached
     keyGenerator = null // Custom key generator function
   } = options;
-  
+
   return async (req, res, next) => {
     // Skip caching for non-GET requests
     if (req.method !== 'GET') {
       return next();
     }
-    
+
     // Skip caching if user is authenticated and includeUser is false
     if (req.user && !includeUser) {
       return next();
     }
-    
+
     try {
       // Generate cache key
-      const cacheKey = keyGenerator ? 
-        keyGenerator(req) : 
-        generateCacheKey(req, { prefix, includeUser, includeQuery });
-      
+      const cacheKey = keyGenerator
+        ? keyGenerator(req)
+        : generateCacheKey(req, { prefix, includeUser, includeQuery });
+
       // Try to get cached response
       const cachedResponse = await cache.get(cacheKey);
-      
+
       if (cachedResponse) {
         logger.debug('Cache hit', { key: cacheKey, requestId: req.lambda?.context?.awsRequestId });
-        
+
         // Set cache headers
         res.set({
           'X-Cache': 'HIT',
           'X-Cache-Key': cacheKey,
           'Cache-Control': `public, max-age=${ttl}`
         });
-        
+
         return res.status(cachedResponse.status).json(cachedResponse.data);
       }
-      
+
       logger.debug('Cache miss', { key: cacheKey, requestId: req.lambda?.context?.awsRequestId });
-      
+
       // Store original res.json method
       const originalJson = res.json;
-      
+
       // Override res.json to cache the response
-      res.json = function(data) {
+      res.json = function (data) {
         // Check if response should be cached
         if (condition && !condition(req, res, data)) {
           return originalJson.call(this, data);
         }
-        
+
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
           const responseToCache = {
             status: res.statusCode,
-            data: data
+            data
           };
-          
+
           // Cache the response (non-blocking)
           cache.set(cacheKey, responseToCache, ttl).catch(err => {
             logger.warn('Failed to cache response:', err.message);
           });
-          
+
           // Set cache headers
           res.set({
             'X-Cache': 'MISS',
@@ -244,12 +243,11 @@ export const cacheResponse = (options = {}) => {
             'Cache-Control': `public, max-age=${ttl}`
           });
         }
-        
+
         return originalJson.call(this, data);
       };
-      
+
       next();
-      
     } catch (error) {
       logger.error('Cache middleware error:', error);
       next(); // Continue without caching on error
@@ -265,9 +263,9 @@ export const invalidateCache = (patterns = []) => {
     // Store original methods
     const originalJson = res.json;
     const originalSend = res.send;
-    
+
     // Override response methods to invalidate cache after successful operations
-    const invalidateAfterResponse = function(data) {
+    const invalidateAfterResponse = function (data) {
       if (res.statusCode >= 200 && res.statusCode < 300) {
         // Invalidate cache patterns (non-blocking)
         Promise.all(patterns.map(async (pattern) => {
@@ -289,20 +287,20 @@ export const invalidateCache = (patterns = []) => {
           logger.warn('Cache invalidation failed:', err.message);
         });
       }
-      
+
       return data;
     };
-    
-    res.json = function(data) {
+
+    res.json = function (data) {
       invalidateAfterResponse(data);
       return originalJson.call(this, data);
     };
-    
-    res.send = function(data) {
+
+    res.send = function (data) {
       invalidateAfterResponse(data);
       return originalSend.call(this, data);
     };
-    
+
     next();
   };
 };
@@ -316,7 +314,7 @@ export const warmCache = (keys = []) => {
       // Warm cache with predefined keys (non-blocking)
       Promise.all(keys.map(async (keyConfig) => {
         const { key, fetcher, ttl = 300 } = keyConfig;
-        
+
         if (!(await cache.exists(key))) {
           try {
             const data = await fetcher();
@@ -329,11 +327,10 @@ export const warmCache = (keys = []) => {
       })).catch(err => {
         logger.warn('Cache warming error:', err.message);
       });
-      
     } catch (error) {
       logger.error('Cache warming middleware error:', error);
     }
-    
+
     next();
   };
 };
@@ -347,10 +344,10 @@ export const cacheMiddleware = cacheResponse({
   condition: (req, res, data) => {
     // Don't cache error responses
     if (res.statusCode >= 400) return false;
-    
+
     // Don't cache empty responses
     if (!data || (Array.isArray(data) && data.length === 0)) return false;
-    
+
     return true;
   }
 });
@@ -361,20 +358,20 @@ export const cacheMiddleware = cacheResponse({
 export const cacheUtils = {
   // Get cache instance
   getCache: () => cache,
-  
+
   // Manual cache operations
   get: (key) => cache.get(key),
   set: (key, value, ttl) => cache.set(key, value, ttl),
   del: (key) => cache.del(key),
   flush: () => cache.flush(),
   exists: (key) => cache.exists(key),
-  
+
   // Generate cache key
   generateKey: generateCacheKey,
-  
+
   // Cache statistics (memory cache only)
   getStats: () => memoryCache.getStats(),
-  
+
   // Redis status
   isRedisConnected: () => redisConnected
 };

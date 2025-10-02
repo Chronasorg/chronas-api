@@ -1,8 +1,9 @@
-import passport from 'passport'
-import { Strategy } from 'passport-facebook'
-import jwt from 'jsonwebtoken'
-import { config } from '../../config/config.js'
-import userCtrl from '../controllers/user.controller.js'
+import passport from 'passport';
+import { Strategy } from 'passport-facebook';
+import jwt from 'jsonwebtoken';
+
+import { config } from '../../config/config.js';
+import userCtrl from '../controllers/user.controller.js';
 
 const credentials = {
   clientID: config.facebookClientId,
@@ -10,18 +11,18 @@ const credentials = {
   callbackURL: config.facebookCallBackUrl,
 
   profileFields: ['id', 'displayName', 'photos', 'email']
-}
+};
 
 function authenticateUser(req, res, next) {
-  const self = this
+  const self = this;
 
-  let redirect = config.chronasHost
-  if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app'
+  let redirect = config.chronasHost;
+  if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app';
 
   // Begin process
-  console.log('============================================================')
-  console.log('[services.facebook] - Triggered authentication process...')
-  console.log('------------------------------------------------------------')
+  console.log('============================================================');
+  console.log('[services.facebook] - Triggered authentication process...');
+  console.log('------------------------------------------------------------');
 
   // Initalise Facebook credentials
   const facebookStrategy = new Strategy(credentials, (accessToken, refreshToken, profile, done) => {
@@ -29,27 +30,27 @@ function authenticateUser(req, res, next) {
       accessToken,
       refreshToken,
       profile
-    })
-  })
+    });
+  });
 
   // Pass through authentication to passport
-  passport.use(facebookStrategy)
+  passport.use(facebookStrategy);
 
   // Save user data once returning from Facebook
   if (typeof (req.query || {}).cb !== 'undefined') {
-    console.log('[services.facebook] - Callback workflow detected, attempting to process data...')
-    console.log('------------------------------------------------------------')
+    console.log('[services.facebook] - Callback workflow detected, attempting to process data...');
+    console.log('------------------------------------------------------------');
 
     passport.authenticate('facebook', { session: false }, (err, data) => {
       if (err || !data) {
-        console.log(`[services.facebook] - Error retrieving Facebook account data - ${JSON.stringify(data)} ${JSON.stringify(err)}`)
-        return res.redirect('/signin')
+        console.log(`[services.facebook] - Error retrieving Facebook account data - ${JSON.stringify(data)} ${JSON.stringify(err)}`);
+        return res.redirect('/signin');
       }
 
-      console.log('[services.facebook] - Successfully retrieved Facebook account data, processing...')
-      console.log('------------------------------------------------------------')
+      console.log('[services.facebook] - Successfully retrieved Facebook account data, processing...');
+      console.log('------------------------------------------------------------');
 
-      const name = (data.profile && data.profile.displayName) ? data.profile.displayName.split(' ') : []
+      const name = (data.profile && data.profile.displayName) ? data.profile.displayName.split(' ') : [];
       //
       const auth = {
         id: `facebook${data.profile.id}`,
@@ -66,7 +67,7 @@ function authenticateUser(req, res, next) {
         avatar: `https://graph.facebook.com/${data.profile.id}/picture?width=600&height=600`,
         accessToken: data.accessToken,
         refreshToken: data.refreshToken
-      }
+      };
 
       req.body = {
         id: auth.type + auth.profileId,
@@ -77,24 +78,24 @@ function authenticateUser(req, res, next) {
         username: auth.username || `${auth.name.first} ${auth.name.last}`,
         name: `${auth.name.first} ${auth.name.last}`,
         thirdParty: true,
-        website: auth.website,
-      }
+        website: auth.website
+      };
 
-      userCtrl.create(req, res, next)
+      userCtrl.create(req, res, next);
 
       // req.session.auth = auth
       //
       // const token = jwt.sign(auth, config.jwtSecret)
       //
-    })(req, res, next)
+    })(req, res, next);
 
     // Perform inital authentication request to Facebook
   } else {
-    console.log('[services.facebook] - Authentication workflow detected, attempting to request access...')
-    console.log('------------------------------------------------------------')
+    console.log('[services.facebook] - Authentication workflow detected, attempting to request access...');
+    console.log('------------------------------------------------------------');
 
-    passport.authenticate('facebook', { scope: ['email'] })(req, res, next)
+    passport.authenticate('facebook', { scope: ['email'] })(req, res, next);
   }
 }
 
-export default { authenticateUser }
+export default { authenticateUser };

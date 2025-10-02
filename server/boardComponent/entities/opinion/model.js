@@ -1,7 +1,7 @@
 /**
  * opinion model
  */
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const opinionSchema = mongoose.Schema({
   forum_id: mongoose.Schema.ObjectId,
@@ -13,9 +13,9 @@ const opinionSchema = mongoose.Schema({
   date: Date,
   score: {
     type: Number,
-    default: 0,
+    default: 0
   },
-  content: Object,
-}, { usePushEach: true })
+  content: Object
+}, { usePushEach: true });
 
-export default mongoose.model('opinion', opinionSchema)
+export default mongoose.model('opinion', opinionSchema);

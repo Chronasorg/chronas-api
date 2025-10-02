@@ -1,7 +1,8 @@
-import Promise from 'bluebird'
-import mongoose from 'mongoose'
-import httpStatus from 'http-status'
-import APIError from '../helpers/APIError.js'
+import Promise from 'bluebird';
+import mongoose from 'mongoose';
+import httpStatus from 'http-status';
+
+import APIError from '../helpers/APIError.js';
 
 /**
  * Flag Schema
@@ -12,26 +13,26 @@ const FlagSchema = new mongoose.Schema({
   //   required: true
   // },
   fullUrl: { // id of the resource
-    type: String,
+    type: String
   },
   subEntityId: {
-    type: String,
+    type: String
   },
   resource: {
-    type: String,
+    type: String
   },
   wrongWiki: {
-    type: String,
+    type: String
   },
   timestamp: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   fixed: {
     type: Boolean,
     default: false
   }
-}, { versionKey: false })
+}, { versionKey: false });
 
 /**
  * Add your
@@ -44,7 +45,7 @@ const FlagSchema = new mongoose.Schema({
  * Methods
  */
 FlagSchema.method({
-})
+});
 
 /**
  * Statics
@@ -60,11 +61,11 @@ FlagSchema.statics = {
       .exec()
       .then((flag) => {
         if (flag) {
-          return flag
+          return flag;
         }
-        const err = new APIError('No such flag exists!', httpStatus.NOT_FOUND)
-        return Promise.reject(err)
-      })
+        const err = new APIError('No such flag exists!', httpStatus.NOT_FOUND);
+        return Promise.reject(err);
+      });
   },
 
   /**
@@ -74,12 +75,12 @@ FlagSchema.statics = {
    * @returns {Promise<Flag[]>}
    */
   list({ start = 0, end = 50, entity, order, subentity, fixed, sort = 'timestamp' } = {}) {
-    const optionalFind = (entity) ? { entityId: entity } : {}
+    const optionalFind = (entity) ? { entityId: entity } : {};
     if (subentity) {
-      optionalFind.subEntityId = subentity
+      optionalFind.subEntityId = subentity;
     }
-    if (typeof fixed !== "undefined") {
-      optionalFind.fixed = fixed
+    if (typeof fixed !== 'undefined') {
+      optionalFind.fixed = fixed;
     }
 
     return this.find(optionalFind)
@@ -89,14 +90,14 @@ FlagSchema.statics = {
       .lean()
       .exec()
       .then(flags => flags.map((obj) => {
-        obj.fullUrl = decodeURIComponent(obj.fullUrl)
+        obj.fullUrl = decodeURIComponent(obj.fullUrl);
 
-        return obj
-      }))
+        return obj;
+      }));
   }
-}
+};
 
 /**
  * @typedef Flag
  */
-export default mongoose.model('Flag', FlagSchema)
+export default mongoose.model('Flag', FlagSchema);

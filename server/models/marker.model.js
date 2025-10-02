@@ -1,6 +1,6 @@
 /**
  * Legacy Marker Model
- * 
+ *
  * Simplified marker model compatible with existing controllers
  * Maintains backward compatibility with the original schema
  */
@@ -8,6 +8,7 @@
 import Promise from 'bluebird';
 import mongoose from 'mongoose';
 import httpStatus from 'http-status';
+
 import APIError from '../helpers/APIError.js';
 
 /**
@@ -18,83 +19,83 @@ const MarkerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed, // Allow both ObjectId and String
     required: true
   },
-  
+
   name: {
     type: String,
     required: true,
     trim: true,
     index: true
   },
-  
+
   year: {
     type: Number,
     required: true,
     index: true
   },
-  
+
   // Legacy coordinate format [longitude, latitude]
   coo: {
     type: [Number],
     validate: {
-      validator: function(v) {
-        return !v || (Array.isArray(v) && v.length === 2 && 
-               v[1] >= -90 && v[1] <= 90 && 
+      validator: function (v) {
+        return !v || (Array.isArray(v) && v.length === 2 &&
+               v[1] >= -90 && v[1] <= 90 &&
                v[0] >= -180 && v[0] <= 180);
       },
       message: 'Invalid coordinates format'
     }
   },
-  
+
   // Secondary coordinates (if needed)
   coo2: {
     type: [Number]
   },
-  
+
   // Marker type
   type: {
     type: String,
     required: true,
     index: true
   },
-  
+
   // Capital flag
   capital: {
     type: Boolean,
     default: false
   },
-  
+
   // HTML content
   html: {
     type: String
   },
-  
+
   // Part of relationship
   partOf: {
     type: String
   },
-  
+
   // End year
   end: {
     type: Number
   },
-  
+
   // Wiki reference
   wiki: {
     type: String,
     trim: true
   },
-  
+
   // Score for ranking
   score: {
     type: Number,
     default: 0
   },
-  
+
   // Additional data
   data: {
     type: mongoose.Schema.Types.Mixed
   }
-}, { 
+}, {
   versionKey: false,
   timestamps: false
 });
@@ -163,7 +164,7 @@ MarkerSchema.statics = {
 
     // Build query
     const query = {};
-    
+
     // Year filtering with delta
     if (year !== false && year !== undefined) {
       const actualDelta = migrationDelta || delta;
@@ -172,7 +173,7 @@ MarkerSchema.statics = {
         $lte: year + actualDelta
       };
     }
-    
+
     // End year filtering
     if (end !== false && end !== undefined) {
       if (!query.year) query.year = {};
@@ -182,17 +183,17 @@ MarkerSchema.statics = {
         query.year = { $lte: end };
       }
     }
-    
+
     // Type filtering
     if (typeArray && Array.isArray(typeArray)) {
       query.type = { $in: typeArray };
     }
-    
+
     // Wiki filtering
     if (wikiArray && Array.isArray(wikiArray)) {
       query.wiki = { $in: wikiArray };
     }
-    
+
     // Search filtering
     if (search) {
       query.$or = [
@@ -201,16 +202,16 @@ MarkerSchema.statics = {
         { _id: { $regex: search, $options: 'i' } }
       ];
     }
-    
+
     // Text filter
     if (filter) {
       query.name = { $regex: filter, $options: 'i' };
     }
-    
+
     // Build sort
     const sortQuery = {};
     sortQuery[sort] = order === 'desc' ? -1 : 1;
-    
+
     return this.find(query)
       .sort(sortQuery)
       .skip(start)
@@ -241,7 +242,7 @@ MarkerSchema.statics = {
             }))
           };
         }
-        
+
         return markers;
       });
   },

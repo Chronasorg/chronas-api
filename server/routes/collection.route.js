@@ -1,13 +1,14 @@
-import express from 'express'
-import { validate } from '../helpers/validation.js'
-import { expressjwt as expressJwt } from 'express-jwt'
-import paramValidation from '../../config/param-validation.js'
-import collectionCtrl from '../controllers/collection.controller.js'
-import markerCtrl from '../controllers/marker.controller.js'
-import { config } from '../../config/config.js'
-import checkPrivilege from '../helpers/privileges.js'
+import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
-const router = express.Router() // eslint-disable-line new-cap
+import { validate } from '../helpers/validation.js';
+import paramValidation from '../../config/param-validation.js';
+import collectionCtrl from '../controllers/collection.controller.js';
+import markerCtrl from '../controllers/marker.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
+
+const router = express.Router(); // eslint-disable-line new-cap
 
 router.route('/')
   /** GET /v1/collections - Get list of collections */
@@ -21,13 +22,13 @@ router.route('/')
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(1),
     // validate(paramValidation.createMarker),
-    collectionCtrl.create)
+    collectionCtrl.create);
 
 router.route('/slides')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(1),
-    collectionCtrl.updateBookmark)
+    collectionCtrl.updateBookmark);
 
 router.route('/:collectionId')
   .get(
@@ -41,9 +42,9 @@ router.route('/:collectionId')
   .delete(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(1),
-    collectionCtrl.remove)
+    collectionCtrl.remove);
 
 /** Load collection when API with collectionId route parameter is hit */
-router.param('collectionId', collectionCtrl.load)
+router.param('collectionId', collectionCtrl.load);
 
-export default router
+export default router;

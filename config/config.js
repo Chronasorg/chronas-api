@@ -7,25 +7,22 @@ export const cache = memoryCache;
 
 // require and configure dotenv, will load vars in .env in PROCESS.ENV
 
-//parse json from the lambda environment variables
-//check if process.env.chronasConfig is not null
+// parse json from the lambda environment variables
+// check if process.env.chronasConfig is not null
 const mergedSecrets = {};
 
-if (process.env.chronasConfig != null)
-{
-  const lambdaEnv = JSON.parse(process.env.chronasConfig)
+if (process.env.chronasConfig != null) {
+  const lambdaEnv = JSON.parse(process.env.chronasConfig);
   Object.assign(mergedSecrets, process.env);
   Object.keys(lambdaEnv).forEach(key => mergedSecrets[key] = lambdaEnv[key]);
-
-}else
-{
+} else {
   // Load environment-specific .env file
   const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
   dotenv.config({ path: envFile });
   Object.assign(mergedSecrets, process.env);
 }
 
-//define the default env vars
+// define the default env vars
 
 // define validation for all the env vars
 const envVarsSchema = Joi.object({
@@ -43,9 +40,9 @@ const envVarsSchema = Joi.object({
   JWT_SECRET: Joi.string().required()
     .description('JWT Secret required to sign'),
   SECRET_DB_NAME: Joi.string()
-    .default('/chronas/docdb/newpassword'),    
+    .default('/chronas/docdb/newpassword'),
   region: Joi.string()
-    .default('eu-west-1'),       
+    .default('eu-west-1'),
   MONGO_HOST: Joi.string()
     .when('SECRET_DB_NAME', {
       is: Joi.exist(),
@@ -55,16 +52,16 @@ const envVarsSchema = Joi.object({
     .description('Mongo DB host url (optional when using Secrets Manager)'),
   MONGO_PORT: Joi.number()
     .default(27017)
-    
-}).unknown()
-  .required()
 
-const { error, value: envVars } = envVarsSchema.validate(mergedSecrets)
+}).unknown()
+  .required();
+
+const { error, value: envVars } = envVarsSchema.validate(mergedSecrets);
 if (error) {
-  throw new Error(`Config validation error: ${error.message}`)
+  throw new Error(`Config validation error: ${error.message}`);
 }
 
-export const initItemsAndLinksToRefresh = ['provinces', 'links', 'ruler', 'culture', 'religion', 'capital', 'province', 'religionGeneral']
+export const initItemsAndLinksToRefresh = ['provinces', 'links', 'ruler', 'culture', 'religion', 'capital', 'province', 'religionGeneral'];
 
 export const config = {
   env: envVars.NODE_ENV,
@@ -72,7 +69,7 @@ export const config = {
   mongooseDebug: envVars.MONGOOSE_DEBUG,
   jwtSecret: envVars.JWT_SECRET,
   mongo: {
-    host: envVars.MONGO_HOST || null, 
+    host: envVars.MONGO_HOST || null,
     port: envVars.MONGO_PORT
   },
   docDbsecretName: envVars.SECRET_DB_NAME,
@@ -103,6 +100,6 @@ export const config = {
   twitterCallbackUrl: envVars.TWITTER_CALLBACK_URL,
   rumApplicationId: envVars.RUMAPPLICATIONID,
   chronasHost: envVars.CHRONAS_HOST
-}
+};
 
 console.log(config);

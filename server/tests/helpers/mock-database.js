@@ -37,20 +37,20 @@ class MockModel {
   static find(query = {}) {
     const collection = mockData[this.collection.name];
     if (!collection) return Promise.resolve([]);
-    
+
     const results = Array.from(collection.values());
-    
+
     // Simple query matching
     if (Object.keys(query).length === 0) {
       return Promise.resolve(results);
     }
-    
+
     const filtered = results.filter(doc => {
       return Object.entries(query).every(([key, value]) => {
         return doc[key] === value;
       });
     });
-    
+
     return Promise.resolve(filtered);
   }
 
@@ -71,26 +71,26 @@ class MockModel {
   static insertMany(docs) {
     const collection = mockData[this.collection.name];
     if (!collection) return Promise.resolve([]);
-    
+
     const results = docs.map(data => {
       const doc = new this(data);
       collection.set(doc._id, doc);
       return doc;
     });
-    
+
     return Promise.resolve(results);
   }
 
   static deleteMany(query = {}) {
     const collection = mockData[this.collection.name];
     if (!collection) return Promise.resolve({ deletedCount: 0 });
-    
+
     if (Object.keys(query).length === 0) {
       const count = collection.size;
       collection.clear();
       return Promise.resolve({ deletedCount: count });
     }
-    
+
     // Simple implementation for specific queries
     let deletedCount = 0;
     for (const [id, doc] of collection.entries()) {
@@ -102,7 +102,7 @@ class MockModel {
         deletedCount++;
       }
     }
-    
+
     return Promise.resolve({ deletedCount });
   }
 }
@@ -110,7 +110,7 @@ class MockModel {
 // Mock User model
 class MockUser extends MockModel {
   static collection = { name: 'users' };
-  
+
   async comparePassword(candidatePassword, callback) {
     // Simple mock - in real tests, this would check bcrypt hash
     const isMatch = candidatePassword === 'asdf';
@@ -119,20 +119,20 @@ class MockUser extends MockModel {
     }
     return isMatch;
   }
-  
+
   static findOne(query = {}) {
     const collection = mockData[this.collection.name];
     if (!collection) return { exec: () => Promise.resolve(null) };
-    
+
     const results = Array.from(collection.values());
     const filtered = results.filter(doc => {
       return Object.entries(query).every(([key, value]) => {
         return doc[key] === value;
       });
     });
-    
+
     const result = filtered[0] || null;
-    
+
     // Return an object with exec method to match Mongoose API
     return {
       exec: () => Promise.resolve(result ? new MockUser(result) : null)
@@ -169,11 +169,11 @@ const mockConnection = {
 const mockMongoose = {
   model: (name) => {
     switch (name) {
-      case 'User': return MockUser;
-      case 'Marker': return MockMarker;
-      case 'Area': return MockArea;
-      case 'Metadata': return MockMetadata;
-      default: return MockModel;
+    case 'User': return MockUser;
+    case 'Marker': return MockMarker;
+    case 'Area': return MockArea;
+    case 'Metadata': return MockMetadata;
+    default: return MockModel;
     }
   },
   connection: mockConnection,
@@ -203,25 +203,25 @@ export function populateMockData(testData) {
       mockData.users.set(user._id || user.email, user);
     });
   }
-  
+
   if (testData.markers) {
     testData.markers.forEach(marker => {
       mockData.markers.set(marker._id, marker);
     });
   }
-  
+
   if (testData.areas) {
     testData.areas.forEach(area => {
       mockData.areas.set(area._id, area);
     });
   }
-  
+
   if (testData.metadatas) {
     testData.metadatas.forEach(metadata => {
       mockData.metadatas.set(metadata._id, metadata);
     });
   }
-  
+
   console.log('📋 Mock data populated');
   return Promise.resolve();
 }

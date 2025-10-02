@@ -1,10 +1,11 @@
-import Game from '../models/game.model.js'
-import logger from '../../config/winston.js'
-import APIError from '../helpers/APIError.js'
-import { config } from '../../config/config.js'
-import jwt from 'jsonwebtoken'
-import httpStatus from 'http-status'
-import Marker from "../models/marker.model.js";
+import jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+
+import Game from '../models/game.model.js';
+import logger from '../../config/winston.js';
+import APIError from '../helpers/APIError.js';
+import { config } from '../../config/config.js';
+import Marker from '../models/marker.model.js';
 
 /**
  * Create new game
@@ -13,8 +14,8 @@ import Marker from "../models/marker.model.js";
  * @returns {Game}
  */
 function create(req, res, next) {
-  console.log('Attempting to create game')
-  console.log('------------------------------------------------------------')
+  console.log('Attempting to create game');
+  console.log('------------------------------------------------------------');
   const game = new Game({
     // _id: Math.random(),
     avatar: req.body.avatar,
@@ -22,20 +23,20 @@ function create(req, res, next) {
     gold: req.body.gold,
     identified: req.body.identified,
     duration: req.body.duration
-  })
+  });
 
   game.save()
     .then((savedGame) => {
-      return res.json(savedGame)
+      return res.json(savedGame);
     })
     .catch((e) => {
-      console.log('ERROR Attempt to save game', e)
-      console.log('------------------------------------------------------------')
+      console.log('ERROR Attempt to save game', e);
+      console.log('------------------------------------------------------------');
 
       if (!req.body.thirdParty) {
-        next(e)
+        next(e);
       }
-    })
+    });
 }
 
 /**
@@ -45,11 +46,11 @@ function create(req, res, next) {
  * @returns {Game[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query
-  const limit = end - start
-  let highscoreCount = (req.query.top || 10)
-  if (highscoreCount > 15) highscoreCount = 15
-  const countOnly = req.query.countOnly || false
+  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
+  const limit = end - start;
+  let highscoreCount = (req.query.top || 10);
+  if (highscoreCount > 15) highscoreCount = 15;
+  const countOnly = req.query.countOnly || false;
 
   if (highscoreCount !== false) {
     Game.find()
@@ -59,8 +60,8 @@ function list(req, res, next) {
       .exec()
       .then((games) => {
         Game.count().exec().then((gameCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count')
-          res.set('X-Total-Count', gameCount)
+          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
+          res.set('X-Total-Count', gameCount);
           res.json(games.map(u => ({
             _id: u._id,
             avatar: u.avatar,
@@ -68,19 +69,19 @@ function list(req, res, next) {
             gold: u.gold,
             identified: u.identified,
             createdAt: u.createdAt,
-            duration: u.duration,
-          })))
-        })
-      })
+            duration: u.duration
+          })));
+        });
+      });
   } else if (countOnly !== false) {
     Game.count()
       .exec()
       .then((gameCount) => {
-        res.json({ total: gameCount })
-      })
+        res.json({ total: gameCount });
+      });
   } else {
-    res.status(401).json({ message: 'Unauthorized' })
+    res.status(401).json({ message: 'Unauthorized' });
   }
 }
 
-export default { create, list }
+export default { create, list };

@@ -1,6 +1,6 @@
 /**
  * AWS Secrets Manager Integration (SDK v3)
- * 
+ *
  * This module provides optimized Secrets Manager integration with caching,
  * error handling, and Lambda performance optimization.
  */
@@ -28,7 +28,7 @@ function getSecretsManagerClient() {
       region,
       // Lambda optimization: reuse connections
       maxAttempts: 3,
-      requestTimeout: 10000, // 10 seconds timeout
+      requestTimeout: 10000 // 10 seconds timeout
     });
 
     debugLog(`Secrets Manager client created for region: ${region}`);
@@ -138,7 +138,6 @@ export async function getSecret(secretId, options = {}) {
 
         debugLog(`Secret retrieved successfully: ${secretId}`);
         return secretValue;
-
       } catch (error) {
         lastError = error;
         debugLog(`Attempt ${attempt} failed for secret ${secretId}: ${error.message}`);
@@ -158,7 +157,6 @@ export async function getSecret(secretId, options = {}) {
     }
 
     throw lastError;
-
   } catch (error) {
     debugLog(`Failed to retrieve secret ${secretId}: ${error.message}`);
     throw new Error(`Failed to retrieve secret ${secretId}: ${error.message}`);
@@ -240,7 +238,6 @@ export async function getDatabaseCredentials(secretId) {
     });
 
     return processedCredentials;
-
   } catch (error) {
     console.error('❌ Failed to get database credentials:', error.message);
     console.error('🔍 Credentials error details:', error);
@@ -263,7 +260,6 @@ export async function getApplicationConfig(secretId) {
 
     debugLog('Application configuration retrieved from Secrets Manager');
     return config;
-
   } catch (error) {
     debugLog(`Failed to get application config: ${error.message}`);
 
@@ -343,7 +339,6 @@ export async function initializeDatabaseFromSecrets(secretId) {
 
     debugLog('Database connection URI created from Secrets Manager');
     return mongoUri;
-
   } catch (error) {
     debugLog(`Failed to initialize database from secrets: ${error.message}`);
     throw error;
@@ -402,7 +397,6 @@ export async function healthCheck() {
       healthy: true,
       message: 'Secrets Manager connectivity verified'
     };
-
   } catch (error) {
     return {
       healthy: false,

@@ -1,11 +1,12 @@
 /**
  * Modern Area Model
- * 
+ *
  * Updated for Mongoose 8.x with GeoJSON support,
  * improved validation, and modern features
  */
 
 import mongoose from 'mongoose';
+
 import { createNotFoundError, createValidationError } from '../middleware/errorHandler.js';
 
 const { Schema } = mongoose;
@@ -23,7 +24,7 @@ const GeometrySchema = new Schema({
     type: Schema.Types.Mixed,
     required: [true, 'Coordinates are required'],
     validate: {
-      validator: function(coordinates) {
+      validator: function (coordinates) {
         // Basic coordinate validation - could be enhanced
         return Array.isArray(coordinates) && coordinates.length > 0;
       },
@@ -42,79 +43,79 @@ const PropertiesSchema = new Schema({
     trim: true,
     maxlength: [200, 'Ruler name cannot exceed 200 characters']
   },
-  
+
   dynasty: {
     type: String,
     trim: true,
     maxlength: [200, 'Dynasty name cannot exceed 200 characters']
   },
-  
+
   capital: {
     type: String,
     trim: true,
     maxlength: [200, 'Capital name cannot exceed 200 characters']
   },
-  
+
   population: {
     type: Number,
     min: [0, 'Population cannot be negative']
   },
-  
+
   area: {
     type: Number,
     min: [0, 'Area cannot be negative']
   },
-  
+
   // Cultural information
   culture: {
     type: String,
     trim: true,
     maxlength: [100, 'Culture cannot exceed 100 characters']
   },
-  
+
   religion: {
     type: String,
     trim: true,
     maxlength: [100, 'Religion cannot exceed 100 characters']
   },
-  
+
   language: {
     type: String,
     trim: true,
     maxlength: [100, 'Language cannot exceed 100 characters']
   },
-  
+
   // Economic information
   economy: {
     type: String,
     enum: ['agricultural', 'pastoral', 'trading', 'industrial', 'mixed'],
     default: 'mixed'
   },
-  
+
   resources: [{
     type: String,
     trim: true,
     maxlength: [50, 'Resource name cannot exceed 50 characters']
   }],
-  
+
   // Political information
   governmentType: {
     type: String,
     enum: ['monarchy', 'republic', 'empire', 'city-state', 'tribal', 'theocracy', 'other'],
     default: 'other'
   },
-  
+
   // External references
   wikipedia: {
     type: String,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return !v || /^https?:\/\/(en\.)?wikipedia\.org\/wiki\/.+/.test(v);
       },
       message: 'Wikipedia URL must be a valid Wikipedia link'
     }
   },
-  
+
   sources: [{
     title: {
       type: String,
@@ -125,7 +126,7 @@ const PropertiesSchema = new Schema({
     url: {
       type: String,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return !v || /^https?:\/\/.+/.test(v);
         },
         message: 'Source URL must be valid'
@@ -152,7 +153,7 @@ const AreaSchema = new Schema({
     type: Schema.Types.Mixed, // Allow both ObjectId and String for backward compatibility
     required: true
   },
-  
+
   name: {
     type: String,
     required: [true, 'Area name is required'],
@@ -160,7 +161,7 @@ const AreaSchema = new Schema({
     maxlength: [200, 'Area name cannot exceed 200 characters'],
     index: true
   },
-  
+
   year: {
     type: Number,
     required: [true, 'Year is required'],
@@ -168,20 +169,20 @@ const AreaSchema = new Schema({
     max: [3000, 'Year cannot be after 3000 CE'],
     index: true
   },
-  
+
   // GeoJSON geometry
   geometry: {
     type: GeometrySchema,
     required: [true, 'Geometry is required'],
     index: '2dsphere' // Enable geospatial queries
   },
-  
+
   // Area properties and metadata
   properties: {
     type: PropertiesSchema,
     default: {}
   },
-  
+
   // Visual styling
   style: {
     color: {
@@ -207,7 +208,7 @@ const AreaSchema = new Schema({
       default: 1
     }
   },
-  
+
   // Categorization
   tags: [{
     type: String,
@@ -215,21 +216,21 @@ const AreaSchema = new Schema({
     lowercase: true,
     maxlength: [50, 'Tag cannot exceed 50 characters']
   }],
-  
+
   category: {
     type: String,
     enum: ['political', 'cultural', 'religious', 'economic', 'military', 'geographical', 'other'],
     default: 'political',
     index: true
   },
-  
+
   // Content
   description: {
     type: String,
     maxlength: [2000, 'Description cannot exceed 2000 characters'],
     trim: true
   },
-  
+
   // Versioning and attribution
   createdBy: {
     type: Schema.Types.ObjectId,
@@ -237,19 +238,19 @@ const AreaSchema = new Schema({
     required: [true, 'Creator is required'],
     index: true
   },
-  
+
   lastModifiedBy: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     index: true
   },
-  
+
   version: {
     type: Number,
     default: 1,
     min: [1, 'Version must be at least 1']
   },
-  
+
   // Status and moderation
   status: {
     type: String,
@@ -257,14 +258,14 @@ const AreaSchema = new Schema({
     default: 'published',
     index: true
   },
-  
+
   visibility: {
     type: String,
     enum: ['public', 'private', 'unlisted'],
     default: 'public',
     index: true
   },
-  
+
   // Quality metrics
   accuracy: {
     type: Number,
@@ -272,7 +273,7 @@ const AreaSchema = new Schema({
     max: [5, 'Accuracy rating must be between 1 and 5'],
     default: 3
   },
-  
+
   votes: {
     up: {
       type: Number,
@@ -285,18 +286,18 @@ const AreaSchema = new Schema({
       min: [0, 'Downvotes cannot be negative']
     }
   },
-  
+
   // Relationships
   parentArea: {
     type: Schema.Types.ObjectId,
     ref: 'Area'
   },
-  
+
   childAreas: [{
     type: Schema.Types.ObjectId,
     ref: 'Area'
   }],
-  
+
   relatedAreas: [{
     area: {
       type: Schema.Types.ObjectId,
@@ -309,7 +310,7 @@ const AreaSchema = new Schema({
       required: true
     }
   }],
-  
+
   // Legacy data field for backward compatibility with old controllers
   // TODO: Remove this once controllers are updated to use new format
   data: {
@@ -340,12 +341,12 @@ AreaSchema.index({
 });
 
 // Virtual for vote score
-AreaSchema.virtual('voteScore').get(function() {
+AreaSchema.virtual('voteScore').get(function () {
   return this.votes.up - this.votes.down;
 });
 
 // Virtual for area calculation (approximate)
-AreaSchema.virtual('calculatedArea').get(function() {
+AreaSchema.virtual('calculatedArea').get(function () {
   if (this.geometry && this.geometry.type === 'Polygon') {
     // This is a simplified calculation - in production you'd use a proper geospatial library
     return this.properties.area || 0;
@@ -354,17 +355,17 @@ AreaSchema.virtual('calculatedArea').get(function() {
 });
 
 // Pre-save middleware
-AreaSchema.pre('save', function(next) {
+AreaSchema.pre('save', function (next) {
   // Update version on modification
   if (this.isModified() && !this.isNew) {
     this.version += 1;
   }
-  
+
   // Validate year range based on category
   if (this.category === 'political' && this.year > new Date().getFullYear()) {
     return next(new Error('Political areas cannot be in the future'));
   }
-  
+
   next();
 });
 
@@ -381,7 +382,7 @@ AreaSchema.methods = {
     }
     return true; // unlisted
   },
-  
+
   /**
    * Add vote
    */
@@ -393,34 +394,34 @@ AreaSchema.methods = {
     } else {
       throw createValidationError('Vote type must be \"up\" or \"down\"');
     }
-    
+
     return this.save();
   },
-  
+
   /**
    * Add related area
    */
   async addRelatedArea(areaId, relationship) {
     const validRelationships = ['successor', 'predecessor', 'contemporary', 'vassal', 'overlord', 'ally', 'enemy'];
-    
+
     if (!validRelationships.includes(relationship)) {
       throw createValidationError('Invalid relationship type');
     }
-    
+
     // Check if relationship already exists
     const existingRelation = this.relatedAreas.find(
       rel => rel.area.toString() === areaId.toString()
     );
-    
+
     if (existingRelation) {
       existingRelation.relationship = relationship;
     } else {
       this.relatedAreas.push({ area: areaId, relationship });
     }
-    
+
     return this.save();
   },
-  
+
   /**
    * Get GeoJSON representation
    */
@@ -449,17 +450,17 @@ AreaSchema.statics = {
   async get(id, options = {}) {
     try {
       let query = this.findById(id);
-      
+
       if (options.populate) {
         query = query.populate(options.populate);
       }
-      
+
       const area = await query;
-      
+
       if (!area) {
         throw createNotFoundError('Area not found');
       }
-      
+
       return area;
     } catch (error) {
       if (error.name === 'CastError') {
@@ -468,7 +469,7 @@ AreaSchema.statics = {
       throw error;
     }
   },
-  
+
   /**
    * Find areas by year range
    */
@@ -480,24 +481,24 @@ AreaSchema.statics = {
       limit = 50,
       skip = 0
     } = options;
-    
+
     const query = {
       year: { $gte: startYear, $lte: endYear },
       status,
       visibility
     };
-    
+
     if (category) {
       query.category = category;
     }
-    
+
     return this.find(query)
       .sort({ year: 1, name: 1 })
       .limit(limit)
       .skip(skip)
       .lean();
   },
-  
+
   /**
    * Find areas within geographic bounds
    */
@@ -508,7 +509,7 @@ AreaSchema.statics = {
       visibility = 'public',
       limit = 100
     } = options;
-    
+
     const query = {
       geometry: {
         $geoWithin: {
@@ -521,20 +522,20 @@ AreaSchema.statics = {
       status,
       visibility
     };
-    
+
     if (year !== null) {
       query.year = year;
     }
-    
+
     if (category) {
       query.category = category;
     }
-    
+
     return this.find(query)
       .limit(limit)
       .lean();
   },
-  
+
   /**
    * Search areas with text and filters
    */
@@ -549,31 +550,31 @@ AreaSchema.statics = {
       limit = 20,
       sort = 'relevance'
     } = options;
-    
+
     const skip = (page - 1) * limit;
-    
+
     // Build query
     const query = {
       status,
       visibility
     };
-    
+
     if (searchTerm) {
       query.$text = { $search: searchTerm };
     }
-    
+
     if (year) {
       query.year = year;
     }
-    
+
     if (category) {
       query.category = category;
     }
-    
+
     if (tags && tags.length > 0) {
       query.tags = { $in: tags };
     }
-    
+
     // Build sort
     let sortQuery = {};
     if (searchTerm && sort === 'relevance') {
@@ -587,7 +588,7 @@ AreaSchema.statics = {
     } else {
       sortQuery = { createdAt: -1 };
     }
-    
+
     const [areas, total] = await Promise.all([
       this.find(query)
         .sort(sortQuery)
@@ -596,7 +597,7 @@ AreaSchema.statics = {
         .lean(),
       this.countDocuments(query)
     ]);
-    
+
     return {
       areas,
       pagination: {
@@ -607,7 +608,7 @@ AreaSchema.statics = {
       }
     };
   },
-  
+
   /**
    * Get areas by user
    */
@@ -617,14 +618,14 @@ AreaSchema.statics = {
       page = 1,
       limit = 20
     } = options;
-    
+
     const skip = (page - 1) * limit;
     const query = { createdBy: userId };
-    
+
     if (status) {
       query.status = status;
     }
-    
+
     const [areas, total] = await Promise.all([
       this.find(query)
         .sort({ createdAt: -1 })
@@ -633,7 +634,7 @@ AreaSchema.statics = {
         .lean(),
       this.countDocuments(query)
     ]);
-    
+
     return {
       areas,
       pagination: {
@@ -644,7 +645,7 @@ AreaSchema.statics = {
       }
     };
   },
-  
+
   /**
    * List areas with pagination and filtering
    */
@@ -658,21 +659,21 @@ AreaSchema.statics = {
       status = 'published',
       visibility = 'public'
     } = options;
-    
+
     const query = {
       status,
       visibility
     };
-    
+
     // Add text search if filter is provided
     if (filter) {
       query.$text = { $search: filter };
     }
-    
+
     // Build sort object
     const sortQuery = {};
     sortQuery[sort] = order === 'desc' ? -1 : 1;
-    
+
     return this.find(query)
       .sort(sortQuery)
       .skip(start)
@@ -707,7 +708,7 @@ AreaSchema.statics = {
         }
       }
     ]);
-    
+
     return stats[0] || {
       totalAreas: 0,
       publishedAreas: 0,

@@ -17,17 +17,17 @@ export async function setupTestDatabase() {
         dbName: 'chronas-test-memory'
       }
     });
-    
+
     const uri = mongod.getUri();
     console.log(`📦 In-memory MongoDB started at: ${uri}`);
-    
+
     // Connect mongoose to the in-memory database
     await mongoose.connect(uri, {
       maxPoolSize: 5,
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      socketTimeoutMS: 45000
     });
-    
+
     console.log('✅ Connected to in-memory MongoDB');
     return uri;
   } catch (error) {
@@ -42,7 +42,7 @@ export async function teardownTestDatabase() {
       await mongoose.disconnect();
       console.log('✅ Disconnected from MongoDB');
     }
-    
+
     if (mongod) {
       await mongod.stop();
       console.log('✅ In-memory MongoDB stopped');
@@ -55,13 +55,13 @@ export async function teardownTestDatabase() {
 
 export async function clearTestDatabase() {
   try {
-    const collections = mongoose.connection.collections;
-    
+    const { collections } = mongoose.connection;
+
     for (const key in collections) {
       const collection = collections[key];
       await collection.deleteMany({});
     }
-    
+
     console.log('🧹 Test database cleared');
   } catch (error) {
     console.error('❌ Failed to clear test database:', error);

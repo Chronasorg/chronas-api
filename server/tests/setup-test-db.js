@@ -17,19 +17,18 @@ export async function setupTestDatabase() {
         dbName: 'chronas-test'
       }
     });
-    
+
     const uri = mongod.getUri();
     console.log(`Test MongoDB started at: ${uri}`);
-    
+
     // Connect mongoose to the in-memory database
     await mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    
+
     console.log('✅ Test database connected successfully');
     return uri;
-    
   } catch (error) {
     console.error('❌ Failed to setup test database:', error.message);
     throw error;
@@ -41,7 +40,7 @@ export async function teardownTestDatabase() {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
-    
+
     if (mongod) {
       await mongod.stop();
       console.log('✅ Test database stopped');

@@ -1,7 +1,7 @@
 /**
  * user model
  */
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const userSchema = mongoose.Schema({
   name: String,
@@ -17,8 +17,8 @@ const userSchema = mongoose.Schema({
     bio: String,
     hireable: Boolean,
     followers: Number,
-    following: Number,
-  },
-}, { usePushEach: true })
+    following: Number
+  }
+}, { usePushEach: true });
 
-export default mongoose.model('user', userSchema)
+export default mongoose.model('user', userSchema);
