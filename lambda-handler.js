@@ -5,7 +5,7 @@
  * cold start optimization, and proper error handling.
  */
 
-import serverlessExpress from '@vendia/serverless-express';
+import { configure } from '@vendia/serverless-express';
 import debug from 'debug';
 
 import { initializeApp, setupLambdaContext, checkAppHealth } from './config/lambda-app.js';
@@ -13,7 +13,7 @@ import { trackColdStart, trackWarmStart, trackLambdaContext, getMetrics } from '
 
 const debugLog = debug('chronas-api:lambda-handler');
 
-// Force cold start for debugging - v1.0.1
+// Force cold start for debugging - v1.0.3 - Fixed serverless-express package version compatibility
 
 // Cached serverless express instance for connection reuse
 let serverlessExpressInstance = null;
@@ -39,11 +39,13 @@ async function getServerlessExpressInstance() {
     }
 
     // Create serverless express instance
-    serverlessExpressInstance = serverlessExpress({
+    serverlessExpressInstance = configure({
       app: appResult.app,
       logSettings: {
         level: process.env.NODE_ENV === 'development' ? 'debug' : 'warn'
       },
+      // Explicitly configure for API Gateway v2
+      eventSourceName: 'AWS_API_GATEWAY_V2',
       // Lambda-specific optimizations
       binaryMimeTypes: [
         'application/octet-stream',

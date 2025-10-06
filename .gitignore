@@ -64,3 +64,4 @@ connectToMongo.sh
 users-bk.json
 
 dataToMigrate
+CURRENT_PRODUCTION_SETUP.json

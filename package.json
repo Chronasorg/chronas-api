@@ -35,14 +35,18 @@
     "test:setup": "node scripts/setup-test-environment.js",
     "test:ci": "node scripts/ci-postman-tests.js local enhanced",
     "test:ci:basic": "node scripts/ci-postman-tests.js local basic",
-
+    "test:ci:lambda": "node scripts/ci-lambda-postman-tests.js enhanced",
+    "test:ci:lambda:basic": "node scripts/ci-lambda-postman-tests.js basic",
     "deploy:lambda": "node scripts/deploy-lambda.js",
     "deploy:lambda:dev": "node scripts/deploy-lambda.js dev",
     "deploy:lambda:prod": "node scripts/deploy-lambda.js prod",
     "deploy:lambda:dry-run": "node scripts/deploy-lambda.js dev --dry-run",
     "validate:deployment": "node scripts/validate-deployment.js",
+    "validate:lambda": "node scripts/validate-lambda-deployment.js",
     "deploy:dev": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-dev",
-    "deploy:prod": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-prod"
+    "deploy:prod": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-prod",
+    "production:deploy": "echo 'See SIMPLE_PRODUCTION_DEPLOYMENT.md for production deployment steps'",
+    "production:document": "node scripts/document-current-setup.js"
   },
   "repository": {
     "type": "git",
