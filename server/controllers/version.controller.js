@@ -9,7 +9,7 @@ import APIError from '../helpers/APIError.js';
 
 // Lambda-compatible version info
 const VERSION_INFO = {
-  version: '1.3.6',
+  version: '1.3.7',
   commit: 'automated-deploy-test',
   build: new Date().toISOString()
 };
