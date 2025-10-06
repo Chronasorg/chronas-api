@@ -9,8 +9,8 @@ import APIError from '../helpers/APIError.js';
 
 // Lambda-compatible version info
 const VERSION_INFO = {
-  version: '1.3.5',
-  commit: 'lambda-deploy',
+  version: '1.3.6',
+  commit: 'automated-deploy-test',
   build: new Date().toISOString()
 };
 
