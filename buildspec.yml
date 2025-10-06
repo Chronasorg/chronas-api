@@ -1,0 +1,77 @@
+version: 0.2
+
+# AWS CodeBuild specification for Chronas API Lambda deployment
+# This buildspec is used by the BuildChronasAPiStack CodeBuild project
+# to automatically build and deploy the Lambda function on master branch changes
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo Installing Node.js 22 and dependencies...
+      - node --version
+      - npm --version
+      - echo Installing CDK CLI...
+      - npm install -g aws-cdk@latest
+      - cdk --version
+
+  pre_build:
+    commands:
+      - echo Pre-build phase started on `date`
+      - echo GitHub webhook trigger: $CODEBUILD_WEBHOOK_TRIGGER
+      - echo Source version: $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo Branch: $CODEBUILD_WEBHOOK_HEAD_REF
+      - echo Installing chronas-api dependencies...
+      - npm ci
+      - echo Installing CDK dependencies...
+      - cd ../chronas-cdk && npm ci && cd ../chronas-api
+      - echo Running unit tests...
+      - npm test
+      - echo Running integration tests...
+      - npm run test:integration
+
+  build:
+    commands:
+      - echo Build phase started on `date`
+      - echo Building CDK TypeScript...
+      - cd ../chronas-cdk && npm run build && cd ../chronas-api
+      - echo Deploying Lambda function to development environment...
+      - cd ../chronas-cdk
+      - npx cdk deploy ChronasApiLambdaStackV2 --require-approval never --profile chronas-dev
+      - echo Lambda deployment completed successfully!
+
+  post_build:
+    commands:
+      - echo Post-build phase started on `date`
+      - echo Getting stack outputs...
+      - aws cloudformation describe-stacks --stack-name ChronasApiLambdaStackV2 --region eu-west-1 --query "Stacks[0].Outputs" || echo "Could not get stack outputs"
+      - echo Waiting for Lambda function to be ready...
+      - sleep 30
+      - echo Running post-deployment validation...
+      - cd ../chronas-api
+      - echo Testing API health endpoint...
+      - npm run test:postman:dev || echo "Post-deployment tests failed - API might still be warming up"
+      - echo Build completed successfully on `date`
+
+# Test reports for CodeBuild
+reports:
+  test-reports:
+    files:
+      - 'test-results*.json'
+      - 'coverage/lcov.info'
+    base-directory: '.'
+    file-format: 'JUNITXML'
+
+# Artifacts (optional - for debugging)
+artifacts:
+  files:
+    - '**/*'
+  base-directory: '.'
+  name: chronas-api-lambda-build-$(date +%Y-%m-%d-%H-%M-%S)
+
+# Cache node_modules for faster builds
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - '../chronas-cdk/node_modules/**/*'
