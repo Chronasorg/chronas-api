@@ -35,10 +35,14 @@
     "test:setup": "node scripts/setup-test-environment.js",
     "test:ci": "node scripts/ci-postman-tests.js local enhanced",
     "test:ci:basic": "node scripts/ci-postman-tests.js local basic",
-    "validate:workflow": "node scripts/validate-workflow.js",
-    "test:deployment": "node scripts/test-deployment.js",
-    "deploy:dev": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStack --profile chronas-dev",
-    "deploy:prod": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStack --profile chronas-prod"
+
+    "deploy:lambda": "node scripts/deploy-lambda.js",
+    "deploy:lambda:dev": "node scripts/deploy-lambda.js dev",
+    "deploy:lambda:prod": "node scripts/deploy-lambda.js prod",
+    "deploy:lambda:dry-run": "node scripts/deploy-lambda.js dev --dry-run",
+    "validate:deployment": "node scripts/validate-deployment.js",
+    "deploy:dev": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-dev",
+    "deploy:prod": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-prod"
   },
   "repository": {
     "type": "git",
