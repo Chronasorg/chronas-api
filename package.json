@@ -85,7 +85,7 @@
     "mongoose": "^8.0.0",
     "moniker": "0.1.2",
     "morgan": "^1.10.0",
-    "nodemailer": "7.0.6",
+    "nodemailer": "7.0.7",
     "nodemailer-mailgun-transport": "2.1.5",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
