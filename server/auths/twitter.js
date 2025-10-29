@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { Strategy } from 'passport-twitter';
+import { Strategy } from '@passport-js/passport-twitter';
 import jwt from 'jsonwebtoken';
 import httpStatus from 'http-status';
 
