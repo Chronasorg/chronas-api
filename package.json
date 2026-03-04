@@ -95,7 +95,7 @@
     "passport-google-oauth20": "^2.0.0",
     "postman-collection-transformer": "4.1.12",
     "swagger-ui-express": "5.0.1",
-    "underscore": "1.13.2",
+    "underscore": "1.13.8",
     "winston": "^3.8.0",
     "yamljs": "0.3.0"
   },
