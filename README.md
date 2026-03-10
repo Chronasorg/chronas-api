@@ -1,4 +1,5 @@
 [![Build Status](https://dev.azure.com/chronas/chronas/_apis/build/status/Chronasorg.chronas-api?branchName=master)](https://dev.azure.com/chronas/chronas/_build/latest?definitionId=1?branchName=master)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Chronasorg/chronas-api)
 
 # [Chronas](https://github.com/daumann/chronas) API
 
