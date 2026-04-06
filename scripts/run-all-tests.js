@@ -7,7 +7,7 @@
  * All tests use in-memory MongoDB — no external database needed.
  */
 
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -58,6 +58,12 @@ async function main() {
     ]
   );
   results.push(mocha);
+
+  // Kill any lingering process on port 3001 before starting Postman tests
+  try {
+    execSync('lsof -ti :3001 | xargs kill -9 2>/dev/null', { stdio: 'ignore' });
+  } catch { /* no process on port */ }
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // 2. Postman/Newman tests (against in-memory test server)
   const postman = await runCommand(

@@ -48,10 +48,10 @@
       }
     },
     "timings": {
-      "responseAverage": 11.264705882352942,
+      "responseAverage": 9.647058823529411,
       "responseMin": 2,
-      "responseMax": 102,
-      "responseSd": 16.59076430450425,
+      "responseMax": 128,
+      "responseSd": 20.936714660166846,
       "dnsAverage": 0,
       "dnsMin": 0,
       "dnsMax": 0,
@@ -60,8 +60,8 @@
       "firstByteMin": 0,
       "firstByteMax": 0,
       "firstByteSd": 0,
-      "started": 1775505955522,
-      "completed": 1775505959919
+      "started": 1775506248119,
+      "completed": 1775506252342
     },
     "failures": []
   }
