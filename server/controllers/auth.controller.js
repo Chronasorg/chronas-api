@@ -96,4 +96,27 @@ function signup(req, res, next) {
   userCtrl.create(req, res, next);
 }
 
-export default { login, signup };
+/**
+ * Refresh JWT token — accepts a valid token via req.auth (express-jwt) and returns a new one
+ */
+function refresh(req, res, next) {
+  try {
+    const { id, username, score, privilege, subscription, avatar, lastUpdated } = req.auth;
+
+    const token = jwt.sign({
+      id,
+      username,
+      score,
+      privilege,
+      subscription,
+      avatar,
+      lastUpdated
+    }, config.jwtSecret);
+
+    return res.json({ token, username });
+  } catch (e) {
+    return next(new APIError('Token refresh failed', httpStatus.UNAUTHORIZED, true));
+  }
+}
+
+export default { login, signup, refresh };

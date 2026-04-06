@@ -1,7 +1,4 @@
-import { pick, keys, isEqual, extendOwn } from 'underscore';
 import httpStatus from 'http-status';
-import Promise from 'bluebird';
-
 import Area from '../models/area.model.js';
 import Metadata from '../models/metadata.model.js';
 import metadataCtrl from '../controllers/metadata.controller.js';
@@ -139,38 +136,48 @@ function aggregateProvinces(req, res, next, resolve = false) {
         });
       }).on('error', (e) => {
         res.status(500).send(e);
-      }).on('close', () => {
-        // the stream is closed
+      }).on('close', async () => {
+        try {
+          // Collect all metadata IDs to query in a single batch
+          const provKeys = Object.keys(aggregatedData).filter(
+            currProv => !province || currProv.toLowerCase() === province.toLowerCase()
+          );
+          const metadataIds = provKeys.map(p => `ap_${p.toLowerCase()}`);
 
-        Object.keys(aggregatedData).forEach((currProv) => {
-          if (province && currProv.toLowerCase() !== province.toLowerCase()) return;
+          // Single batch query instead of N individual findById calls
+          const existingMetadata = await Metadata.find({ _id: { $in: metadataIds } }).exec();
+          const existingMap = new Map(existingMetadata.map(m => [m._id, m]));
 
-          const metadataId = `ap_${currProv.toLowerCase()}`;
-          Metadata.findById(metadataId)
-            .exec()
-            .then((foundMetadataEntity) => {
-              if (foundMetadataEntity) {
-                // already exists -> update
-                foundMetadataEntity.data = aggregatedData[currProv];
-                foundMetadataEntity.markModified('data');
-                foundMetadataEntity.save();
-              } else {
-                // does not exist -> create
-                const metadata = new Metadata({
-                  _id: metadataId,
-                  data: aggregatedData[currProv],
-                  type: 'ap'
-                });
+          // Batch all writes using bulkWrite
+          const bulkOps = provKeys.map(currProv => {
+            const metadataId = `ap_${currProv.toLowerCase()}`;
+            if (existingMap.has(metadataId)) {
+              return {
+                updateOne: {
+                  filter: { _id: metadataId },
+                  update: { $set: { data: aggregatedData[currProv] } }
+                }
+              };
+            } else {
+              return {
+                updateOne: {
+                  filter: { _id: metadataId },
+                  update: { $set: { data: aggregatedData[currProv], type: 'ap' } },
+                  upsert: true
+                }
+              };
+            }
+          });
 
-                metadata.save({ checkKeys: false })
-                  .then(() => Promise.resolve());
-              }
-            })
-            .catch(e => res.status(500).send(e));
-        });
+          if (bulkOps.length > 0) {
+            await Metadata.bulkWrite(bulkOps);
+          }
 
-        if (resolve) return resolve();
-        res.send('OK');
+          if (resolve) return resolve();
+          res.send('OK');
+        } catch (e) {
+          res.status(500).send(e);
+        }
       });
     })
     .catch(e => res.status(500).send(e));
@@ -314,36 +321,45 @@ function aggregateDimension(req, res, next, resolve = false) {
         // popTotal
       }).on('error', (e) => {
         res.status(500).send(e);
-      }).on('close', () => {
-        // the stream is closed
+      }).on('close', async () => {
+        try {
+          const dimKeys = Object.keys(aggregatedData);
+          const metadataIds = dimKeys.map(k => `a_${dimension}_${k}`);
 
-        Object.keys(aggregatedData).forEach((currDimEntity) => {
-          const metadataId = `a_${dimension}_${currDimEntity}`;
-          Metadata.findById(metadataId)
-            .exec()
-            .then((foundMetadataEntity) => {
-              if (foundMetadataEntity) {
-                // already exists -> update
-                foundMetadataEntity.data = { ...foundMetadataEntity.data, influence: aggregatedData[currDimEntity] };
-                foundMetadataEntity.markModified('data');
-                return foundMetadataEntity.save();
-              } else {
-                // does not exist -> create
-                const metadata = new Metadata({
-                  _id: metadataId,
-                  data: { influence: aggregatedData[currDimEntity] },
-                  type: `a_${dimension}`
-                });
+          // Single batch query instead of N individual findById calls
+          const existingMetadata = await Metadata.find({ _id: { $in: metadataIds } }).lean().exec();
+          const existingMap = new Map(existingMetadata.map(m => [m._id, m]));
 
-                return metadata.save({ checkKeys: false })
-                  .then(() => Promise.resolve());
-              }
-            })
-            .catch(e => res.status(500).send(e));
-        });
+          const bulkOps = dimKeys.map(currDimEntity => {
+            const metadataId = `a_${dimension}_${currDimEntity}`;
+            const existing = existingMap.get(metadataId);
+            if (existing) {
+              return {
+                updateOne: {
+                  filter: { _id: metadataId },
+                  update: { $set: { data: { ...existing.data, influence: aggregatedData[currDimEntity] } } }
+                }
+              };
+            } else {
+              return {
+                updateOne: {
+                  filter: { _id: metadataId },
+                  update: { $set: { data: { influence: aggregatedData[currDimEntity] }, type: `a_${dimension}` } },
+                  upsert: true
+                }
+              };
+            }
+          });
 
-        if (resolve) return resolve();
-        res.send('OK');
+          if (bulkOps.length > 0) {
+            await Metadata.bulkWrite(bulkOps);
+          }
+
+          if (resolve) return resolve();
+          res.send('OK');
+        } catch (e) {
+          res.status(500).send(e);
+        }
       });
     })
     .catch(e => res.status(500).send(e));
@@ -426,7 +442,7 @@ function replaceAll(req, res, next) {
 
           provincesIncluding.forEach((province) => {
             nextBody.forEach((singleValue, index) => {
-              if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
+              if (typeof nextBody[index] !== 'undefined' && JSON.stringify(area.data[province][index]) !== JSON.stringify(nextBody[index])) {
                 if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {};
                 if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = [];
                 if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {};
@@ -563,7 +579,7 @@ function updateMany(req, res, next) {
           const currYear = +area.year;
           provinces.forEach((province) => {
             nextBody.forEach((singleValue, index) => {
-              if (typeof nextBody[index] !== 'undefined' && !isEqual(area.data[province][index], nextBody[index])) {
+              if (typeof nextBody[index] !== 'undefined' && JSON.stringify(area.data[province][index]) !== JSON.stringify(nextBody[index])) {
                 if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {};
                 if (typeof prevBody[currYear][province] === 'undefined') prevBody[currYear][province] = [];
                 if (typeof trimmedNextBody[currYear] === 'undefined') trimmedNextBody[currYear] = {};
@@ -701,7 +717,7 @@ function getRanges(obj) {
   for (let i = 0; i < array.length; i++) {
     rstart = array[i];
     rend = rstart;
-    while (array[i + 1] - array[i] === 1 && isEqual(obj[array[i + 1]], obj[array[i]])) {
+    while (array[i + 1] - array[i] === 1 && JSON.stringify(obj[array[i + 1]]) === JSON.stringify(obj[array[i]])) {
       rend = array[i + 1]; // increment the index if the numbers sequential
       i++;
     }

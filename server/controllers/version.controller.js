@@ -1,5 +1,4 @@
 // Lambda-compatible version without appversion dependency
-import Promise from 'bluebird';
 import httpStatus from 'http-status';
 
 import User from '../models/user.model.js';

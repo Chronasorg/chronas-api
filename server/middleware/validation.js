@@ -320,34 +320,13 @@ export const sanitizeInput = (req, res, next) => {
   next();
 };
 
-/**
- * Rate limiting validation
- */
-export const validateRateLimit = (req, res, next) => {
-  // Add rate limiting headers
-  const limit = 100; // requests per window
-  const window = 15 * 60 * 1000; // 15 minutes
-
-  res.set({
-    'X-RateLimit-Limit': limit,
-    'X-RateLimit-Window': window,
-    'X-RateLimit-Remaining': limit - 1 // This would be calculated based on actual usage
-  });
-
-  next();
-};
 
 /**
  * Main validation middleware that applies common validations
  */
 export const validationMiddleware = (req, res, next) => {
   // Apply sanitization
-  sanitizeInput(req, res, (err) => {
-    if (err) return next(err);
-
-    // Apply rate limit headers
-    validateRateLimit(req, res, next);
-  });
+  sanitizeInput(req, res, next);
 };
 
 /**

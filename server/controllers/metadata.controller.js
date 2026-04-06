@@ -90,6 +90,8 @@ function load(req, res, next, id) {
  * @returns {Metadata}
  */
 function get(req, res) {
+  // Metadata rarely changes — allow browser/CDN caching for 1 hour
+  res.set('Cache-Control', 'public, max-age=3600');
   return res.json(req.entity);
 }
 

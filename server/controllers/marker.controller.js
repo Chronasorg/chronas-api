@@ -191,7 +191,9 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { offset = 0, count = 2000, sort = 'name', order = 'asc', filter = '' } = req.query;
+  const { offset = 0, sort = 'name', order = 'asc', filter = '' } = req.query;
+  // Frontend sends "limit", legacy clients may send "count"
+  const count = req.query.limit || req.query.count || 2000;
   const length = +count;
   const typeArray = req.query.types || false;
   const wikiArray = req.query.wikis || false;
@@ -209,7 +211,7 @@ function list(req, res, next) {
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
       if (count) {
-        Marker.count().exec().then((markerCount) => {
+        Marker.estimatedDocumentCount().then((markerCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count');
           res.set('X-Total-Count', markerCount);
           res.json(markers);

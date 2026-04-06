@@ -151,22 +151,21 @@ describe('## Application Startup Tests', () => {
     });
   });
 
-  describe('# Migration Scripts', () => {
-    const migrationScripts = [
-      'migration-lambda.js',
-      'rollback-lambda.js',
-      'validate-migration.js',
-      'update-app-config.js',
-      'orchestrate-migration.js'
+  describe('# Utility Scripts', () => {
+    const utilityScripts = [
+      'download-docdb-cert.js',
+      'run-postman-tests.js',
+      'setup-test-environment.js',
+      'validate-deployment.js'
     ];
 
-    migrationScripts.forEach(scriptFile => {
-      it(`should load migration script ${scriptFile} without errors`, async () => {
+    utilityScripts.forEach(scriptFile => {
+      it(`should load script ${scriptFile} without errors`, async () => {
         try {
           const script = await import(`../../../scripts/${scriptFile}`);
           expect(script).to.exist;
         } catch (error) {
-          throw new Error(`Migration script ${scriptFile} failed to load: ${error.message}`);
+          throw new Error(`Script ${scriptFile} failed to load: ${error.message}`);
         }
       });
     });

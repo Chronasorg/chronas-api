@@ -1,6 +1,4 @@
-import { omit } from 'underscore';
 import httpStatus from 'http-status';
-import Promise from 'bluebird';
 
 import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
 import logger from '../../config/winston.js';
@@ -403,7 +401,9 @@ function remove(req, res, next) {
 }
 
 function shallowDiff(a, b) {
-  return omit(a, (v, k) => JSON.stringify(b[k]) === JSON.stringify(v));
+  return Object.fromEntries(
+    Object.entries(a).filter(([k, v]) => JSON.stringify(b[k]) !== JSON.stringify(v))
+  );
 }
 
 function unpackObj(obj) {

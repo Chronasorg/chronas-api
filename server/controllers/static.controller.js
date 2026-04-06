@@ -1,4 +1,3 @@
-import { pick, keys, isEqual, extendOwn } from 'underscore';
 import puppeteer from 'puppeteer';
 
 import { cache } from '../../config/config.js';

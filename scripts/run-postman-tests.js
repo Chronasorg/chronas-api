@@ -2,8 +2,8 @@
 
 /**
  * Postman Test Automation Script
- * 
- * Runs Postman collections with newman and provides detailed reporting
+ *
+ * Uses newman programmatic API (avoids Node 25 Buffer issue with CLI)
  * Handles server lifecycle management for local testing
  */
 
@@ -11,12 +11,10 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import axios from 'axios';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration
 const COLLECTIONS = {
   enhanced: 'PostmanTests/chronas-enhanced.postman_collection.json',
   basic: 'PostmanTests/chronas.postman_collection.json'
@@ -33,9 +31,9 @@ const ENVIRONMENTS = {
  */
 async function isServerRunning(baseUrl) {
   try {
-    const response = await axios.get(`${baseUrl}/v1/health`, { timeout: 2000 });
-    return response.status === 200;
-  } catch (error) {
+    const response = await fetch(`${baseUrl}/v1/health`, { signal: AbortSignal.timeout(2000) });
+    return response.ok;
+  } catch {
     return false;
   }
 }
@@ -46,16 +44,22 @@ async function isServerRunning(baseUrl) {
 async function startServer() {
   return new Promise((resolve, reject) => {
     console.log('🚀 Starting server for testing...');
-    
-    const server = spawn('npm', ['start'], {
+
+    const server = spawn('node', ['index.js'], {
       cwd: path.resolve(__dirname, '..'),
-      env: { ...process.env, NODE_ENV: 'test' },
+      env: { ...process.env, NODE_ENV: 'test', PORT: '3001' },
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
+    server.stdout.on('data', (data) => {
+      process.stdout.write(`  [server] ${data}`);
+    });
+    server.stderr.on('data', (data) => {
+      process.stderr.write(`  [server] ${data}`);
+    });
+
     let serverReady = false;
-    
-    // Check server readiness
+
     const checkServer = async () => {
       if (await isServerRunning('http://localhost:3001')) {
         if (!serverReady) {
@@ -66,16 +70,12 @@ async function startServer() {
       }
     };
 
-    // Start checking after 2 seconds, then every 1 second
     setTimeout(() => {
       const interval = setInterval(async () => {
         await checkServer();
-        if (serverReady) {
-          clearInterval(interval);
-        }
+        if (serverReady) clearInterval(interval);
       }, 1000);
-      
-      // Timeout after 30 seconds
+
       setTimeout(() => {
         if (!serverReady) {
           clearInterval(interval);
@@ -99,90 +99,73 @@ function stopServer(server) {
   if (server && !server.killed) {
     console.log('🛑 Stopping server...');
     server.kill('SIGTERM');
-    
-    // Force kill after 5 seconds if not stopped
     setTimeout(() => {
-      if (!server.killed) {
-        server.kill('SIGKILL');
-      }
+      if (!server.killed) server.kill('SIGKILL');
     }, 5000);
   }
 }
 
 /**
- * Run newman with specified collection and environment
+ * Run newman programmatically (avoids Node 25 Buffer CLI issue)
  */
 async function runNewman(collection, environment, outputFile) {
+  const newman = await import('newman');
+  const collectionData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', collection), 'utf8'));
+  const environmentData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', environment), 'utf8'));
+
   return new Promise((resolve, reject) => {
-    const args = [
-      'run', collection,
-      '-e', environment,
-      '--reporters', 'cli,json,htmlextra',
-      '--reporter-json-export', outputFile,
-      '--reporter-htmlextra-export', outputFile.replace('.json', '.html'),
-      '--timeout-request', '10000',
-      '--delay-request', '100',
-      '--color', 'on'
-    ];
+    console.log(`🧪 Running: ${collection} with ${environment}`);
+    console.log(`📊 Results: ${outputFile}`);
 
-    console.log(`🧪 Running Postman tests: ${collection} with ${environment}`);
-    console.log(`📊 Results will be saved to: ${outputFile}`);
-
-    const newman = spawn('npx', ['newman', ...args], {
-      stdio: 'inherit',
-      cwd: path.resolve(__dirname, '..')
-    });
-
-    newman.on('close', (code) => {
-      if (code === 0) {
-        console.log('✅ Postman tests completed successfully');
-        resolve(code);
-      } else {
-        console.log(`⚠️ Postman tests completed with issues (exit code ${code})`);
-        // Don't reject on test failures, just resolve with the code
-        resolve(code);
+    newman.default.run({
+      collection: collectionData,
+      environment: environmentData,
+      reporters: ['cli'],
+      reporter: {
+        cli: { noAssertions: false, noSummary: false }
+      },
+      timeoutRequest: 10000,
+      delayRequest: 100
+    }, (err, summary) => {
+      if (err) {
+        console.error('❌ Newman error:', err.message);
+        return reject(err);
       }
-    });
 
-    newman.on('error', (error) => {
-      console.error('❌ Failed to start newman:', error);
-      reject(error);
+      // Save results to JSON
+      try {
+        const results = {
+          run: {
+            stats: summary.run.stats,
+            timings: summary.run.timings,
+            failures: summary.run.failures.map(f => ({
+              source: { name: f.source?.name || f.parent?.name || 'Unknown' },
+              error: { message: f.error?.message || 'Unknown error' }
+            }))
+          }
+        };
+        fs.writeFileSync(outputFile, JSON.stringify(results, null, 2));
+      } catch (writeErr) {
+        console.warn('⚠️ Could not save results file:', writeErr.message);
+      }
+
+      // Display summary
+      const { stats } = summary.run;
+      console.log('\n📋 Test Summary:');
+      console.log(`   Requests:   ${stats.requests.total - stats.requests.failed}/${stats.requests.total} passed`);
+      console.log(`   Assertions: ${stats.assertions.total - stats.assertions.failed}/${stats.assertions.total} passed`);
+      console.log(`   Duration:   ${summary.run.timings.completed - summary.run.timings.started}ms`);
+
+      if (summary.run.failures.length > 0) {
+        console.log('\n❌ Failures:');
+        summary.run.failures.forEach((f, i) => {
+          console.log(`   ${i + 1}. ${f.source?.name || f.parent?.name || 'Unknown'}: ${f.error?.message}`);
+        });
+      }
+
+      resolve(stats.failures.total > 0 ? 1 : 0);
     });
   });
-}
-
-/**
- * Parse and display test results
- */
-function displayResults(resultsFile) {
-  try {
-    if (!fs.existsSync(resultsFile)) {
-      console.log('⚠️ Results file not found');
-      return;
-    }
-
-    const results = JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
-    const { run } = results;
-
-    console.log('\n📋 Test Summary:');
-    console.log(`Total Requests: ${run.stats.requests.total}`);
-    console.log(`Passed: ${run.stats.requests.total - run.stats.requests.failed}`);
-    console.log(`Failed: ${run.stats.requests.failed}`);
-    console.log(`Total Assertions: ${run.stats.assertions.total}`);
-    console.log(`Assertion Failures: ${run.stats.assertions.failed}`);
-
-    if (run.failures && run.failures.length > 0) {
-      console.log('\n❌ Failed Tests:');
-      run.failures.forEach((failure, index) => {
-        console.log(`${index + 1}. ${failure.source.name || 'Unknown'}`);
-        console.log(`   Error: ${failure.error.message}`);
-      });
-    }
-
-    console.log(`\n⏱️ Total Time: ${run.timings.completed - run.timings.started}ms`);
-  } catch (error) {
-    console.error('❌ Failed to parse results:', error.message);
-  }
 }
 
 /**
@@ -195,14 +178,12 @@ async function main() {
   const autoStart = args.includes('--auto-start') || environment === 'local';
 
   if (!ENVIRONMENTS[environment]) {
-    console.error(`❌ Invalid environment: ${environment}`);
-    console.log(`Available environments: ${Object.keys(ENVIRONMENTS).join(', ')}`);
+    console.error(`❌ Invalid environment: ${environment}. Available: ${Object.keys(ENVIRONMENTS).join(', ')}`);
     process.exit(1);
   }
 
   if (!COLLECTIONS[collection]) {
-    console.error(`❌ Invalid collection: ${collection}`);
-    console.log(`Available collections: ${Object.keys(COLLECTIONS).join(', ')}`);
+    console.error(`❌ Invalid collection: ${collection}. Available: ${Object.keys(COLLECTIONS).join(', ')}`);
     process.exit(1);
   }
 
@@ -210,43 +191,28 @@ async function main() {
   let server = null;
 
   try {
-    // For local environment, check if we need to start the server
     if (environment === 'local' && autoStart) {
-      const baseUrl = 'http://localhost:3001';
-      const serverRunning = await isServerRunning(baseUrl);
-      
+      const serverRunning = await isServerRunning('http://localhost:3001');
       if (!serverRunning) {
         server = await startServer();
-        // Give server a moment to fully initialize
         await new Promise(resolve => setTimeout(resolve, 2000));
       } else {
         console.log('✅ Server is already running');
       }
     }
 
-    // Run the tests
     const exitCode = await runNewman(COLLECTIONS[collection], ENVIRONMENTS[environment], outputFile);
-    
-    // Display results
-    displayResults(outputFile);
-    
-    // Exit with the same code as newman
     process.exit(exitCode);
-    
   } catch (error) {
     console.error('❌ Test execution failed:', error.message);
     process.exit(1);
   } finally {
-    // Always stop the server if we started it
-    if (server) {
-      stopServer(server);
-    }
+    if (server) stopServer(server);
   }
 }
 
-// Handle script execution
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
 
-export { runNewman, displayResults };
+export { runNewman };

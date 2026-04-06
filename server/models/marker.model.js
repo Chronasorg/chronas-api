@@ -5,7 +5,6 @@
  * Maintains backward compatibility with the original schema
  */
 
-import Promise from 'bluebird';
 import mongoose from 'mongoose';
 import httpStatus from 'http-status';
 

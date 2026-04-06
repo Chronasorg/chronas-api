@@ -1,7 +1,6 @@
 import passport from 'passport';
 import { OAuth2Strategy } from 'passport-google-oauth';
 import jwt from 'jsonwebtoken';
-import Promise from 'bluebird';
 
 import { config } from '../../config/config.js';
 import userCtrl from '../controllers/user.controller.js';

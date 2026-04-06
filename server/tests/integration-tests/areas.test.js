@@ -38,9 +38,10 @@ describe('## Areas APIs', () => {
 
     // Create test user for authentication
     const testUser = new User({
+      _id: 'test@test.de',
       username: 'testuser',
       email: 'test@test.de',
-      password: 'password123', // Must be at least 8 characters
+      password: 'password123',
       privilege: 5
     });
     const savedUser = await testUser.save();

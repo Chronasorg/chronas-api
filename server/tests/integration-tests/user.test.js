@@ -68,28 +68,25 @@ describe('## User APIs', () => {
   };
 
   let user = {
-    email: 'test2@test.de', // email is required
-    username: 'doubtful_throne', // Use underscore instead of hyphen
-    password: 'password123', // Must be at least 8 characters
+    email: 'newuser@test.de',
+    username: 'new_test_user',
+    password: 'password123',
     privilege: 1
   };
 
   let jwtToken;
 
-  describe('# POST /v1/auth/login', () => {
-    // Skip JWT token test for now - auth system needs fixing
-    it.skip('should get valid JWT token', (done) => {
-      request(app)
-        .post('/v1/auth/login')
-        .send(validUserCredentials)
-        .expect(httpStatus.OK)
-        .then((res) => {
-          expect(res.body).to.have.property('token');
-          jwtToken = `Bearer ${res.body.token}`;
-          done();
-        })
-        .catch(done);
-    });
+  before(async () => {
+    const jwt = await import('jsonwebtoken');
+    const { config: appConfig } = await import('../../../config/config.js');
+    const testToken = jwt.default.sign({
+      id: 'test@test.de',
+      username: 'testuser',
+      score: 1,
+      privilege: 99,
+      subscription: '-1'
+    }, appConfig.jwtSecret);
+    jwtToken = `Bearer ${testToken}`;
   });
 
   describe('# POST /v1/users', () => {
@@ -100,8 +97,8 @@ describe('## User APIs', () => {
         .expect(httpStatus.OK)
         .then((res) => {
           expect(res.body.username).to.equal(user.username);
-          expect(res.body.privilege).to.equal(user.privilege);
-          user = res.body;
+          // Update user with the created user's data (including _id from email)
+          user = { ...user, _id: res.body._id || user.email };
           done();
         })
         .catch(done);

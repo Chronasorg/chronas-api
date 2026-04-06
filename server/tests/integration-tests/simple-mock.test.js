@@ -133,12 +133,12 @@ describe('## Simple Mock Integration Tests', () => {
 
   describe('# API Route Structure', () => {
     it('should mount API routes on /v1 path', async () => {
-      // Test that /v1 path exists (even if it returns an error due to missing auth)
+      // Test that /v1/health endpoint is reachable
       const res = await request(app)
-        .get('/v1/');
+        .get('/v1/health');
 
-      // Should not be 404, might be 401/403/500 due to auth/db requirements
-      expect(res.status).to.not.equal(httpStatus.NOT_FOUND);
+      // Health endpoint should return 200
+      expect(res.status).to.equal(httpStatus.OK);
     });
 
     it('should handle OPTIONS requests for CORS preflight', async () => {

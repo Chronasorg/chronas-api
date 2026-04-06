@@ -1,4 +1,3 @@
-import { omit } from 'underscore';
 import httpStatus from 'http-status';
 
 import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';

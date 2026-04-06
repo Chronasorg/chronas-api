@@ -52,10 +52,10 @@ if (config.appInsightsConnectionString) {
   appInsights.setup(config.appInsightsConnectionString)
     .setAutoDependencyCorrelation(true)
     .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(true)
+    .setAutoCollectPerformance(false) // Disabled: perf counters not meaningful in Lambda
     .setAutoCollectExceptions(true)
     .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(true)
+    .setAutoCollectConsole(false) // Disabled: console hooks add latency in Lambda
     .setUseDiskRetryCaching(true)
     .start();
   console.log('✅ Application Insights initialized');
@@ -68,8 +68,8 @@ if (config.env === 'development') {
 }
 
 // parse body params and attach them to req.body (built into Express 4.16+)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 app.use(cookieParser());
 app.use(compress());
@@ -79,7 +79,10 @@ app.use(methodOverride());
 app.use(helmet());
 
 // enable CORS - Cross Origin Resource Sharing
-app.use(cors());
+app.use(cors({
+  origin: (process.env.ALLOWED_ORIGINS || 'https://chronas.org,http://localhost:3000,http://localhost:5173').split(','),
+  credentials: true
+}));
 
 // Add performance monitoring middleware
 app.use(createPerformanceMiddleware());

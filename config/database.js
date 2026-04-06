@@ -85,7 +85,7 @@ function getConnectionOptions(uri) {
 
     // Timeouts - increased for DocumentDB 5.0
     serverSelectionTimeoutMS: 10000, // 10 seconds (increased for DocumentDB)
-    socketTimeoutMS: 45000, // 45 seconds (Lambda timeout consideration)
+    socketTimeoutMS: 25000, // 25 seconds (must be less than Lambda's 30s timeout)
     connectTimeoutMS: 15000, // 15 seconds (increased for DocumentDB)
 
     // Buffer settings for Lambda

@@ -37,9 +37,10 @@ describe('## Metadata APIs', () => {
 
     // Create test user for authentication
     const testUser = new User({
+      _id: 'test@test.de',
       username: 'testuser',
       email: 'test@test.de',
-      password: 'password123', // Must be at least 8 characters
+      password: 'password123',
       privilege: 5
     });
     await testUser.save();
@@ -123,20 +124,20 @@ describe('## Metadata APIs', () => {
 
   let jwtToken;
 
+  before(async () => {
+    const jwt = await import('jsonwebtoken');
+    const { config: appConfig } = await import('../../../config/config.js');
+    const testToken = jwt.default.sign({
+      id: 'test@test.de',
+      username: 'testuser',
+      score: 1,
+      privilege: 5,
+      subscription: '-1'
+    }, appConfig.jwtSecret);
+    jwtToken = `Bearer ${testToken}`;
+  });
+
   describe('# GET /v1/metadata', () => {
-    // Skip JWT token test for now - auth system needs fixing
-    it.skip('should get valid JWT token', (done) => {
-      request(app)
-        .post('/v1/auth/login')
-        .send(validUserCredentials)
-        .expect(httpStatus.OK)
-        .then((res) => {
-          expect(res.body).to.have.property('token');
-          jwtToken = `Bearer ${res.body.token}`;
-          done();
-        })
-        .catch(done);
-    });
 
     describe('# POST /v1/metadata', () => {
       it('should create a new metadata', (done) => {

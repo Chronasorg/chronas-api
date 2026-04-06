@@ -1,41 +1,46 @@
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
 import request from 'supertest-as-promised';
 import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import chai from 'chai';
 
 import app from '../helpers/test-app.js';
 import { config } from '../../../config/config.js';
-import { setupMockDatabase, teardownMockDatabase, clearMockDatabase, populateMockData } from '../helpers/mock-database.js';
+import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js';
+import User from '../../models/user.model.js';
+
 const { expect } = chai;
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 chai.config.includeStack = true;
 
 describe('## Auth APIs', () => {
-  const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData-modern.json'), 'utf8'));
-
   before(async function () {
-    this.timeout(10000);
-    await setupMockDatabase();
-    await populateMockData(testData);
-    console.log('📋 Mock database ready for auth tests');
+    this.timeout(30000);
+    await setupTestDatabase();
+    console.log('📋 In-memory database ready for auth tests');
   });
 
   after(async function () {
-    this.timeout(5000);
-    await teardownMockDatabase();
+    this.timeout(10000);
+    await teardownTestDatabase();
   });
 
   beforeEach(async () => {
-    await clearMockDatabase();
-    await populateMockData(testData);
+    await clearTestDatabase();
+
+    // Pre-hash the password since User model has no pre-save hook
+    const hashedPassword = await bcrypt.hash('asdf', 10);
+
+    // Create test user with known credentials
+    const testUser = new User({
+      _id: 'test@test.de',
+      username: 'doubtful_throne',
+      email: 'test@test.de',
+      password: hashedPassword,
+      privilege: 1,
+      loginCount: 0,
+      karma: 1
+    });
+    await testUser.save();
   });
 
   const validUserCredentials = {
@@ -102,14 +107,24 @@ describe('## Auth APIs', () => {
     });
 
     it('should return that User already exist', (done) => {
+      // First signup
       request(app)
         .post('/v1/auth/signup')
         .send(validSignUserCredentials)
-        .expect(httpStatus.BAD_REQUEST)
-        .then((res) => {
-          expect(res.body).to.have.property('stack');
-          expect(res.body.stack).to.contain('already exist');
-          done();
+        .expect(httpStatus.OK)
+        .then(() => {
+          // Second signup with same email should fail
+          request(app)
+            .post('/v1/auth/signup')
+            .send(validSignUserCredentials)
+            .expect(httpStatus.BAD_REQUEST)
+            .then((res) => {
+              // Error message could be in message or stack depending on error handler
+              const errorText = res.body.message || res.body.stack || '';
+              expect(errorText).to.contain('already exist');
+              done();
+            })
+            .catch(done);
         })
         .catch(done);
     });
