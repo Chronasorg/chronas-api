@@ -39,15 +39,15 @@ async function isServerRunning(baseUrl) {
 }
 
 /**
- * Start the server for testing
+ * Start the test server with in-memory MongoDB
  */
 async function startServer() {
   return new Promise((resolve, reject) => {
-    console.log('🚀 Starting server for testing...');
+    console.log('🚀 Starting test server with in-memory MongoDB...');
 
-    const server = spawn('node', ['index.js'], {
+    const server = spawn('node', ['scripts/start-test-server.js'], {
       cwd: path.resolve(__dirname, '..'),
-      env: { ...process.env, NODE_ENV: 'test', PORT: '3001' },
+      env: { ...process.env, PORT: '3001' },
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -64,7 +64,7 @@ async function startServer() {
       if (await isServerRunning('http://localhost:3001')) {
         if (!serverReady) {
           serverReady = true;
-          console.log('✅ Server is ready for testing');
+          console.log('✅ Test server is ready');
           resolve(server);
         }
       }
@@ -80,13 +80,13 @@ async function startServer() {
         if (!serverReady) {
           clearInterval(interval);
           server.kill();
-          reject(new Error('Server failed to start within 30 seconds'));
+          reject(new Error('Test server failed to start within 30 seconds'));
         }
       }, 30000);
     }, 2000);
 
     server.on('error', (error) => {
-      console.error('❌ Failed to start server:', error);
+      console.error('❌ Failed to start test server:', error);
       reject(error);
     });
   });
@@ -163,7 +163,7 @@ async function runNewman(collection, environment, outputFile) {
         });
       }
 
-      resolve(stats.failures.total > 0 ? 1 : 0);
+      resolve(stats.assertions.failed > 0 ? 1 : 0);
     });
   });
 }

@@ -17,6 +17,7 @@
   "scripts": {
     "start": "cross-env DEBUG=chronas-api:* node index.js",
     "start:debug": "cross-env DEBUG=chronas-api:* node --inspect index.js",
+    "start:test": "node scripts/start-test-server.js",
     "start:prodSim": "cross-env NODE_ENV=production node index.js",
     "build": "echo 'Build completed - using native Node.js 22.x runtime'",
     "build:lambda": "echo 'Lambda build handled by CDK bundling'",
@@ -37,6 +38,7 @@
     "test:ci:basic": "node scripts/ci-postman-tests.js local basic",
     "test:ci:lambda": "node scripts/ci-lambda-postman-tests.js enhanced",
     "test:ci:lambda:basic": "node scripts/ci-lambda-postman-tests.js basic",
+    "test:all": "node scripts/run-all-tests.js",
     "deploy:lambda": "node scripts/deploy-lambda.js",
     "deploy:lambda:dev": "node scripts/deploy-lambda.js dev",
     "deploy:lambda:prod": "node scripts/deploy-lambda.js prod",

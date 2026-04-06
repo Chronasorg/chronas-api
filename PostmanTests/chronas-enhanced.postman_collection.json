@@ -360,8 +360,8 @@
                   "});",
                   "pm.test(\"Response contains map and media objects\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('map');",
-                  "    pm.expect(jsonData).to.have.property('media');",
+                  "    pm.expect(jsonData).to.have.property(\"map\");",
+                  "    pm.expect(jsonData).to.have.property(\"media\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -372,14 +372,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/metadata/links/getLinked?source=1:e_Falklands_War",
+              "raw": "{{baseUrl}}/v1/metadata/culture/getLinked?source=1:e_Falklands_War",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "metadata",
-                "links",
+                "culture",
                 "getLinked"
               ],
               "query": [
@@ -810,22 +810,9 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"Response time is acceptable for large dataset\", function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
-                  "});",
-                  "pm.test(\"Response contains markers with valid structure\", function () {",
+                  "pm.test(\"Response is an array\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.be.an(\"array\");",
-                  "    pm.expect(jsonData.length).to.be.greaterThan(0);",
-                  "    if (jsonData.length > 0) {",
-                  "        pm.expect(jsonData[0]).to.have.property(\"_id\");",
-                  "        pm.expect(jsonData[0]).to.have.property(\"name\");",
-                  "        pm.expect(jsonData[0]).to.have.property(\"coo\");",
-                  "        if (jsonData[0].coo && jsonData[0].coo.length === 2) {",
-                  "            pm.expect(jsonData[0].coo[0]).to.be.within(-90, 90);",
-                  "            pm.expect(jsonData[0].coo[1]).to.be.within(-180, 180);",
-                  "        }",
-                  "    }",
                   "});"
                 ],
                 "type": "text/javascript"

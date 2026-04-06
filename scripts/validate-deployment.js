@@ -318,8 +318,12 @@ async function validateDeployment() {
   }
 }
 
-// Run validation
-validateDeployment().catch(error => {
-  console.error('❌ Validation script failed:', error.message);
-  process.exit(1);
-});
+// Only run when executed directly (not when imported by tests)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  validateDeployment().catch(error => {
+    console.error('❌ Validation script failed:', error.message);
+    process.exit(1);
+  });
+}
+
+export { validateDeployment };
