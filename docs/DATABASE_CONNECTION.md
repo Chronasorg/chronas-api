@@ -124,19 +124,19 @@ node scripts/download-docdb-cert.js
 
 ### Certificate Locations
 
-The module searches for certificates in this order:
-1. `/opt/rds-ca-2019-root.pem` (Lambda layer)
-2. `./certs/rds-ca-2019-root.pem` (Local development)
-3. `./migration/rds-ca-2019-root.pem` (Migration scripts)
+The module searches for certificates in this order (see `config/database.js`):
+1. `/opt/global-bundle.pem` (Lambda layer)
+2. `./certs/global-bundle.pem` (Local development — new AWS global bundle)
+3. `./certs/rds-ca-2019-root.pem` (Fallback — old certificate)
+4. `./migration/rds-ca-2019-root.pem` (Migration scripts)
 
 ## Health Checks
 
-The health check endpoints have been updated to use the new database module:
+The health check endpoints use the database module:
 
 - `GET /health` - Basic health status
 - `GET /health/detailed` - Detailed health with database status
-- `GET /health/ready` - Kubernetes readiness probe
-- `GET /health/live` - Kubernetes liveness probe
+- `GET /health/lambda` - Lambda-specific health check
 
 ## Migration from Old Connection
 

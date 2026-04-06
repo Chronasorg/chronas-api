@@ -1,60 +1,59 @@
 # Current Production Setup Summary
 
-Generated: 2025-10-06T14:11:49.276Z
-
-## DocumentDB Clusters
-
-### databaseb269d8bb-phnragzw0yth
-- **Engine Version**: 3.6.0
-- **Status**: available
-- **Endpoint**: databaseb269d8bb-phnragzw0yth.cluster-cstwu7mt2svi.eu-west-1.docdb.amazonaws.com
-- **Port**: 27017
-- **VPC**: cluster-WWY3U47MSKYAT4OZQYXOI6VP6M
-- **Instances**: 1
+Last verified: 2026-04-06
+AWS Account: chronas-prod, Region: eu-west-1
 
 ## Lambda Functions
 
-### ChronasApiLambdaStack-ChronasApiLambdaFunction7C76-HsfSlA0k7fuU
-- **Runtime**: undefined
-- **Memory**: 400MB
-- **Timeout**: 300s
-- **Last Modified**: 2025-07-11T04:45:32.000+0000
-- **Code Size**: 0 bytes
-- **Handler**: undefined
+### ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM
+- **Runtime**: nodejs22.x
+- **Handler**: lambda-handler.handler
+- **Memory**: 512MB
+- **Timeout**: 30s
+- **Package**: Zip (S3)
+- **Last Modified**: 2026-03-10
 
 ### ChronasFrontendS3Stack-CustomS3AutoDeleteObjectsCu-Ui7ewcHUZewT
 - **Runtime**: nodejs18.x
 - **Memory**: 128MB
-- **Timeout**: 900s
-- **Last Modified**: 2025-09-11T13:26:37.482+0000
-- **Code Size**: 1956 bytes
-- **Handler**: index.handler
+- **Purpose**: S3 auto-delete custom resource (CDK-managed)
 
 ## API Gateway
 
-## CloudFormation Stacks
+### ChronasApiGateway
+- **Type**: HTTP API (API Gateway v2)
+- **Endpoint**: https://2g4uy0bdoe.execute-api.eu-west-1.amazonaws.com
+- **Custom Domain**: api.chronas.org (TLS 1.2, regional)
 
-### ChronasFrontendS3Stack
-- **Status**: UPDATE_COMPLETE
-- **Created**: 2025-09-11T13:26:09.702000+00:00
-- **Description**: N/A
+## DocumentDB
 
-### ChronasApiLambdaStack
-- **Status**: UPDATE_COMPLETE
-- **Created**: 2023-09-22T15:01:26.634000+00:00
-- **Description**: N/A
+### databaseb269d8bb-phnragzw0yth
+- **Status**: available
+- **Endpoint**: databaseb269d8bb-phnragzw0yth.cluster-cstwu7mt2svi.eu-west-1.docdb.amazonaws.com
+- **Port**: 27017
+- **Auth**: SCRAM-SHA-1, TLS required
+- **Credentials**: AWS Secrets Manager `/chronas/docdb/newpassword`
 
-### BuildChronasAPi
-- **Status**: UPDATE_COMPLETE
-- **Created**: 2023-09-22T14:29:31.037000+00:00
-- **Description**: N/A
+## CloudFormation Stacks (active)
 
-## Next Steps
+| Stack | Status | Description |
+|-------|--------|-------------|
+| ChronasApiLambdaStackV2 | UPDATE_COMPLETE | Lambda function + config |
+| ApiGatewayStack | UPDATE_COMPLETE | HTTP API Gateway |
+| NetworkStack | UPDATE_COMPLETE | VPC for DocumentDB |
+| SecretStack | UPDATE_COMPLETE | Secrets Manager secrets |
+| DnsStack | UPDATE_COMPLETE | Route 53 DNS |
+| ChronasFrontendS3Stack | UPDATE_COMPLETE | Frontend S3 hosting |
+| CloudwatchStack | UPDATE_COMPLETE | Monitoring |
+| CDKToolkit | UPDATE_COMPLETE | CDK bootstrap |
 
-1. **Review this documentation** to understand current setup
-2. **Create DocumentDB snapshot** before any changes
-3. **Plan Lambda deployment** strategy
-4. **Test in development** environment first
-5. **Execute production deployment** with proper backups
+## S3 Buckets
 
-See SIMPLE_PRODUCTION_DEPLOYMENT.md for deployment steps.
+- **chronas-frontend-new** — Current frontend hosting
+- **chronas-frontend-937826731833** — Previous frontend bucket
+- **cdk-hnb659fds-assets-***: CDK asset staging buckets
+
+## App Secrets
+
+- `/chronas/docdb/newpassword` — DocumentDB credentials (host, username, password, port)
+- `/chronas/secrets` — App config (OAuth keys, JWT secret, etc.)
