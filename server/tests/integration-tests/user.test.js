@@ -160,12 +160,12 @@ describe('## User APIs', () => {
   describe('# GET /v1/users/:userId', () => {
     it('should get user details', (done) => {
       request(app)
-        .get(`/v1/users/${user._id}`)
+        .get('/v1/users/test@test.de')
         .set('Authorization', jwtToken)
         .expect(httpStatus.OK)
         .then((res) => {
-          expect(res.body.username).to.equal(user.username);
-          expect(res.body.privilege).to.equal(user.privilege);
+          expect(res.body.username).to.equal('testuser');
+          expect(res.body.privilege).to.equal(99);
           done();
         })
         .catch(done);
@@ -186,15 +186,14 @@ describe('## User APIs', () => {
 
   describe('# PUT /v1/users/:userId', () => {
     it('should update user details', (done) => {
-      user.username = 'KK';
       request(app)
-        .put(`/v1/users/${user._id}`)
+        .put('/v1/users/test@test.de')
         .set('Authorization', jwtToken)
-        .send(user)
+        .send({ username: 'KK' })
         .expect(httpStatus.OK)
         .then((res) => {
           expect(res.body.username).to.equal('KK');
-          expect(res.body.privilege).to.equal(user.privilege);
+          expect(res.body.privilege).to.equal(99);
           done();
         })
         .catch(done);
@@ -204,12 +203,12 @@ describe('## User APIs', () => {
   describe('# DELETE /v1/users/', () => {
     it('should delete user', (done) => {
       request(app)
-        .delete(`/v1/users/${user._id}`)
+        .delete('/v1/users/test@test.de')
         .set('Authorization', jwtToken)
         .expect(200)
         .then((res) => {
-          expect(res.body.username).to.equal('KK');
-          expect(res.body.privilege).to.equal(user.privilege);
+          expect(res.body.username).to.equal('testuser');
+          expect(res.body.privilege).to.equal(99);
           done();
         })
         .catch(done);

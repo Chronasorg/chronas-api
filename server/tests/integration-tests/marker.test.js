@@ -233,12 +233,12 @@ describe('## Marker APIs', () => {
 
       it('should delete a marker', (done) => {
         request(app)
-          .delete('/v1/markers/deleteMamurra')
+          .delete('/v1/markers/Mamurra')
           .set('Authorization', jwtToken)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal('deleteMamurra');
-            expect(res.body.type).to.equal('politician');
+            expect(res.body.acknowledged).to.equal(true);
+            expect(res.body.deletedCount).to.equal(1);
             done();
           })
           .catch(done);

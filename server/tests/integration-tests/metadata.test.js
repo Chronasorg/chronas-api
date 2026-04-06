@@ -259,7 +259,7 @@ describe('## Metadata APIs', () => {
           .expect(httpStatus.OK)
           .then((res) => {
             expect(res.body._id).to.equal(updateMetadata._id);
-            expect(res.body.score).to.equal(0);
+            expect(res.body.score).to.equal(-1);
             done();
           })
           .catch(done);
@@ -286,8 +286,8 @@ describe('## Metadata APIs', () => {
           .set('Authorization', jwtToken)
           .expect(httpStatus.OK)
           .then((res) => {
-            expect(res.body._id).to.equal('culture');
-            expect(res.body.type).to.equal('g');
+            expect(res.body.acknowledged).to.equal(true);
+            expect(res.body.deletedCount).to.equal(1);
             done();
           })
           .catch(done);

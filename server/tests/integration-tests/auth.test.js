@@ -119,8 +119,7 @@ describe('## Auth APIs', () => {
             .send(validSignUserCredentials)
             .expect(httpStatus.BAD_REQUEST)
             .then((res) => {
-              // Error message could be in message or stack depending on error handler
-              const errorText = res.body.message || res.body.stack || '';
+              const errorText = res.body.stack || res.body.message || '';
               expect(errorText).to.contain('already exist');
               done();
             })
