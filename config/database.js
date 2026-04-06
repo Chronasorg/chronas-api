@@ -157,9 +157,6 @@ export async function connectToDatabase(uri) {
 
     const options = getConnectionOptions(uri);
 
-    // Set mongoose promise library
-    mongoose.Promise = global.Promise;
-
     // Connect to database
     cachedConnection = await mongoose.connect(uri, options);
 

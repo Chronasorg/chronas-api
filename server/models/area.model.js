@@ -355,7 +355,7 @@ AreaSchema.virtual('calculatedArea').get(function () {
 });
 
 // Pre-save middleware
-AreaSchema.pre('save', function (next) {
+AreaSchema.pre('save', function () {
   // Update version on modification
   if (this.isModified() && !this.isNew) {
     this.version += 1;
@@ -363,10 +363,8 @@ AreaSchema.pre('save', function (next) {
 
   // Validate year range based on category
   if (this.category === 'political' && this.year > new Date().getFullYear()) {
-    return next(new Error('Political areas cannot be in the future'));
+    throw new Error('Political areas cannot be in the future');
   }
-
-  next();
 });
 
 // Instance methods
