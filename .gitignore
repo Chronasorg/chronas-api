@@ -65,3 +65,4 @@ users-bk.json
 
 dataToMigrate
 CURRENT_PRODUCTION_SETUP.json
+build-version.json

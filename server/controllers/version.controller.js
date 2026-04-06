@@ -6,22 +6,33 @@ import Revision from '../models/revision.model.js';
 import APIError from '../helpers/APIError.js';
 
 
-// Lambda-compatible version info
-const VERSION_INFO = {
-  version: '1.3.7',
-  commit: 'automated-deploy-test',
-  build: new Date().toISOString()
-};
+// Version info - updated by CI/CD pipeline via build-version.json
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let VERSION_INFO;
+try {
+  VERSION_INFO = JSON.parse(readFileSync(join(__dirname, '../../build-version.json'), 'utf8'));
+} catch {
+  VERSION_INFO = {
+    version: '1.3.7',
+    commit: 'local-dev',
+    build: new Date().toISOString()
+  };
+}
 
 /**
  * get current deployed version
  */
 function get(req, res) {
-  const formatedDate = new Date(VERSION_INFO.build).toLocaleDateString();
   return res.json({
     version: VERSION_INFO.version,
     commit: VERSION_INFO.commit,
-    build: formatedDate
+    build: VERSION_INFO.build
   });
 }
 
