@@ -18,7 +18,7 @@ function checkPrivilege(threshold) {
 
 function checkPrivilegeForTypes(threshold, typesBlocked) {
   return function (req, res, next) {
-    const typeToChecked = req.body.type || ((req.entity || {})[0] || {}).type;
+    const typeToChecked = (req.body || {}).type || ((req.entity || {})[0] || {}).type;
 
     if (typesBlocked.indexOf(typeToChecked) === -1 || (req && req.auth && req.auth.privilege >= threshold)) {
       next();
