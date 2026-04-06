@@ -8,6 +8,10 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: true
 
+env:
+  S3_BUCKET: chronas-lambda-deployments
+  AWS_REGION: eu-west-1
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -59,14 +63,14 @@ jobs:
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile chronas-prod
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
-          aws configure set region eu-west-1 --profile chronas-prod
+          aws configure set region ${{ env.AWS_REGION }} --profile chronas-prod
 
       - name: Get Lambda function name
         id: lambda
         run: |
           FUNCTION_NAME=$(aws cloudformation describe-stacks \
             --stack-name ChronasApiLambdaStackV2 \
-            --region eu-west-1 \
+            --region ${{ env.AWS_REGION }} \
             --profile chronas-prod \
             --query "Stacks[0].Outputs[?OutputKey=='LambdaFunctionName'].OutputValue" \
             --output text)
@@ -74,20 +78,41 @@ jobs:
 
       - name: Create deployment package
         run: |
-          zip -r lambda-deployment.zip . -x "node_modules/*" "*.git*" "tests/*" "*.md" "*.log" "PostmanTests/*" "coverage/*"
           npm ci --omit=dev
-          zip -r lambda-deployment.zip node_modules/
+          zip -r lambda-deployment.zip . \
+            -x "*.git*" \
+            -x "server/tests/*" \
+            -x "PostmanTests/*" \
+            -x "coverage/*" \
+            -x "postman-results*" \
+            -x "*.md" \
+            -x "*.log" \
+            -x ".github/*" \
+            -x ".claude/*" \
+            -x "eslint.config.js"
+          echo "Package size: $(du -h lambda-deployment.zip | cut -f1)"
 
-      - name: Deploy to Lambda
+      - name: Ensure S3 bucket exists
         run: |
+          aws s3 mb s3://${{ env.S3_BUCKET }} \
+            --region ${{ env.AWS_REGION }} \
+            --profile chronas-prod 2>/dev/null || true
+
+      - name: Deploy to Lambda via S3
+        run: |
+          S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
+          aws s3 cp lambda-deployment.zip s3://${{ env.S3_BUCKET }}/$S3_KEY \
+            --region ${{ env.AWS_REGION }} \
+            --profile chronas-prod
           aws lambda update-function-code \
             --function-name ${{ steps.lambda.outputs.function_name }} \
-            --zip-file fileb://lambda-deployment.zip \
-            --region eu-west-1 \
+            --s3-bucket ${{ env.S3_BUCKET }} \
+            --s3-key $S3_KEY \
+            --region ${{ env.AWS_REGION }} \
             --profile chronas-prod
           aws lambda wait function-updated \
             --function-name ${{ steps.lambda.outputs.function_name }} \
-            --region eu-west-1 \
+            --region ${{ env.AWS_REGION }} \
             --profile chronas-prod
           echo "Lambda deployment completed successfully!"
 
@@ -96,5 +121,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
-          git commit -m "chore: bump version to $(node -p \"require('./package.json').version\") [skip ci]"
+          git commit -m "chore: bump version to $(node -p "require('./package.json').version") [skip ci]"
           git push
