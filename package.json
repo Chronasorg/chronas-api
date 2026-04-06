@@ -99,19 +99,19 @@
   },
   "devDependencies": {
     "c8": "^11.0.0",
-    "chai": "^3.4.1",
+    "chai": "^6.0.0",
     "cross-env": "^10.0.0",
     "eslint": "^8.0.0",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-n": "16.6.2",
     "eslint-plugin-promise": "6.6.0",
-    "mocha": "^10.0.0",
+    "mocha": "^11.0.0",
     "mongo-unit": "3.4.0",
     "mongodb-memory-server": "^11.0.0",
     "newman": "6.2.2",
     "newman-reporter-htmlextra": "1.23.1",
-    "supertest": "^6.3.0",
+    "supertest": "^7.0.0",
     "supertest-as-promised": "4.0.2"
   },
   "bugs": {

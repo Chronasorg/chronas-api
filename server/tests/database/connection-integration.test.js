@@ -1,9 +1,8 @@
 import { performance } from 'perf_hooks';
 
 import { describe, it, before, after } from 'mocha';
-import chai from 'chai';
+import { expect } from 'chai';
 import mongoose from 'mongoose';
-const { expect } = chai;
 
 describe('## Database Connection Integration Tests', () => {
   let dbConfig;

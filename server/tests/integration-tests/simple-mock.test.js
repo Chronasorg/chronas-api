@@ -4,16 +4,15 @@ import path from 'path';
 
 import request from 'supertest-as-promised';
 import httpStatus from 'http-status';
-import chai from 'chai';
+import { expect, config as chaiConfig } from 'chai';
 
 import app from '../helpers/test-app.js';
 import { setupMockDatabase, teardownMockDatabase, clearMockDatabase, populateMockData } from '../helpers/mock-database.js';
-const { expect } = chai;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-chai.config.includeStack = true;
+chaiConfig.includeStack = true;
 
 describe('## Simple Mock Integration Tests', () => {
   const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData-modern.json'), 'utf8'));

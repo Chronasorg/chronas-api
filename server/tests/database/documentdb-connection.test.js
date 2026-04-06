@@ -1,8 +1,7 @@
 import { performance } from 'perf_hooks';
 
 import { describe, it, before, after } from 'mocha';
-import chai from 'chai';
-const { expect } = chai;
+import { expect } from 'chai';
 
 describe('## DocumentDB Connection Tests', () => {
   let dbConfig;

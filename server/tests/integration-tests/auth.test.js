@@ -2,15 +2,14 @@ import request from 'supertest-as-promised';
 import httpStatus from 'http-status';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import chai from 'chai';
+import { expect, config as chaiConfig } from 'chai';
 
 import app from '../helpers/test-app.js';
 import { config } from '../../../config/config.js';
 import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../helpers/mongodb-memory.js';
 import User from '../../models/user.model.js';
 
-const { expect } = chai;
-chai.config.includeStack = true;
+chaiConfig.includeStack = true;
 
 describe('## Auth APIs', () => {
   before(async function () {

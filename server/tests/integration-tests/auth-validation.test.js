@@ -1,12 +1,11 @@
 import request from 'supertest-as-promised';
 import httpStatus from 'http-status';
-import chai from 'chai';
+import { expect, config as chaiConfig } from 'chai';
 
 import app from '../helpers/test-app.js';
 import { setupMockDatabase, teardownMockDatabase, clearMockDatabase } from '../helpers/mock-database.js';
-const { expect } = chai;
 
-chai.config.includeStack = true;
+chaiConfig.includeStack = true;
 
 describe('## Auth Validation Tests', () => {
   before(async function () {

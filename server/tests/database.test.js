@@ -4,7 +4,7 @@
  * Tests for the DocumentDB connection module
  */
 
-import chai from 'chai';
+import { expect } from 'chai';
 
 import {
   connectToDatabase,
@@ -12,7 +12,6 @@ import {
   getConnectionStatus,
   testDatabaseConnectivity
 } from '../../config/database.js';
-const { expect } = chai;
 
 describe('Database Connection', () => {
   describe('Connection Status', () => {

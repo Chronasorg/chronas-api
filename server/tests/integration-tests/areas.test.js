@@ -4,7 +4,7 @@ import path from 'path';
 
 import request from 'supertest-as-promised';
 import httpStatus from 'http-status';
-import chai from 'chai';
+import { expect, config as chaiConfig } from 'chai';
 
 import mongoose from 'mongoose';
 import app from '../helpers/test-app.js';
@@ -12,13 +12,12 @@ import { setupTestDatabase, teardownTestDatabase, clearTestDatabase } from '../h
 import Area from '../../models/area.model.js';
 import User from '../../models/user.model.js';
 import Metadata from '../../models/metadata.model.js';
-const { expect } = chai;
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-chai.config.includeStack = true;
+chaiConfig.includeStack = true;
 
 describe('## Areas APIs', () => {
   const testData = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/testData.json'), 'utf8'));
