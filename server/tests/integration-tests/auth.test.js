@@ -79,7 +79,7 @@ describe('## Auth APIs', () => {
         .then((res) => {
           expect(res.body).to.have.property('token');
           jwt.verify(res.body.token, config.jwtSecret, (err, decoded) => {
-            expect(err).to.not.be.ok; // eslint-disable-line no-unused-expressions
+            expect(err).to.not.be.ok;
             expect(decoded.username).to.equal('doubtful_throne');
             done();
           });
@@ -97,7 +97,7 @@ describe('## Auth APIs', () => {
         .then((res) => {
           expect(res.body).to.have.property('token');
           jwt.verify(res.body.token, config.jwtSecret, (err, decoded) => {
-            expect(err).to.not.be.ok; // eslint-disable-line no-unused-expressions
+            expect(err).to.not.be.ok;
             expect(decoded.id).to.equal('testSign@test.de');
             done();
           });

@@ -24,7 +24,7 @@ const GeometrySchema = new Schema({
     type: Schema.Types.Mixed,
     required: [true, 'Coordinates are required'],
     validate: {
-      validator: function (coordinates) {
+      validator(coordinates) {
         // Basic coordinate validation - could be enhanced
         return Array.isArray(coordinates) && coordinates.length > 0;
       },
@@ -109,7 +109,7 @@ const PropertiesSchema = new Schema({
   wikipedia: {
     type: String,
     validate: {
-      validator: function (v) {
+      validator(v) {
         return !v || /^https?:\/\/(en\.)?wikipedia\.org\/wiki\/.+/.test(v);
       },
       message: 'Wikipedia URL must be a valid Wikipedia link'
@@ -126,7 +126,7 @@ const PropertiesSchema = new Schema({
     url: {
       type: String,
       validate: {
-        validator: function (v) {
+        validator(v) {
           return !v || /^https?:\/\/.+/.test(v);
         },
         message: 'Source URL must be valid'

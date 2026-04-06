@@ -7,7 +7,7 @@ import userCtrl from '../controllers/user.controller.js';
 import { config } from '../../config/config.js';
 import checkPrivilege from '../helpers/privileges.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 router.route('/')
 //   /** GET /v1/users - Get list of users */

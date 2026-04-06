@@ -2,7 +2,7 @@ import express from 'express';
 
 import versionCtrl from '../controllers/version.controller.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 router.route('/welcome')
 /** GET /v1/version - get current deployed version */

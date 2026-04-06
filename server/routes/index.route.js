@@ -21,7 +21,7 @@ import revisionRoutes from './revision.route.js';
 
 import versionRoutes from './version.router.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 /** GET /health - Check service health */
 router.get('/health', (req, res) =>

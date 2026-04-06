@@ -19,7 +19,7 @@ async function load(req, res, next, id) {
         message: 'Not Found'
       });
     }
-    req.user = user; // eslint-disable-line no-param-reassign
+    req.user = user;
     return next();
   } catch (e) {
     res.status(httpStatus.NOT_FOUND).json({

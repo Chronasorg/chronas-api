@@ -64,7 +64,7 @@ function load(req, res, next, id) {
 
   Metadata.get(id, req.method)
     .then((metadata) => {
-      req.entity = metadata; // eslint-disable-line no-param-reassign
+      req.entity = metadata;
       return next();
     })
     .catch((e) => {

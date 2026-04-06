@@ -10,7 +10,7 @@ import { config } from '../../config/config.js';
 function load(req, res, next, id) {
   Flag.findOne({ fullUrl: encodeURIComponent(id) })
     .then((flag) => {
-      req.flag = flag; // eslint-disable-line no-param-reassign
+      req.flag = flag;
       return next();
     })
     .catch((e) => {

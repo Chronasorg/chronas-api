@@ -2,7 +2,7 @@ import express from 'express';
 
 import statisticsCtrl from '../controllers/statistics.controller.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 // get general data statistics
 router.route('/')

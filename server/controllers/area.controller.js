@@ -17,7 +17,7 @@ const dimAccessor = {
 async function load(req, res, next, id) {
   try {
     const area = await Area.get(id, req.method);
-    req.entity = area; // eslint-disable-line no-param-reassign
+    req.entity = area;
     return next();
   } catch (e) {
     res.status(httpStatus.NOT_FOUND).json({
@@ -186,7 +186,7 @@ function aggregateProvinces(req, res, next, resolve = false) {
 function aggregateMetaCoo(req, res, next, resolve = false) {
   Metadata.get('links', req.method)
     .then((linkObj) => {
-      req.entity = linkObj; // eslint-disable-line no-param-reassign
+      req.entity = linkObj;
 
       const { start = 0, end = 1, type = 'i' } = req.query;
       const metadataStream = Metadata
@@ -476,7 +476,7 @@ function replaceAll(req, res, next) {
     // Promise.all(mapItemsPromises).then(() => {.
     Metadata.get('links', req.method)
       .then((linkObj) => {
-        req.entity = linkObj; // eslint-disable-line no-param-reassign
+        req.entity = linkObj;
         req.query.source = `1:${toReplaceLinkId}`;
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve);

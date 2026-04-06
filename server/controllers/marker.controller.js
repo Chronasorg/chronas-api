@@ -11,7 +11,7 @@ import Metadata from '../models/metadata.model.js';
 async function load(req, res, next, id) {
   try {
     const marker = await Marker.get(id);
-    req.entity = marker; // eslint-disable-line no-param-reassign
+    req.entity = marker;
     return next();
   } catch (e) {
     res.status(httpStatus.NOT_FOUND).json({

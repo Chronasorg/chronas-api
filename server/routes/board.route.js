@@ -1,6 +1,6 @@
 import express from 'express';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 /** GET /v1/board/test - Simple test endpoint */
 router.route('/test')

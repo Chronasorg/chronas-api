@@ -48,7 +48,7 @@ const iconAccByAEtype = {
 function load(req, res, next, id) {
   Collection.findById(id)
     .then((collection) => {
-      req.collection = collection; // eslint-disable-line no-param-reassign
+      req.collection = collection;
       return next();
     })
     .catch((e) => {

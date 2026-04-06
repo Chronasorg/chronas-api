@@ -25,7 +25,7 @@ function load(req, res, next, id) {
 
   Revision.findById(id)
     .then((revision) => {
-      req.revision = revision; // eslint-disable-line no-param-reassign
+      req.revision = revision;
       // loadEntity
       const { resource } = revision;
       const { entityId } = revision;
@@ -43,7 +43,7 @@ function load(req, res, next, id) {
               }
             }
 
-            req.entity = entity; // eslint-disable-line no-param-reassign
+            req.entity = entity;
             return next();
           })
           .catch(e => res.status(httpStatus.NOT_FOUND).json({

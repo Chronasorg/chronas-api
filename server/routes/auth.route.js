@@ -10,7 +10,7 @@ import facebook from '../auths/facebook.js';
 import google from '../auths/google.js';
 import github from '../auths/github.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 /** POST /v1/auth/login - Returns token if correct email and password is provided */
 router.route('/login')

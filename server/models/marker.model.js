@@ -36,7 +36,7 @@ const MarkerSchema = new mongoose.Schema({
   coo: {
     type: [Number],
     validate: {
-      validator: function (v) {
+      validator(v) {
         return !v || (Array.isArray(v) && v.length === 2 &&
                v[1] >= -90 && v[1] <= 90 &&
                v[0] >= -180 && v[0] <= 180);

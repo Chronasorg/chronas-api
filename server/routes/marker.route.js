@@ -8,7 +8,7 @@ import revisionCtrl from '../controllers/revision.controller.js';
 import { config } from '../../config/config.js';
 import checkPrivilege from '../helpers/privileges.js';
 
-const router = express.Router(); // eslint-disable-line new-cap
+const router = express.Router();
 
 router.route('/')
   .all(markerCtrl.defineEntity)
