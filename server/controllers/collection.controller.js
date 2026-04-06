@@ -328,7 +328,7 @@ function list(req, res, next) {
           if (fSubentity) {
             optionalFind.subEntityId = fSubentity;
           }
-          Collection.find(optionalFind).count().exec().then((collectionCount) => {
+          Collection.find(optionalFind).countDocuments().exec().then((collectionCount) => {
             res.set('Access-Control-Expose-Headers', 'X-Total-Count');
             res.set('X-Total-Count', collectionCount);
             res.json(collections);
@@ -347,7 +347,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const { collection } = req;
-  collection.remove()
+  collection.deleteOne()
     .then(deletedCollection => res.json(deletedCollection))
     // .then(deletedCollection => next(new APICustomResponse(`${deletedCollection} deleted successfully`, 204, true)))
     .catch(e => next(e));

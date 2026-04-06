@@ -59,7 +59,7 @@ function list(req, res, next) {
       .lean()
       .exec()
       .then((games) => {
-        Game.count().exec().then((gameCount) => {
+        Game.countDocuments().exec().then((gameCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count');
           res.set('X-Total-Count', gameCount);
           res.json(games.map(u => ({
@@ -74,7 +74,7 @@ function list(req, res, next) {
         });
       });
   } else if (countOnly !== false) {
-    Game.count()
+    Game.countDocuments()
       .exec()
       .then((gameCount) => {
         res.json({ total: gameCount });

@@ -456,7 +456,7 @@ function list(req, res, next) {
   Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (count) {
-        Metadata.count().exec().then((metadataCount) => {
+        Metadata.countDocuments().exec().then((metadataCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count');
           res.set('X-Total-Count', metadataCount);
           res.json(metadata);

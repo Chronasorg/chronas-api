@@ -114,7 +114,7 @@ function update(req, res, next, fromRevision = false) {
         // return res.send("OK")
         Marker.get(oldId)
           .then((origMarker) => {
-            origMarker.remove() // removing the just created
+            origMarker.deleteOne() // removing the just created
               .then(() => {
                 Metadata.get('links', req.method)
                   .then((links) => {

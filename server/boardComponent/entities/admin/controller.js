@@ -13,10 +13,10 @@ import User from '../user/model.js';
  */
 const getAdminDashInfo = async () => {
   try {
-    const discussionCount = await Discussion.count().exec();
-    const opinionCount = await Opinion.count().exec();
-    const forumCount = await Forum.count().exec();
-    const userCount = await User.count().exec();
+    const discussionCount = await Discussion.countDocuments().exec();
+    const opinionCount = await Opinion.countDocuments().exec();
+    const forumCount = await Forum.countDocuments().exec();
+    const userCount = await User.countDocuments().exec();
     const forums = await Forum
       .find({})
       .sort({ date: -1 })
@@ -86,13 +86,13 @@ const createForum = ({ forum_name, forum_slug }) => new Promise((resolve, reject
  */
 const deleteForum = ({ forum_id }) => new Promise((resolve, reject) => {
   // first remove any discussion regarding the forum
-  Discussion.remove({ forum_id }).exec()
+  Discussion.deleteMany({ forum_id }).exec()
     .then(() => {
       // remove any opinion regarding the forum
-      return Opinion.remove({ forum_id }).exec()
+      return Opinion.deleteMany({ forum_id }).exec()
         .then(() => {
           // now we can remove the forum
-          return Forum.remove({ _id: forum_id }).exec()
+          return Forum.deleteOne({ _id: forum_id }).exec()
             .then(() => {
               resolve({ deleted: true });
             });
@@ -111,13 +111,13 @@ const deleteForum = ({ forum_id }) => new Promise((resolve, reject) => {
  */
 const deleteUser = ({ user_id }) => new Promise((resolve, reject) => {
   // first we need to remvoe any discussion the user created
-  Discussion.remove({ user_id }).exec()
+  Discussion.deleteMany({ user_id }).exec()
     .then(() => {
       // now we need to remove any opinions that are created by the user
-      return Opinion.remove({ user_id }).exec()
+      return Opinion.deleteMany({ user_id }).exec()
         .then(() => {
           // finally we can remove the user
-          return User.remove({ _id: user_id }).exec()
+          return User.deleteOne({ _id: user_id }).exec()
             .then(() => {
               resolve({ deleted: true });
             });
@@ -136,10 +136,10 @@ const deleteUser = ({ user_id }) => new Promise((resolve, reject) => {
  */
 const deleteDiscussion = ({ discussion_id }) => new Promise((resolve, reject) => {
   // first we need to remove any opinion regarding the discussion
-  Opinion.remove({ discussion_id }).exec()
+  Opinion.deleteMany({ discussion_id }).exec()
     .then(() => {
       // now we need to remove the discussion
-      return Discussion.remove({ _id: discussion_id }).exec()
+      return Discussion.deleteOne({ _id: discussion_id }).exec()
         .then(() => {
           resolve({ deleted: true });
         });

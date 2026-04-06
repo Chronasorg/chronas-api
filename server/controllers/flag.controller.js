@@ -93,7 +93,7 @@ function list(req, res, next) {
         if (fSubentity) {
           optionalFind.subEntityId = fSubentity;
         }
-        Flag.find(optionalFind).count().exec().then((flagCount) => {
+        Flag.find(optionalFind).countDocuments().exec().then((flagCount) => {
           res.set('Access-Control-Expose-Headers', 'X-Total-Count');
           res.set('X-Total-Count', flagCount);
           res.json(flags);
@@ -111,7 +111,7 @@ function list(req, res, next) {
  */
 function remove(req, res, next) {
   const { flag } = req;
-  flag.remove()
+  flag.deleteOne()
     .then(deletedFlag => res.json(deletedFlag))
     // .then(deletedFlag => next(new APICustomResponse(`${deletedFlag} deleted successfully`, 204, true)))
     .catch(e => next(e));

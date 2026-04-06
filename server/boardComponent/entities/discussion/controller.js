@@ -197,12 +197,12 @@ const deleteDiscussion = discussion_slug => new Promise((resolve, reject) => {
 
       // remove any opinion regarding the discussion
       Opinion
-      .remove({ discussion_id })
+      .deleteMany({ discussion_id })
       .exec()
       .then(() => {
         // finally remove the discussion
         return Discussion
-          .remove({ discussion_slug })
+          .deleteOne({ discussion_slug })
           .exec()
           .then(() => {
             resolve({ deleted: true })
