@@ -62,7 +62,7 @@
     "@vendia/serverless-express": "4.12.6",
     "applicationinsights": "^3.14.0",
     "aws-xray-sdk": "^3.5.0",
-    "axios": "^1.14.0",
+    "axios": "^1.15.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.7.4",
     "connect-mongo": "^6.0.0",
