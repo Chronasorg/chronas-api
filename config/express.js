@@ -80,7 +80,17 @@ app.use(helmet());
 
 // enable CORS - Cross Origin Resource Sharing
 app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'https://chronas.org,https://new.chronas.org,http://localhost:3000,http://localhost:5173').split(','),
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. server-to-server, curl, mobile apps)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173').split(',');
+
+    if (allowedOrigins.includes(origin) || /^https:\/\/([a-z0-9-]+\.)?chronas\.org$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
