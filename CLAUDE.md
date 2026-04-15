@@ -51,7 +51,7 @@ Azure Pipelines (`azure-pipelines.yml`), Travis CI, AWS CodeBuild (`buildspec.ym
 - [database.js](config/database.js) — Mongoose connection with DocumentDB TLS, connection pooling (1 for Lambda, 10 for local), Secrets Manager integration
 - [lambda-config.js](config/lambda-config.js) — Lambda-specific config loading
 - [secrets-manager.js](config/secrets-manager.js) — AWS Secrets Manager client (SDK v3)
-- [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Passport, Winston, AWS X-Ray, performance monitoring
+- [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Passport, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
 - [performance.js](config/performance.js) — Cold/warm start tracking, Lambda metrics
 
 **Request flow**: API Gateway → Lambda handler → `@vendia/serverless-express` → Express middleware → `/v1` routes → controllers → Mongoose models → DocumentDB
