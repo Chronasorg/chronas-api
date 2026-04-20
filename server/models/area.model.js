@@ -358,7 +358,7 @@ AreaSchema.virtual('calculatedArea').get(function () {
 AreaSchema.pre('save', function () {
   // Update version on modification
   if (this.isModified() && !this.isNew) {
-    this.version += 1;
+    this.version = (this.version || 0) + 1;
   }
 
   // Validate year range based on category
