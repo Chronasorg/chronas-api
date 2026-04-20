@@ -399,6 +399,13 @@ function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId
   });
 }
 
+/**
+ * Replace ALL occurrences of a dimension value across all provinces in a year range.
+ *
+ * WARNING: This replaces globally — every province matching the value is changed.
+ * For targeted data corrections, use updateMany() with explicit province lists instead.
+ * This function also updates metadata links and war participant data.
+ */
 function replaceAll(req, res, next) {
   const { start, end = start, ruler, culture, religion, replaceWith } = req.body;
   const nextBody = []; // "SWE","swedish","redo","Stockholm",1000
@@ -552,8 +559,55 @@ function replaceAll(req, res, next) {
   if (!waitForCompletion) return res.send('OK');
 }
 
+/**
+ * Update specific provinces across a year range for one or more dimensions.
+ *
+ * HOW IT WORKS:
+ * - Iterates through each year from `start` to `end` (inclusive)
+ * - For each year, loads the area document (one doc per year)
+ * - For each province in the `provinces` array:
+ *   - Skips years that have no area document in the database
+ *   - Only updates dimensions that are explicitly provided (non-undefined)
+ *   - Skips the province if it doesn't exist in that year's data
+ *   - Skips if the current value already matches the new value
+ *   - Records old/new values for revision tracking
+ *
+ * DIMENSION ISOLATION:
+ * Area data is stored as arrays: [ruler, culture, religion, capital, population]
+ * Only the dimensions provided in the request body are modified.
+ * Example: { religion: "orthodox" } builds nextBody = [undefined, undefined, "orthodox", undefined, undefined]
+ * The check `typeof nextBody[index] !== 'undefined'` ensures indices 0,1,3,4 are skipped —
+ * ruler, culture, capital, population are NEVER touched.
+ *
+ * YEAR RANGE BEHAVIOR:
+ * - Ranges <= 10 years: synchronous, waits for completion, chains to revision middleware
+ * - Ranges > 10 years: returns response immediately, runs aggregation async
+ *
+ * REVISION TRACKING:
+ * prevBody/nextBody are compressed via getRanges() (consecutive years with identical
+ * changes are merged, e.g., "1054-1200": {"Kiev": [,,,"orthodox"]}) and passed to
+ * revisionCtrl.addUpdateManyRevision via next().
+ *
+ * @param {Object} req.body
+ * @param {number} req.body.start - First year to update (inclusive)
+ * @param {number} req.body.end - Last year to update (inclusive, defaults to start)
+ * @param {string[]} req.body.provinces - Province names to update
+ * @param {string} [req.body.ruler] - New ruler value (index 0)
+ * @param {string} [req.body.culture] - New culture value (index 1)
+ * @param {string} [req.body.religion] - New religion value (index 2)
+ * @param {string} [req.body.capital] - New capital value (index 3)
+ * @param {number} [req.body.population] - New population value (index 4)
+ *
+ * @example
+ * // Fix Issue #10: change religion from chalcedonism to orthodox for specific provinces
+ * // PUT /v1/areas
+ * // { "start": 1054, "end": 1060, "provinces": ["Kiev","Volhynia","Thrace"], "religion": "orthodox" }
+ * // Result: Only religion (index 2) changes for Kiev, Volhynia, Thrace
+ * // Ruler, culture, capital, population remain untouched
+ */
 function updateMany(req, res, next) {
   const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body;
+  const typeDim = ruler ? 'ruler' : culture ? 'culture' : religion ? 'religion' : null;
   const nextBody = []; // "SWE","swedish","redo","Stockholm",1000
 
   nextBody[0] = ruler;
@@ -572,12 +626,14 @@ function updateMany(req, res, next) {
 
   const waitForCompletion = (end - start) < 11;
   yearToUpdate.reduce(
-    (p, x) => p.then(_ => new Promise((resolve) => {
+    (p, x) => p.then(_ => new Promise((resolve, reject) => {
       Area.findOne({ year: x })
         .exec()
         .then((area) => {
+          if (!area || !area.data) return resolve();
           const currYear = +area.year;
           provinces.forEach((province) => {
+            if (!area.data[province]) return;
             nextBody.forEach((singleValue, index) => {
               if (typeof nextBody[index] !== 'undefined' && JSON.stringify(area.data[province][index]) !== JSON.stringify(nextBody[index])) {
                 if (typeof prevBody[currYear] === 'undefined') prevBody[currYear] = {};

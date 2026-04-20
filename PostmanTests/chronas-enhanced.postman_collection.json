@@ -1189,6 +1189,155 @@
       ]
     },
     {
+      "name": "Data Corrections (updateMany)",
+      "description": "Tests for the updateMany endpoint (PUT /v1/areas) used for targeted data corrections like Issue #10 (chalcedonism→orthodox). updateMany changes ONLY the specified dimensions for ONLY the specified provinces, leaving all other data untouched.",
+      "item": [
+        {
+          "name": "updateMany - Get area before correction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Area data has expected structure before correction\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('object');",
+                  "    // Store a province's original data for later comparison",
+                  "    var firstKey = Object.keys(jsonData)[0];",
+                  "    if (firstKey && Array.isArray(jsonData[firstKey])) {",
+                  "        pm.globals.set('updateMany_province', firstKey);",
+                  "        pm.globals.set('updateMany_original_ruler', jsonData[firstKey][0]);",
+                  "        pm.globals.set('updateMany_original_culture', jsonData[firstKey][1]);",
+                  "        pm.globals.set('updateMany_original_religion', jsonData[firstKey][2]);",
+                  "        pm.globals.set('updateMany_original_capital', jsonData[firstKey][3]);",
+                  "        pm.globals.set('updateMany_original_population', jsonData[firstKey][4]);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/areas/1000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "areas",
+                "1000"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateMany - Apply religion correction to single province",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response indicates success\", function () {",
+                  "    pm.expect(pm.response.text()).to.include('updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start\": 1000,\n  \"end\": 1000,\n  \"provinces\": [\"{{updateMany_province}}\"],\n  \"religion\": \"orthodox\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/areas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "areas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateMany - Verify only religion changed, all other dimensions untouched",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var province = pm.globals.get('updateMany_province');",
+                  "pm.test(\"Religion was updated to orthodox\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData[province][2]).to.equal('orthodox');",
+                  "});",
+                  "pm.test(\"Ruler was NOT changed (dimension isolation)\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData[province][0]).to.equal(pm.globals.get('updateMany_original_ruler'));",
+                  "});",
+                  "pm.test(\"Culture was NOT changed (dimension isolation)\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData[province][1]).to.equal(pm.globals.get('updateMany_original_culture'));",
+                  "});",
+                  "pm.test(\"Capital was NOT changed (dimension isolation)\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData[province][3]).to.equal(pm.globals.get('updateMany_original_capital'));",
+                  "});",
+                  "pm.test(\"Population was NOT changed (dimension isolation)\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData[province][4]).to.equal(parseInt(pm.globals.get('updateMany_original_population')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/areas/1000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "areas",
+                "1000"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Board/Forum (4th Most Used - 11k requests)",
       "item": [
         {

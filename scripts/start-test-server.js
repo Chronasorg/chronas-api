@@ -46,7 +46,9 @@ async function seedDatabase() {
       data: {
         protestant: ['Protestant', 'rgb(255,0,0)', 'Christianity', 'Christianity'],
         sunni: ['Sunni Islam', 'rgb(0,255,0)', 'Islam', 'Islam'],
-        catholic: ['Catholic', 'rgb(0,0,255)', 'Christianity', 'Christianity']
+        catholic: ['Catholic', 'rgb(0,0,255)', 'Christianity', 'Christianity'],
+        chalcedonism: ['Chalcedonism', 'rgb(191,166,0)', 'Chalcedonian_Christianity', 'Christianity'],
+        orthodox: ['Orthodox', 'rgb(178,128,0)', 'History_of_the_Orthodox_Church', 'Christianity']
       },
       type: 'g',
       score: 0,
@@ -106,6 +108,34 @@ async function seedDatabase() {
       geometry: defaultGeometry,
       createdBy: creatorId,
       data: { AncientProv: ['ANC', 'ancient', 'catholic', 'AncientCity', 100] }
+    },
+    {
+      _id: '1000',
+      name: 'Area 1000 (pre-Schism)',
+      year: 1000,
+      geometry: defaultGeometry,
+      createdBy: creatorId,
+      data: {
+        Kiev: ['KRU', 'ruthenian', 'chalcedonism', 'Kiev', 50000],
+        Thrace: ['BYZ', 'greek', 'chalcedonism', 'Constantinople', 100000],
+        London: ['ENG', 'english', 'chalcedonism', 'London', 80000],
+        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 30000]
+      }
+    },
+    {
+      _id: '1100',
+      name: 'Area 1100 (post-Schism)',
+      year: 1100,
+      geometry: defaultGeometry,
+      createdBy: creatorId,
+      data: {
+        Kiev: ['KRU', 'ruthenian', 'chalcedonism', 'Kiev', 55000],
+        Thrace: ['BYZ', 'greek', 'chalcedonism', 'Constantinople', 110000],
+        London: ['ENG', 'english', 'catholic', 'London', 90000],
+        Bulgaria: ['_First_Bulgarian_Empire', 'bulgarian', 'chalcedonism', 'Preslav', 60000],
+        Serbia: ['SRB', 'serbian', 'chalcedonism', 'Belgrade', 40000],
+        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 35000]
+      }
     }
   ]);
 
