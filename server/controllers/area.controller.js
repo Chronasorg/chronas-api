@@ -649,8 +649,9 @@ function updateMany(req, res, next) {
             });
           });
           if (typeof prevBody[currYear] !== 'undefined') {
-            // need to update
-            area.save()
+            // Skip schema validation: legacy area docs lack required fields (name, geometry,
+            // createdBy) added in the modernized schema. We only modify the Mixed 'data' field.
+            area.save({ validateBeforeSave: false })
               .then((ar) => {
                 resolve();
               })
