@@ -78,63 +78,83 @@ async function seedDatabase() {
     location: { type: 'Point', coordinates: [13.4, 52.5] }
   });
 
-  // Seed areas for year-based lookups
-  const creatorId = new mongoose.Types.ObjectId();
-  const defaultGeometry = {
-    type: 'Polygon',
-    coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
-  };
-  await Area.insertMany([
+  // Seed areas as raw documents (bypassing Mongoose validation) to match
+  // production legacy format: only _id, year, data, __v fields
+  const areasCollection = mongoose.connection.collection('areas');
+  await areasCollection.insertMany([
     {
       _id: '2000',
-      name: 'Test Area 2000',
       year: 2000,
-      geometry: defaultGeometry,
-      createdBy: creatorId,
-      data: { TestProvince: ['TST', 'test', 'protestant', 'TestCapital', 1000] }
+      data: { TestProvince: ['TST', 'test', 'protestant', 'TestCapital', 1000] },
+      __v: 0
     },
     {
       _id: '1947',
-      name: 'Test Area 1947',
       year: 1947,
-      geometry: defaultGeometry,
-      createdBy: creatorId,
-      data: { TestProvince2: ['TST2', 'test2', 'sunni', 'TestCapital2', 500] }
+      data: { TestProvince2: ['TST2', 'test2', 'sunni', 'TestCapital2', 500] },
+      __v: 0
     },
     {
       _id: '-2000',
-      name: 'Test Area -2000',
       year: -2000,
-      geometry: defaultGeometry,
-      createdBy: creatorId,
-      data: { AncientProv: ['ANC', 'ancient', 'catholic', 'AncientCity', 100] }
+      data: { AncientProv: ['ANC', 'ancient', 'catholic', 'AncientCity', 100] },
+      __v: 0
     },
     {
       _id: '1000',
-      name: 'Area 1000 (pre-Schism)',
       year: 1000,
-      geometry: defaultGeometry,
-      createdBy: creatorId,
       data: {
+        // Eastern territories — chalcedonism is valid pre-1054
         Kiev: ['KRU', 'ruthenian', 'chalcedonism', 'Kiev', 50000],
         Thrace: ['BYZ', 'greek', 'chalcedonism', 'Constantinople', 100000],
+        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 30000],
+        Bulgaria: ['_First_Bulgarian_EmpirE', 'bulgarian', 'chalcedonism', 'Preslav', 40000],
+        Dobruja: ['PEC', 'romanian', 'chalcedonism', 'Tigheci', 3200],
+        Serbia: ['SRB', 'serbian', 'chalcedonism', 'Belgrade', 25000],
+        Larissa: ['_First_Bulgarian_EmpirE', 'greek', 'chalcedonism', 'Ptolemaida', 11000],
+        // Western territories — chalcedonism is valid pre-1054
         London: ['ENG', 'english', 'chalcedonism', 'London', 80000],
-        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 30000]
+        Schwyz: ['LOM', 'lombard', 'chalcedonism', 'Milano', 2800],
+        Vlaanderen: ['FLA', 'flemish', 'chalcedonism', 'Brugge', 58000],
+        // Empty data provinces (like production's Chaco Boreal)
+        'Chaco Boreal': ['', '', '', '', 1000],
+        'Jurua': ['', '', '', '', 1000]
+      }
+    },
+    {
+      _id: '1054',
+      year: 1054,
+      data: {
+        Kiev: ['KRU', 'ruthenian', 'chalcedonism', 'Kiev', 52000],
+        Thrace: ['BYZ', 'greek', 'chalcedonism', 'Constantinople', 105000],
+        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 32000],
+        Bulgaria: ['BYZ', 'bulgarian', 'chalcedonism', 'Preslav', 42000],
+        Dobruja: ['PEC', 'romanian', 'chalcedonism', 'Tigheci', 3300],
+        Serbia: ['SRB', 'serbian', 'chalcedonism', 'Belgrade', 27000],
+        Larissa: ['BYZ', 'greek', 'chalcedonism', 'Ptolemaida', 12000],
+        London: ['ENG', 'english', 'catholic', 'London', 85000],
+        Schwyz: ['HRE', 'lombard', 'catholic', 'Milano', 3000],
+        Vlaanderen: ['FLA', 'flemish', 'catholic', 'Brugge', 60000],
+        'Chaco Boreal': ['', '', '', '', 1000]
       }
     },
     {
       _id: '1100',
-      name: 'Area 1100 (post-Schism)',
       year: 1100,
-      geometry: defaultGeometry,
-      createdBy: creatorId,
       data: {
+        // Eastern territories — should be orthodox post-1054 (this is the bug)
         Kiev: ['KRU', 'ruthenian', 'chalcedonism', 'Kiev', 55000],
         Thrace: ['BYZ', 'greek', 'chalcedonism', 'Constantinople', 110000],
+        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 35000],
+        Bulgaria: ['BYZ', 'bulgarian', 'chalcedonism', 'Preslav', 45000],
+        Dobruja: ['CUM', 'romanian', 'chalcedonism', 'Tigheci', 3500],
+        Serbia: ['SRB', 'serbian', 'chalcedonism', 'Belgrade', 30000],
+        Larissa: ['BYZ', 'greek', 'chalcedonism', 'Ptolemaida', 13000],
+        // Western territories — correctly using catholic post-1054
         London: ['ENG', 'english', 'catholic', 'London', 90000],
-        Bulgaria: ['_First_Bulgarian_Empire', 'bulgarian', 'chalcedonism', 'Preslav', 60000],
-        Serbia: ['SRB', 'serbian', 'chalcedonism', 'Belgrade', 40000],
-        Novgorod: ['KRU', 'ruthenian', 'orthodox', 'Novgorod', 35000]
+        Schwyz: ['HRE', 'lombard', 'catholic', 'Milano', 3200],
+        Vlaanderen: ['FLA', 'flemish', 'catholic', 'Brugge', 65000],
+        'Chaco Boreal': ['', '', '', '', 1000]
       }
     }
   ]);
