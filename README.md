@@ -43,7 +43,8 @@ npm start              # runs on port 4040 with debug logging
 ```sh
 npm start                    # Dev server (port 4040)
 npm run start:debug          # Dev server with --inspect
-npm test                     # Mocha tests
+npm test                     # Mocha tests (150+ tests)
+npm run test:all             # Mocha + Postman tests
 npm run test:coverage        # c8 coverage report
 npm run lint                 # ESLint with auto-fix
 npm run test:postman         # Newman tests against local server
@@ -52,10 +53,15 @@ npm run test:postman:prod    # Newman tests against production
 
 ## Deployment
 
-Production deployment is via AWS Lambda + API Gateway, managed by CDK:
+Production deployment is fully automated via **GitHub Actions** (the sole active pipeline):
 
-```sh
-npm run deploy:prod          # Deploys via CDK from ../chronas-cdk
-```
+1. Push to `master` triggers the workflow
+2. Runs unit tests — blocks deploy if any fail
+3. Deploys to Lambda via S3
+4. Runs **Postman smoke tests against production**
+5. If Postman tests fail → **automatic Lambda rollback** to previous version
+6. If Postman tests pass → bumps version and pushes `[skip ci]` commit
 
-See [docs/LAMBDA_OPTIMIZATION.md](docs/LAMBDA_OPTIMIZATION.md) for Lambda architecture details and [docs/DATABASE_CONNECTION.md](docs/DATABASE_CONNECTION.md) for DocumentDB connection setup.
+See [docs/DEPLOYMENT_AND_TESTING.md](docs/DEPLOYMENT_AND_TESTING.md) for full pipeline details, test coverage, and rollback behavior.
+
+The legacy AWS CodeBuild webhook has been **disabled** — GitHub Actions is the sole deployment mechanism. See [docs/LAMBDA_OPTIMIZATION.md](docs/LAMBDA_OPTIMIZATION.md) for Lambda architecture and [docs/DATABASE_CONNECTION.md](docs/DATABASE_CONNECTION.md) for DocumentDB connection setup.

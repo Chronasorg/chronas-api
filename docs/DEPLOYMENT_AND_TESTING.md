@@ -1,10 +1,8 @@
 # Deployment Pipeline & Test Coverage
 
-## Deployment Paths
+## Deployment Pipeline
 
-There are **two deployment mechanisms** configured. Both deploy to the same Lambda function.
-
-### 1. GitHub Actions (PRIMARY — ACTIVE)
+### GitHub Actions (SOLE ACTIVE PIPELINE)
 
 **File:** `.github/workflows/deploy-prod.yml`
 
@@ -16,41 +14,27 @@ There are **two deployment mechanisms** configured. Both deploy to the same Lamb
 3. Generate `build-version.json` with version, commit SHA, build date
 4. `npm version patch` (auto-bumps version, commits `[skip ci]`)
 5. Create zip (excludes tests, docs, .github)
-6. Upload zip to S3 (`s3://chronas-lambda-deployments/deploys/chronas-api-{sha}.zip`)
-7. `aws lambda update-function-code` from S3
-8. `aws lambda wait function-updated`
-9. Push version bump commit back to master
+6. Save previous S3 deployment key (for rollback)
+7. Upload zip to S3 (`s3://chronas-lambda-deployments/deploys/chronas-api-{sha}.zip`)
+8. `aws lambda update-function-code` from S3
+9. `aws lambda wait function-updated`
+10. **Post-deploy Postman smoke tests** against `https://api.chronas.org`
+11. If Postman tests **fail** → automatic Lambda rollback to previous S3 deployment
+12. If Postman tests **pass** → push version bump commit back to master
 
 **Credentials:** GitHub Secrets `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` with `--profile chronas-prod`
 
-**Duration:** ~1.5 minutes
+**Duration:** ~2-3 minutes (including Postman tests)
 
-**Recent runs:** All succeeding (last 5 runs all green)
+**Rollback:** Automatic. If post-deploy Postman tests fail, the pipeline rolls back the Lambda function to the previous deployed zip from S3 and fails the workflow. No manual intervention needed.
 
-### 2. AWS CodeBuild (LEGACY — ALSO ACTIVE)
+### AWS CodeBuild (DISABLED)
 
 **Project:** `chronas-api-lambda-deploy-standalone`
 
-**Trigger:** GitHub webhook (push to master). Last triggered: 2026-04-06 (before GitHub Actions was set up as primary).
+**Status:** Webhook DISABLED as of 2026-04-22. No longer auto-triggers on push to master.
 
-**Pipeline:**
-1. Install Node 22, CDK CLI
-2. `npm ci` for chronas-api
-3. Clone `chronas-cdk` repo, `npm ci`
-4. **Tests are SKIPPED** ("will be enabled after migration scripts are complete")
-5. Check if Lambda stack exists → if yes, zip and `aws lambda update-function-code`
-6. If stack doesn't exist → CDK deploy from scratch
-7. Post-build: runs Postman tests via `node scripts/ci-lambda-postman-tests.js` — but failures don't block (`|| echo "⚠️ Some tests failed but deployment continues"`)
-
-**Runtime:** Amazon Linux 2, Node 22, BUILD_GENERAL1_SMALL
-
-**Issue:** Tests are skipped, Postman failures don't block deployment. This means broken code can deploy via CodeBuild even if GitHub Actions gates on tests.
-
-### Recommendation
-
-**Disable the CodeBuild webhook** to avoid double-deploys and ungated deployments. GitHub Actions is the correct primary pipeline — it runs tests before deploying and blocks on failure.
-
-The CodeBuild project can be kept for manual/emergency deploys or initial CDK stack creation, but should not auto-trigger on push.
+The CodeBuild project remains available in AWS for emergency/manual deploys or initial CDK stack creation, but the GitHub webhook has been disabled to prevent double-deploys and ungated deployments. GitHub Actions is the sole deployment pipeline — it runs unit tests before deploying and Postman tests after deploying, with automatic rollback on failure.
 
 ---
 
@@ -62,8 +46,11 @@ The CodeBuild project can be kept for manual/emergency deploys or initial CDK st
 - **Database:** `mongodb-memory-server` (real MongoDB engine in RAM)
 - **App:** `server/tests/helpers/test-app.js` (Express without X-Ray/AppInsights)
 - **Auth:** JWT tokens generated directly with test secret
-- **Fixtures:** `server/tests/integration-tests/fixtures/testData.json`
-- **Count:** 142 tests passing
+- **Fixtures:**
+  - `server/tests/integration-tests/fixtures/testData.json` — legacy test data
+  - `server/tests/integration-tests/fixtures/testData-modern.json` — modernized format
+  - `server/tests/integration-tests/fixtures/productionData.json` — **real production data** from `api.chronas.org` for issue #35 endpoint tests
+- **Count:** 150+ tests passing
 
 ### Postman/Newman Tests (`npm run test:postman`)
 
@@ -114,57 +101,38 @@ npm run test:postman:basic  # Postman basic against local
 
 ---
 
-## Test Gaps (Issue #35)
+## Test Coverage for Issue #35 Endpoints
 
-### Priority 1 — High traffic, missing query param tests
+All high-traffic production endpoints from issue #35 are now covered by `production-endpoints.test.js` using **real production data** (not mocks).
 
-**GET /v1/markers with filters** (55.8% of all traffic)
+### Covered Endpoints
 
-Existing test: `GET /v1/markers` returns array — but doesn't test the production query pattern with `types`, `year`, and `count` parameters.
+| Endpoint | Traffic | Test | Data Source |
+|----------|---------|------|-------------|
+| `GET /v1/markers?types=...&year=714&count=3000` | 55.8% | ✅ production-endpoints.test.js | Real markers from api.chronas.org |
+| `GET /v1/markers?types=cp&year=1195&count=3000` | — | ✅ production-endpoints.test.js | Real markers from api.chronas.org |
+| `GET /v1/markers?count=1` | — | ✅ production-endpoints.test.js | Real markers from api.chronas.org |
+| `GET /v1/metadata?type=g&f=...` | 17.9% | ✅ production-endpoints.test.js | Real metadata from api.chronas.org |
+| `GET /v1/metadata?type=e&subtype=ew` | — | ✅ production-endpoints.test.js | Real war/battle data from api.chronas.org |
+| `GET /v1/metadata/:id/getLinked` | 0.5% | ✅ production-endpoints.test.js | Real linked data from api.chronas.org |
+| `GET /v1/board/forum/.../discussions` | 0.3% | ✅ production-endpoints.test.js | Stub endpoint verification |
+| `GET /v1/version/welcome` | 1.1% | ✅ production-endpoints.test.js | Live version endpoint |
+| `GET /v1/areas/:year` | 4.0% | ✅ production-endpoints.test.js | Real area data from api.chronas.org |
 
-Tests needed:
-```
-GET /v1/markers?types=a,ar,at,b,c,ca,cp,e,m,op,p,r,s,si&year=714&count=3000
-  → Returns array, filtered by type and year
-GET /v1/markers?types=cp&year=1195&count=3000
-  → Returns only 'cp' type markers
-GET /v1/markers?count=1
-  → Returns limited results
-```
-
-**GET /v1/metadata with filters** (17.9% of all traffic)
-
-Existing test: `GET /v1/metadata` returns array — but doesn't test the production filter pattern.
-
-Tests needed:
-```
-GET /v1/metadata?type=g&f=provinces,ruler,culture,religion,capital,province,religionGeneral
-  → Returns metadata filtered by type 'g' with specified fields
-GET /v1/metadata?type=e&end=3000&subtype=ew
-  → Returns metadata filtered by type 'e', subtype 'ew'
-```
-
-### Priority 2 — Missing unit tests for endpoints with >200 req/month
-
-| Endpoint | Requests/month | Test file exists | Test needed |
-|----------|---------------|------------------|-------------|
-| `GET /v1/metadata/:id/getLinked` | 390 | metadata.test.js | Add getLinked test |
-| `GET /v1/statistics` | 292 | None | Create statistics.test.js |
-| `GET /v1/board/forum/.../discussions` | 234 | None | Low priority (forum) |
-| `GET /v1/flags` | 217 | None | Create flags.test.js |
-
-### Priority 3 — Missing Postman test
+### Remaining Gaps (lower priority)
 
 | Endpoint | Requests/month | Status |
 |----------|---------------|--------|
+| `GET /v1/statistics` | 292 | Missing unit test |
+| `GET /v1/flags` | 217 | Missing unit test |
 | `POST /v1/auth/signup` | 2 | Missing from Postman collection |
 
-### What's already well-covered
+### Already well-covered
 
 - Areas CRUD + updateMany (6 dedicated tests including Issue #10 simulation)
 - Users CRUD (full coverage)
-- Markers CRUD (basic coverage)
-- Metadata CRUD (basic coverage)
+- Markers CRUD (basic coverage + production query patterns)
+- Metadata CRUD (basic + production filter patterns)
 - Health + Version
 - Authentication (login, JWT validation)
 
@@ -183,7 +151,9 @@ GET /v1/metadata?type=e&end=3000&subtype=ew
 | `PostmanTests/chronas-api.postman_environment.json` | Production environment |
 | `server/tests/helpers/test-app.js` | Express app for tests |
 | `server/tests/helpers/mongodb-memory.js` | In-memory MongoDB setup |
-| `server/tests/integration-tests/fixtures/testData.json` | Test seed data |
+| `server/tests/integration-tests/fixtures/testData.json` | Legacy test seed data |
+| `server/tests/integration-tests/fixtures/productionData.json` | Real production data for issue #35 tests |
+| `server/tests/integration-tests/production-endpoints.test.js` | Issue #35 endpoint tests with production data |
 
 ## AWS Resources
 

@@ -40,9 +40,9 @@ Local dev requires MongoDB on port 27017 and a `.env` file (see `.env` or config
 
 [lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config, connects to DocumentDB (with retry logic), then creates the Express app. Connection and app instance are cached across warm invocations.
 
-### Legacy (not active)
+### Legacy (disabled)
 
-Azure Pipelines (`azure-pipelines.yml`), Travis CI, AWS CodeBuild (`buildspec.yml`), Docker/Kubernetes configs are no longer used.
+Azure Pipelines, Travis CI, Docker/Kubernetes configs are no longer used. AWS CodeBuild (`chronas-api-lambda-deploy-standalone`) webhook has been **disabled** — GitHub Actions is the sole deployment pipeline. CodeBuild project remains available for emergency/manual deploys only.
 
 ## Code Architecture
 

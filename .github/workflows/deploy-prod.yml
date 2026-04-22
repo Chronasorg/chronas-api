@@ -101,6 +101,15 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --profile chronas-prod 2>/dev/null || true
 
+      - name: Save previous deployment for rollback
+        id: previous
+        run: |
+          PREV_KEY=$(aws s3 ls s3://${{ env.S3_BUCKET }}/deploys/ \
+            --region ${{ env.AWS_REGION }} \
+            --profile chronas-prod | sort | tail -1 | awk '{print $4}')
+          echo "prev_key=deploys/$PREV_KEY" >> $GITHUB_OUTPUT
+          echo "Previous deployment: deploys/$PREV_KEY"
+
       - name: Deploy to Lambda via S3
         run: |
           S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
@@ -119,7 +128,39 @@ jobs:
             --profile chronas-prod
           echo "Lambda deployment completed successfully!"
 
+      - name: Post-deploy Postman smoke tests
+        id: postman
+        continue-on-error: true
+        run: |
+          npm install -g newman
+          newman run PostmanTests/chronas-enhanced.postman_collection.json \
+            -e PostmanTests/chronas-api.postman_environment.json \
+            --timeout-request 30000 \
+            --delay-request 100
+
+      - name: Rollback Lambda on test failure
+        if: steps.postman.outcome == 'failure'
+        run: |
+          echo "Postman tests FAILED -- rolling back Lambda to previous deployment"
+          aws lambda update-function-code \
+            --function-name ${{ steps.lambda.outputs.function_name }} \
+            --s3-bucket ${{ env.S3_BUCKET }} \
+            --s3-key ${{ steps.previous.outputs.prev_key }} \
+            --region ${{ env.AWS_REGION }} \
+            --profile chronas-prod
+          aws lambda wait function-updated \
+            --function-name ${{ steps.lambda.outputs.function_name }} \
+            --region ${{ env.AWS_REGION }} \
+            --profile chronas-prod
+          echo "Rolled back to ${{ steps.previous.outputs.prev_key }}"
+          exit 1
+
+      - name: Verify deployment success
+        if: steps.postman.outcome == 'success'
+        run: echo "Post-deploy Postman tests passed!"
+
       - name: Push version bump
+        if: steps.postman.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
