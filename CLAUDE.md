@@ -9,10 +9,9 @@ Chronas API is a Node.js 22 / Express REST API for the Chronas historical timeli
 ## Build & Development Commands
 
 ```bash
-npm start                    # Dev server (node index.js with debug), port 4040
+npm start                    # Dev server (scripts/start-test-server.js) with in-memory MongoDB, port 3001
 npm run start:debug          # Dev server with --inspect
-npm test                     # Mocha tests with mock database
-npm run test:watch           # Watch mode
+npm test                     # Mocha tests with mock database (160 tests)
 npm run test:coverage        # c8 coverage report
 npm run lint                 # ESLint with auto-fix
 npm run test:postman         # Newman/Postman tests against local server
@@ -24,7 +23,7 @@ Single test file:
 cross-env NODE_ENV=test mocha --require server/tests/helpers.js server/tests/integration-tests/health.test.js --exit
 ```
 
-Local dev requires MongoDB on port 27017 and a `.env` file (see `.env` or config/config.js for required vars). Key required env vars: `JWT_SECRET`, `MONGO_HOST`.
+The dev server uses `mongodb-memory-server` (no external MongoDB needed). Key required env vars: `JWT_SECRET`. Entry point for Lambda is `lambda-handler.js` (the legacy `index.js` was removed 2025-10-02 during the Lambda migration).
 
 ## Production Architecture (AWS, eu-west-1, chronas-prod)
 

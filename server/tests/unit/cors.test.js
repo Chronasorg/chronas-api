@@ -2,7 +2,7 @@ import { describe, it, before, after } from 'mocha';
 import { expect } from 'chai';
 import express from 'express';
 import cors from 'cors';
-import request from 'supertest-as-promised';
+import request from 'supertest';
 
 /**
  * Build a minimal Express app using the same CORS origin logic as config/express.js.

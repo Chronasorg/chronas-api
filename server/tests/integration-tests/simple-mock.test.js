@@ -2,7 +2,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import request from 'supertest-as-promised';
+import request from 'supertest';
 import httpStatus from 'http-status';
 import { expect, config as chaiConfig } from 'chai';
 

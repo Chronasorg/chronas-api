@@ -15,10 +15,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Certificate URL and destination
-const CERT_URL = 'https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem';
+// AWS global certificate bundle (covers RDS/DocumentDB across regions)
+const CERT_URL = 'https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem';
 const CERT_DIR = path.join(__dirname, '../certs');
-const CERT_PATH = path.join(CERT_DIR, 'rds-ca-2019-root.pem');
+const CERT_PATH = path.join(CERT_DIR, 'global-bundle.pem');
 
 // Colors for output
 const colors = {
