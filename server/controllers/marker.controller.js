@@ -210,15 +210,7 @@ function list(req, res, next) {
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
-      if (count) {
-        Marker.estimatedDocumentCount().then((markerCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-          res.set('X-Total-Count', markerCount);
-          res.json(markers);
-        });
-      } else {
-        res.json(markers);
-      }
+      res.json(markers);
     })
     .catch(e => next(e));
 }
