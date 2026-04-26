@@ -1,21 +1,13 @@
-/**
- * opinion model
- */
-import mongoose from 'mongoose';
+import { config } from '../../../../config/config.js';
 
-const opinionSchema = mongoose.Schema({
-  forum_id: mongoose.Schema.ObjectId,
-  forum: { type: mongoose.Schema.ObjectId, ref: 'forum' },
-  discussion_id: mongoose.Schema.ObjectId,
-  discussion: { type: mongoose.Schema.ObjectId, ref: 'discussion' },
-  user_id: String,
-  user: { type: String, ref: 'User' },
-  date: Date,
-  score: {
-    type: Number,
-    default: 0
-  },
-  content: Object
-}, { usePushEach: true });
+let Opinion;
 
-export default mongoose.model('opinion', opinionSchema);
+if (config.dynamodb?.useBoard) {
+  const mod = await import('./model.dynamo.js');
+  Opinion = mod.default;
+} else {
+  const mod = await import('./model.mongoose.js');
+  Opinion = mod.default;
+}
+
+export default Opinion;
