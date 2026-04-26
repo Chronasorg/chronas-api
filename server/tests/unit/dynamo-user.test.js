@@ -115,6 +115,14 @@ describe('UserDynamo (DynamoDB Local, real data)', () => {
     });
   });
 
+  describe('.aggregate().exec() chain (statistics pattern)', () => {
+    it('groups by authType via .exec()', async () => {
+      const result = await UserDynamo.aggregate([{ $group: { _id: '$authType', count: { $sum: 1 } } }]).exec();
+      expect(result).to.be.an('array');
+      expect(result.length).to.be.greaterThan(0);
+    });
+  });
+
   describe('.comparePassword()', () => {
     it('returns true for correct password', async () => {
       const user = await UserDynamo.findById('admin@chronas.org');

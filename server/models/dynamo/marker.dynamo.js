@@ -108,23 +108,24 @@ export default class MarkerDynamo extends DynamoDocument {
     return paged;
   }
 
-  static async aggregate(pipeline) {
-    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
-      throw new Error('MarkerDynamo.aggregate: only [{$group}] supported');
-    }
-    const field = typeof pipeline[0].$group._id === 'string'
-      ? pipeline[0].$group._id.replace('$', '') : null;
-    const items = await scanAll();
-    const counts = {};
-    for (const item of items) {
-      const key = field ? (item[field] ?? null) : null;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    const result = Object.entries(counts).map(([k, v]) => ({
-      _id: k === 'null' ? null : k, count: v
-    }));
-    result.exec = () => Promise.resolve(result);
-    return result;
+  static aggregate(pipeline) {
+    const promise = (async () => {
+      if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+        throw new Error('MarkerDynamo.aggregate: only [{$group}] supported');
+      }
+      const field = typeof pipeline[0].$group._id === 'string'
+        ? pipeline[0].$group._id.replace('$', '') : null;
+      const items = await scanAll();
+      const counts = {};
+      for (const item of items) {
+        const key = field ? (item[field] ?? null) : null;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return Object.entries(counts).map(([k, v]) => ({
+        _id: k === 'null' ? null : k, count: v
+      }));
+    })();
+    return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
   async save() {
@@ -151,11 +152,11 @@ async function queryByTypeAndYear(typeArray, year, delta, end) {
   return results.flat();
 }
 
-async function paginatedQuery(client, params) {
+async function paginatedQuery(client, baseParams) {
   const items = [];
   let next;
   do {
-    if (next) params.ExclusiveStartKey = next;
+    const params = next ? { ...baseParams, ExclusiveStartKey: next } : baseParams;
     const out = await client.send(new QueryCommand(params));
     if (out.Items) items.push(...out.Items);
     next = out.LastEvaluatedKey;

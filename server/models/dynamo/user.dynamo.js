@@ -75,31 +75,32 @@ export default class UserDynamo extends DynamoDocument {
     return Table?.ItemCount ?? 0;
   }
 
-  static async aggregate(pipeline) {
-    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
-      throw new Error('UserDynamo.aggregate: only [{$group}] supported');
-    }
-    const field = typeof pipeline[0].$group._id === 'string'
-      ? pipeline[0].$group._id.replace('$', '') : null;
-    const items = [];
-    let next;
-    do {
-      const params = { TableName: TABLE };
-      if (next) params.ExclusiveStartKey = next;
-      const out = await getDocClient().send(new ScanCommand(params));
-      if (out.Items) items.push(...out.Items);
-      next = out.LastEvaluatedKey;
-    } while (next);
-    const counts = {};
-    for (const item of items) {
-      const key = field ? (item[field] ?? null) : null;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    const result = Object.entries(counts).map(([k, v]) => ({
-      _id: k === 'null' ? null : k, count: v
-    }));
-    result.exec = () => Promise.resolve(result);
-    return result;
+  static aggregate(pipeline) {
+    const promise = (async () => {
+      if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+        throw new Error('UserDynamo.aggregate: only [{$group}] supported');
+      }
+      const field = typeof pipeline[0].$group._id === 'string'
+        ? pipeline[0].$group._id.replace('$', '') : null;
+      const items = [];
+      let next;
+      do {
+        const params = { TableName: TABLE };
+        if (next) params.ExclusiveStartKey = next;
+        const out = await getDocClient().send(new ScanCommand(params));
+        if (out.Items) items.push(...out.Items);
+        next = out.LastEvaluatedKey;
+      } while (next);
+      const counts = {};
+      for (const item of items) {
+        const key = field ? (item[field] ?? null) : null;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return Object.entries(counts).map(([k, v]) => ({
+        _id: k === 'null' ? null : k, count: v
+      }));
+    })();
+    return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
   async comparePassword(candidatePassword) {

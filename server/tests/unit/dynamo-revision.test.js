@@ -112,6 +112,12 @@ describe('RevisionDynamo (DynamoDB Local, real data)', () => {
       const puts = result.find(r => r._id === 'PUT');
       expect(puts.count).to.equal(3);
     });
+
+    it('supports .exec().then() chain (statistics controller pattern)', async () => {
+      const result = await RevisionDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec();
+      expect(result).to.be.an('array');
+      expect(result.length).to.be.greaterThan(0);
+    });
   });
 
   describe('.list() — stubbed', () => {

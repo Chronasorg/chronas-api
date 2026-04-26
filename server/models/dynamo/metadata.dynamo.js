@@ -46,10 +46,10 @@ export default class MetadataDynamo extends DynamoDocument {
   static countDocuments(filter = {}) {
     if (Object.keys(filter).length === 0) {
       const promise = MetadataDynamo.estimatedDocumentCount();
-      return { exec: () => promise };
+      return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
     }
-    const promise = new DynamoQuery(MetadataDynamo, filter).countDocuments();
-    return { exec: () => promise };
+    const wrapper = new DynamoQuery(MetadataDynamo, filter).countDocuments();
+    return wrapper;
   }
 
   static async estimatedDocumentCount() {
@@ -74,31 +74,32 @@ export default class MetadataDynamo extends DynamoDocument {
     return defaultBranch(start, end);
   }
 
-  static async aggregate(pipeline) {
-    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
-      throw new Error('MetadataDynamo.aggregate: only [{$group}] is supported (for statistics)');
-    }
-    const groupField = pipeline[0].$group._id;
-    const field = typeof groupField === 'string' ? groupField.replace('$', '') : null;
+  static aggregate(pipeline) {
+    const promise = (async () => {
+      if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+        throw new Error('MetadataDynamo.aggregate: only [{$group}] is supported (for statistics)');
+      }
+      const groupField = pipeline[0].$group._id;
+      const field = typeof groupField === 'string' ? groupField.replace('$', '') : null;
 
-    const items = [];
-    let next;
-    do {
-      const params = { TableName: TABLE };
-      if (next) params.ExclusiveStartKey = next;
-      const out = await getDocClient().send(new ScanCommand(params));
-      if (out.Items) items.push(...out.Items);
-      next = out.LastEvaluatedKey;
-    } while (next);
+      const items = [];
+      let next;
+      do {
+        const params = { TableName: TABLE };
+        if (next) params.ExclusiveStartKey = next;
+        const out = await getDocClient().send(new ScanCommand(params));
+        if (out.Items) items.push(...out.Items);
+        next = out.LastEvaluatedKey;
+      } while (next);
 
-    const counts = {};
-    for (const item of items) {
-      const key = field ? (item[field] ?? null) : null;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    const result = Object.entries(counts).map(([k, v]) => ({ _id: k === 'null' ? null : k, count: v }));
-    result.exec = () => Promise.resolve(result);
-    return result;
+      const counts = {};
+      for (const item of items) {
+        const key = field ? (item[field] ?? null) : null;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return Object.entries(counts).map(([k, v]) => ({ _id: k === 'null' ? null : k, count: v }));
+    })();
+    return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
   async save(options = {}) {

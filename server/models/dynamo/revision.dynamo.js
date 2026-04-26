@@ -61,24 +61,25 @@ export default class RevisionDynamo extends DynamoDocument {
     return { exec: () => promise };
   }
 
-  static async aggregate(pipeline) {
-    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
-      throw new Error('RevisionDynamo.aggregate: only [{$group}] supported');
-    }
-    const field = typeof pipeline[0].$group._id === 'string'
-      ? pipeline[0].$group._id.replace('$', '') : null;
+  static aggregate(pipeline) {
+    const promise = (async () => {
+      if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+        throw new Error('RevisionDynamo.aggregate: only [{$group}] supported');
+      }
+      const field = typeof pipeline[0].$group._id === 'string'
+        ? pipeline[0].$group._id.replace('$', '') : null;
 
-    const items = await scanAll();
-    const counts = {};
-    for (const item of items) {
-      const key = field ? (item[field] ?? null) : null;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    const result = Object.entries(counts).map(([k, v]) => ({
-      _id: k === 'null' ? null : k, count: v
-    }));
-    result.exec = () => Promise.resolve(result);
-    return result;
+      const items = await scanAll();
+      const counts = {};
+      for (const item of items) {
+        const key = field ? (item[field] ?? null) : null;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return Object.entries(counts).map(([k, v]) => ({
+        _id: k === 'null' ? null : k, count: v
+      }));
+    })();
+    return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
   static list = notImplemented(

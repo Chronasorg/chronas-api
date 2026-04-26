@@ -164,6 +164,16 @@ describe('MarkerDynamo (DynamoDB Local, real data)', () => {
     });
   });
 
+  describe('.aggregate().exec() chain (statistics pattern)', () => {
+    it('groups by type via .exec().then()', async () => {
+      const result = await MarkerDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec();
+      expect(result).to.be.an('array');
+      const events = result.find(r => r._id === 'e');
+      expect(events).to.not.be.undefined;
+      expect(events.count).to.be.greaterThan(0);
+    });
+  });
+
   describe('.deleteOne()', () => {
     it('removes an existing marker', async () => {
       const m = await MarkerDynamo.findById('Colosseum');

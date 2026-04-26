@@ -150,6 +150,12 @@ describe('MetadataDynamo (DynamoDB Local, real data)', () => {
       expect(ewType).to.not.be.undefined;
       expect(ewType.count).to.equal(2);
     });
+
+    it('supports .exec().then() chain (statistics controller pattern)', async () => {
+      const result = await MetadataDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec();
+      expect(result).to.be.an('array');
+      expect(result.length).to.be.greaterThan(0);
+    });
   });
 
   describe('compression round-trip', () => {
