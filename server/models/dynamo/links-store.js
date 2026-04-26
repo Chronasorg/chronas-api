@@ -120,17 +120,22 @@ export async function renameEntity(oldRef, newRef) {
     }
   }
 
-  // Move the old entity's link item to the new key
+  // Move the old entity's link item to the new key — put first, delete only on success
   if (oldLinks.markers.length > 0 || oldLinks.metadata.length > 0) {
     await client.send(new PutCommand({
       TableName: LINKS_TABLE,
       Item: { entityRef: newRef, markers: oldLinks.markers, metadata: oldLinks.metadata }
     }));
+    await client.send(new DeleteCommand({
+      TableName: LINKS_TABLE,
+      Key: { entityRef: oldRef }
+    }));
+  } else {
+    await client.send(new DeleteCommand({
+      TableName: LINKS_TABLE,
+      Key: { entityRef: oldRef }
+    }));
   }
-  await client.send(new DeleteCommand({
-    TableName: LINKS_TABLE,
-    Key: { entityRef: oldRef }
-  }));
 }
 
 async function getRawItem(entityRef) {

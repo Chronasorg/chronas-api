@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 import crypto from 'node:crypto';
@@ -56,6 +56,11 @@ export default class RevisionDynamo extends DynamoDocument {
     return Table?.ItemCount ?? 0;
   }
 
+  static countDocuments(filter = {}) {
+    const promise = new DynamoQuery(RevisionDynamo, filter).countDocuments();
+    return { exec: () => promise };
+  }
+
   static async aggregate(pipeline) {
     if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
       throw new Error('RevisionDynamo.aggregate: only [{$group}] supported');
@@ -94,7 +99,6 @@ export default class RevisionDynamo extends DynamoDocument {
 }
 
 async function scanAll() {
-  const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
   const client = getDocClient();
   const items = [];
   let next;
