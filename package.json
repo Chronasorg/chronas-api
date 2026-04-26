@@ -106,6 +106,7 @@
     "c8": "^11.0.0",
     "chai": "^6.0.0",
     "cross-env": "^10.0.0",
+    "dynalite": "4.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-n": "^17.0.0",
     "eslint-plugin-promise": "^7.0.0",

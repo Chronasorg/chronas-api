@@ -8,18 +8,19 @@ let cachedClient = null;
 let cachedDocClient = null;
 
 export function getDynamoClient() {
+  if (globalThis.__TEST_DYNAMO_RAW_CLIENT) return globalThis.__TEST_DYNAMO_RAW_CLIENT;
   if (cachedClient) return cachedClient;
 
   const region = process.env.AWS_REGION || process.env.region || 'eu-west-1';
-  cachedClient = new DynamoDBClient({
-    region,
-    maxAttempts: 3
-  });
-  debugLog('DynamoDBClient created (region=%s)', region);
+  const opts = { region, maxAttempts: 3 };
+  if (process.env.DYNAMODB_ENDPOINT) opts.endpoint = process.env.DYNAMODB_ENDPOINT;
+  cachedClient = new DynamoDBClient(opts);
+  debugLog('DynamoDBClient created (region=%s, endpoint=%s)', region, opts.endpoint || 'default');
   return cachedClient;
 }
 
 export function getDocClient() {
+  if (globalThis.__TEST_DYNAMO_DOC_CLIENT) return globalThis.__TEST_DYNAMO_DOC_CLIENT;
   if (cachedDocClient) return cachedDocClient;
 
   cachedDocClient = DynamoDBDocumentClient.from(getDynamoClient(), {

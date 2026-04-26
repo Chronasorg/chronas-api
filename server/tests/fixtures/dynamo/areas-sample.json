@@ -1,0 +1,67 @@
+[
+  {
+    "_id": "1000",
+    "year": 1000,
+    "data": {
+      "Kiev": ["RUS", "east_slavic", "orthodox", "Kiev", 50000],
+      "Novgorod": ["RUS", "east_slavic", "orthodox", "Novgorod", 30000],
+      "Bohemia": ["BOH", "czech", "catholic", "Prague", 40000],
+      "Bavaria": ["HRE", "german", "catholic", "Munich", 35000],
+      "Ile-de-France": ["FRA", "french", "catholic", "Paris", 60000]
+    }
+  },
+  {
+    "_id": "1500",
+    "year": 1500,
+    "data": {
+      "Kiev": ["LIT", "ruthenian", "orthodox", "Kiev", 80000],
+      "Novgorod": ["MOS", "russian", "orthodox", "Moscow", 120000],
+      "Bohemia": ["BOH", "czech", "catholic", "Prague", 100000],
+      "Bavaria": ["HRE", "german", "catholic", "Munich", 90000],
+      "Ile-de-France": ["FRA", "french", "catholic", "Paris", 200000],
+      "Castile": ["SPA", "spanish", "catholic", "Toledo", 150000]
+    }
+  },
+  {
+    "_id": "2000",
+    "year": 2000,
+    "data": {
+      "Kiev": ["UKR", "ukrainian", "orthodox", "Kiev", 2800000],
+      "Novgorod": ["RUS", "russian", "orthodox", "Moscow", 150000],
+      "Bohemia": ["CZE", "czech", "catholic", "Prague", 1200000],
+      "Bavaria": ["DEU", "german", "catholic", "Munich", 1300000],
+      "Ile-de-France": ["FRA", "french", "catholic", "Paris", 11000000],
+      "Castile": ["ESP", "spanish", "catholic", "Madrid", 3200000]
+    }
+  },
+  {
+    "_id": "-2000",
+    "year": -2000,
+    "data": {
+      "Lower_Egypt": ["EGY", "egyptian", "egyptian_religion", "Memphis", 500000],
+      "Upper_Egypt": ["EGY", "egyptian", "egyptian_religion", "Thebes", 300000],
+      "Sumer": ["SUM", "sumerian", "mesopotamian_religion", "Ur", 200000]
+    }
+  },
+  {
+    "_id": "0",
+    "year": 0,
+    "data": {
+      "Italia": ["ROM", "latin", "roman_religion", "Rome", 1000000],
+      "Gallia": ["ROM", "celtic", "roman_religion", "Lugdunum", 400000],
+      "Aegyptus": ["ROM", "egyptian", "roman_religion", "Alexandria", 800000]
+    }
+  },
+  {
+    "_id": "1947",
+    "year": 1947,
+    "data": {
+      "Kiev": ["SOV", "ukrainian", "orthodox", "Kiev", 900000],
+      "Bohemia": ["CZS", "czech", "catholic", "Prague", 900000],
+      "Bavaria": ["DEU", "german", "catholic", "Munich", 800000],
+      "Ile-de-France": ["FRA", "french", "catholic", "Paris", 5000000],
+      "Punjab": ["IND", "punjabi", "sikh", "Lahore", 2000000],
+      "Bengal": ["IND", "bengali", "sunni", "Calcutta", 3000000]
+    }
+  }
+]
