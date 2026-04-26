@@ -1,0 +1,7 @@
+[
+  {"_id": "rev-001", "type": "PUT", "entityId": "Battle_of_Hastings", "resource": "markers", "user": "admin@chronas.org", "nextBody": "{\"name\":\"Battle of Hastings\"}", "prevBody": "{\"name\":\"Hastings\"}", "timestamp": "2026-04-01T10:00:00Z", "reverted": false},
+  {"_id": "rev-002", "type": "POST", "entityId": "e_French_Revolution", "resource": "metadata", "user": "editor@chronas.org", "nextBody": "{\"year\":1789}", "timestamp": "2026-04-02T12:00:00Z", "reverted": false},
+  {"_id": "rev-003", "type": "PUT", "entityId": "1000", "subEntityId": "Kiev", "resource": "areas", "user": "testuser@test.de", "nextBody": "{\"0\":\"UKR\"}", "prevBody": "{\"0\":\"RUS\"}", "timestamp": "2026-04-03T14:00:00Z", "reverted": false},
+  {"_id": "rev-004", "type": "DELETE", "entityId": "test_marker", "resource": "markers", "user": "admin@chronas.org", "timestamp": "2026-04-04T16:00:00Z", "reverted": true},
+  {"_id": "rev-005", "type": "PUT", "entityId": "culture", "subEntityId": "east_slavic", "resource": "metadata", "user": "editor@chronas.org", "nextBody": "[\"East Slavic\",\"#AA0000\",\"East_Slavs\"]", "timestamp": "2026-04-05T08:00:00Z", "reverted": false}
+]
