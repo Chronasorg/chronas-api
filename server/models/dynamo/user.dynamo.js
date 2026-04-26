@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
+import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 
 const TABLE = tableName('users');
@@ -17,12 +18,15 @@ export default class UserDynamo extends DynamoDocument {
     return new DynamoQuery(UserDynamo, filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { _id: String(id) }
-    }));
-    return Item ? new UserDynamo(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { _id: String(id) }
+      }));
+      return Item ? new UserDynamo(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static findOne(filter = {}) {
@@ -30,12 +34,12 @@ export default class UserDynamo extends DynamoDocument {
   }
 
   static async get(id) {
-    const doc = await UserDynamo.findById(id);
+    const doc = await UserDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('User not found', httpStatus.NOT_FOUND);
   }
 
-  static async findByEmail(email) {
+  static findByEmail(email) {
     return UserDynamo.findById(email.toLowerCase());
   }
 
@@ -144,7 +148,7 @@ class UserQuery {
 
 async function _findOneRaw(filter) {
   if (filter.email) {
-    return UserDynamo.findById(filter.email.toLowerCase());
+    return UserDynamo.findById(filter.email.toLowerCase()).exec();
   }
   if (filter.username) {
     const { Items } = await getDocClient().send(new QueryCommand({

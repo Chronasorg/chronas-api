@@ -5,6 +5,7 @@ import httpStatus from 'http-status';
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
+import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
 import { cache } from '../../../config/config.js';
@@ -22,23 +23,29 @@ export default class MetadataDynamo extends DynamoDocument {
     return new DynamoQuery(MetadataDynamo, filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { _id: String(id) }
-    }));
-    if (!Item) return null;
-    return new MetadataDynamo(decodeFromRead(Item));
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { _id: String(id) }
+      }));
+      if (!Item) return null;
+      return new MetadataDynamo(decodeFromRead(Item));
+    })();
+    return new QueryProxy(promise);
   }
 
-  static async findOne(filter = {}) {
+  static findOne(filter = {}) {
     if (filter._id !== undefined) return MetadataDynamo.findById(filter._id);
-    const results = await new DynamoQuery(MetadataDynamo, filter).limit(1).exec();
-    return results[0] || null;
+    const promise = (async () => {
+      const results = await new DynamoQuery(MetadataDynamo, filter).limit(1).exec();
+      return results[0] || null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async get(id, method = '') {
-    const doc = await MetadataDynamo.findById(id);
+    const doc = await MetadataDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('No such metadata exists!', httpStatus.NOT_FOUND);
   }

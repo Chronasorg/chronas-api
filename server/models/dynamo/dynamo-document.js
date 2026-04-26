@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 
 import APIError from '../../helpers/APIError.js';
 import { getDocClient } from './dynamo-client.js';
+import QueryProxy from './query-proxy.js';
 
 /**
  * Base class that mimics the surface area of a Mongoose document the
@@ -71,19 +72,23 @@ export default class DynamoDocument {
     return this;
   }
 
-  static async findById(id) {
-    if (!this.tableName) {
-      throw new Error(`${this.name} is missing static tableName`);
-    }
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: this.tableName,
-      Key: { _id: id }
-    }));
-    return Item ? new this(Item) : null;
+  static findById(id) {
+    const Model = this;
+    const promise = (async () => {
+      if (!Model.tableName) {
+        throw new Error(`${Model.name} is missing static tableName`);
+      }
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: Model.tableName,
+        Key: { _id: id }
+      }));
+      return Item ? new Model(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async get(id) {
-    const doc = await this.findById(id);
+    const doc = await this.findById(id).exec();
     if (doc) return doc;
     const err = new APIError(`No such ${this.name} exists!`, httpStatus.NOT_FOUND);
     throw err;

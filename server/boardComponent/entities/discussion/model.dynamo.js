@@ -1,8 +1,9 @@
-import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import crypto from 'node:crypto';
 
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
+import QueryProxy from '../../../models/dynamo/query-proxy.js';
 import DynamoQuery from '../../../models/dynamo/dynamo-query.js';
 import { getDocClient, getDynamoClient, tableName } from '../../../models/dynamo/dynamo-client.js';
 
@@ -15,12 +16,15 @@ export default class DiscussionDynamo extends DynamoDocument {
     return new DiscussionQuery(filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { PK: `DISC#${id}`, SK: 'META' }
-    }));
-    return Item ? toDiscussion(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { PK: `DISC#${id}`, SK: 'META' }
+      }));
+      return Item ? new DiscussionDynamo(toDiscussion(Item)) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static countDocuments(filter = {}) {
@@ -74,7 +78,6 @@ export default class DiscussionDynamo extends DynamoDocument {
     if (!item._id) item._id = crypto.randomUUID();
     if (!item.date) item.date = new Date().toISOString();
     const pk = `DISC#${item._id}`;
-    const forumPk = item.forum_id ? `FORUM#${item.forum_id}` : undefined;
     await getDocClient().send(new PutCommand({
       TableName: TABLE,
       Item: {
@@ -91,7 +94,6 @@ export default class DiscussionDynamo extends DynamoDocument {
   }
 
   async deleteOne() {
-    const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
     await getDocClient().send(new DeleteCommand({
       TableName: TABLE,
       Key: { PK: `DISC#${this._id}`, SK: 'META' }

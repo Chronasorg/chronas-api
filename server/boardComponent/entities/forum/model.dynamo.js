@@ -1,6 +1,7 @@
 import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
+import QueryProxy from '../../../models/dynamo/query-proxy.js';
 import { getDocClient, tableName } from '../../../models/dynamo/dynamo-client.js';
 
 const TABLE = tableName('board');
@@ -12,23 +13,29 @@ export default class ForumDynamo extends DynamoDocument {
     return new ForumQuery(filter);
   }
 
-  static async findOne(filter = {}) {
-    if (filter.forum_slug) {
-      const items = await scanForums();
-      return items.find(f => f.forum_slug === filter.forum_slug) || null;
-    }
-    if (filter._id) {
-      return ForumDynamo.findById(filter._id);
-    }
-    return null;
+  static findOne(filter = {}) {
+    const promise = (async () => {
+      if (filter.forum_slug) {
+        const items = await scanForums();
+        return items.find(f => f.forum_slug === filter.forum_slug) || null;
+      }
+      if (filter._id) {
+        return ForumDynamo.findById(filter._id).exec();
+      }
+      return null;
+    })();
+    return new QueryProxy(promise);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { PK: `FORUM#${id}`, SK: 'META' }
-    }));
-    return Item ? toForum(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { PK: `FORUM#${id}`, SK: 'META' }
+      }));
+      return Item ? toForum(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   async save() {

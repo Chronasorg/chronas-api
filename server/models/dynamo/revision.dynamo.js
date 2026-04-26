@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
+import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
 
@@ -18,21 +19,25 @@ export default class RevisionDynamo extends DynamoDocument {
     return new DynamoQuery(RevisionDynamo, filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { _id: String(id) }
-    }));
-    return Item ? new RevisionDynamo(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { _id: String(id) }
+      }));
+      return Item ? new RevisionDynamo(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async get(id) {
-    const doc = await RevisionDynamo.findById(id);
+    const doc = await RevisionDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('No such revision exists!', httpStatus.NOT_FOUND);
   }
 
-  static async findOne(filter = {}) {
+  static findOne(filter = {}) {
+    const promise = (async () => {
     if (filter.entityId) {
       const { Items } = await getDocClient().send(new QueryCommand({
         TableName: TABLE,
@@ -47,6 +52,8 @@ export default class RevisionDynamo extends DynamoDocument {
     }
     const results = await new DynamoQuery(RevisionDynamo, filter).limit(1).exec();
     return results[0] || null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async estimatedDocumentCount() {

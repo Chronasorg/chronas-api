@@ -2,6 +2,7 @@ import { GetCommand, PutCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib
 import crypto from 'node:crypto';
 
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
+import QueryProxy from '../../../models/dynamo/query-proxy.js';
 import { getDocClient, tableName } from '../../../models/dynamo/dynamo-client.js';
 
 const TABLE = tableName('board');
@@ -13,17 +14,25 @@ export default class OpinionDynamo extends DynamoDocument {
     return new OpinionQuery(filter);
   }
 
-  static async findOne(filter = {}) {
-    if (filter._id) {
-      return OpinionDynamo.findById(filter._id);
-    }
-    const items = await scanOpinions(filter);
-    return items[0] || null;
+  static findOne(filter = {}) {
+    const promise = (async () => {
+      if (filter._id) {
+        return OpinionDynamo.findById(filter._id).exec();
+      }
+      const items = await scanOpinions(filter);
+      const plain = items[0] || null;
+      return plain ? new OpinionDynamo(plain) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
-  static async findById(id) {
-    const items = await scanOpinions({ _id: id });
-    return items[0] || null;
+  static findById(id) {
+    const promise = (async () => {
+      const items = await scanOpinions({ _id: id });
+      const plain = items[0] || null;
+      return plain ? new OpinionDynamo(plain) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static aggregate(pipeline) {

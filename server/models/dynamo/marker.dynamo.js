@@ -5,6 +5,7 @@ import httpStatus from 'http-status';
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
+import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 
 const TABLE = tableName('markers');
@@ -16,16 +17,19 @@ export default class MarkerDynamo extends DynamoDocument {
     return new DynamoQuery(MarkerDynamo, filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { _id: String(id) }
-    }));
-    return Item ? new MarkerDynamo(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { _id: String(id) }
+      }));
+      return Item ? new MarkerDynamo(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async get(id) {
-    const doc = await MarkerDynamo.findById(id);
+    const doc = await MarkerDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('No such marker exists!', httpStatus.NOT_FOUND);
   }

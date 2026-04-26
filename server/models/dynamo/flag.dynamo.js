@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
+import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 
 const TABLE = tableName('flags');
@@ -17,32 +18,38 @@ export default class FlagDynamo extends DynamoDocument {
     return new DynamoQuery(FlagDynamo, filter);
   }
 
-  static async findById(id) {
-    const { Item } = await getDocClient().send(new GetCommand({
-      TableName: TABLE,
-      Key: { _id: String(id) }
-    }));
-    return Item ? new FlagDynamo(Item) : null;
+  static findById(id) {
+    const promise = (async () => {
+      const { Item } = await getDocClient().send(new GetCommand({
+        TableName: TABLE,
+        Key: { _id: String(id) }
+      }));
+      return Item ? new FlagDynamo(Item) : null;
+    })();
+    return new QueryProxy(promise);
   }
 
-  static async findOne(filter = {}) {
-    if (filter.fullUrl) {
-      const { Items } = await getDocClient().send(new QueryCommand({
-        TableName: TABLE,
-        IndexName: 'GSI-FullUrl',
-        KeyConditionExpression: '#f = :f',
-        ExpressionAttributeNames: { '#f': 'fullUrl' },
-        ExpressionAttributeValues: { ':f': filter.fullUrl },
-        Limit: 1
-      }));
-      return Items?.[0] ? new FlagDynamo(Items[0]) : null;
-    }
-    const results = await new DynamoQuery(FlagDynamo, filter).limit(1).exec();
-    return results[0] || null;
+  static findOne(filter = {}) {
+    const promise = (async () => {
+      if (filter.fullUrl) {
+        const { Items } = await getDocClient().send(new QueryCommand({
+          TableName: TABLE,
+          IndexName: 'GSI-FullUrl',
+          KeyConditionExpression: '#f = :f',
+          ExpressionAttributeNames: { '#f': 'fullUrl' },
+          ExpressionAttributeValues: { ':f': filter.fullUrl },
+          Limit: 1
+        }));
+        return Items?.[0] ? new FlagDynamo(Items[0]) : null;
+      }
+      const results = await new DynamoQuery(FlagDynamo, filter).limit(1).exec();
+      return results[0] || null;
+    })();
+    return new QueryProxy(promise);
   }
 
   static async get(id) {
-    const doc = await FlagDynamo.findById(id);
+    const doc = await FlagDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('No such flag exists!', httpStatus.NOT_FOUND);
   }
