@@ -43,11 +43,13 @@ export default class MetadataDynamo extends DynamoDocument {
     throw new APIError('No such metadata exists!', httpStatus.NOT_FOUND);
   }
 
-  static async countDocuments(filter = {}) {
+  static countDocuments(filter = {}) {
     if (Object.keys(filter).length === 0) {
-      return MetadataDynamo.estimatedDocumentCount();
+      const promise = MetadataDynamo.estimatedDocumentCount();
+      return { exec: () => promise };
     }
-    return new DynamoQuery(MetadataDynamo, filter).countDocuments();
+    const promise = new DynamoQuery(MetadataDynamo, filter).countDocuments();
+    return { exec: () => promise };
   }
 
   static async estimatedDocumentCount() {
@@ -94,7 +96,9 @@ export default class MetadataDynamo extends DynamoDocument {
       const key = field ? (item[field] ?? null) : null;
       counts[key] = (counts[key] || 0) + 1;
     }
-    return Object.entries(counts).map(([k, v]) => ({ _id: k === 'null' ? null : k, count: v }));
+    const result = Object.entries(counts).map(([k, v]) => ({ _id: k === 'null' ? null : k, count: v }));
+    result.exec = () => Promise.resolve(result);
+    return result;
   }
 
   async save(options = {}) {
@@ -133,7 +137,8 @@ async function batchGetByIds(ids) {
 }
 
 async function fListBranch(fList, type, subtype, locale) {
-  const cachedInit = cache.get(`init${locale || ''}`);
+  const cacheKey = `init:${fList}:${locale || ''}`;
+  const cachedInit = cache.get(cacheKey);
   if (cachedInit) return cachedInit;
 
   const resourceArray = fList.split(',');
@@ -149,7 +154,7 @@ async function fListBranch(fList, type, subtype, locale) {
     const key = decoded._id.substr(0, decoded._id.length - countLength);
     result[key] = decoded.data;
   }
-  cache.put(`init${locale || ''}`, result, CACHETTL);
+  cache.put(cacheKey, result, CACHETTL);
   return result;
 }
 

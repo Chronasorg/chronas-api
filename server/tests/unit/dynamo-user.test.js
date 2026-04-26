@@ -79,6 +79,17 @@ describe('UserDynamo (DynamoDB Local, real data)', () => {
       const user = await UserDynamo.findOne({ username: 'nobody' });
       expect(user).to.be.null;
     });
+
+    it('supports .select("+password").exec() chain (auth login pattern)', async () => {
+      const user = await UserDynamo.findOne({ email: 'admin@chronas.org' })
+        .select('+password')
+        .exec();
+      expect(user).to.not.be.null;
+      expect(user.username).to.equal('admin');
+      expect(user.password).to.be.a('string');
+      const match = await user.comparePassword('test123');
+      expect(match).to.equal(true);
+    });
   });
 
   describe('.findByEmail()', () => {
@@ -137,6 +148,13 @@ describe('UserDynamo (DynamoDB Local, real data)', () => {
       await u.save();
       const fetched = await UserDynamo.findById('new@test.com');
       expect(fetched.username).to.equal('newuser');
+    });
+  });
+
+  describe('.countDocuments().exec()', () => {
+    it('returns count via .exec() chain', async () => {
+      const count = await UserDynamo.countDocuments().exec();
+      expect(count).to.equal(fixtures.length);
     });
   });
 

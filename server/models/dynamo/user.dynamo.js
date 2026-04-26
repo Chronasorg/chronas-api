@@ -25,23 +25,8 @@ export default class UserDynamo extends DynamoDocument {
     return Item ? new UserDynamo(Item) : null;
   }
 
-  static async findOne(filter = {}) {
-    if (filter.email) {
-      return UserDynamo.findById(filter.email.toLowerCase());
-    }
-    if (filter.username) {
-      const { Items } = await getDocClient().send(new QueryCommand({
-        TableName: TABLE,
-        IndexName: 'GSI-Username',
-        KeyConditionExpression: '#u = :u',
-        ExpressionAttributeNames: { '#u': 'username' },
-        ExpressionAttributeValues: { ':u': filter.username },
-        Limit: 1
-      }));
-      return Items?.[0] ? new UserDynamo(Items[0]) : null;
-    }
-    const results = await new DynamoQuery(UserDynamo, filter).limit(1).exec();
-    return results[0] || null;
+  static findOne(filter = {}) {
+    return new UserQuery(filter);
   }
 
   static async get(id) {
@@ -78,8 +63,9 @@ export default class UserDynamo extends DynamoDocument {
     return items.slice(start, start + limit);
   }
 
-  static async countDocuments(filter = {}) {
-    return new DynamoQuery(UserDynamo, filter).countDocuments();
+  static countDocuments(filter = {}) {
+    const promise = new DynamoQuery(UserDynamo, filter).countDocuments();
+    return { exec: () => promise };
   }
 
   static async estimatedDocumentCount() {
@@ -89,18 +75,31 @@ export default class UserDynamo extends DynamoDocument {
     return Table?.ItemCount ?? 0;
   }
 
-  select(fields) {
-    if (typeof fields === 'string' && fields.includes('+password')) {
-      // password is already on the instance in DynamoDB (no select:false)
+  static async aggregate(pipeline) {
+    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+      throw new Error('UserDynamo.aggregate: only [{$group}] supported');
     }
-    return this;
-  }
-
-  static select(fields) {
-    // Static form used in chaining: User.findOne(...).select('+password')
-    // DynamoDB doesn't strip fields by default, so this is a passthrough
-    // that returns a thenable wrapping the pending query.
-    return { select: () => this };
+    const field = typeof pipeline[0].$group._id === 'string'
+      ? pipeline[0].$group._id.replace('$', '') : null;
+    const items = [];
+    let next;
+    do {
+      const params = { TableName: TABLE };
+      if (next) params.ExclusiveStartKey = next;
+      const out = await getDocClient().send(new ScanCommand(params));
+      if (out.Items) items.push(...out.Items);
+      next = out.LastEvaluatedKey;
+    } while (next);
+    const counts = {};
+    for (const item of items) {
+      const key = field ? (item[field] ?? null) : null;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    const result = Object.entries(counts).map(([k, v]) => ({
+      _id: k === 'null' ? null : k, count: v
+    }));
+    result.exec = () => Promise.resolve(result);
+    return result;
   }
 
   async comparePassword(candidatePassword) {
@@ -115,4 +114,48 @@ export default class UserDynamo extends DynamoDocument {
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     return this;
   }
+}
+
+/**
+ * Chainable query proxy so that User.findOne({email}).select('+password').exec()
+ * works like Mongoose. DynamoDB doesn't strip fields, so select() is a no-op,
+ * but the chain must not break.
+ */
+class UserQuery {
+  constructor(filter) {
+    this._filter = filter;
+    this._promise = null;
+  }
+
+  select() { return this; }
+  lean() { return this; }
+
+  exec() { return this._resolve(); }
+  then(ok, fail) { return this._resolve().then(ok, fail); }
+  catch(fn) { return this._resolve().catch(fn); }
+
+  async _resolve() {
+    if (this._promise) return this._promise;
+    this._promise = _findOneRaw(this._filter);
+    return this._promise;
+  }
+}
+
+async function _findOneRaw(filter) {
+  if (filter.email) {
+    return UserDynamo.findById(filter.email.toLowerCase());
+  }
+  if (filter.username) {
+    const { Items } = await getDocClient().send(new QueryCommand({
+      TableName: TABLE,
+      IndexName: 'GSI-Username',
+      KeyConditionExpression: '#u = :u',
+      ExpressionAttributeNames: { '#u': 'username' },
+      ExpressionAttributeValues: { ':u': filter.username },
+      Limit: 1
+    }));
+    return Items?.[0] ? new UserDynamo(Items[0]) : null;
+  }
+  const results = await new DynamoQuery(UserDynamo, filter).limit(1).exec();
+  return results[0] || null;
 }

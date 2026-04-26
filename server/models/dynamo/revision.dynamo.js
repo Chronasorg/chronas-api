@@ -69,9 +69,11 @@ export default class RevisionDynamo extends DynamoDocument {
       const key = field ? (item[field] ?? null) : null;
       counts[key] = (counts[key] || 0) + 1;
     }
-    return Object.entries(counts).map(([k, v]) => ({
+    const result = Object.entries(counts).map(([k, v]) => ({
       _id: k === 'null' ? null : k, count: v
     }));
+    result.exec = () => Promise.resolve(result);
+    return result;
   }
 
   static list = notImplemented(

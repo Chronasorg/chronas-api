@@ -77,18 +77,26 @@ export default class DynamoQuery {
     return this.exec().catch(onRejected);
   }
 
-  async countDocuments() {
-    const params = this._buildParams({ select: 'COUNT' });
-    const Command = this._index ? QueryCommand : ScanCommand;
-    let count = 0;
-    let next;
-    do {
-      if (next) params.ExclusiveStartKey = next;
-      const out = await getDocClient().send(new Command(params));
-      count += out.Count || 0;
-      next = out.LastEvaluatedKey;
-    } while (next);
-    return count;
+  countDocuments() {
+    const self = this;
+    const promise = (async () => {
+      const params = self._buildParams({ select: 'COUNT' });
+      const Command = self._index ? QueryCommand : ScanCommand;
+      let count = 0;
+      let next;
+      do {
+        if (next) params.ExclusiveStartKey = next;
+        const out = await getDocClient().send(new Command(params));
+        count += out.Count || 0;
+        next = out.LastEvaluatedKey;
+      } while (next);
+      return count;
+    })();
+    return {
+      exec: () => promise,
+      then: (ok, fail) => promise.then(ok, fail),
+      catch: (fn) => promise.catch(fn)
+    };
   }
 
   async _runQuery() {

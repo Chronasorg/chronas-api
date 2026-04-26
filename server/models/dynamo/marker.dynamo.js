@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, BatchGetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 
@@ -108,6 +108,25 @@ export default class MarkerDynamo extends DynamoDocument {
     return paged;
   }
 
+  static async aggregate(pipeline) {
+    if (!Array.isArray(pipeline) || !pipeline[0]?.$group) {
+      throw new Error('MarkerDynamo.aggregate: only [{$group}] supported');
+    }
+    const field = typeof pipeline[0].$group._id === 'string'
+      ? pipeline[0].$group._id.replace('$', '') : null;
+    const items = await scanAll();
+    const counts = {};
+    for (const item of items) {
+      const key = field ? (item[field] ?? null) : null;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    const result = Object.entries(counts).map(([k, v]) => ({
+      _id: k === 'null' ? null : k, count: v
+    }));
+    result.exec = () => Promise.resolve(result);
+    return result;
+  }
+
   async save() {
     const item = this.toObject();
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
@@ -120,18 +139,28 @@ async function queryByTypeAndYear(typeArray, year, delta, end) {
   const yearHi = end !== false && end !== undefined ? end : year + delta;
   const client = getDocClient();
 
-  const queries = typeArray.map(type =>
-    client.send(new QueryCommand({
-      TableName: TABLE,
-      IndexName: 'GSI-TypeYear',
-      KeyConditionExpression: '#t = :t AND #y BETWEEN :lo AND :hi',
-      ExpressionAttributeNames: { '#t': 'type', '#y': 'year' },
-      ExpressionAttributeValues: { ':t': type, ':lo': yearLo, ':hi': yearHi }
-    }))
-  );
+  const queries = typeArray.map(type => paginatedQuery(client, {
+    TableName: TABLE,
+    IndexName: 'GSI-TypeYear',
+    KeyConditionExpression: '#t = :t AND #y BETWEEN :lo AND :hi',
+    ExpressionAttributeNames: { '#t': 'type', '#y': 'year' },
+    ExpressionAttributeValues: { ':t': type, ':lo': yearLo, ':hi': yearHi }
+  }));
 
   const results = await Promise.all(queries);
-  return results.flatMap(r => r.Items || []);
+  return results.flat();
+}
+
+async function paginatedQuery(client, params) {
+  const items = [];
+  let next;
+  do {
+    if (next) params.ExclusiveStartKey = next;
+    const out = await client.send(new QueryCommand(params));
+    if (out.Items) items.push(...out.Items);
+    next = out.LastEvaluatedKey;
+  } while (next);
+  return items;
 }
 
 async function batchGetByWikis(wikiArray) {
@@ -157,7 +186,6 @@ async function scanAll() {
   do {
     const params = { TableName: TABLE };
     if (next) params.ExclusiveStartKey = next;
-    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
     const out = await client.send(new ScanCommand(params));
     if (out.Items) items.push(...out.Items);
     next = out.LastEvaluatedKey;
