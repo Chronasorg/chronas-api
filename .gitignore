@@ -66,3 +66,6 @@ users-bk.json
 dataToMigrate
 CURRENT_PRODUCTION_SETUP.json
 build-version.json
+
+# Migration script logs (DocumentDB → DynamoDB migration)
+scripts/migration/logs/

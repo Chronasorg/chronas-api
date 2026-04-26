@@ -51,7 +51,21 @@ const envVarsSchema = Joi.object({
     })
     .description('Mongo DB host url (optional when using Secrets Manager)'),
   MONGO_PORT: Joi.number()
-    .default(27017)
+    .default(27017),
+
+  // Per-model DynamoDB feature flags. Each flag routes that model's reads
+  // and writes to DynamoDB when true; false keeps the existing Mongoose
+  // path. Flags flip ON only — see the forward-only policy in the plan.
+  USE_DYNAMODB_AREAS: Joi.boolean().default(false),
+  USE_DYNAMODB_MARKERS: Joi.boolean().default(false),
+  USE_DYNAMODB_METADATA: Joi.boolean().default(false),
+  USE_DYNAMODB_USERS: Joi.boolean().default(false),
+  USE_DYNAMODB_FLAGS: Joi.boolean().default(false),
+  USE_DYNAMODB_REVISIONS: Joi.boolean().default(false),
+  USE_DYNAMODB_COLLECTIONS: Joi.boolean().default(false),
+  USE_DYNAMODB_GAMES: Joi.boolean().default(false),
+  USE_DYNAMODB_BOARD: Joi.boolean().default(false),
+  DYNAMODB_TABLE_PREFIX: Joi.string().default('chronas')
 
 }).unknown()
   .required();
@@ -99,7 +113,19 @@ export const config = {
   googleCallbackUrl: envVars.GOOGLE_CALLBACK_URL,
   twitterCallbackUrl: envVars.TWITTER_CALLBACK_URL,
   rumApplicationId: envVars.RUMAPPLICATIONID,
-  chronasHost: envVars.CHRONAS_HOST
+  chronasHost: envVars.CHRONAS_HOST,
+  dynamodb: {
+    tablePrefix: envVars.DYNAMODB_TABLE_PREFIX,
+    useAreas: envVars.USE_DYNAMODB_AREAS,
+    useMarkers: envVars.USE_DYNAMODB_MARKERS,
+    useMetadata: envVars.USE_DYNAMODB_METADATA,
+    useUsers: envVars.USE_DYNAMODB_USERS,
+    useFlags: envVars.USE_DYNAMODB_FLAGS,
+    useRevisions: envVars.USE_DYNAMODB_REVISIONS,
+    useCollections: envVars.USE_DYNAMODB_COLLECTIONS,
+    useGames: envVars.USE_DYNAMODB_GAMES,
+    useBoard: envVars.USE_DYNAMODB_BOARD
+  }
 };
 
 console.log(config);

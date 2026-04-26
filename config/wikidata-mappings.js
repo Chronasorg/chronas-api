@@ -38,7 +38,7 @@ export const religionFromWikidata = {
   'Q212117': 'manichaeism',     // Manichaeism
   'Q46857':  'druidism',        // Celtic polytheism
   'Q193849': 'romuva',          // Romuva (Baltic paganism)
-  'Q188712': 'slavic',          // Slavic Native Faith
+  'Q188712': 'slavic'          // Slavic Native Faith
 };
 
 // Chronas religion key → Wikidata entity ID (reverse lookup)
@@ -54,7 +54,7 @@ export const cultureFromWikidata = {
   'Q826806': 'polynesian',      // Polynesian culture
   'Q33199':  'austronesian',    // Austronesian languages
   'Q485895': 'malay',           // Malay people
-  'Q49085':  'sumatran',        // Batak people (Sumatra)
+  'Q49085':  'sumatran'        // Batak people (Sumatra)
 };
 
 // Wikidata-confirmed Orthodox ruler codes (P3075 official religion on historical polities)
@@ -163,7 +163,7 @@ export const easternOrthodoxProvinces = {
   'Kakheti': 'Q193882', 'Guria': 'Q193882', 'Abkhazia': 'Q193882',
   // Polish territories under Russian rule
   'Kalisz': 'Q193882', 'Leczyca': 'Q193882', 'Lodz': 'Q193882',
-  'Mazovia': 'Q193882', 'Plock': 'Q193882', 'Wizna': 'Q193882',
+  'Mazovia': 'Q193882', 'Plock': 'Q193882', 'Wizna': 'Q193882'
 };
 
 // Western territories — should stay chalcedonism pre-1054, then catholic post-1054
@@ -184,5 +184,5 @@ export const cultureCorrections = {
   'Halmahera':          'papuan',
   'Rabaul':             'polynesian',
   'Lombok':             'javanese',
-  'Western Sumbawa':    'javanese',
+  'Western Sumbawa':    'javanese'
 };

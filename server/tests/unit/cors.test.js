@@ -50,7 +50,7 @@ describe('## CORS Configuration', () => {
       'https://de.chronas.org',
       'https://fr.chronas.org',
       'https://api.chronas.org',
-      'https://my-test.chronas.org',
+      'https://my-test.chronas.org'
     ];
 
     allowedOrigins.forEach((origin) => {
@@ -69,7 +69,7 @@ describe('## CORS Configuration', () => {
   describe('# Allowed localhost origins', () => {
     const localhostOrigins = [
       'http://localhost:3000',
-      'http://localhost:5173',
+      'http://localhost:5173'
     ];
 
     localhostOrigins.forEach((origin) => {
@@ -101,7 +101,7 @@ describe('## CORS Configuration', () => {
       'https://chronas.org.evil.com',
       'https://fakechronas.org',
       'http://chronas.org',       // http not https
-      'https://sub.sub.chronas.org', // nested subdomain
+      'https://sub.sub.chronas.org' // nested subdomain
     ];
 
     blockedOrigins.forEach((origin) => {
