@@ -13,7 +13,7 @@ import { gzipSync, gunzipSync } from 'zlib';
  * are untouched.
  */
 
-const MIN_COMPRESS_BYTES = 200 * 1024; // 200 KB — below this, raw JSON is fine
+const MIN_COMPRESS_BYTES = 100 * 1024; // 100 KB — safe margin below 400 KB DynamoDB limit
 
 export function shouldCompress(data) {
   if (!data) return false;

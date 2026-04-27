@@ -133,7 +133,29 @@ class OpinionQuery {
 }
 
 async function scanOpinions(filter = {}) {
+  const { QueryCommand } = await import('@aws-sdk/lib-dynamodb');
   const client = getDocClient();
+
+  if (filter.discussion_id) {
+    const items = [];
+    let next;
+    do {
+      const params = {
+        TableName: TABLE,
+        KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :prefix)',
+        ExpressionAttributeNames: { '#pk': 'PK', '#sk': 'SK' },
+        ExpressionAttributeValues: { ':pk': `DISC#${filter.discussion_id}`, ':prefix': 'OPINION#' }
+      };
+      if (next) params.ExclusiveStartKey = next;
+      const out = await client.send(new QueryCommand(params));
+      if (out.Items) items.push(...out.Items.map(toOpinion));
+      next = out.LastEvaluatedKey;
+    } while (next);
+    if (filter._id) return items.filter(o => o._id === filter._id);
+    return items;
+  }
+
+  // Fallback to scan for queries without discussion_id (e.g. findById)
   const items = [];
   let next;
   do {
@@ -150,7 +172,6 @@ async function scanOpinions(filter = {}) {
   } while (next);
   return items.filter(o => {
     if (filter._id && o._id !== filter._id) return false;
-    if (filter.discussion_id && String(o.discussion_id) !== String(filter.discussion_id)) return false;
     return true;
   });
 }

@@ -79,11 +79,17 @@ async function migrateCollection(req, res) {
 async function writeBatch(docClient, table, items) {
   try {
     const requests = items.map(item => ({ PutRequest: { Item: item } }));
-    await docClient.send(new BatchWriteCommand({
-      RequestItems: { [table]: requests }
-    }));
+    let unprocessed = { [table]: requests };
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const result = await docClient.send(new BatchWriteCommand({ RequestItems: unprocessed }));
+      if (!result.UnprocessedItems || Object.keys(result.UnprocessedItems).length === 0) return;
+      unprocessed = result.UnprocessedItems;
+      await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+    }
+    if (Object.keys(unprocessed).length > 0) {
+      console.error(`writeBatch: ${unprocessed[table]?.length || 0} items still unprocessed after retries`);
+    }
   } catch (err) {
-    // Batch failed — fall back to individual puts so one oversized item doesn't block 24 others
     const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
     for (const item of items) {
       try {

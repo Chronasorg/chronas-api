@@ -28,7 +28,7 @@ if (!args.collection || !args.lambdaFunction) {
 
 const dynamoClient = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: REGION }),
-  { marshallOptions: { removeUndefinedValues: true, convertClassInstanceToMap: true }, unmarshallOptions: { wrapNumbers: false } }
+  { marshallOptions: { removeUndefinedValues: true, convertClassInstanceToMap: true, convertEmptyValues: true }, unmarshallOptions: { wrapNumbers: false } }
 );
 const lambdaClient = new LambdaClient({ region: REGION });
 
@@ -192,7 +192,8 @@ function transformUser(doc) {
     if (k === '__v' || k === '' || v === undefined) continue;
     item[k] = v;
   }
-  item._id = id;
+  item._id = id.toLowerCase();
+  if (item.email) item.email = String(item.email).toLowerCase();
   item._entity = 'USER';
   if (!item.karma) item.karma = 0;
   if (!item.username) item.username = id;

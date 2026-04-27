@@ -1,6 +1,6 @@
-import { GetCommand, PutCommand, BatchGetCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
-import { getDocClient, tableName } from './dynamo-client.js';
+import { getDocClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 
 /**
  * Per-entity links store — replaces the monolithic `Metadata._id='links'`
@@ -37,13 +37,13 @@ export async function batchGetLinked(entityRefs) {
   }
   const out = {};
   for (const chunk of chunks) {
-    const { Responses } = await getDocClient().send(new BatchGetCommand({
+    const { Responses } = await batchGetWithRetry({
       RequestItems: {
         [LINKS_TABLE]: {
           Keys: chunk.map(entityRef => ({ entityRef }))
         }
       }
-    }));
+    });
     const items = (Responses && Responses[LINKS_TABLE]) || [];
     for (const item of items) {
       out[item.entityRef] = {

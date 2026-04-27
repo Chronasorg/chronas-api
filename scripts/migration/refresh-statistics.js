@@ -52,7 +52,7 @@ async function main() {
   const entityItems = Responses?.[`${TABLE_PREFIX}-metadata`] || [];
   let entityCount = 0;
   for (const item of entityItems) {
-    if (item.data && typeof item.data === 'object' && !Buffer.isBuffer(item.data)) {
+    if (item.data && typeof item.data === 'object' && !Buffer.isBuffer(item.data) && !(item.data instanceof Uint8Array)) {
       entityCount += Object.keys(item.data).length;
     }
   }

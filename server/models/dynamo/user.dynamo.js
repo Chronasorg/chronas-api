@@ -22,9 +22,12 @@ export default class UserDynamo extends DynamoDocument {
     const promise = (async () => {
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
-        Key: { _id: String(id) }
+        Key: { _id: String(id).toLowerCase() }
       }));
-      return Item ? new UserDynamo(Item) : null;
+      if (!Item) return null;
+      const user = new UserDynamo(Item);
+      delete user.password;
+      return user;
     })();
     return new QueryProxy(promise);
   }
@@ -134,9 +137,15 @@ class UserQuery {
   constructor(filter) {
     this._filter = filter;
     this._promise = null;
+    this._includePassword = false;
   }
 
-  select() { return this; }
+  select(fields) {
+    if (typeof fields === 'string' && fields.includes('+password')) {
+      this._includePassword = true;
+    }
+    return this;
+  }
   lean() { return this; }
 
   exec() { return this._resolve(); }
@@ -145,7 +154,12 @@ class UserQuery {
 
   async _resolve() {
     if (this._promise) return this._promise;
-    this._promise = _findOneRaw(this._filter);
+    this._promise = _findOneRaw(this._filter).then(user => {
+      if (user && !this._includePassword) {
+        delete user.password;
+      }
+      return user;
+    });
     return this._promise;
   }
 }

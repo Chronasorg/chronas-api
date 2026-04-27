@@ -1,15 +1,20 @@
 import express from 'express';
+import { expressjwt as expressJwt } from 'express-jwt';
 
 import statisticsCtrl from '../controllers/statistics.controller.js';
+import { config } from '../../config/config.js';
+import checkPrivilege from '../helpers/privileges.js';
 
 const router = express.Router();
 
-// get general data statistics (reads from S3, falls back to live compute)
 router.route('/')
   .get(statisticsCtrl.list);
 
-// recompute statistics and write to S3 (call after data changes)
 router.route('/refresh')
-  .post(statisticsCtrl.refresh);
+  .post(
+    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
+    checkPrivilege.checkPrivilege(5),
+    statisticsCtrl.refresh
+  );
 
 export default router;

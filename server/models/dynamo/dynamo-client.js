@@ -27,7 +27,7 @@ export function getDocClient() {
     marshallOptions: {
       removeUndefinedValues: true,
       convertClassInstanceToMap: true,
-      convertEmptyValues: false
+      convertEmptyValues: true
     },
     unmarshallOptions: {
       wrapNumbers: false
@@ -41,4 +41,29 @@ export const TABLE_PREFIX = process.env.DYNAMODB_TABLE_PREFIX || 'chronas';
 
 export function tableName(suffix) {
   return `${TABLE_PREFIX}-${suffix}`;
+}
+
+/**
+ * BatchGetItem with automatic retry for UnprocessedKeys.
+ * DynamoDB may return partial results under throttling.
+ */
+export async function batchGetWithRetry(params, maxRetries = 3) {
+  const { BatchGetCommand } = await import('@aws-sdk/lib-dynamodb');
+  const client = getDocClient();
+  const allItems = {};
+  let request = params.RequestItems;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const result = await client.send(new BatchGetCommand({ RequestItems: request }));
+    for (const [table, items] of Object.entries(result.Responses || {})) {
+      if (!allItems[table]) allItems[table] = [];
+      allItems[table].push(...items);
+    }
+    if (!result.UnprocessedKeys || Object.keys(result.UnprocessedKeys).length === 0) break;
+    if (attempt < maxRetries) {
+      await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+      request = result.UnprocessedKeys;
+    }
+  }
+  return { Responses: allItems };
 }

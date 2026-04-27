@@ -21,4 +21,5 @@ export default class QueryProxy {
 
   then(ok, fail) { return this._promise.then(ok, fail); }
   catch(fn) { return this._promise.catch(fn); }
+  finally(fn) { return this._promise.finally(fn); }
 }

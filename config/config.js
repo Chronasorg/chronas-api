@@ -128,4 +128,6 @@ export const config = {
   }
 };
 
-console.log(config);
+if (config.env !== 'production') {
+  console.log('Config loaded (env=%s, port=%s, dynamodb=%j)', config.env, config.port, config.dynamodb);
+}

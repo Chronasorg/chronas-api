@@ -6,7 +6,7 @@ import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
-import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
 import { cache } from '../../../config/config.js';
 
@@ -132,13 +132,12 @@ class BatchGetProxy {
 }
 
 async function batchGetByIds(ids) {
-  const client = getDocClient();
   const all = [];
   for (let i = 0; i < ids.length; i += 100) {
     const chunk = ids.slice(i, i + 100);
-    const { Responses } = await client.send(new BatchGetCommand({
+    const { Responses } = await batchGetWithRetry({
       RequestItems: { [TABLE]: { Keys: chunk.map(_id => ({ _id: String(_id) })) } }
-    }));
+    });
     if (Responses?.[TABLE]) all.push(...Responses[TABLE]);
   }
   return all;
