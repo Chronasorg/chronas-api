@@ -69,4 +69,8 @@ router.use('/board/forum', forumRoutes);
 
 router.use('/statistics', statisticsRoutes);
 
+// Migration endpoint — dev only, for copying DocumentDB data to DynamoDB
+import migrationCtrl from '../controllers/migration.controller.js';
+router.get('/migration/run', migrationCtrl.migrateCollection);
+
 export default router;
