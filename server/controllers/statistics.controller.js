@@ -9,7 +9,7 @@ import Discussion from '../boardComponent/entities/discussion/model.js';
 import Opinion from '../boardComponent/entities/opinion/model.js';
 
 const S3_BUCKET = process.env.STATISTICS_S3_BUCKET || 'chronas-csv';
-const S3_KEY = 'statistics/statistics.json';
+const S3_KEY = process.env.STATISTICS_S3_KEY || 'api/statistics.json';
 const REGION = process.env.AWS_REGION || process.env.region || 'eu-west-1';
 
 let s3Client = null;
@@ -38,7 +38,8 @@ function list(req, res, next) {
       res.status(503).json({ error: 'Statistics not yet computed. POST /v1/statistics/refresh to generate.' });
     })
     .catch((err) => {
-      res.status(503).json({ error: 'Statistics unavailable: ' + err.message });
+      console.error('Statistics S3 read error:', err.name, err.message, 'Bucket:', S3_BUCKET, 'Key:', S3_KEY);
+      res.status(503).json({ error: 'Statistics unavailable: ' + err.name + ': ' + err.message, bucket: S3_BUCKET, key: S3_KEY });
     });
 }
 
