@@ -55,13 +55,14 @@ async function main() {
   console.log(`Lambda: ${args.lambdaFunction}, batch: ${args.batchSize}, dryRun: ${args.dryRun}`);
 
   let skip = 0;
+  let lastId = null;
   let totalMigrated = 0;
   let totalSkipped = 0;
   let totalFailed = 0;
 
   while (true) {
-    console.log(`  Exporting skip=${skip} limit=${args.batchSize}...`);
-    const docs = await exportFromLambda(args.collection, skip, args.batchSize);
+    console.log(`  Exporting ${lastId ? 'afterId=' + lastId : 'skip=' + skip} limit=${args.batchSize}...`);
+    const docs = await exportFromLambda(args.collection, skip, args.batchSize, lastId);
 
     if (!docs || docs.length === 0) {
       console.log(`  No more docs at skip=${skip}. Done.`);
@@ -95,18 +96,25 @@ async function main() {
     console.log(`  Progress: ${totalMigrated} migrated, ${totalSkipped} skipped, ${totalFailed} failed`);
 
     if (docs.length < args.batchSize) break;
+    lastId = docs[docs.length - 1]._id;
     skip += args.batchSize;
   }
 
   console.log(`\nDone: ${totalMigrated} migrated, ${totalSkipped} skipped, ${totalFailed} failed`);
 }
 
-async function exportFromLambda(collection, skip, limit) {
+async function exportFromLambda(collection, skip, limit, lastId) {
+  const qs = lastId
+    ? `collection=${collection}&limit=${limit}&afterId=${encodeURIComponent(lastId)}`
+    : `collection=${collection}&skip=${skip}&limit=${limit}`;
+  const qsParams = lastId
+    ? { collection, limit: String(limit), afterId: lastId }
+    : { collection, skip: String(skip), limit: String(limit) };
   const payload = JSON.stringify({
     version: '2.0', routeKey: 'GET /v1/migration/export', rawPath: '/v1/migration/export',
-    rawQueryString: `collection=${collection}&skip=${skip}&limit=${limit}`,
+    rawQueryString: qs,
     headers: { host: 'lambda.local' },
-    queryStringParameters: { collection, skip: String(skip), limit: String(limit) },
+    queryStringParameters: qsParams,
     requestContext: { http: { method: 'GET', path: '/v1/migration/export' }, stage: '$default' },
     isBase64Encoded: false
   });

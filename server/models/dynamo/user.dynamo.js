@@ -24,12 +24,15 @@ export default class UserDynamo extends DynamoDocument {
         TableName: TABLE,
         Key: { _id: String(id).toLowerCase() }
       }));
-      if (!Item) return null;
-      const user = new UserDynamo(Item);
-      delete user.password;
-      return user;
+      return Item ? new UserDynamo(Item) : null;
     })();
     return new QueryProxy(promise);
+  }
+
+  toJSON() {
+    const obj = this.toObject();
+    delete obj.password;
+    return obj;
   }
 
   static findOne(filter = {}) {
@@ -154,12 +157,7 @@ class UserQuery {
 
   async _resolve() {
     if (this._promise) return this._promise;
-    this._promise = _findOneRaw(this._filter).then(user => {
-      if (user && !this._includePassword) {
-        delete user.password;
-      }
-      return user;
-    });
+    this._promise = _findOneRaw(this._filter);
     return this._promise;
   }
 }

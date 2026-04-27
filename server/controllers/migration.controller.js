@@ -272,6 +272,7 @@ async function exportCollection(req, res) {
   const collection = req.query.collection;
   const skip = parseInt(req.query.skip) || 0;
   const limit = parseInt(req.query.limit) || 500;
+  const afterId = req.query.afterId || null;
 
   if (!collection) {
     return res.status(400).json({ error: 'collection query param required' });
@@ -290,7 +291,8 @@ async function exportCollection(req, res) {
 
   try {
     const db = mongoose.connection.db;
-    const docs = await db.collection(mongoCol).find({}).sort({ _id: 1 }).skip(skip).limit(limit).toArray();
+    const query = afterId ? { _id: { $gt: afterId } } : {};
+    const docs = await db.collection(mongoCol).find(query).sort({ _id: 1 }).limit(limit).toArray();
     // Convert ObjectId to string for JSON serialization
     const cleaned = docs.map(doc => {
       const obj = { ...doc };
