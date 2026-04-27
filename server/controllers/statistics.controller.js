@@ -1,3 +1,6 @@
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client } from '@aws-sdk/client-s3';
+
 import Marker from '../models/marker.model.js';
 import Metadata from '../models/metadata.model.js';
 import User from '../models/user.model.js';
@@ -5,23 +8,75 @@ import Revision from '../models/revision.model.js';
 import Discussion from '../boardComponent/entities/discussion/model.js';
 import Opinion from '../boardComponent/entities/opinion/model.js';
 
-const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
-let cachedResult = null;
-let cachedAt = 0;
+const S3_BUCKET = process.env.STATISTICS_S3_BUCKET || 'chronas-csv';
+const S3_KEY = 'statistics/statistics.json';
+const REGION = process.env.AWS_REGION || process.env.region || 'eu-west-1';
+
+let s3Client = null;
+function getS3() {
+  if (!s3Client) s3Client = new S3Client({ region: REGION });
+  return s3Client;
+}
+
+let memoryCache = null;
+let memoryCacheAt = 0;
+const MEMORY_TTL = 1000 * 60 * 60; // 1 hour in-memory cache
 
 function list(req, res, next) {
   const now = Date.now();
-  if (cachedResult && (now - cachedAt) < CACHE_TTL_MS) {
-    return res.json(cachedResult);
+  if (memoryCache && (now - memoryCacheAt) < MEMORY_TTL) {
+    return res.json(memoryCache);
   }
 
-  buildStatistics()
+  readFromS3()
     .then((stats) => {
-      cachedResult = stats;
-      cachedAt = Date.now();
-      res.json(stats);
+      if (stats) {
+        memoryCache = stats;
+        memoryCacheAt = Date.now();
+        return res.json(stats);
+      }
+      res.status(503).json({ error: 'Statistics not yet computed. POST /v1/statistics/refresh to generate.' });
     })
-    .catch(e => next(e));
+    .catch((err) => {
+      res.status(503).json({ error: 'Statistics unavailable: ' + err.message });
+    });
+}
+
+async function refresh(req, res) {
+  try {
+    const stats = await buildAndStore();
+    res.json({ refreshed: true, markerTotal: stats.markerTotal, updatedAt: stats._updatedAt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function readFromS3() {
+  try {
+    const response = await getS3().send(new GetObjectCommand({
+      Bucket: S3_BUCKET, Key: S3_KEY
+    }));
+    const body = await response.Body.transformToString();
+    return JSON.parse(body);
+  } catch (err) {
+    if (err.name === 'NoSuchKey' || err.Code === 'NoSuchKey') return null;
+    throw err;
+  }
+}
+
+async function buildAndStore() {
+  const stats = await buildStatistics();
+  stats._updatedAt = new Date().toISOString();
+
+  await getS3().send(new PutObjectCommand({
+    Bucket: S3_BUCKET, Key: S3_KEY,
+    Body: JSON.stringify(stats),
+    ContentType: 'application/json'
+  }));
+
+  memoryCache = stats;
+  memoryCacheAt = Date.now();
+  return stats;
 }
 
 async function buildStatistics() {
@@ -80,4 +135,4 @@ async function buildStatistics() {
   return statisticsObj;
 }
 
-export default { list };
+export default { list, refresh, buildAndStore };
