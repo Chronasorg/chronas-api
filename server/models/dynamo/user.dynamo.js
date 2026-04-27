@@ -116,6 +116,10 @@ export default class UserDynamo extends DynamoDocument {
 
   async save() {
     const item = this.toObject();
+    if (item._id) item._id = String(item._id).toLowerCase();
+    if (item.email) item.email = String(item.email).toLowerCase();
+    this._id = item._id;
+    this.email = item.email;
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     return this;
   }

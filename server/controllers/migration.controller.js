@@ -262,4 +262,51 @@ async function migrateLinks(dryRun) {
   return { collection: 'links', table: tableName('links'), migratedCount: count, totalEntries: entries.length, dryRun };
 }
 
-export default { migrateCollection };
+async function exportCollection(req, res) {
+  const collection = req.query.collection;
+  const skip = parseInt(req.query.skip) || 0;
+  const limit = parseInt(req.query.limit) || 500;
+
+  if (!collection) {
+    return res.status(400).json({ error: 'collection query param required' });
+  }
+
+  const mongoCollections = {
+    areas: 'areas', markers: 'markers', metadata: 'metadatas',
+    users: 'users', revisions: 'revisions', flags: 'flags',
+    discussions: 'discussions', opinions: 'opinions', forums: 'forums'
+  };
+
+  const mongoCol = mongoCollections[collection];
+  if (!mongoCol) {
+    return res.status(400).json({ error: `unknown collection: ${collection}` });
+  }
+
+  try {
+    const db = mongoose.connection.db;
+    const docs = await db.collection(mongoCol).find({}).sort({ _id: 1 }).skip(skip).limit(limit).toArray();
+    // Convert ObjectId to string for JSON serialization
+    const cleaned = docs.map(doc => {
+      const obj = { ...doc };
+      if (obj._id && typeof obj._id === 'object' && obj._id.toString) {
+        obj._id = obj._id.toString();
+      }
+      // Convert Date objects to ISO strings
+      for (const [k, v] of Object.entries(obj)) {
+        if (v instanceof Date) obj[k] = v.toISOString();
+        if (v && typeof v === 'object' && v.toString && k === 'forum_id') obj[k] = v.toString();
+        if (v && typeof v === 'object' && v.toString && k === 'discussion_id') obj[k] = v.toString();
+        if (v && typeof v === 'object' && v.toString && k === 'forum') obj[k] = v.toString();
+        if (v && typeof v === 'object' && v.toString && k === 'discussion') obj[k] = v.toString();
+        if (v && typeof v === 'object' && v.toString && k === 'user' && k !== 'users') obj[k] = v.toString();
+      }
+      delete obj.__v;
+      return obj;
+    });
+    res.json({ collection, count: cleaned.length, skip, limit, docs: cleaned });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export default { migrateCollection, exportCollection };
