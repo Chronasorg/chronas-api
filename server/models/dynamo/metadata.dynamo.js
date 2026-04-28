@@ -149,16 +149,13 @@ async function fListBranch(fList, type, subtype, locale) {
   if (cachedInit) return cachedInit;
 
   const resourceArray = fList.split(',');
-  let ids = resourceArray;
-  if (locale) ids = resourceArray.map(id => `${id}_${locale}`);
-
-  const items = await batchGetByIds(ids);
+  const items = await batchGetByIds(resourceArray);
   let countLength = 0;
   if (locale) countLength = locale.length + 1;
   const result = {};
   for (const item of items) {
     const decoded = decodeFromRead(item);
-    const key = decoded._id.substr(0, decoded._id.length - countLength);
+    const key = countLength ? decoded._id.substr(0, decoded._id.length - countLength) : decoded._id;
     result[key] = decoded.data;
   }
   cache.put(cacheKey, result, CACHETTL);
