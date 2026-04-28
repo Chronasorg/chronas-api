@@ -18,7 +18,7 @@ const TABLE_PREFIX = 'chronas';
 
 const args = parseArgs(process.argv.slice(2));
 const BUCKET = args.bucket || process.env.STATISTICS_S3_BUCKET || 'chronas-csv';
-const S3_KEY = 'statistics/statistics.json';
+const S3_KEY = args.key || process.env.STATISTICS_S3_KEY || 'api/statistics.json';
 
 const dynamo = DynamoDBDocumentClient.from(
   new DynamoDBClient({ region: REGION }),
@@ -126,6 +126,7 @@ function parseArgs(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--bucket') out.bucket = argv[++i];
+    else if (argv[i] === '--key') out.key = argv[++i];
   }
   return out;
 }

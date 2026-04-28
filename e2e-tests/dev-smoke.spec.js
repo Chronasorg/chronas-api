@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const API_URL = 'https://9c3213bzri.execute-api.eu-west-1.amazonaws.com/v1';
-const FRONTEND_URL = 'https://d1q6nlczw9cdpt.cloudfront.net';
+const API_URL = process.env.E2E_API_URL || 'https://9c3213bzri.execute-api.eu-west-1.amazonaws.com/v1';
+const FRONTEND_URL = process.env.E2E_FRONTEND_URL || 'https://d1q6nlczw9cdpt.cloudfront.net';
 
 test.describe('Dev Environment E2E Smoke Tests', () => {
 
