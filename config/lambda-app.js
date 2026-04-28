@@ -53,40 +53,51 @@ async function preInitializeDependencies() {
 }
 
 /**
- * Initialize database connection with retry logic and Secrets Manager support
- * Database connection is REQUIRED - Lambda will fail if database is not available
+ * Check whether all in-scope DynamoDB feature flags are enabled.
+ * When true the Lambda no longer needs DocumentDB at all.
+ */
+function allDynamoFlagsOn(cfg) {
+  const d = cfg.dynamodb || {};
+  return d.useAreas && d.useMarkers && d.useMetadata && d.useUsers
+    && d.useFlags && d.useRevisions && d.useBoard;
+}
+
+/**
+ * Initialize database connection with retry logic and Secrets Manager support.
+ * Skipped entirely when all DynamoDB feature flags are ON (no DocumentDB needed).
  */
 async function initializeDatabase(config) {
+  if (allDynamoFlagsOn(config)) {
+    console.log('All DynamoDB flags ON — skipping DocumentDB connection');
+    appState.dbConnected = false;
+    return false;
+  }
+
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
 
-  console.log('🔌 Initializing database connection (REQUIRED)...');
+  console.log('Initializing DocumentDB connection...');
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 Database connection attempt ${attempt}/${maxRetries}`);
       debugLog(`Database connection attempt ${attempt}/${maxRetries}`);
 
       await initializeDatabaseConnection(config);
       appState.dbConnected = true;
-      console.log('✅ Database connection established successfully');
+      console.log('DocumentDB connection established');
       debugLog('Database connection established');
       return true;
     } catch (error) {
-      console.error(`❌ Database connection attempt ${attempt} failed:`, error.message);
+      console.error(`Database connection attempt ${attempt} failed:`, error.message);
       debugLog(`Database connection attempt ${attempt} failed:`, error.message);
 
       if (attempt === maxRetries) {
-        // Database connection is REQUIRED - fail the Lambda initialization
-        const finalError = new Error(`Database connection failed after ${maxRetries} attempts. Lambda cannot start without database. Last error: ${error.message}`);
-        console.error('💥 CRITICAL: Database connection failed after all retries. Lambda initialization FAILED.');
-        console.error('🚫 The API cannot function without database access. Terminating Lambda initialization.');
+        const finalError = new Error(`Database connection failed after ${maxRetries} attempts. Last error: ${error.message}`);
+        console.error('CRITICAL: Database connection failed after all retries.');
         appState.dbConnected = false;
         throw finalError;
       }
 
-      // Wait before retry
-      console.log(`⏳ Waiting ${retryDelay * attempt}ms before retry...`);
       await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
     }
   }

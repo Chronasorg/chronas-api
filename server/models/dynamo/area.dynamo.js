@@ -33,7 +33,11 @@ export default class AreaDynamo extends DynamoDocument {
         TableName: TABLE,
         Key: { _id: String(id) }
       }));
-      return Item ? new AreaDynamo(Item) : null;
+      if (!Item) return null;
+      if (Item.data && typeof Item.data === 'object') {
+        restoreEmptyStrings(Item.data);
+      }
+      return new AreaDynamo(Item);
     })();
     return new QueryProxy(promise);
   }
@@ -74,6 +78,10 @@ export default class AreaDynamo extends DynamoDocument {
     return this;
   }
 
+  static list(options = {}) {
+    return new DynamoQuery(AreaDynamo, {}).exec();
+  }
+
   static aggregate = notImplemented(
     'Area.aggregate',
     'Admin aggregation paths (aggregateProvinces, aggregateDimension) are out of scope.'
@@ -83,4 +91,15 @@ export default class AreaDynamo extends DynamoDocument {
     'Area.bulkWrite',
     'Used by area aggregation admin paths — out of scope.'
   );
+}
+
+function restoreEmptyStrings(data) {
+  for (const key in data) {
+    const arr = data[key];
+    if (Array.isArray(arr)) {
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] === null) arr[i] = '';
+      }
+    }
+  }
 }

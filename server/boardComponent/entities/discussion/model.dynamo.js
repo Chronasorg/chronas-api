@@ -131,13 +131,18 @@ class DiscussionQuery {
     if (this._skip) items = items.slice(this._skip);
     if (this._limit) items = items.slice(0, this._limit);
     if (this._popUser) {
+      const userIds = [...new Set(items.map(i => i.user_id || i.user).filter(Boolean))];
+      const userMap = await lookupUsers(userIds);
       for (const item of items) {
-        item.user = { _id: item.user_id || item.user, username: item.user_username, avatar: item.user_avatar };
+        const uid = item.user_id || item.user;
+        item.user = userMap.get(uid) || { _id: uid };
       }
     }
     if (this._popForum) {
+      const forumIds = [...new Set(items.map(i => i.forum_id).filter(Boolean))];
+      const forumMap = await lookupForums(forumIds);
       for (const item of items) {
-        item.forum = { _id: item.forum_id, forum_slug: item.forum_slug, forum_name: item.forum_name };
+        item.forum = forumMap.get(item.forum_id) || { _id: item.forum_id };
       }
     }
     return items;
@@ -182,6 +187,46 @@ async function scanDiscussions() {
     next = out.LastEvaluatedKey;
   } while (next);
   return items;
+}
+
+async function lookupUsers(userIds) {
+  if (!userIds.length) return new Map();
+  const { batchGetWithRetry } = await import('../../../models/dynamo/dynamo-client.js');
+  const userTable = tableName('users');
+  const map = new Map();
+  for (let i = 0; i < userIds.length; i += 100) {
+    const chunk = userIds.slice(i, i + 100);
+    const { Responses } = await batchGetWithRetry({
+      RequestItems: { [userTable]: { Keys: chunk.map(_id => ({ _id: _id.toLowerCase() })) } }
+    });
+    for (const u of (Responses?.[userTable] || [])) {
+      const obj = { _id: u._id, karma: u.karma, loginCount: u.loginCount, authType: u.authType,
+        privilege: u.privilege, count_linked: u.count_linked, count_voted: u.count_voted,
+        count_deleted: u.count_deleted, count_updated: u.count_updated, count_reverted: u.count_reverted,
+        count_created: u.count_created, count_mistakes: u.count_mistakes, subscription: u.subscription,
+        bio: u.bio, username: u.username, name: u.name, email: u.email,
+        createdAt: u.createdAt, lastUpdated: u.lastUpdated };
+      map.set(u._id, obj);
+      if (u.email && u.email !== u._id) map.set(u.email, obj);
+    }
+  }
+  return map;
+}
+
+async function lookupForums(forumIds) {
+  if (!forumIds.length) return new Map();
+  const map = new Map();
+  const client = getDocClient();
+  for (const fid of forumIds) {
+    const { Item } = await client.send(new GetCommand({
+      TableName: TABLE,
+      Key: { PK: `FORUM#${fid}`, SK: 'META' }
+    }));
+    if (Item) {
+      map.set(fid, { _id: fid, forum_slug: Item.forum_slug, forum_name: Item.forum_name });
+    }
+  }
+  return map;
 }
 
 function toDiscussion(item) {

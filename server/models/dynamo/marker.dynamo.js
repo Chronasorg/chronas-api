@@ -49,26 +49,30 @@ export default class MarkerDynamo extends DynamoDocument {
     const {
       start = 0, length = 2000, sort = 'name', order = 'asc',
       filter = '', year, end, delta = 10, includeMarkers = true,
-      typeArray, wikiArray, search, format, migrationDelta
+      typeArray: rawTypeArray, wikiArray: rawWikiArray, search, format, migrationDelta
     } = options;
 
     if (!includeMarkers) return [];
 
+    const typeArray = normalizeArray(rawTypeArray);
+    const wikiArray = normalizeArray(rawWikiArray);
     const actualDelta = migrationDelta || delta;
     let items;
 
-    if (typeArray && Array.isArray(typeArray) && year !== false && year !== undefined) {
+    if (typeArray && year !== false && year !== undefined) {
       items = await queryByTypeAndYear(typeArray, year, actualDelta, end);
-    } else if (wikiArray && Array.isArray(wikiArray)) {
+    } else if (wikiArray) {
       items = await batchGetByWikis(wikiArray);
+    } else if (year !== false && year !== undefined) {
+      items = await scanByYear(year, actualDelta, end);
     } else {
       items = await scanAll();
     }
 
     if (wikiArray && !typeArray) {
-      // already filtered
-    } else if (wikiArray && Array.isArray(wikiArray)) {
-      items = items.filter(m => wikiArray.includes(m.wiki));
+      // already filtered by batchGetByWikis
+    } else if (wikiArray) {
+      items = items.filter(m => wikiArray.includes(m._id));
     }
 
     if (search) {
@@ -137,6 +141,34 @@ export default class MarkerDynamo extends DynamoDocument {
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     return this;
   }
+}
+
+function normalizeArray(val) {
+  if (!val) return null;
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+  return null;
+}
+
+async function scanByYear(year, delta, end) {
+  const yearLo = year - delta;
+  const yearHi = end !== false && end !== undefined ? end : year + delta;
+  const client = getDocClient();
+  const items = [];
+  let next;
+  do {
+    const params = {
+      TableName: TABLE,
+      FilterExpression: '#y BETWEEN :lo AND :hi',
+      ExpressionAttributeNames: { '#y': 'year' },
+      ExpressionAttributeValues: { ':lo': yearLo, ':hi': yearHi }
+    };
+    if (next) params.ExclusiveStartKey = next;
+    const out = await client.send(new ScanCommand(params));
+    if (out.Items) items.push(...out.Items);
+    next = out.LastEvaluatedKey;
+  } while (next);
+  return items;
 }
 
 async function queryByTypeAndYear(typeArray, year, delta, end) {
