@@ -342,10 +342,10 @@ function getLinked(req, res, next, resolve = false) {
     }
 
     const idTypeObj = {};
-    const markerIdList = linkedItems[0].map((el) => {
+    const markerIdList = [...new Set(linkedItems[0].map((el) => {
       idTypeObj[el[0]] = el[1];
       return el[0];
-    });
+    }))];
 
     const metadataAeList = linkedItems[1].filter(el => (el[0].indexOf('ae|') > -1)).map((el) => {
       idTypeObj[el[0]] = el[1];
@@ -353,13 +353,14 @@ function getLinked(req, res, next, resolve = false) {
       return aeArr;
     }) || [];
 
-    const metadataIdList = linkedItems[1].map((el) => {
+    const metadataIdList = [...new Set(linkedItems[1].map((el) => {
       idTypeObj[el[0]] = el[1];
       return el[0];
-    });
+    }))];
 
+    const allMetadataIds = [...new Set(metadataIdList.concat(metadataAeList.map(el => el[1])))];
     const mongoSearchQueryMarker = { _id: { $in: markerIdList } };
-    const mongoSearchQueryMetadata = { _id: { $in: metadataIdList.concat(metadataAeList.map(el => el[1])) } };
+    const mongoSearchQueryMetadata = { _id: { $in: allMetadataIds } };
 
     Metadata.find(mongoSearchQueryMetadata)
       .lean()
