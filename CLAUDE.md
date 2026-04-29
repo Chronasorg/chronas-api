@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Chronas API is a Node.js 22 / Express REST API for the Chronas historical timeline application. It runs as an AWS Lambda function (via `@vendia/serverless-express`) behind API Gateway at `api.chronas.org`, backed by AWS DocumentDB. All API routes are under `/v1`. Uses native ESM (`"type": "module"` in package.json).
+Chronas API is a Node.js 22 / Express REST API for the Chronas historical timeline application. It runs as an AWS Lambda function (via `@vendia/serverless-express`) behind API Gateway at `api.chronas.org`, backed by **DynamoDB** (migrated from DocumentDB in April 2026). All API routes are under `/v1`. Uses native ESM (`"type": "module"` in package.json).
 
 ## Build & Development Commands
 
@@ -25,23 +25,32 @@ cross-env NODE_ENV=test mocha --require server/tests/helpers.js server/tests/int
 
 The dev server uses `mongodb-memory-server` (no external MongoDB needed). Key required env vars: `JWT_SECRET`. Entry point for Lambda is `lambda-handler.js` (the legacy `index.js` was removed 2025-10-02 during the Lambda migration).
 
-## Production Architecture (AWS, eu-west-1, chronas-prod)
+## Production Architecture (AWS, eu-west-1, account 937826731833)
 
-- **Lambda**: `ChronasApiLambdaStackV2` — nodejs22.x, handler `lambda-handler.handler`, 512MB, 30s timeout
+- **Lambda**: `ChronasApiLambdaStackV2` — nodejs22.x, handler `lambda-handler.handler`, 512MB, 30s timeout, **NOT in VPC**
 - **API Gateway**: HTTP API (`ChronasApiGateway`) with custom domain `api.chronas.org`
-- **Database**: DocumentDB cluster (`databaseb269d8bb-phnragzw0yth`) with TLS, SCRAM-SHA-1 auth
-- **Secrets**: AWS Secrets Manager — `/chronas/docdb/newpassword` (DB creds), `/chronas/secrets` (app config)
-- **Infrastructure as Code**: CDK stacks in separate `chronas-cdk` repo
-- **Deployment**: `npm run deploy:prod` (runs CDK deploy from `../chronas-cdk`)
-- **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org`
+- **Database**: DynamoDB (10 tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
+- **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
+- **Secrets**: AWS Secrets Manager — `/chronas/secrets` (JWT secret, OAuth keys)
+- **Deployment**: GitHub Actions (`deploy-prod.yml`) on push to `master` — tests → deploy → Postman → auto-rollback on failure
+- **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org` via CloudFront
+- **Cost**: ~$8-10/mo (DynamoDB ~$5, API Gateway ~$1.50, other ~$2)
 
 ### Lambda Entry Point
 
-[lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config, connects to DocumentDB (with retry logic), then creates the Express app. Connection and app instance are cached across warm invocations.
+[lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config, skips DocumentDB (all DynamoDB flags ON via `allDynamoFlagsOn()`), then creates the Express app. App instance is cached across warm invocations.
 
-### Legacy (disabled)
+### DynamoDB Tables (10)
 
-Azure Pipelines, Travis CI, Docker/Kubernetes configs are no longer used. AWS CodeBuild (`chronas-api-lambda-deploy-standalone`) webhook has been **disabled** — GitHub Actions is the sole deployment pipeline. CodeBuild project remains available for emergency/manual deploys only.
+`chronas-markers`, `chronas-areas`, `chronas-metadata`, `chronas-users`, `chronas-flags`, `chronas-revisions`, `chronas-links`, `chronas-board`, `chronas-collections`, `chronas-games`
+
+Feature flags (`USE_DYNAMODB_*` env vars) route each model to DynamoDB. All in-scope flags are ON in production. Models live in `server/models/dynamo/`.
+
+### Legacy (disabled/deleted)
+
+- **DocumentDB**: Deleted 2026-04-29. Final snapshot: `chronas-docdb-final-snapshot-2026-04-29`.
+- **VPC**: Lambda removed from VPC. No VPC endpoints remain.
+- Azure Pipelines, Travis CI, Docker/Kubernetes, CodeBuild — all disabled. GitHub Actions is the sole deployment pipeline.
 
 ## Code Architecture
 
@@ -53,7 +62,7 @@ Azure Pipelines, Travis CI, Docker/Kubernetes configs are no longer used. AWS Co
 - [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Passport, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
 - [performance.js](config/performance.js) — Cold/warm start tracking, Lambda metrics
 
-**Request flow**: API Gateway → Lambda handler → `@vendia/serverless-express` → Express middleware → `/v1` routes → controllers → Mongoose models → DocumentDB
+**Request flow**: API Gateway → Lambda handler → `@vendia/serverless-express` → Express middleware → `/v1` routes → controllers → DynamoDB models (`server/models/dynamo/`)
 
 **Conventions**:
 - Routes, controllers, and models follow 1:1 naming per resource (e.g., `marker.route.js` / `marker.controller.js` / `marker.model.js`)
@@ -68,13 +77,29 @@ Azure Pipelines, Travis CI, Docker/Kubernetes configs are no longer used. AWS Co
 - Patreon subscribers bypass privilege checks
 - OAuth: Facebook, Google, GitHub active; Twitter commented out during modernization
 
-**Database specifics**:
-- User model uses email as `_id`
-- Marker model supports geospatial coordinates (`[longitude, latitude]`) and year-based filtering
+**Database (DynamoDB)**:
+- User model uses email (lowercased) as `_id`
+- Marker model: GSI-TypeYear for the hot query path (year + type filter), GSI-PartOf for area lookups
 - Marker types: `'a', 'at', 'e', 'm', 'op', 'p', 'r', 's', 'c', 'ca', 'w'`
-- DocumentDB requires `retryWrites: false`, `authMechanism: SCRAM-SHA-1`, TLS with `global-bundle.pem` cert
+- Links: normalized per-entity items in `chronas-links` table (decomposed from monolithic doc)
+- Large metadata items (provinces, ruler) are gzip-compressed transparently via `compression.js`
+- Areas: `null` values in province arrays are restored to `""` on read for frontend compatibility
 
 ## Testing
 
-- **Unit/Integration tests**: Mocha + Chai + Supertest with mock database (see `server/tests/helpers/mock-database.js`). Test env auto-configured in `server/tests/helpers.js`.
-- **Postman/Newman tests**: Collections in `PostmanTests/` for API-level testing against local, dev, or prod environments.
+- **Unit/Integration tests**: Mocha + Chai + Supertest (314 passing). DynamoDB models tested against dynalite (in-memory emulator). Test env auto-configured in `server/tests/helpers.js`.
+- **Postman/Newman tests**: `PostmanTests/chronas-enhanced.postman_collection.json` — 37 requests, 76 assertions. Run via `npm run test:postman:prod` or automatically in GitHub Actions post-deploy (with auto-rollback on failure).
+- **Playwright E2E**: `e2e-tests/dev-smoke.spec.js` — 12 tests covering API + frontend.
+
+## CDK Stacks (chronas-cdk repo)
+
+The `chronas-cdk` repo manages infrastructure but has known drift. **Do NOT run `cdk deploy`**.
+
+| Stack | Status | Manages |
+|---|---|---|
+| `ChronasApiLambdaStackV2` | Active | Lambda function, IAM role, SQS DLQ, CloudWatch alarms |
+| `ChronasFrontendS3Stack` | Active | S3 bucket, CloudFront distribution, cache policies |
+| `ChronasApiLambdaStack` (V1) | Orphaned | Old Lambda — safe to delete |
+| `BuildChronasAPi` | Orphaned | CodeBuild (disabled) + ECR repos — safe to delete |
+
+Note: DynamoDB tables, VPC endpoints, and IAM inline policies were created via CLI scripts (not CDK). API Gateway was created by CDK but routing is stable.
