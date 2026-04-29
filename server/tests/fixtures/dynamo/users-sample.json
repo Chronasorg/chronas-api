@@ -1,0 +1,7 @@
+[
+  {"_id": "admin@chronas.org", "username": "admin", "email": "admin@chronas.org", "password": "$2b$10$Log65OdNuHD2EPhsen4Kje6Gl8NemKD23eaByVKcquVabFy9CEeP.", "privilege": 5, "karma": 100, "loginCount": 500, "subscription": "patreon", "_entity": "USER"},
+  {"_id": "testuser@test.de", "username": "testUser", "email": "testuser@test.de", "password": "$2b$10$Log65OdNuHD2EPhsen4Kje6Gl8NemKD23eaByVKcquVabFy9CEeP.", "privilege": 1, "karma": 10, "loginCount": 5, "_entity": "USER"},
+  {"_id": "editor@chronas.org", "username": "editor", "email": "editor@chronas.org", "password": "$2b$10$Log65OdNuHD2EPhsen4Kje6Gl8NemKD23eaByVKcquVabFy9CEeP.", "privilege": 3, "karma": 50, "loginCount": 100, "_entity": "USER"},
+  {"_id": "oauth@gmail.com", "username": "googleUser", "email": "oauth@gmail.com", "privilege": 1, "karma": 5, "loginCount": 2, "authType": "google", "_entity": "USER"},
+  {"_id": "newbie@test.com", "username": "newbie", "email": "newbie@test.com", "password": "$2b$10$Log65OdNuHD2EPhsen4Kje6Gl8NemKD23eaByVKcquVabFy9CEeP.", "privilege": 1, "karma": 1, "loginCount": 0, "_entity": "USER"}
+]

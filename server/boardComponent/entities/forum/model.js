@@ -1,11 +1,13 @@
-/**
- * forum model
- */
-import mongoose from 'mongoose';
+import { config } from '../../../../config/config.js';
 
-const forumSchema = mongoose.Schema({
-  forum_slug: String,
-  forum_name: String
-});
+let Forum;
 
-export default mongoose.model('forum', forumSchema);
+if (config.dynamodb?.useBoard) {
+  const mod = await import('./model.dynamo.js');
+  Forum = mod.default;
+} else {
+  const mod = await import('./model.mongoose.js');
+  Forum = mod.default;
+}
+
+export default Forum;

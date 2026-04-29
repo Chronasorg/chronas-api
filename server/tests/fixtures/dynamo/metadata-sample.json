@@ -1,0 +1,16 @@
+[
+  {"_id": "ruler", "type": "g", "data": {"RUS": ["Russia", "#FF0000", "Russia", "RUS_flag"], "FRA": ["France", "#0000FF", "France", "FRA_flag"], "HRE": ["Holy Roman Empire", "#FFD700", "Holy_Roman_Empire", "HRE_flag"]}},
+  {"_id": "culture", "type": "g", "data": {"east_slavic": ["East Slavic", "#AA0000", "East_Slavs"], "french": ["French", "#0000AA", "French_people"], "german": ["German", "#DDAA00", "Germans"]}},
+  {"_id": "religion", "type": "g", "data": {"orthodox": ["Orthodox", "#880088", "Eastern_Orthodox", "christian", "orthodox_icon"], "catholic": ["Catholic", "#FFFF00", "Catholic_Church", "christian", "catholic_icon"]}},
+  {"_id": "religionGeneral", "type": "g", "data": {"christian": ["Christianity", "#FFAAFF", "Christianity", "christian_icon"]}},
+  {"_id": "capital", "type": "g", "data": {"Kiev": ["Kiev", "Kiev"], "Paris": ["Paris", "Paris"], "Prague": ["Prague", "Prague"]}},
+  {"_id": "province", "type": "g", "data": {"Kiev": "Kiev", "Novgorod": "Novgorod", "Bohemia": "Bohemia"}},
+  {"_id": "e_Battle_of_Hastings", "type": "e", "subtype": "ew", "year": 1066, "score": 85, "name": "Battle of Hastings", "wiki": "Battle_of_Hastings", "coo": [-0.49, 50.91], "data": {"participants": [["ENG"], ["NOR"]], "content": "The decisive Norman victory"}},
+  {"_id": "e_Fall_of_Constantinople", "type": "e", "subtype": "ew", "year": 1453, "score": 95, "name": "Fall of Constantinople", "wiki": "Fall_of_Constantinople", "coo": [28.98, 41.01], "data": {"participants": [["BYZ"], ["OTT"]]}},
+  {"_id": "e_French_Revolution", "type": "e", "subtype": "ei", "year": 1789, "score": 90, "name": "French Revolution", "wiki": "French_Revolution", "coo": [2.35, 48.86], "data": {"content": "Major social upheaval"}},
+  {"_id": "i_Notre_Dame", "type": "i", "subtype": "monuments", "year": 1163, "score": 70, "name": "Notre-Dame de Paris", "wiki": "Notre-Dame_de_Paris", "coo": [2.35, 48.85], "data": {"poster": "notre_dame.jpg"}},
+  {"_id": "i_Colosseum_art", "type": "i", "subtype": "monuments", "year": 80, "score": 75, "name": "Colosseum", "wiki": "Colosseum", "coo": [12.49, 41.89], "data": {"poster": "colosseum.jpg"}},
+  {"_id": "ap_kiev", "type": "ap", "data": {"ruler": [{"1000": "RUS"}, {"1500": "LIT"}], "culture": [{"1000": "east_slavic"}, {"1500": "ruthenian"}]}},
+  {"_id": "a_ruler_RUS", "type": "a_ruler", "data": {"influence": [{"1000": [5, 50000, 10]}, {"1500": [2, 80000, 5]}]}},
+  {"_id": "test_metadata", "type": "i", "subtype": "test", "year": 2020, "score": 0, "name": "Test Metadata", "data": {"test": true}}
+]

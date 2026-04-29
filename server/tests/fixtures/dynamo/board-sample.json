@@ -1,0 +1,12 @@
+[
+  {"PK": "FORUM#f001", "SK": "META", "entityType": "forum", "_id": "f001", "forum_slug": "general", "forum_name": "General Discussion"},
+  {"PK": "FORUM#f002", "SK": "META", "entityType": "forum", "_id": "f002", "forum_slug": "history", "forum_name": "History Topics"},
+
+  {"PK": "DISC#d001", "SK": "META", "entityType": "discussion", "_id": "d001", "forum_id": "f001", "forum_slug": "general", "forum_name": "General Discussion", "discussion_slug": "hello-world", "user_id": "admin@chronas.org", "user": "admin@chronas.org", "user_username": "admin", "user_avatar": "admin.jpg", "date": "2026-04-01T10:00:00Z", "title": "Hello World", "qa_id": "!na", "content": {"text": "First post"}, "favorites": [], "tags": ["intro"], "pinned": true},
+  {"PK": "DISC#d002", "SK": "META", "entityType": "discussion", "_id": "d002", "forum_id": "f001", "forum_slug": "general", "forum_name": "General Discussion", "discussion_slug": "test-thread", "user_id": "editor@chronas.org", "user": "editor@chronas.org", "user_username": "editor", "date": "2026-04-02T12:00:00Z", "title": "Test Thread", "qa_id": "1:ae|ruler|KHI", "content": {"text": "Testing"}, "favorites": [], "tags": [], "pinned": false},
+  {"PK": "DISC#d003", "SK": "META", "entityType": "discussion", "_id": "d003", "forum_id": "f002", "discussion_slug": "roman-empire", "user_id": "testuser@test.de", "user": "testuser@test.de", "user_username": "testUser", "date": "2026-04-03T14:00:00Z", "title": "Roman Empire Discussion", "qa_id": "!na", "content": {"text": "About Rome"}, "favorites": [], "tags": ["rome"], "pinned": false},
+
+  {"PK": "DISC#d001", "SK": "OPINION#o001", "entityType": "opinion", "_id": "o001", "forum_id": "f001", "discussion_id": "d001", "user_id": "editor@chronas.org", "user": "editor@chronas.org", "user_username": "editor", "date": "2026-04-01T11:00:00Z", "score": 5, "content": {"text": "Great first post!"}},
+  {"PK": "DISC#d001", "SK": "OPINION#o002", "entityType": "opinion", "_id": "o002", "forum_id": "f001", "discussion_id": "d001", "user_id": "testuser@test.de", "user": "testuser@test.de", "user_username": "testUser", "date": "2026-04-01T12:00:00Z", "score": 2, "content": {"text": "Welcome!"}},
+  {"PK": "DISC#d002", "SK": "OPINION#o003", "entityType": "opinion", "_id": "o003", "forum_id": "f001", "discussion_id": "d002", "user_id": "admin@chronas.org", "user": "admin@chronas.org", "user_username": "admin", "date": "2026-04-02T13:00:00Z", "score": 0, "content": {"text": "Looks good"}}
+]

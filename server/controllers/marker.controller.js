@@ -4,6 +4,9 @@ import Marker from '../models/marker.model.js';
 import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
 import { config } from '../../config/config.js';
 import Metadata from '../models/metadata.model.js';
+import * as linksStore from '../models/dynamo/links-store.js';
+
+const useDynamoLinks = config.dynamodb?.useMetadata;
 
 /**
  * Load marker and append to req.
@@ -111,64 +114,39 @@ function update(req, res, next, fromRevision = false) {
 
     markerNew.save()
       .then((savedMarker) => {
-        // return res.send("OK")
         Marker.get(oldId)
           .then((origMarker) => {
-            origMarker.deleteOne() // removing the just created
+            origMarker.deleteOne()
               .then(() => {
-                Metadata.get('links', req.method)
-                  .then((links) => {
-                    if (links) {
+                // Rename links: update all references from oldId to newId
+                const renamePromise = useDynamoLinks
+                  ? linksStore.renameEntity(`0:${oldId}`, `0:${newId}`)
+                  : Metadata.get('links', req.method).then((links) => {
+                      if (!links) return;
                       const linkedItems = links.data[(`0:${oldId}`)];
-                      if (linkedItems) {
-                        const linkedMarkers = linkedItems[0];
-                        const linkedMetadata = linkedItems[1];
+                      if (!linkedItems) return links.save();
+                      const linkedMarkers = linkedItems[0];
+                      const linkedMetadata = linkedItems[1];
+                      linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
+                        const currVal = links.data[key];
+                        if (currVal) {
+                          const mediaIndex = currVal[0].findIndex(el => el[0] === oldId);
+                          const mapIndex = currVal[1].findIndex(el => el[0] === oldId);
+                          if (mediaIndex > -1) currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]];
+                          if (mapIndex > -1) currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]];
+                          if (mediaIndex > -1 || mapIndex > -1) links.data[key] = currVal;
+                        }
+                      });
+                      links.data[(`0:${newId}`)] = linkedItems;
+                      delete links.data[(`0:${oldId}`)];
+                      links.markModified('data');
+                      return links.save();
+                    });
 
-                        linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
-                          const currVal = links.data[key];
-                          if (currVal) {
-                            const mediaIndex = currVal[0].findIndex(el => el[0] === oldId);
-                            const mapIndex = currVal[1].findIndex(el => el[0] === oldId);
-                            const dirtyMedia = mediaIndex > -1;
-                            const dirtyMap = mapIndex > -1;
-
-                            if (dirtyMedia) {
-                              currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]];
-                            }
-                            if (dirtyMap) {
-                              currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]];
-                            }
-                            if (dirtyMap || dirtyMedia) {
-                              links.data[key] = currVal;
-                            }
-                          }
-                        });
-
-                        links.data[(`0:${newId}`)] = linkedItems;
-                        delete links.data[(`0:${oldId}`)];
-                        links.markModified('data');
-                      }
-
-                      links.save()
-                        .then(() => {
-                          if (!fromRevision) {
-                            res.json(savedMarker);
-                          }
-                        })
-                        .catch((err) => {
-                          if (!fromRevision) {
-                            res.send('NOTOK');
-                          }
-                        });
-                    }
-                  })
-                  .catch((err) => {
-                    if (!fromRevision) {
-                      res.send('NOTOK');
-                    }
-                  });
+                renamePromise
+                  .then(() => { if (!fromRevision) res.json(savedMarker); })
+                  .catch(() => { if (!fromRevision) res.send('NOTOK'); });
               })
-              // .then(deletedMarker => next(new APICustomResponse(`${deletedMarker} deleted successfully`, 204, true)))
               .catch(e => next(e));
           }).catch(e => next(e));
       })
@@ -210,15 +188,7 @@ function list(req, res, next) {
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
-      if (count) {
-        Marker.estimatedDocumentCount().then((markerCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-          res.set('X-Total-Count', markerCount);
-          res.json(markers);
-        });
-      } else {
-        res.json(markers);
-      }
+      res.json(markers);
     })
     .catch(e => next(e));
 }

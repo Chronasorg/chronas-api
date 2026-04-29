@@ -1,21 +1,13 @@
-/**
- * discussion model
- */
-import mongoose from 'mongoose';
+import { config } from '../../../../config/config.js';
 
-const discussionSchema = mongoose.Schema({
-  forum_id: mongoose.Schema.ObjectId,
-  forum: { type: mongoose.Schema.ObjectId, ref: 'forum' },
-  discussion_slug: String,
-  user_id: String,
-  user: { type: String, ref: 'User' },
-  date: Date,
-  title: String,
-  qa_id: { type: String, default: '!na' },
-  content: Object,
-  favorites: Array,
-  tags: Array,
-  pinned: Boolean
-}, { usePushEach: true });
+let Discussion;
 
-export default mongoose.model('discussion', discussionSchema);
+if (config.dynamodb?.useBoard) {
+  const mod = await import('./model.dynamo.js');
+  Discussion = mod.default;
+} else {
+  const mod = await import('./model.mongoose.js');
+  Discussion = mod.default;
+}
+
+export default Discussion;

@@ -4,9 +4,12 @@ import Metadata from '../models/metadata.model.js';
 import Marker from '../models/marker.model.js';
 import APIError from '../helpers/APIError.js';
 import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js';
+import * as linksStore from '../models/dynamo/links-store.js';
 
 import userCtrl from './user.controller.js';
 import revisionCtrl from './revision.controller.js';
+
+const useDynamoLinks = config.dynamodb?.useMetadata;
 
 
 const linkedTypeAccessor = {
@@ -47,11 +50,16 @@ const iconAccByAEtype = {
  */
 function load(req, res, next, id) {
   if (req.method === 'PUT' && initItemsAndLinksToRefresh.includes(id)) {
-    if (id === 'links') {
-      cache.del('links');
-    } else {
+    if (id !== 'links') {
       cache.del('init');
     }
+  }
+
+  // When DynamoDB is active, skip loading the monolithic links doc.
+  // getLinked and updateLinkAtom read from links-store directly.
+  if (id === 'links' && useDynamoLinks) {
+    req.entity = { _id: 'links', data: {} };
+    return next();
   }
 
   if (req.method === 'GET' && id === 'links') {
@@ -238,39 +246,44 @@ function updateLink(addLink) {
   };
 }
 
-function updateLinkAtom(req, res, next, addLink, resolve = false) {
+function updateLinkAtom(req, res, next, isAddLink, resolve = false) {
   if (!resolve) {
     const { username } = req.auth;
     userCtrl.changePoints(username, 'linked', 1);
   }
 
-  const { linkedItemType1 } = req.body;
-  const { linkedItemType2 } = req.body;
-  const { linkedItemKey1 } = req.body;
-  const { linkedItemKey2 } = req.body;
-  const { type1 } = req.body;
-  const { type2 } = req.body;
-  const prevValue1 = req.entity.data[`${linkedTypeAccessor[linkedItemType1]}:${linkedItemKey1}`] || false;
-  const prevValue2 = req.entity.data[`${linkedTypeAccessor[linkedItemType2]}:${linkedItemKey2}`] || false;
+  const { linkedItemType1, linkedItemType2, linkedItemKey1, linkedItemKey2, type1, type2 } = req.body;
+  const sourceRef = `${linkedTypeAccessor[linkedItemType1]}:${linkedItemKey1}`;
+  const targetRef = `${linkedTypeAccessor[linkedItemType2]}:${linkedItemKey2}`;
 
-  let newNextBody1 = (prevValue1) || [
-    [],
-    []
-  ];
+  if (useDynamoLinks) {
+    const linkOp = isAddLink
+      ? linksStore.addLink(sourceRef, targetRef, type1, type2)
+      : linksStore.removeLink(sourceRef, targetRef);
 
-  let newNextBody2 = (prevValue2) || [
-    [],
-    []
-  ];
+    linkOp.then(() => {
+      if (resolve) return resolve();
+      revisionCtrl.addUpdateSingleRevision(req, res, next);
+    }).catch((err) => {
+      if (resolve) return resolve();
+      next(err);
+    });
+    return;
+  }
 
-  if (addLink) {
+  // Legacy DocumentDB path
+  const prevValue1 = req.entity.data[sourceRef] || false;
+  const prevValue2 = req.entity.data[targetRef] || false;
+
+  let newNextBody1 = (prevValue1) || [[], []];
+  let newNextBody2 = (prevValue2) || [[], []];
+
+  if (isAddLink) {
     if (newNextBody1[linkedTypeAccessor[linkedItemType2]].map(el => el[0]).indexOf(linkedItemKey2) === -1) {
-      newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]); // [linkedItemKey2, type2] ?
+      newNextBody1[linkedTypeAccessor[linkedItemType2]].push([linkedItemKey2, type2]);
     } else if (type2 === 'b') {
       newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].map((el) => {
-        if (el[0] === linkedItemKey2) {
-          el[1] = 'b';
-        }
+        if (el[0] === linkedItemKey2) el[1] = 'b';
         return el;
       });
     }
@@ -278,27 +291,24 @@ function updateLinkAtom(req, res, next, addLink, resolve = false) {
       newNextBody2[linkedTypeAccessor[linkedItemType1]].push([linkedItemKey1, type1]);
     } else if (type1 === 'b') {
       newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].map((el) => {
-        if (el[0] === linkedItemKey1) {
-          el[1] = 'b';
-        }
+        if (el[0] === linkedItemKey1) el[1] = 'b';
         return el;
       });
     }
   } else {
     newNextBody1[linkedTypeAccessor[linkedItemType2]] = newNextBody1[linkedTypeAccessor[linkedItemType2]].filter(el => el[0] !== linkedItemKey2);
     newNextBody2[linkedTypeAccessor[linkedItemType1]] = newNextBody2[linkedTypeAccessor[linkedItemType1]].filter(el => el[0] !== linkedItemKey1);
-
-    if (newNextBody1[linkedTypeAccessor[linkedItemType2]] && newNextBody1[0].length === 0 && newNextBody1[1].length === 0) newNextBody1 = -1;
-    if (newNextBody2[linkedTypeAccessor[linkedItemType2]] && newNextBody2[0].length === 0 && newNextBody2[1].length === 0) newNextBody2 = -1;
+    if (newNextBody1[0].length === 0 && newNextBody1[1].length === 0) newNextBody1 = -1;
+    if (newNextBody2[0].length === 0 && newNextBody2[1].length === 0) newNextBody2 = -1;
   }
 
   req.body.nextBody = newNextBody1;
-  req.body.subEntityId = `${linkedTypeAccessor[linkedItemType1]}:${linkedItemKey1}`;
+  req.body.subEntityId = sourceRef;
   updateSinglePromise(req, res, next, 'revision')
     .then(() => {
       if (!resolve) revisionCtrl.addUpdateSingleRevision(req, res, next, false);
       req.body.nextBody = newNextBody2;
-      req.body.subEntityId = `${linkedTypeAccessor[linkedItemType2]}:${linkedItemKey2}`;
+      req.body.subEntityId = targetRef;
       return updateSinglePromise(req, res, next, 'revision')
         .then(() => {
           if (resolve) return resolve();
@@ -315,123 +325,118 @@ function getLinked(req, res, next, resolve = false) {
 
   if (!sourceItem) return res.status(400).send('query parameter "source" is required in the form of 0:markerId or 1:metadataId.');
 
-  const linkedItems = req.entity.data[sourceItem] || false;
+  // Get linked items — from links-store (DynamoDB) or monolithic doc (DocumentDB)
+  const linkedItemsPromise = useDynamoLinks
+    ? linksStore.getLinked(sourceItem).then(result => {
+        if (result.markers.length === 0 && result.metadata.length === 0) return false;
+        return [result.markers, result.metadata];
+      })
+    : Promise.resolve(req.entity.data[sourceItem] || false);
 
-  const resObj = {
-    map: [],
-    media: []
-  };
+  linkedItemsPromise.then((linkedItems) => {
+    const resObj = { map: [], media: [] };
 
-  if (!linkedItems) {
-    if (resolve) {
-      return resolve(resObj);
+    if (!linkedItems) {
+      if (resolve) return resolve(resObj);
+      return res.json(resObj);
     }
-    return res.json(resObj);
-  }
 
-  const idTypeObj = {};
-  const markerIdList = linkedItems[0].map((el) => {
-    idTypeObj[el[0]] = el[1];
-    return el[0];
-  });
+    const idTypeObj = {};
+    const markerIdList = [...new Set(linkedItems[0].map((el) => {
+      idTypeObj[el[0]] = el[1];
+      return el[0];
+    }))];
 
-  const metadataAeList = linkedItems[1].filter(el => (el[0].indexOf('ae|') > -1)).map((el) => {
-    idTypeObj[el[0]] = el[1];
-    const aeArr = el[0].split('|');
-    return aeArr;
-  }) || [];
+    const metadataAeList = linkedItems[1].filter(el => (el[0].indexOf('ae|') > -1)).map((el) => {
+      idTypeObj[el[0]] = el[1];
+      const aeArr = el[0].split('|');
+      return aeArr;
+    }) || [];
 
-  const metadataIdList = linkedItems[1].map((el) => {
-    idTypeObj[el[0]] = el[1];
-    return el[0];
-  });
+    const metadataIdList = [...new Set(linkedItems[1].map((el) => {
+      idTypeObj[el[0]] = el[1];
+      return el[0];
+    }))];
 
-  const mongoSearchQueryMarker = { _id: { $in: markerIdList } };
-  const mongoSearchQueryMetadata = { _id: { $in: metadataIdList.concat(metadataAeList.map(el => el[1])) } };
+    const allMetadataIds = [...new Set(metadataIdList.concat(metadataAeList.map(el => el[1])))];
+    const mongoSearchQueryMarker = { _id: { $in: markerIdList } };
+    const mongoSearchQueryMetadata = { _id: { $in: allMetadataIds } };
 
-  // TODO: links collection should be cached!
-  Metadata.find(mongoSearchQueryMetadata)
-    .lean()
-    .exec()
-    .then((metadataPre) => {
-      const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || [];
-      const aeEntities = [];
-      metadataAeList.forEach((el) => {
-        const metaData = metadataPre.find(mEl => mEl._id === el[1]).data[el[2]];
-        if (metaData) {
-          aeEntities.push({
-            properties: {
-              n: metaData[nameAccByAEtype[el[1]]],
-              w: metaData[wikiAccByAEtype[el[1]]],
-              t: `${el[0]}|${el[1]}`,
-              i: metaData[iconAccByAEtype[el[1]]],
-              aeId: el.join('|'),
-              ct: 'area'
-            },
-            geometry: {
-            },
-            type: 'Feature'
-          });
-        }
-      });
-
-      Marker.find(mongoSearchQueryMarker)
-        .lean()
-        .exec()
-        .then((markers) => {
-          const fullList = aeEntities.concat((markers || []).map(feature => ({
-            properties: {
-              n: feature.name || (feature.data || {}).title || feature.name,
-              w: feature._id,
-              y: feature.year,
-              t: feature.type,
-              f: (feature.data || {}).geojson,
-              c: (feature.data || {}).content,
-              src: (feature.data || {}).source,
-              s: feature.score,
-              ct: 'marker'
-            },
-            geometry: {
-              coordinates: feature.coo,
-              type: 'Point'
-            },
-            type: 'Feature'
-          }))).concat(metadata.map(feature => ({
-            properties: {
-              n: feature.name || (feature.data || {}).title || feature._id,
-              id: feature._id,
-              w: feature.wiki || feature._id,
-              s: feature.score,
-              src: (feature.data || {}).source,
-              y: feature.year,
-              f: (feature.data || {}).geojson,
-              c: (feature.data || {}).content,
-              t: feature.subtype || feature.type,
-              ct: 'metadata'
-            },
-            geometry: {
-              coordinates: feature.coo,
-              type: 'Point'
-            },
-            type: 'Feature'
-          })));
-
-          fullList.forEach((el) => {
-            if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
-              resObj.map.push(el);
-            }
-            if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
-              resObj.media.push(el);
-            }
-          });
-
-          if (resolve) {
-            return resolve(resObj);
+    Metadata.find(mongoSearchQueryMetadata)
+      .lean()
+      .exec()
+      .then((metadataPre) => {
+        const metadata = metadataPre.filter(el => !metadataAeList.map(el => el[1]).includes(el._id)) || [];
+        const aeEntities = [];
+        metadataAeList.forEach((el) => {
+          const metaDataItem = metadataPre.find(mEl => mEl._id === el[1]);
+          const metaData = metaDataItem ? metaDataItem.data[el[2]] : null;
+          if (metaData) {
+            aeEntities.push({
+              properties: {
+                n: metaData[nameAccByAEtype[el[1]]],
+                w: metaData[wikiAccByAEtype[el[1]]],
+                t: `${el[0]}|${el[1]}`,
+                i: metaData[iconAccByAEtype[el[1]]],
+                aeId: el.join('|'),
+                ct: 'area'
+              },
+              geometry: {},
+              type: 'Feature'
+            });
           }
-          return res.json(resObj);
         });
-    })
-    .catch(e => res.status(500).send(e));
+
+        Marker.find(mongoSearchQueryMarker)
+          .lean()
+          .exec()
+          .then((markers) => {
+            const fullList = aeEntities.concat((markers || []).map(feature => ({
+              properties: {
+                n: feature.name || (feature.data || {}).title || feature.name,
+                w: feature._id,
+                y: feature.year,
+                t: feature.type,
+                f: (feature.data || {}).geojson,
+                c: (feature.data || {}).content,
+                src: (feature.data || {}).source,
+                s: feature.score,
+                ct: 'marker'
+              },
+              geometry: { coordinates: feature.coo, type: 'Point' },
+              type: 'Feature'
+            }))).concat(metadata.map(feature => ({
+              properties: {
+                n: feature.name || (feature.data || {}).title || feature._id,
+                id: feature._id,
+                w: feature.wiki || feature._id,
+                s: feature.score,
+                src: (feature.data || {}).source,
+                y: feature.year,
+                f: (feature.data || {}).geojson,
+                c: (feature.data || {}).content,
+                t: feature.subtype || feature.type,
+                ct: 'metadata'
+              },
+              geometry: { coordinates: feature.coo, type: 'Point' },
+              type: 'Feature'
+            })));
+
+            fullList.forEach((el) => {
+              if (MAPIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
+                resObj.map.push(el);
+              }
+              if (MEDIAIDS.includes(idTypeObj[el.properties.aeId || el.properties.id || el.properties.w])) {
+                resObj.media.push(el);
+              }
+            });
+
+            if (resolve) return resolve(resObj);
+            return res.json(resObj);
+          });
+      })
+      .catch(e => res.status(500).send(e));
+  }).catch(e => res.status(500).send(e));
 }
 
 /**
@@ -455,15 +460,7 @@ function list(req, res, next) {
 
   Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
-      if (count) {
-        Metadata.countDocuments().exec().then((metadataCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-          res.set('X-Total-Count', metadataCount);
-          res.json(metadata);
-        });
-      } else {
-        res.json(metadata);
-      }
+      res.json(metadata);
     })
     .catch(e => next(e));
 }

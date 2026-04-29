@@ -1,0 +1,7 @@
+[
+  {"_id": "flag-001", "fullUrl": "%2Fv1%2Fmarkers%2FBattle_of_Hastings", "resource": "markers", "subEntityId": "Battle_of_Hastings", "timestamp": "2026-01-15T10:00:00Z", "fixed": false},
+  {"_id": "flag-002", "fullUrl": "%2Fv1%2Fmetadata%2Fruler", "resource": "metadata", "subEntityId": "ruler", "timestamp": "2026-02-01T12:30:00Z", "fixed": true},
+  {"_id": "flag-003", "fullUrl": "%2Fv1%2Fareas%2F1000", "resource": "areas", "subEntityId": "1000", "wrongWiki": "wrong_article", "timestamp": "2026-03-10T08:00:00Z", "fixed": false},
+  {"_id": "flag-004", "fullUrl": "%2Fv1%2Fmarkers%2FRome", "resource": "markers", "subEntityId": "Rome", "timestamp": "2026-04-01T16:00:00Z", "fixed": false},
+  {"_id": "flag-005", "fullUrl": "%2Fv1%2Fmetadata%2Fculture", "resource": "metadata", "subEntityId": "culture", "timestamp": "2025-12-25T00:00:00Z", "fixed": true}
+]

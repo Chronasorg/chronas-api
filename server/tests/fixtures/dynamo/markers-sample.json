@@ -1,0 +1,22 @@
+[
+  {"_id": "Battle_of_Hastings", "name": "Battle of Hastings", "year": 1066, "type": "e", "coo": [-0.49, 50.91], "wiki": "Battle_of_Hastings", "partOf": "Norman_Conquest"},
+  {"_id": "Battle_of_Waterloo", "name": "Battle of Waterloo", "year": 1815, "type": "e", "coo": [4.41, 50.68], "wiki": "Battle_of_Waterloo"},
+  {"_id": "Battle_of_Stalingrad", "name": "Battle of Stalingrad", "year": 1942, "type": "e", "coo": [44.52, 48.71], "wiki": "Battle_of_Stalingrad"},
+  {"_id": "Fall_of_Constantinople", "name": "Fall of Constantinople", "year": 1453, "type": "e", "coo": [28.98, 41.01], "wiki": "Fall_of_Constantinople"},
+  {"_id": "Paris", "name": "Paris", "year": -300, "type": "c", "coo": [2.35, 48.86], "wiki": "Paris", "capital": true, "end": 3000},
+  {"_id": "Rome", "name": "Rome", "year": -753, "type": "c", "coo": [12.49, 41.89], "wiki": "Rome", "capital": true, "end": 3000},
+  {"_id": "Constantinople", "name": "Constantinople", "year": 330, "type": "c", "coo": [28.98, 41.01], "wiki": "Constantinople", "capital": true, "end": 1453},
+  {"_id": "London", "name": "London", "year": 43, "type": "c", "coo": [-0.12, 51.51], "wiki": "London", "capital": true, "end": 3000},
+  {"_id": "Genghis_Khan", "name": "Genghis Khan", "year": 1162, "type": "p", "coo": [111.97, 48.26], "wiki": "Genghis_Khan", "end": 1227},
+  {"_id": "Napoleon", "name": "Napoleon Bonaparte", "year": 1769, "type": "p", "coo": [9.15, 41.92], "wiki": "Napoleon", "end": 1821},
+  {"_id": "Julius_Caesar", "name": "Julius Caesar", "year": -100, "type": "p", "coo": [12.49, 41.89], "wiki": "Julius_Caesar", "end": -44},
+  {"_id": "Colosseum", "name": "Colosseum", "year": 80, "type": "b", "coo": [12.49, 41.89], "wiki": "Colosseum"},
+  {"_id": "Hagia_Sophia", "name": "Hagia Sophia", "year": 537, "type": "b", "coo": [28.98, 41.01], "wiki": "Hagia_Sophia"},
+  {"_id": "Silk_Road", "name": "Silk Road", "year": -130, "type": "r", "coo": [60.0, 38.0], "wiki": "Silk_Road", "end": 1450},
+  {"_id": "Roman_Republic", "name": "Roman Republic", "year": -509, "type": "s", "coo": [12.49, 41.89], "wiki": "Roman_Republic", "end": -27},
+  {"_id": "Ming_Dynasty", "name": "Ming Dynasty", "year": 1368, "type": "s", "coo": [116.39, 39.91], "wiki": "Ming_dynasty", "end": 1644},
+  {"_id": "Printing_Press", "name": "Printing Press", "year": 1440, "type": "a", "coo": [8.27, 50.0], "wiki": "Printing_press"},
+  {"_id": "Steam_Engine", "name": "Steam Engine", "year": 1712, "type": "a", "coo": [-1.68, 55.01], "wiki": "Steam_engine"},
+  {"_id": "Treaty_of_Westphalia", "name": "Treaty of Westphalia", "year": 1648, "type": "at", "coo": [7.63, 51.96], "wiki": "Peace_of_Westphalia"},
+  {"_id": "Magna_Carta", "name": "Magna Carta", "year": 1215, "type": "at", "coo": [-0.57, 51.43], "wiki": "Magna_Carta"}
+]

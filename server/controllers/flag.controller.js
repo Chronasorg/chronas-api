@@ -88,19 +88,7 @@ function list(req, res, next) {
   const fSubentity = (potentialSubentity || subentity);
   Flag.list({ start, end, sort, order, entity: fEntity, user: potentialUser, subentity: fSubentity, fixed: potentialReverted, filter })
     .then((flags) => {
-      if (count) {
-        const optionalFind = (fEntity) ? { entityId: fEntity } : {};
-        if (fSubentity) {
-          optionalFind.subEntityId = fSubentity;
-        }
-        Flag.find(optionalFind).countDocuments().exec().then((flagCount) => {
-          res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-          res.set('X-Total-Count', flagCount);
-          res.json(flags);
-        });
-      } else {
-        res.json(flags);
-      }
+      res.json(flags);
     })
     .catch(e => next(e));
 }
