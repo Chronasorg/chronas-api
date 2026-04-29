@@ -161,7 +161,75 @@ npm run test:postman:prod
 
 ## Cleanup After Migration
 
-1. Remove the `/v1/migration/run` route from `index.route.js`
-2. Delete `migration.controller.js`
-3. Restore Lambda timeout to 30s
-4. Remove `DynamoDBMigrationAccess` inline policy (keep the managed policy for runtime)
+1. ~~Remove the `/v1/migration/run` route from `index.route.js`~~ — DONE (commit 5e8aa1b)
+2. Delete `migration.controller.js` (dead code, no routes point to it)
+3. Restore Lambda to 512 MB / 30s timeout
+4. Remove Lambda from VPC (no DocumentDB access needed)
+5. Remove `DynamoDBMigrationAccess` inline policy (keep the managed policy for runtime)
+
+## Learnings from Dev Deployment (2026-04-28/29)
+
+### Critical Code Bugs Found After Migration
+
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| Markers returned all items (no year/type filter) | Express sends `types=a,b,c` as string, not array. `Array.isArray()` failed. | `normalizeArray()` splits comma-separated strings |
+| Areas had `null` where prod had `""` | DynamoDB `convertEmptyValues` converts empty strings to null | `restoreEmptyStrings()` on read in area model |
+| Board discussions missing user/forum details | `populate('user')` relied on denormalized fields not present in migrated data | Real BatchGet lookups from users/forums tables |
+| Locale metadata returned empty `{}` | fListBranch double-appended locale suffix (`ruler_de` → `ruler_de_de`) | Removed redundant `_locale` append (IDs already have suffix) |
+| Lambda 503 on cold start after deploy | New deploy package missing TLS cert + code tried DocumentDB connection | `allDynamoFlagsOn()` skips DocumentDB entirely |
+| Frontend CORS blocked | CloudFront domain not in allowed origins | Added `ALLOWED_ORIGINS` env var |
+| Frontend "Mapbox Token Missing" | Build deployed without `VITE_MAPBOX_TOKEN` env var | Created `.env.dev-deploy` with token + dev API URL |
+
+### Deployment Procedure
+
+1. Build: `rsync` source (excluding node_modules/tests/scripts) → `npm ci --omit=dev` → `zip`
+2. Upload to S3: `aws s3 cp lambda.zip s3://chronas-frontend-dev/deploy/`
+3. Deploy: `aws lambda update-function-code --s3-bucket chronas-frontend-dev --s3-key deploy/<file>.zip`
+4. Wait: `aws lambda wait function-updated`
+5. Verify: `curl /v1/health` → "Health OK"
+
+Direct zip upload (`--zip-file`) fails for packages >50 MB. Use S3 intermediate.
+
+### Frontend Deployment
+
+1. Build: `npx vite build --mode dev-deploy` (uses `.env.dev-deploy` with Mapbox token + dev API URL)
+2. Upload: `aws s3 sync dist/ s3://chronas-frontend-dev/ --delete --exclude 'api/*'`
+3. Invalidate: `aws cloudfront create-invalidation --distribution-id E1D2L65NR3T3E8 --paths '/*'`
+4. **Important:** `--exclude 'api/*'` preserves `api/statistics.json` in S3
+
+### CORS Configuration
+
+Lambda env var `ALLOWED_ORIGINS` must include the CloudFront domain:
+```
+ALLOWED_ORIGINS=https://d1q6nlczw9cdpt.cloudfront.net
+```
+
+For production, the regex `*.chronas.org` already handles it — no change needed.
+
+### Data Freshness Gaps (expected, not code bugs)
+
+Dev was migrated from a DocumentDB snapshot at a point in time. Production continued receiving writes. Known gaps:
+- 137 rulers, 6 cultures, 3 religions missing in metadata (prod writes after snapshot)
+- 348 area provinces at year 1000 differ (religion renames: chalcedonism→catholic/orthodox)
+- 18k fewer revisions
+- ~600 fewer users
+
+**For production cutover:** migrate from LIVE DocumentDB (not a snapshot) during a low-traffic window. The migration takes ~10 minutes total. Zero downtime — flags flip one at a time.
+
+## Dev Environment Final Status (2026-04-29)
+
+| Test | Result |
+|------|--------|
+| Postman | **37/37 requests, 76/76 assertions** |
+| Playwright E2E | **12/12 passing** |
+| Markers (5 year/type combos) | **OK — matches production** |
+| Areas (null→empty fixed) | **OK** |
+| Metadata init bundle | **OK** |
+| Locale translations (de) | **OK — 1235 rulers, 407 cultures, 39 religions, 10 religionGeneral** |
+| Flags | **OK — identical to prod** |
+| Board (forum/user populate) | **OK** |
+| Statistics (from S3) | **OK** |
+| getLinked | **OK** |
+| Cold start (no DocumentDB) | **~3s** (was ~20s with VPC+TLS) |
+| Average response time | **199ms** (Postman suite average) |
