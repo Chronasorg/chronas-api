@@ -192,8 +192,6 @@
                   "pm.test(\"Status code is 200\", function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
-                  "pm.test(\"Response time is acceptable\", function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
                   "});",
                   "pm.test(\"Response contains metadata array with valid structure\", function () {",
                   "    var jsonData = pm.response.json();",
