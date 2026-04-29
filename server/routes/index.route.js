@@ -69,16 +69,4 @@ router.use('/board/forum', forumRoutes);
 
 router.use('/statistics', statisticsRoutes);
 
-// Migration endpoints — only accessible from direct Lambda invokes (host: lambda.local).
-// External HTTP requests via API Gateway are rejected with 403.
-// Remove these endpoints entirely before production deploy.
-import migrationCtrl from '../controllers/migration.controller.js';
-const internalOnly = (req, res, next) => {
-  const host = req.get('host') || '';
-  if (host === 'lambda.local' || host.includes('localhost')) return next();
-  return res.status(403).json({ error: 'Migration endpoints are internal-only' });
-};
-router.get('/migration/run', internalOnly, migrationCtrl.migrateCollection);
-router.get('/migration/export', internalOnly, migrationCtrl.exportCollection);
-
 export default router;

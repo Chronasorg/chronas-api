@@ -172,7 +172,7 @@ async function scanByYear(year, delta, end) {
     const out = await client.send(new ScanCommand(params));
     if (out.Items) items.push(...out.Items);
     next = out.LastEvaluatedKey;
-  } while (next);
+  } while (next && items.length < 5000);
   return items;
 }
 

@@ -232,8 +232,8 @@ export async function shutdownApp() {
   debugLog('Shutting down application...');
 
   try {
-    // Close database connection
-    if (appState.dbConnected) {
+    // Close database connection (skip if we never connected — DynamoDB-only mode)
+    if (appState.dbConnected && !appState.dbSkipped) {
       const { closeDatabaseConnection } = await import('./database.js');
       await closeDatabaseConnection();
       appState.dbConnected = false;

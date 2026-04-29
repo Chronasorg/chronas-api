@@ -206,6 +206,7 @@ async function lookupUsers(userIds) {
         bio: u.bio, username: u.username, name: u.name,
         createdAt: u.createdAt, lastUpdated: u.lastUpdated };
       map.set(u._id, obj);
+      // user_id in discussions is the email (legacy schema); index both for lookup
       if (u.email && u.email !== u._id) map.set(u.email, obj);
     }
   }
