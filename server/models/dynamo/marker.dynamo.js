@@ -66,7 +66,7 @@ export default class MarkerDynamo extends DynamoDocument {
     } else if (year !== false && year !== undefined) {
       items = await scanByYear(year, actualDelta, end);
     } else {
-      items = await scanAll();
+      items = await scanLimited(length);
     }
 
     if (wikiArray && !typeArray) {
@@ -218,6 +218,20 @@ async function batchGetByWikis(wikiArray) {
     if (Responses?.[TABLE]) all.push(...Responses[TABLE]);
   }
   return all;
+}
+
+async function scanLimited(limit) {
+  const client = getDocClient();
+  const items = [];
+  let next;
+  do {
+    const params = { TableName: TABLE, Limit: Math.min(limit * 2, 1000) };
+    if (next) params.ExclusiveStartKey = next;
+    const out = await client.send(new ScanCommand(params));
+    if (out.Items) items.push(...out.Items);
+    next = out.LastEvaluatedKey;
+  } while (next && items.length < limit);
+  return items;
 }
 
 async function scanAll() {
