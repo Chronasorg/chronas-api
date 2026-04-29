@@ -131,9 +131,12 @@ jobs:
       - name: Warm up Lambda (cold start after deploy)
         run: |
           echo "Sending warmup request to trigger cold start..."
-          curl -sf --max-time 30 https://api.chronas.org/v1/health || true
+          curl -sf --max-time 60 https://api.chronas.org/v1/health || true
           sleep 5
-          curl -sf --max-time 30 https://api.chronas.org/v1/version || true
+          echo "Warming DB connection..."
+          curl -sf --max-time 60 https://api.chronas.org/v1/flags || true
+          curl -sf --max-time 60 https://api.chronas.org/v1/statistics || true
+          sleep 3
           echo "Lambda warmed up"
 
       - name: Post-deploy Postman smoke tests
@@ -143,7 +146,7 @@ jobs:
           npm install -g newman
           newman run PostmanTests/chronas-enhanced.postman_collection.json \
             -e PostmanTests/chronas-api.postman_environment.json \
-            --timeout-request 30000 \
+            --timeout-request 60000 \
             --delay-request 500
 
       - name: Rollback Lambda on test failure
