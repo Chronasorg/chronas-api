@@ -24,8 +24,7 @@
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.token).to.not.be.empty;",
                   "    pm.expect(jsonData.username).to.not.be.empty;",
-                  "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/);",
-                  "});"
+                  "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/);"
                 ],
                 "type": "text/javascript"
               }
@@ -79,8 +78,7 @@
                   "});",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.version).to.not.be.empty;",
-                  "    pm.expect(jsonData.version).to.match(/^\\d+\\.\\d+/);",
-                  "});"
+                  "    pm.expect(jsonData.version).to.match(/^\\d+\\.\\d+/);"
                 ],
                 "type": "text/javascript"
               }
@@ -1086,8 +1084,7 @@
                   "        pm.expect(jsonData[firstKey]).to.satisfy(function(value) {",
                   "            return Array.isArray(value) || typeof value === \"object\";",
                   "        });",
-                  "    }",
-                  "});"
+                  "    }"
                 ],
                 "type": "text/javascript"
               }
@@ -1395,8 +1392,7 @@
                   "    pm.expect(jsonData).to.have.property(\"email\");",
                   "    pm.expect(jsonData).to.have.property(\"username\");",
                   "    pm.expect(jsonData.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
-                  "    pm.expect(jsonData.email).to.equal(\"postman@aui.de\");",
-                  "});"
+                  "    pm.expect(jsonData.email).to.equal(\"postman@aui.de\");"
                 ],
                 "type": "text/javascript"
               }
