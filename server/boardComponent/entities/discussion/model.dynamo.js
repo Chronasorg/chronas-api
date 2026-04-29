@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
 import QueryProxy from '../../../models/dynamo/query-proxy.js';
 import DynamoQuery from '../../../models/dynamo/dynamo-query.js';
-import { getDocClient, getDynamoClient, tableName } from '../../../models/dynamo/dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from '../../../models/dynamo/dynamo-client.js';
 
 const TABLE = tableName('board');
 
@@ -191,7 +191,6 @@ async function scanDiscussions() {
 
 async function lookupUsers(userIds) {
   if (!userIds.length) return new Map();
-  const { batchGetWithRetry } = await import('../../../models/dynamo/dynamo-client.js');
   const userTable = tableName('users');
   const map = new Map();
   for (let i = 0; i < userIds.length; i += 100) {
@@ -204,7 +203,7 @@ async function lookupUsers(userIds) {
         privilege: u.privilege, count_linked: u.count_linked, count_voted: u.count_voted,
         count_deleted: u.count_deleted, count_updated: u.count_updated, count_reverted: u.count_reverted,
         count_created: u.count_created, count_mistakes: u.count_mistakes, subscription: u.subscription,
-        bio: u.bio, username: u.username, name: u.name, email: u.email,
+        bio: u.bio, username: u.username, name: u.name,
         createdAt: u.createdAt, lastUpdated: u.lastUpdated };
       map.set(u._id, obj);
       if (u.email && u.email !== u._id) map.set(u.email, obj);
@@ -215,16 +214,15 @@ async function lookupUsers(userIds) {
 
 async function lookupForums(forumIds) {
   if (!forumIds.length) return new Map();
-  const map = new Map();
-  const client = getDocClient();
-  for (const fid of forumIds) {
-    const { Item } = await client.send(new GetCommand({
-      TableName: TABLE,
-      Key: { PK: `FORUM#${fid}`, SK: 'META' }
-    }));
-    if (Item) {
-      map.set(fid, { _id: fid, forum_slug: Item.forum_slug, forum_name: Item.forum_name });
+  const { Responses } = await batchGetWithRetry({
+    RequestItems: {
+      [TABLE]: { Keys: forumIds.map(fid => ({ PK: `FORUM#${fid}`, SK: 'META' })) }
     }
+  });
+  const map = new Map();
+  for (const item of (Responses?.[TABLE] || [])) {
+    const fid = item.PK.replace('FORUM#', '');
+    map.set(fid, { _id: fid, forum_slug: item.forum_slug, forum_name: item.forum_name });
   }
   return map;
 }

@@ -69,8 +69,9 @@ function allDynamoFlagsOn(cfg) {
 async function initializeDatabase(config) {
   if (allDynamoFlagsOn(config)) {
     console.log('All DynamoDB flags ON — skipping DocumentDB connection');
-    appState.dbConnected = false;
-    return false;
+    appState.dbConnected = true;
+    appState.dbSkipped = true;
+    return true;
   }
 
   const maxRetries = 3;

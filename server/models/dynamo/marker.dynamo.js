@@ -145,11 +145,16 @@ export default class MarkerDynamo extends DynamoDocument {
 
 function normalizeArray(val) {
   if (!val) return null;
-  if (Array.isArray(val)) return val;
-  if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+  if (Array.isArray(val)) return val.length ? val : null;
+  if (typeof val === 'string') {
+    const arr = val.split(',').map(s => s.trim()).filter(Boolean);
+    return arr.length ? arr : null;
+  }
   return null;
 }
 
+// Fallback for year-only queries without types (new FE pattern, ~10 calls/day).
+// Full scan with filter — acceptable because the new FE always sends types.
 async function scanByYear(year, delta, end) {
   const yearLo = year - delta;
   const yearHi = end !== false && end !== undefined ? end : year + delta;
