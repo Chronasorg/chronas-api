@@ -9,7 +9,7 @@ const credentials = {
   clientID: config.facebookClientId,
   clientSecret: config.facebookClientSecret,
   callbackURL: config.facebookCallBackUrl,
-
+  graphAPIVersion: 'v19.0',
   profileFields: ['id', 'displayName', 'photos', 'email']
 };
 

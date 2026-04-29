@@ -116,18 +116,12 @@ async function create(req, res, next) {
     } catch (e) {
       console.log('ERROR Attempt to save user', e);
       console.log('------------------------------------------------------------');
-
-      if (!req.body.thirdParty) {
-        next(e);
-      }
+      next(e);
     }
   } catch (e) {
     console.log('ERROR Attempt to find user', e);
     console.log('------------------------------------------------------------');
-
-    if (!req.body.thirdParty) {
-      next(e);
-    }
+    next(e);
   }
 }
 
