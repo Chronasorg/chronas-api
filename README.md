@@ -4,20 +4,20 @@
 
 ## Overview
 
-This API provides authentication and CRUD operations for data used by the [Chronas](https://chronas.org) historical timeline application. Built with Node.js 22, Express, and Mongoose, it runs as an AWS Lambda function backed by Amazon DocumentDB.
+This API provides authentication and CRUD operations for data used by the [Chronas](https://chronas.org) historical timeline application. Built with Node.js 22 and Express, it runs as an AWS Lambda function backed by **Amazon DynamoDB**.
 
 The frontend is available at [Chronasorg/chronas-frontend](https://github.com/Chronasorg/chronas-frontend) ([DeepWiki](https://deepwiki.com/Chronasorg/chronas-frontend)).
 
 ### Key Stack
 
 - **Runtime**: Node.js 22.x (native ESM) on AWS Lambda via [`@vendia/serverless-express`](https://github.com/vendia/serverless-express)
-- **Database**: Amazon DocumentDB (MongoDB-compatible) with TLS
+- **Database**: Amazon DynamoDB (10 tables, on-demand billing, ~$5/mo)
 - **Auth**: JWT + OAuth (Facebook, Google, GitHub)
 - **Validation**: Joi + express-validation
-- **Monitoring**: AWS X-Ray, Application Insights
-- **API Docs**: Swagger UI at [`/api-docs`](https://api.chronas.org/api-docs)
-- **Testing**: Mocha + Chai + Supertest (unit/integration), Newman/Postman (API-level). See [PostmanTests/](PostmanTests/)
-- **Infrastructure**: AWS CDK v2 (separate [chronas-cdk](https://github.com/Chronasorg/chronas-cdk) repo)
+- **Monitoring**: AWS X-Ray, CloudWatch dashboard
+- **Testing**: Mocha + Chai + Supertest (314 tests), Newman/Postman (74 assertions). See [PostmanTests/](PostmanTests/)
+- **Deployment**: GitHub Actions with auto-rollback on Postman failure
+- **Cost**: ~$8-10/mo total (DynamoDB + API Gateway + Lambda)
 
 ## Getting Started
 
@@ -25,17 +25,8 @@ The frontend is available at [Chronasorg/chronas-frontend](https://github.com/Ch
 git clone https://github.com/Chronasorg/chronas-api
 cd chronas-api
 npm install
-cp .env.example .env   # configure JWT_SECRET, MONGO_HOST, etc.
-```
-
-Start a local MongoDB:
-```sh
-docker run -d --name mongodatabase -p 27017:27017 mongo
-```
-
-Start the dev server:
-```sh
-npm start              # runs on port 4040 with debug logging
+cp .env.example .env   # configure JWT_SECRET
+npm start              # dev server on port 3001 (in-memory DB, no external deps)
 ```
 
 ## Scripts
@@ -64,4 +55,4 @@ Production deployment is fully automated via **GitHub Actions** (the sole active
 
 See [docs/DEPLOYMENT_AND_TESTING.md](docs/DEPLOYMENT_AND_TESTING.md) for full pipeline details, test coverage, and rollback behavior.
 
-The legacy AWS CodeBuild webhook has been **disabled** — GitHub Actions is the sole deployment mechanism. See [docs/LAMBDA_OPTIMIZATION.md](docs/LAMBDA_OPTIMIZATION.md) for Lambda architecture and [docs/DATABASE_CONNECTION.md](docs/DATABASE_CONNECTION.md) for DocumentDB connection setup.
+Legacy: AWS CodeBuild, Azure Pipelines, Docker/Kubernetes, and DocumentDB are all decommissioned. GitHub Actions is the sole deployment mechanism.
