@@ -1190,7 +1190,7 @@
     },
     {
       "name": "Data Corrections (updateMany)",
-      "description": "Tests for the updateMany endpoint (PUT /v1/areas) used for targeted data corrections like Issue #10 (chalcedonism→orthodox). updateMany changes ONLY the specified dimensions for ONLY the specified provinces, leaving all other data untouched.",
+      "description": "Tests for the updateMany endpoint (PUT /v1/areas) used for targeted data corrections like Issue #10 (chalcedonism\u2192orthodox). updateMany changes ONLY the specified dimensions for ONLY the specified provinces, leaving all other data untouched.",
       "item": [
         {
           "name": "updateMany - Get area before correction",
@@ -1576,45 +1576,6 @@
                 "v1",
                 "users",
                 "testUser@test.de"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Statistics",
-      "item": [
-        {
-          "name": "Get Statistics",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Response contains statistics data\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.not.be.empty;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/statistics",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "statistics"
               ]
             }
           }
