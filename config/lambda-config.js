@@ -269,7 +269,21 @@ function buildConfig(envVars) {
     googleCallbackUrl: envVars.GOOGLE_CALLBACK_URL,
     twitterCallbackUrl: envVars.TWITTER_CALLBACK_URL,
     rumApplicationId: envVars.RUMAPPLICATIONID,
-    chronasHost: envVars.CHRONAS_HOST
+    chronasHost: envVars.CHRONAS_HOST,
+
+    // DynamoDB feature flags
+    dynamodb: {
+      tablePrefix: envVars.DYNAMODB_TABLE_PREFIX || 'chronas',
+      useAreas: envVars.USE_DYNAMODB_AREAS === 'true' || envVars.USE_DYNAMODB_AREAS === true,
+      useMarkers: envVars.USE_DYNAMODB_MARKERS === 'true' || envVars.USE_DYNAMODB_MARKERS === true,
+      useMetadata: envVars.USE_DYNAMODB_METADATA === 'true' || envVars.USE_DYNAMODB_METADATA === true,
+      useUsers: envVars.USE_DYNAMODB_USERS === 'true' || envVars.USE_DYNAMODB_USERS === true,
+      useFlags: envVars.USE_DYNAMODB_FLAGS === 'true' || envVars.USE_DYNAMODB_FLAGS === true,
+      useRevisions: envVars.USE_DYNAMODB_REVISIONS === 'true' || envVars.USE_DYNAMODB_REVISIONS === true,
+      useCollections: envVars.USE_DYNAMODB_COLLECTIONS === 'true' || envVars.USE_DYNAMODB_COLLECTIONS === true,
+      useGames: envVars.USE_DYNAMODB_GAMES === 'true' || envVars.USE_DYNAMODB_GAMES === true,
+      useBoard: envVars.USE_DYNAMODB_BOARD === 'true' || envVars.USE_DYNAMODB_BOARD === true
+    }
   };
 }
 
