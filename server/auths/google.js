@@ -38,7 +38,7 @@ function authenticateUser(req, res, next) {
   passport.use(googleStrategy);
 
   // Save user data once returning from Google
-  if (typeof (req.query || {}).cb !== 'undefined') {
+  if (req.query.cb !== undefined || req.query.code !== undefined || req.query.error !== undefined) {
     console.log('[services.google] - Callback workflow detected, attempting to process data...');
     console.log('------------------------------------------------------------');
 

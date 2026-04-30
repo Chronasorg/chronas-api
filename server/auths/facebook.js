@@ -37,7 +37,7 @@ function authenticateUser(req, res, next) {
   passport.use(facebookStrategy);
 
   // Save user data once returning from Facebook
-  if (typeof (req.query || {}).cb !== 'undefined') {
+  if (req.query.cb !== undefined || req.query.code !== undefined || req.query.error !== undefined) {
     console.log('[services.facebook] - Callback workflow detected, attempting to process data...');
     console.log('------------------------------------------------------------');
 

@@ -35,7 +35,7 @@ function authenticateUser(req, res, next) {
   passport.use(githubStrategy);
 
   // Save user data once returning from GitHub
-  if (typeof (req.query || {}).cb !== 'undefined') {
+  if (req.query.cb !== undefined || req.query.code !== undefined || req.query.error !== undefined) {
     console.log('[services.github] - Callback workflow detected, attempting to process data...');
     console.log('------------------------------------------------------------');
 
