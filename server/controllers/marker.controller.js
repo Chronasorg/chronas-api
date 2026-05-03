@@ -173,7 +173,7 @@ function list(req, res, next) {
   // Frontend sends "limit", legacy clients may send "count"
   const count = req.query.limit || req.query.count || 2000;
   const length = +count;
-  const typeArray = req.query.types || false;
+  const typeArray = req.query.types || req.query.type || false;
   const wikiArray = req.query.wikis || false;
   const format = req.query.format || false;
   const year = isNaN(req.query.year) ? false : +req.query.year;

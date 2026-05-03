@@ -112,6 +112,7 @@ export default class MetadataDynamo extends DynamoDocument {
   async save(options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
+    cache.clear();
     return this;
   }
 }
@@ -168,6 +169,10 @@ async function queryBranch(options) {
     wiki, search, mustGeo, discover
   } = options;
 
+  const cacheKey = `query:${type}:${subtype}:${year}:${delta}:${start}:${end}:${wiki || ''}:${search || ''}:${mustGeo || ''}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const filter = {};
   if (type) filter.type = type;
   if (wiki) filter.wiki = wiki;
@@ -207,13 +212,20 @@ async function queryBranch(options) {
   }
 
   if (search) {
-    return items.map(item => item._id);
+    const result = items.map(item => item._id);
+    cache.put(cacheKey, result, CACHETTL);
+    return result;
   }
 
+  cache.put(cacheKey, items, CACHETTL);
   return items;
 }
 
 async function defaultBranch(start, end) {
+  const cacheKey = `default:${start}:${end}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const items = await new DynamoQuery(MetadataDynamo, {})
     .skip(+start)
     .limit(+end)
@@ -221,10 +233,12 @@ async function defaultBranch(start, end) {
     .lean()
     .exec();
 
-  return items.map(obj => {
+  const result = items.map(obj => {
     const decoded = decodeFromRead(obj);
     const dataString = JSON.stringify(decoded.data).substring(0, 200);
     decoded.data = dataString + ((dataString.length === 200) ? '...' : '');
     return decoded;
   });
+  cache.put(cacheKey, result, CACHETTL);
+  return result;
 }
