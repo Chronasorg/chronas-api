@@ -128,6 +128,14 @@ jobs:
             --profile chronas-prod
           echo "Lambda deployment completed successfully!"
 
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id E1KTIK2H0W8J2Q \
+            --paths "/v1/*" \
+            --profile chronas-prod | cat
+          echo "CloudFront cache invalidated"
+
       - name: Warm up Lambda (cold start after deploy)
         run: |
           echo "Sending warmup request to trigger cold start..."

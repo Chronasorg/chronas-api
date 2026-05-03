@@ -32,9 +32,10 @@ The dev server uses `mongodb-memory-server` (no external MongoDB needed). Key re
 - **Database**: DynamoDB (10 tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
 - **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
 - **Secrets**: AWS Secrets Manager — `/chronas/secrets` (JWT secret, OAuth keys)
-- **Deployment**: GitHub Actions (`deploy-prod.yml`) on push to `master` — tests → deploy → Postman → auto-rollback on failure
+- **CloudFront (API)**: Distribution `E1KTIK2H0W8J2Q` (`d24mkpax7rmotx.cloudfront.net`) caches API responses at edge. DNS `api.chronas.org` → CloudFront → API Gateway origin. Cache policy respects origin `Cache-Control` headers. Invalidated on each deploy via `deploy-prod.yml`.
+- **Deployment**: GitHub Actions (`deploy-prod.yml`) on push to `master` — tests → deploy → CloudFront invalidation → Postman → auto-rollback on failure
 - **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org` via CloudFront
-- **Cost**: ~$8-10/mo (DynamoDB ~$5, API Gateway ~$1.50, other ~$2)
+- **Cost**: ~$5-8/mo (DynamoDB ~$3, CloudFront $0 free tier, API Gateway ~$1, other ~$2)
 
 ### Lambda Entry Point
 
