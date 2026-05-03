@@ -98,8 +98,7 @@ function load(req, res, next, id) {
  * @returns {Metadata}
  */
 function get(req, res) {
-  // Metadata rarely changes — allow browser/CDN caching for 1 hour
-  res.set('Cache-Control', 'public, max-age=3600');
+  res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
   return res.json(req.entity);
 }
 
@@ -460,6 +459,13 @@ function list(req, res, next) {
 
   Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
+      if (fList) {
+        res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+      } else if (type === 'e') {
+        res.set('Cache-Control', 'public, max-age=1800, s-maxage=43200');
+      } else {
+        res.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+      }
       res.json(metadata);
     })
     .catch(e => next(e));

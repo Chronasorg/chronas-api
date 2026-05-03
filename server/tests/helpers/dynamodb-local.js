@@ -261,12 +261,14 @@ async function loadTableDefs() {
         { AttributeName: 'PK', AttributeType: 'S' },
         { AttributeName: 'SK', AttributeType: 'S' },
         { AttributeName: 'qa_id', AttributeType: 'S' },
-        { AttributeName: 'date', AttributeType: 'S' }
+        { AttributeName: 'date', AttributeType: 'S' },
+        { AttributeName: 'forum_id', AttributeType: 'S' }
       ],
       KeySchema: [{ AttributeName: 'PK', KeyType: 'HASH' }, { AttributeName: 'SK', KeyType: 'RANGE' }],
       BillingMode: 'PAY_PER_REQUEST',
       GlobalSecondaryIndexes: [
-        { IndexName: 'GSI-QA', KeySchema: [{ AttributeName: 'qa_id', KeyType: 'HASH' }, { AttributeName: 'date', KeyType: 'RANGE' }], Projection: { ProjectionType: 'ALL' } }
+        { IndexName: 'GSI-QA', KeySchema: [{ AttributeName: 'qa_id', KeyType: 'HASH' }, { AttributeName: 'date', KeyType: 'RANGE' }], Projection: { ProjectionType: 'ALL' } },
+        { IndexName: 'GSI-ForumId', KeySchema: [{ AttributeName: 'forum_id', KeyType: 'HASH' }, { AttributeName: 'date', KeyType: 'RANGE' }], Projection: { ProjectionType: 'ALL' } }
       ]
     }
   ];

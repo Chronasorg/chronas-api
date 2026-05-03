@@ -8,8 +8,10 @@ import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
+import { cache } from '../../../config/config.js';
 
 const TABLE = tableName('areas');
+const AREA_CACHE_TTL = 1000 * 60 * 60 * 24;
 
 /**
  * Areas DynamoDB model. Simple PK-only table keyed on year (stored as a
@@ -43,8 +45,15 @@ export default class AreaDynamo extends DynamoDocument {
   }
 
   static async get(id) {
+    const cacheKey = `area:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return new AreaDynamo(cached);
+
     const doc = await AreaDynamo.findById(id).exec();
-    if (doc) return doc;
+    if (doc) {
+      cache.put(cacheKey, doc.toObject(), AREA_CACHE_TTL);
+      return doc;
+    }
     throw new APIError('No such area exists!', httpStatus.NOT_FOUND);
   }
 
