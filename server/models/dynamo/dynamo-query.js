@@ -81,6 +81,7 @@ export default class DynamoQuery {
     const self = this;
     const promise = (async () => {
       const params = self._buildParams({ select: 'COUNT' });
+      if (params === null) return 0;
       const Command = self._index ? QueryCommand : ScanCommand;
       let count = 0;
       let next;
@@ -101,6 +102,7 @@ export default class DynamoQuery {
 
   async _runQuery() {
     const params = this._buildParams({ select: 'ALL' });
+    if (params === null) return [];
     const Command = this._index ? QueryCommand : ScanCommand;
     const items = [];
     let next;
@@ -126,6 +128,7 @@ export default class DynamoQuery {
     }
 
     const filterSpec = buildFilterExpression(this.filter, params.ExpressionAttributeValues || {}, params.ExpressionAttributeNames || {});
+    if (filterSpec.emptyIn) return null;
     if (filterSpec.expression) {
       params.FilterExpression = filterSpec.expression;
       params.ExpressionAttributeValues = filterSpec.values;
@@ -170,10 +173,11 @@ function buildFilterExpression(filter, valuesIn = {}, namesIn = {}) {
   const ctx = {
     values: { ...valuesIn },
     names: { ...namesIn },
-    counter: 0
+    counter: 0,
+    _emptyIn: false
   };
   const expression = buildExpressionInner(filter || {}, ctx);
-  return { expression, values: ctx.values, names: ctx.names };
+  return { expression, values: ctx.values, names: ctx.names, emptyIn: ctx._emptyIn };
 }
 
 function buildExpressionInner(filter, ctx) {
@@ -212,6 +216,10 @@ function handleCondition(field, condition, ctx) {
     case '$lt': parts.push(`${name} < ${registerValue(rhs, ctx)}`); break;
     case '$lte': parts.push(`${name} <= ${registerValue(rhs, ctx)}`); break;
     case '$in': {
+      if (!Array.isArray(rhs) || rhs.length === 0) {
+        ctx._emptyIn = true;
+        break;
+      }
       const keys = rhs.map(val => registerValue(val, ctx));
       parts.push(`${name} IN (${keys.join(', ')})`);
       break;
