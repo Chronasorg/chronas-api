@@ -203,3 +203,20 @@ describe('Cost Optimization: Controller type param mapping', () => {
     expect(ids1).to.deep.equal(ids2);
   });
 });
+
+describe('Fix: Empty $in does not crash DynamoDB (getLinked alert)', () => {
+  it('Marker.find with empty $in returns empty array (no DynamoDB call)', async () => {
+    const results = await MarkerDynamo.find({ _id: { $in: [] } }).lean().exec();
+    expect(results).to.be.an('array').that.is.empty;
+  });
+
+  it('Metadata.find with empty $in returns empty array', async () => {
+    const results = await MetadataDynamo.find({ _id: { $in: [] } }).lean().exec();
+    expect(results).to.be.an('array').that.is.empty;
+  });
+
+  it('countDocuments with empty $in returns 0', async () => {
+    const count = await MarkerDynamo.find({ _id: { $in: [] } }).countDocuments().exec();
+    expect(count).to.equal(0);
+  });
+});
