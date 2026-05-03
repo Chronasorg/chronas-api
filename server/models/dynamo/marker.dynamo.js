@@ -9,6 +9,7 @@ import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 
 const TABLE = tableName('markers');
+const ALL_MARKER_TYPES = ['a', 'at', 'e', 'm', 'op', 'p', 'r', 's', 'c', 'ca', 'w'];
 
 export default class MarkerDynamo extends DynamoDocument {
   static tableName = TABLE;
@@ -64,7 +65,7 @@ export default class MarkerDynamo extends DynamoDocument {
     } else if (wikiArray) {
       items = await batchGetByWikis(wikiArray);
     } else if (year !== false && year !== undefined) {
-      items = await scanByYear(year, actualDelta, end);
+      items = await queryByTypeAndYear(ALL_MARKER_TYPES, year, actualDelta, end);
     } else {
       items = await scanLimited(length);
     }
