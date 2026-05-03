@@ -112,7 +112,11 @@ export default class MetadataDynamo extends DynamoDocument {
   async save(options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
-    cache.clear();
+    for (const key of cache.keys()) {
+      if (key.startsWith('query:') || key.startsWith('default:') || key.startsWith('init:')) {
+        cache.del(key);
+      }
+    }
     return this;
   }
 }
@@ -169,7 +173,7 @@ async function queryBranch(options) {
     wiki, search, mustGeo, discover
   } = options;
 
-  const cacheKey = `query:${type}:${subtype}:${year}:${delta}:${start}:${end}:${wiki || ''}:${search || ''}:${mustGeo || ''}`;
+  const cacheKey = `query:${type}:${subtype}:${year}:${delta}:${start}:${end}:${wiki || ''}:${search || ''}:${mustGeo || ''}:${discover || ''}`;
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 

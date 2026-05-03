@@ -205,7 +205,7 @@ describe('Cost Optimization: Controller type param mapping', () => {
 });
 
 describe('Fix: Empty $in does not crash DynamoDB (getLinked alert)', () => {
-  it('Marker.find with empty $in returns empty array (no DynamoDB call)', async () => {
+  it('Marker.find with empty $in returns empty array', async () => {
     const results = await MarkerDynamo.find({ _id: { $in: [] } }).lean().exec();
     expect(results).to.be.an('array').that.is.empty;
   });
@@ -218,5 +218,14 @@ describe('Fix: Empty $in does not crash DynamoDB (getLinked alert)', () => {
   it('countDocuments with empty $in returns 0', async () => {
     const count = await MarkerDynamo.find({ _id: { $in: [] } }).countDocuments().exec();
     expect(count).to.equal(0);
+  });
+
+  it('$or with empty $in branch still returns results from other branch', async () => {
+    const results = await MarkerDynamo.find({
+      $or: [{ type: 'e' }, { _id: { $in: [] } }]
+    }).lean().exec();
+    expect(results).to.be.an('array');
+    expect(results.length).to.be.greaterThan(0);
+    results.forEach(m => expect(m.type).to.equal('e'));
   });
 });
