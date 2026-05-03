@@ -162,9 +162,23 @@ async function queryDiscussions(filter) {
     }));
     return (Items || []).filter(i => i.entityType === 'discussion').map(toDiscussion);
   }
+  if (filter.forum_id) {
+    const { Items } = await getDocClient().send(new QueryCommand({
+      TableName: TABLE,
+      IndexName: 'GSI-ForumId',
+      KeyConditionExpression: '#fid = :fid',
+      ExpressionAttributeNames: { '#fid': 'forum_id' },
+      ExpressionAttributeValues: { ':fid': String(filter.forum_id) },
+      ScanIndexForward: false
+    }));
+    let items = (Items || []).filter(i => i.entityType === 'discussion').map(toDiscussion);
+    if (typeof filter.pinned !== 'undefined') {
+      items = items.filter(d => d.pinned === filter.pinned);
+    }
+    return items;
+  }
   const items = await scanDiscussions();
   return items.filter(d => {
-    if (filter.forum_id && String(d.forum_id) !== String(filter.forum_id)) return false;
     if (typeof filter.pinned !== 'undefined' && d.pinned !== filter.pinned) return false;
     return true;
   });

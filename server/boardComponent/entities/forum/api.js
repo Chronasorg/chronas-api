@@ -29,6 +29,7 @@ router.route('/:forum_slug/discussions').get(
     const { q, offset, limit } = req.query;
     getDiscussions(req.params.forum_slug, false, req.query.sorting_method, q, offset, limit).then(
       (result) => {
+        res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
         res.set('Access-Control-Expose-Headers', 'X-Total-Count');
         res.set('X-Total-Count', result[1]);
         res.json(result[0]);

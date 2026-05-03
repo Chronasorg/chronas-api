@@ -188,6 +188,7 @@ function list(req, res, next) {
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
       res.json(markers);
     })
     .catch(e => next(e));
