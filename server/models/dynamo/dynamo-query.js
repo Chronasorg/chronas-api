@@ -128,7 +128,7 @@ export default class DynamoQuery {
     }
 
     const filterSpec = buildFilterExpression(this.filter, params.ExpressionAttributeValues || {}, params.ExpressionAttributeNames || {});
-    if (filterSpec.emptyIn) return null;
+    if (filterSpec.neverMatches) return null;
     if (filterSpec.expression) {
       params.FilterExpression = filterSpec.expression;
       params.ExpressionAttributeValues = filterSpec.values;
@@ -169,15 +169,19 @@ export default class DynamoQuery {
  * the top level. Anything unsupported throws — fail loud, don't silently
  * return wrong results.
  */
+const EMPTY_IN_SENTINEL = '__empty_in_never_matches__';
+
 function buildFilterExpression(filter, valuesIn = {}, namesIn = {}) {
   const ctx = {
     values: { ...valuesIn },
     names: { ...namesIn },
     counter: 0,
-    _emptyIn: false
+    hasOr: false,
+    hasEmptyIn: false
   };
   const expression = buildExpressionInner(filter || {}, ctx);
-  return { expression, values: ctx.values, names: ctx.names, emptyIn: ctx._emptyIn };
+  const neverMatches = ctx.hasEmptyIn && !ctx.hasOr;
+  return { expression, values: ctx.values, names: ctx.names, neverMatches };
 }
 
 function buildExpressionInner(filter, ctx) {
@@ -185,6 +189,7 @@ function buildExpressionInner(filter, ctx) {
   for (const [key, value] of Object.entries(filter)) {
     if (key === '$or') {
       if (!Array.isArray(value)) throw new Error('$or must be an array');
+      ctx.hasOr = true;
       const orParts = value
         .map(sub => buildExpressionInner(sub, ctx))
         .filter(Boolean)
@@ -217,7 +222,8 @@ function handleCondition(field, condition, ctx) {
     case '$lte': parts.push(`${name} <= ${registerValue(rhs, ctx)}`); break;
     case '$in': {
       if (!Array.isArray(rhs) || rhs.length === 0) {
-        ctx._emptyIn = true;
+        ctx.hasEmptyIn = true;
+        parts.push(`${name} = ${registerValue(EMPTY_IN_SENTINEL, ctx)}`);
         break;
       }
       const keys = rhs.map(val => registerValue(val, ctx));

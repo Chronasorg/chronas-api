@@ -163,27 +163,19 @@ async function queryDiscussions(filter) {
     return (Items || []).filter(i => i.entityType === 'discussion').map(toDiscussion);
   }
   if (filter.forum_id) {
-    try {
-      const { Items } = await getDocClient().send(new QueryCommand({
-        TableName: TABLE,
-        IndexName: 'GSI-ForumId',
-        KeyConditionExpression: '#fid = :fid',
-        ExpressionAttributeNames: { '#fid': 'forum_id' },
-        ExpressionAttributeValues: { ':fid': String(filter.forum_id) },
-        ScanIndexForward: false
-      }));
-      let items = (Items || []).filter(i => i.entityType === 'discussion').map(toDiscussion);
-      if (typeof filter.pinned !== 'undefined') {
-        items = items.filter(d => d.pinned === filter.pinned);
-      }
-      return items;
-    } catch (err) {
-      if (err.name === 'ResourceNotFoundException') {
-        // GSI not yet active — fall through to scan
-      } else {
-        throw err;
-      }
+    const { Items } = await getDocClient().send(new QueryCommand({
+      TableName: TABLE,
+      IndexName: 'GSI-ForumId',
+      KeyConditionExpression: '#fid = :fid',
+      ExpressionAttributeNames: { '#fid': 'forum_id' },
+      ExpressionAttributeValues: { ':fid': String(filter.forum_id) },
+      ScanIndexForward: false
+    }));
+    let items = (Items || []).filter(i => i.entityType === 'discussion').map(toDiscussion);
+    if (typeof filter.pinned !== 'undefined') {
+      items = items.filter(d => d.pinned === filter.pinned);
     }
+    return items;
   }
   const items = await scanDiscussions();
   return items.filter(d => {

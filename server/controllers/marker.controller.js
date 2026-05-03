@@ -177,7 +177,7 @@ function list(req, res, next) {
   const wikiArray = req.query.wikis || false;
   const format = req.query.format || false;
   const year = isNaN(req.query.year) ? false : +req.query.year;
-  const end = isNaN(req.query.year) ? false : +req.query.year;
+  const end = isNaN(req.query.end) ? false : +req.query.end;
   const delta = +req.query.delta;
   const includeMarkers = req.query.includeMarkers !== 'false';
   const search = req.query.search || false;

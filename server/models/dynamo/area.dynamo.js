@@ -84,6 +84,7 @@ export default class AreaDynamo extends DynamoDocument {
       TableName: TABLE,
       Item: item
     }));
+    cache.del(`area:${item._id}`);
     return this;
   }
 
