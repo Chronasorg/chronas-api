@@ -112,6 +112,7 @@ export default class MetadataDynamo extends DynamoDocument {
   async save(options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
+    cache.clear();
     return this;
   }
 }

@@ -9,6 +9,7 @@ import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 
 const TABLE = tableName('markers');
+// Must match the type values stored in GSI-TypeYear. Update if new types are added.
 const ALL_MARKER_TYPES = ['a', 'at', 'e', 'm', 'op', 'p', 'r', 's', 'c', 'ca', 'w'];
 
 export default class MarkerDynamo extends DynamoDocument {
