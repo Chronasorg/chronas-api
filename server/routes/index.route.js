@@ -12,13 +12,8 @@ import userRoutes from './user.route.js';
 import contactRoutes from './contact.router.js';
 import markerRoutes from './marker.route.js';
 import metadataRoutes from './metadata.route.js';
-// import staticRoutes from './static.route.js'; // Disabled for Lambda - requires puppeteer
 import statisticsRoutes from './statistics.route.js';
 import revisionRoutes from './revision.route.js';
-// import versionRoutes from './version.router.js'; // Disabled for Lambda - uses app-root-path
-
-// mount version routes at /version - Re-enabled for Lambda with compatible controller
-
 import versionRoutes from './version.router.js';
 
 const router = express.Router();
@@ -64,8 +59,6 @@ router.use('/version', versionRoutes);
 // Third Party ReForum App
 // mount forum routes at /board/forum
 router.use('/board/forum', forumRoutes);
-
-// router.use('/image', staticRoutes) // Disabled for Lambda - requires puppeteer
 
 router.use('/statistics', statisticsRoutes);
 
