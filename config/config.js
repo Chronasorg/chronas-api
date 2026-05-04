@@ -1,14 +1,9 @@
 import Joi from 'joi';
 import memoryCache from 'memory-cache';
 import dotenv from 'dotenv';
-// import logger from './winston.js'
 
 export const cache = memoryCache;
 
-// require and configure dotenv, will load vars in .env in PROCESS.ENV
-
-// parse json from the lambda environment variables
-// check if process.env.chronasConfig is not null
 const mergedSecrets = {};
 
 if (process.env.chronasConfig != null) {
@@ -16,55 +11,31 @@ if (process.env.chronasConfig != null) {
   Object.assign(mergedSecrets, process.env);
   Object.keys(lambdaEnv).forEach(key => mergedSecrets[key] = lambdaEnv[key]);
 } else {
-  // Load environment-specific .env file
   const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
   dotenv.config({ path: envFile });
   Object.assign(mergedSecrets, process.env);
 }
 
-// define the default env vars
-
-// define validation for all the env vars
 const envVarsSchema = Joi.object({
   NODE_ENV: Joi.string()
     .valid('development', 'production', 'test', 'provision')
     .default('development'),
   PORT: Joi.number()
     .default(4040),
-  MONGOOSE_DEBUG: Joi.boolean()
-    .when('NODE_ENV', {
-      is: Joi.string().equal('development'),
-      then: Joi.boolean().default(true),
-      otherwise: Joi.boolean().default(false)
-    }),
   JWT_SECRET: Joi.string().required()
     .description('JWT Secret required to sign'),
-  SECRET_DB_NAME: Joi.string()
-    .default('/chronas/docdb/newpassword'),
   region: Joi.string()
     .default('eu-west-1'),
-  MONGO_HOST: Joi.string()
-    .when('SECRET_DB_NAME', {
-      is: Joi.exist(),
-      then: Joi.string().optional(),
-      otherwise: Joi.string().required()
-    })
-    .description('Mongo DB host url (optional when using Secrets Manager)'),
-  MONGO_PORT: Joi.number()
-    .default(27017),
 
-  // Per-model DynamoDB feature flags. Each flag routes that model's reads
-  // and writes to DynamoDB when true; false keeps the existing Mongoose
-  // path. Flags flip ON only — see the forward-only policy in the plan.
-  USE_DYNAMODB_AREAS: Joi.boolean().default(false),
-  USE_DYNAMODB_MARKERS: Joi.boolean().default(false),
-  USE_DYNAMODB_METADATA: Joi.boolean().default(false),
-  USE_DYNAMODB_USERS: Joi.boolean().default(false),
-  USE_DYNAMODB_FLAGS: Joi.boolean().default(false),
-  USE_DYNAMODB_REVISIONS: Joi.boolean().default(false),
-  USE_DYNAMODB_COLLECTIONS: Joi.boolean().default(false),
-  USE_DYNAMODB_GAMES: Joi.boolean().default(false),
-  USE_DYNAMODB_BOARD: Joi.boolean().default(false),
+  // DynamoDB feature flags. Every in-scope model has been migrated to
+  // DynamoDB — these remain as switches for local overrides only.
+  USE_DYNAMODB_AREAS: Joi.boolean().default(true),
+  USE_DYNAMODB_MARKERS: Joi.boolean().default(true),
+  USE_DYNAMODB_METADATA: Joi.boolean().default(true),
+  USE_DYNAMODB_USERS: Joi.boolean().default(true),
+  USE_DYNAMODB_FLAGS: Joi.boolean().default(true),
+  USE_DYNAMODB_REVISIONS: Joi.boolean().default(true),
+  USE_DYNAMODB_BOARD: Joi.boolean().default(true),
   DYNAMODB_TABLE_PREFIX: Joi.string().default('chronas')
 
 }).unknown()
@@ -80,21 +51,13 @@ export const initItemsAndLinksToRefresh = ['provinces', 'links', 'ruler', 'cultu
 export const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
-  mongooseDebug: envVars.MONGOOSE_DEBUG,
   jwtSecret: envVars.JWT_SECRET,
-  mongo: {
-    host: envVars.MONGO_HOST || null,
-    port: envVars.MONGO_PORT
-  },
-  docDbsecretName: envVars.SECRET_DB_NAME,
   awsRegion: envVars.region,
-  appInsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
   mailgunReceiver: envVars.MAILGUN_RECEIVER,
   githubClientId: envVars.GITHUB_CLIENT_ID,
   twitterConsumerSecret: envVars.TWITTER_CONSUMER_SECRET,
   googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
   mailgunKey: envVars.MAILGUN_KEY,
-  appinsightsInstrumentationkey: envVars.APPINSIGHTS_INSTRUMENTATIONKEY,
   googleClientId: envVars.GOOGLE_CLIENT_ID,
   githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
   mailgunDomain: envVars.MAILGUN_DOMAIN,
@@ -104,7 +67,6 @@ export const config = {
   cloudinaryUrl: envVars.CLOUDINARY_URL,
   facebookClientSecret: envVars.FACEBOOK_CLIENT_SECRET,
   paypalClientSecret: envVars.PAYPAL_CLIENT_SECRET,
-  appinsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
   rumEndpoint: envVars.RUMENDPOINT,
   rumRoleArn: envVars.RUMROLEARN,
   rumIdentityPool: envVars.RUMIDENTITYPOOL,
@@ -122,8 +84,6 @@ export const config = {
     useUsers: envVars.USE_DYNAMODB_USERS,
     useFlags: envVars.USE_DYNAMODB_FLAGS,
     useRevisions: envVars.USE_DYNAMODB_REVISIONS,
-    useCollections: envVars.USE_DYNAMODB_COLLECTIONS,
-    useGames: envVars.USE_DYNAMODB_GAMES,
     useBoard: envVars.USE_DYNAMODB_BOARD
   }
 };

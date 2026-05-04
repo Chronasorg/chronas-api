@@ -39,7 +39,7 @@ function list(req, res, next) {
     })
     .catch((err) => {
       console.error('Statistics S3 read error:', err.name, err.message, 'Bucket:', S3_BUCKET, 'Key:', S3_KEY);
-      res.status(503).json({ error: 'Statistics unavailable: ' + err.name + ': ' + err.message, bucket: S3_BUCKET, key: S3_KEY });
+      res.status(503).json({ error: `Statistics unavailable: ${err.name}: ${err.message}`, bucket: S3_BUCKET, key: S3_KEY });
     });
 }
 

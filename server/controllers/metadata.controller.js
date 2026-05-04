@@ -327,9 +327,9 @@ function getLinked(req, res, next, resolve = false) {
   // Get linked items — from links-store (DynamoDB) or monolithic doc (DocumentDB)
   const linkedItemsPromise = useDynamoLinks
     ? linksStore.getLinked(sourceItem).then(result => {
-        if (result.markers.length === 0 && result.metadata.length === 0) return false;
-        return [result.markers, result.metadata];
-      })
+      if (result.markers.length === 0 && result.metadata.length === 0) return false;
+      return [result.markers, result.metadata];
+    })
     : Promise.resolve(req.entity.data[sourceItem] || false);
 
   linkedItemsPromise.then((linkedItems) => {

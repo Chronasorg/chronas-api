@@ -226,8 +226,15 @@ function handleCondition(field, condition, ctx) {
         parts.push(`${name} = ${registerValue(EMPTY_IN_SENTINEL, ctx)}`);
         break;
       }
-      const keys = rhs.map(val => registerValue(val, ctx));
-      parts.push(`${name} IN (${keys.join(', ')})`);
+      // DynamoDB IN accepts at most 100 operands; chunk larger arrays and
+      // OR the groups together so the request never trips the hard limit.
+      const chunks = [];
+      for (let i = 0; i < rhs.length; i += 100) {
+        const chunk = rhs.slice(i, i + 100);
+        const keys = chunk.map(val => registerValue(val, ctx));
+        chunks.push(`${name} IN (${keys.join(', ')})`);
+      }
+      parts.push(chunks.length === 1 ? chunks[0] : `(${chunks.join(' OR ')})`);
       break;
     }
     case '$regex':

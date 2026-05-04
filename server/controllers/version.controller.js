@@ -1,9 +1,6 @@
 // Lambda-compatible version without appversion dependency
-import httpStatus from 'http-status';
-
 import User from '../models/user.model.js';
 import Revision from '../models/revision.model.js';
-import APIError from '../helpers/APIError.js';
 
 
 // Version info - updated by CI/CD pipeline via build-version.json
@@ -25,9 +22,6 @@ try {
   };
 }
 
-/**
- * get current deployed version
- */
 function get(req, res) {
   return res.json({
     version: VERSION_INFO.version,
@@ -36,76 +30,32 @@ function get(req, res) {
   });
 }
 
-
-/**
- * get current deployed version and user count
- */
-function getPlusUser(req, res) {
+async function getPlusUser(req, res) {
   const formatedDate = VERSION_INFO.build;
 
-  // Handle database queries with fallback for Lambda environment
-  Promise.resolve()
-    .then(() => {
-      // Try to get revision data
-      return Revision
-        .find()
-        .sort({ timestamp: -1 })
-        .limit(1)
-        .lean()
-        .exec()
-        .catch(() => []); // Return empty array if database query fails
-    })
-    .then(async (rev) => {
-      try {
-        // Debug: Check database connection and collections
-        const mongoose = await import('mongoose');
-        const { db } = mongoose.default.connection;
-        console.log('🔍 Debug - Database name:', db ? db.databaseName : 'No database connection');
-        console.log('🔍 Debug - Mongoose connection state:', mongoose.default.connection.readyState);
+  let lastDataEdit = 'n/a';
+  let userCount = 0;
 
-        if (db) {
-          // List all collections
-          const collections = await db.listCollections().toArray();
-          console.log('🔍 Debug - Available collections:', collections.map(c => c.name));
+  try {
+    const rev = await Revision.find().sort({ timestamp: -1 }).limit(1).lean().exec();
+    lastDataEdit = (rev && rev[0] && rev[0].timestamp) || 'n/a';
+  } catch (err) {
+    console.error('Version endpoint: revision lookup failed', err.message);
+  }
 
-          // Try to find any collection that might contain users
-          for (const collection of collections) {
-            const count = await db.collection(collection.name).countDocuments();
-            console.log(`🔍 Debug - Collection '${collection.name}' has ${count} documents`);
-          }
-        }
+  try {
+    userCount = await User.countDocuments().exec();
+  } catch (err) {
+    console.error('Version endpoint: user count failed', err.message);
+  }
 
-        // Try to get user count (using countDocuments instead of deprecated count)
-        const userCount = await User.countDocuments().exec();
-        console.log('🔍 Debug - User.countDocuments() result:', userCount);
-
-        return { rev, userCount };
-      } catch (error) {
-        console.log('🔍 Debug - User.countDocuments() error:', error.message);
-        return { rev, userCount: 0 };
-      }
-    })
-    .then(({ rev, userCount }) => {
-      console.log('Debug - User count query result:', userCount);
-      res.json({
-        lastDataEdit: (rev[0] || {}).timestamp || 'n/a',
-        version: VERSION_INFO.version,
-        commit: VERSION_INFO.commit,
-        build: formatedDate,
-        user: userCount
-      });
-    })
-    .catch((error) => {
-      // Final fallback if everything fails
-      console.error('Version endpoint error:', error);
-      res.json({
-        lastDataEdit: 'n/a',
-        version: VERSION_INFO.version,
-        commit: VERSION_INFO.commit,
-        build: formatedDate,
-        user: 0
-      });
-    });
+  res.json({
+    lastDataEdit,
+    version: VERSION_INFO.version,
+    commit: VERSION_INFO.commit,
+    build: formatedDate,
+    user: userCount
+  });
 }
 
 export default { get, getPlusUser };
