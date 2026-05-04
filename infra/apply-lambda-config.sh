@@ -50,6 +50,15 @@ run_or_print() {
 
 log "Snapshotting current state to $BACKUP_DIR/"
 mkdir -p "$BACKUP_DIR"
+
+# Refuse to run if infra/backups is not gitignored. Lambda config JSON
+# contains OAuth client secrets, JWT secret etc. and must never be pushed.
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if ! git -C "$REPO_ROOT" check-ignore -q "$BACKUP_DIR/sentinel-test.json" 2>/dev/null; then
+  echo "ERROR: $BACKUP_DIR is not gitignored. Add 'infra/backups/' to .gitignore" >&2
+  echo "before running this script — its output contains OAuth client secrets." >&2
+  exit 1
+fi
 aws "${AWS_COMMON[@]}" lambda get-function-configuration --function-name "$FN" \
   > "$BACKUP_DIR/lambda-config-before-$TS.json"
 aws --profile "$PROFILE" iam get-role-policy --role-name "$ROLE" \
@@ -78,14 +87,35 @@ else
 fi
 
 # --- Environment variables ---------------------------------------------------
-log "Reconciling environment variables"
-ENV_FILE="$SCRIPT_DIR/backups/env-vars-after.json"
-if [[ ! -f "$ENV_FILE" ]]; then
-  echo "ERROR: expected env-vars file missing: $ENV_FILE" >&2
+# Remove keys listed in env-vars-to-remove.txt from the live env. We fetch the
+# current env, drop those keys, and write it back — never hardcoding secret
+# values into the repo.
+log "Reconciling environment variables (removing retired keys only)"
+REMOVE_FILE="$SCRIPT_DIR/env-vars-to-remove.txt"
+if [[ ! -f "$REMOVE_FILE" ]]; then
+  echo "ERROR: missing $REMOVE_FILE" >&2
   exit 1
 fi
+
+TMP_ENV="$(mktemp)"
+trap 'rm -f "$TMP_ENV"' EXIT
+aws "${AWS_COMMON[@]}" lambda get-function-configuration --function-name "$FN" \
+  --query 'Environment' --output json \
+  | python3 -c "
+import json, sys
+env = json.load(sys.stdin) or {'Variables': {}}
+variables = env.get('Variables', {}) or {}
+remove = {line.strip() for line in open('$REMOVE_FILE') if line.strip() and not line.startswith('#')}
+changed = [k for k in list(variables) if k in remove]
+for k in changed:
+    del variables[k]
+json.dump({'Variables': variables}, sys.stdout)
+print('', file=sys.stderr)
+print(f'Removing {len(changed)} keys: {changed}', file=sys.stderr)
+" > "$TMP_ENV"
+
 run_or_print aws "${AWS_COMMON[@]}" lambda update-function-configuration \
-  --function-name "$FN" --environment "file://$ENV_FILE"
+  --function-name "$FN" --environment "file://$TMP_ENV"
 run_or_print aws "${AWS_COMMON[@]}" lambda wait function-updated \
   --function-name "$FN"
 

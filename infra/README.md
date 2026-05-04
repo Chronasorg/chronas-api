@@ -109,13 +109,20 @@ stable even if CDK is never run again.
 2. One-off fix? Run the exact `aws` command, then snapshot the result into
    `backups/lambda-config-after-*.json` and update this README.
 
+⚠️ **`infra/backups/` is gitignored and contains secrets.** Lambda
+`get-function-configuration` output includes `FACEBOOK_CLIENT_SECRET`,
+`GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_SECRET`, `JWT_SECRET` etc. in
+cleartext. Keep the snapshots local-only for your own rollback; never
+commit them. `apply-lambda-config.sh` refuses to run if the directory is
+not gitignored.
+
 Before any change:
 
 ```bash
 FN=ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM
 ROLE=ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI
 
-# Snapshot current state for rollback
+# Snapshot current state for rollback (stays LOCAL, not committed)
 aws lambda get-function-configuration --function-name "$FN" \
   --region eu-west-1 --profile chronas-prod \
   > infra/backups/lambda-config-before-$(date +%Y%m%d-%H%M%S).json

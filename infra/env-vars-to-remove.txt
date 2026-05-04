@@ -1,0 +1,11 @@
+# Lambda environment variables to remove on apply.
+# apply-lambda-config.sh reads this file and strips any of these keys from
+# the live environment. Add one key per line. Never add a key here with a
+# value — values live in Secrets Manager (SECRET_CONFIG_NAME=/chronas/secrets)
+# and get merged into env at runtime, not at deploy time.
+
+# DocumentDB / VPC leftovers (2026-05-04)
+VPC_ID
+SECRET_DB_NAME
+SECRET_MODERNIZED_DB_NAME
+DOCDB_TLS_ENABLED
