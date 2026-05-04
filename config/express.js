@@ -12,7 +12,6 @@ import helmet from 'helmet';
 import passport from 'passport';
 // import { Strategy } from 'passport-twitter'
 import AWSXRay from 'aws-xray-sdk';
-import appInsights from 'applicationinsights';
 import expressSession from 'express-session';
 
 import routes from '../server/routes/index.route.js';
@@ -44,24 +43,6 @@ async function setupSwaggerDocs() {
 
 // Initialize Swagger docs asynchronously
 setupSwaggerDocs();
-
-console.log(`appInsightsString${config.appInsightsConnectionString}`);
-
-// Only initialize Application Insights if connection string is provided
-if (config.appInsightsConnectionString) {
-  appInsights.setup(config.appInsightsConnectionString)
-    .setAutoDependencyCorrelation(true)
-    .setAutoCollectRequests(true)
-    .setAutoCollectPerformance(false) // Disabled: perf counters not meaningful in Lambda
-    .setAutoCollectExceptions(true)
-    .setAutoCollectDependencies(true)
-    .setAutoCollectConsole(false) // Disabled: console hooks add latency in Lambda
-    .setUseDiskRetryCaching(true)
-    .start();
-  console.log('✅ Application Insights initialized');
-} else {
-  console.log('⚠️  Application Insights not configured, telemetry disabled');
-}
 
 if (config.env === 'development') {
   app.use(logger('dev'));
@@ -202,27 +183,8 @@ if (config.env !== 'test') {
 }
 
 
-function removeStackTraces(envelope, context) {
-  const data = envelope.data.baseData;
-  if (data.url && data.url.includes('health')) {
-    return false;
-  }
-
-  return true;
-}
-
-// Only add telemetry processor if Application Insights is configured
-if (config.appInsightsConnectionString && appInsights.defaultClient) {
-  appInsights.defaultClient.addTelemetryProcessor(removeStackTraces);
-}
-
-
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  // Only track exceptions if Application Insights is configured
-  if (config.appInsightsConnectionString && appInsights.defaultClient) {
-    appInsights.defaultClient.trackException({ exception: err });
-  }
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}

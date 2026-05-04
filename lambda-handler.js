@@ -64,7 +64,6 @@ async function getServerlessExpressInstance() {
     trackColdStart(appResult.initTime);
 
     debugLog(`Serverless express instance initialized (init time: ${appResult.initTime}ms)`);
-    debugLog(`Database connected: ${appResult.dbConnected}`);
 
     return serverlessExpressInstance;
   } catch (error) {

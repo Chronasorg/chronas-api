@@ -3,11 +3,11 @@
 /**
  * Postman Test Automation Script
  *
- * Uses newman programmatic API (avoids Node 25 Buffer issue with CLI)
- * Handles server lifecycle management for local testing
+ * Runs newman against a remote environment (dev or prod). Local runs are no
+ * longer supported — there is no in-memory test server now that the API is
+ * DynamoDB-only.
  */
 
-import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,93 +21,10 @@ const COLLECTIONS = {
 };
 
 const ENVIRONMENTS = {
-  local: 'PostmanTests/chronas-local.postman_environment.json',
   dev: 'PostmanTests/chronas-dev.postman_environment.json',
   prod: 'PostmanTests/chronas-api.postman_environment.json'
 };
 
-/**
- * Check if server is running
- */
-async function isServerRunning(baseUrl) {
-  try {
-    const response = await fetch(`${baseUrl}/v1/health`, { signal: AbortSignal.timeout(2000) });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Start the test server with in-memory MongoDB
- */
-async function startServer() {
-  return new Promise((resolve, reject) => {
-    console.log('🚀 Starting test server with in-memory MongoDB...');
-
-    const server = spawn('node', ['scripts/start-test-server.js'], {
-      cwd: path.resolve(__dirname, '..'),
-      env: { ...process.env, PORT: '3001' },
-      stdio: ['ignore', 'pipe', 'pipe']
-    });
-
-    server.stdout.on('data', (data) => {
-      process.stdout.write(`  [server] ${data}`);
-    });
-    server.stderr.on('data', (data) => {
-      process.stderr.write(`  [server] ${data}`);
-    });
-
-    let serverReady = false;
-
-    const checkServer = async () => {
-      if (await isServerRunning('http://localhost:3001')) {
-        if (!serverReady) {
-          serverReady = true;
-          console.log('✅ Test server is ready');
-          resolve(server);
-        }
-      }
-    };
-
-    setTimeout(() => {
-      const interval = setInterval(async () => {
-        await checkServer();
-        if (serverReady) clearInterval(interval);
-      }, 1000);
-
-      setTimeout(() => {
-        if (!serverReady) {
-          clearInterval(interval);
-          server.kill();
-          reject(new Error('Test server failed to start within 30 seconds'));
-        }
-      }, 30000);
-    }, 2000);
-
-    server.on('error', (error) => {
-      console.error('❌ Failed to start test server:', error);
-      reject(error);
-    });
-  });
-}
-
-/**
- * Stop the server
- */
-function stopServer(server) {
-  if (server && !server.killed) {
-    console.log('🛑 Stopping server...');
-    server.kill('SIGTERM');
-    setTimeout(() => {
-      if (!server.killed) server.kill('SIGKILL');
-    }, 5000);
-  }
-}
-
-/**
- * Run newman programmatically (avoids Node 25 Buffer CLI issue)
- */
 async function runNewman(collection, environment, outputFile) {
   const newman = await import('newman');
   const collectionData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', collection), 'utf8'));
@@ -132,7 +49,6 @@ async function runNewman(collection, environment, outputFile) {
         return reject(err);
       }
 
-      // Save results to JSON
       try {
         const results = {
           run: {
@@ -149,7 +65,6 @@ async function runNewman(collection, environment, outputFile) {
         console.warn('⚠️ Could not save results file:', writeErr.message);
       }
 
-      // Display summary
       const { stats } = summary.run;
       console.log('\n📋 Test Summary:');
       console.log(`   Requests:   ${stats.requests.total - stats.requests.failed}/${stats.requests.total} passed`);
@@ -168,14 +83,10 @@ async function runNewman(collection, environment, outputFile) {
   });
 }
 
-/**
- * Main execution
- */
 async function main() {
   const args = process.argv.slice(2);
-  const environment = args[0] || 'local';
+  const environment = args[0] || 'dev';
   const collection = args[1] || 'enhanced';
-  const autoStart = args.includes('--auto-start') || environment === 'local';
 
   if (!ENVIRONMENTS[environment]) {
     console.error(`❌ Invalid environment: ${environment}. Available: ${Object.keys(ENVIRONMENTS).join(', ')}`);
@@ -188,26 +99,13 @@ async function main() {
   }
 
   const outputFile = `postman-results-${environment}-${collection}.json`;
-  let server = null;
 
   try {
-    if (environment === 'local' && autoStart) {
-      const serverRunning = await isServerRunning('http://localhost:3001');
-      if (!serverRunning) {
-        server = await startServer();
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } else {
-        console.log('✅ Server is already running');
-      }
-    }
-
     const exitCode = await runNewman(COLLECTIONS[collection], ENVIRONMENTS[environment], outputFile);
     process.exit(exitCode);
   } catch (error) {
     console.error('❌ Test execution failed:', error.message);
     process.exit(1);
-  } finally {
-    if (server) stopServer(server);
   }
 }
 

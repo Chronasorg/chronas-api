@@ -107,7 +107,7 @@ class OpinionQuery {
   skip(n) { return this; }
   limit(n) { return this; }
   async exec() {
-    let items = await scanOpinions(this._filter);
+    const items = await scanOpinions(this._filter);
     if (this._sort) {
       const entries = Object.entries(this._sort);
       items.sort((a, b) => {

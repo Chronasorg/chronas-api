@@ -38,20 +38,20 @@ export default class RevisionDynamo extends DynamoDocument {
 
   static findOne(filter = {}) {
     const promise = (async () => {
-    if (filter.entityId) {
-      const { Items } = await getDocClient().send(new QueryCommand({
-        TableName: TABLE,
-        IndexName: 'GSI-EntityTimestamp',
-        KeyConditionExpression: '#e = :e',
-        ExpressionAttributeNames: { '#e': 'entityId' },
-        ExpressionAttributeValues: { ':e': filter.entityId },
-        ScanIndexForward: false,
-        Limit: 1
-      }));
-      return Items?.[0] ? new RevisionDynamo(Items[0]) : null;
-    }
-    const results = await new DynamoQuery(RevisionDynamo, filter).limit(1).exec();
-    return results[0] || null;
+      if (filter.entityId) {
+        const { Items } = await getDocClient().send(new QueryCommand({
+          TableName: TABLE,
+          IndexName: 'GSI-EntityTimestamp',
+          KeyConditionExpression: '#e = :e',
+          ExpressionAttributeNames: { '#e': 'entityId' },
+          ExpressionAttributeValues: { ':e': filter.entityId },
+          ScanIndexForward: false,
+          Limit: 1
+        }));
+        return Items?.[0] ? new RevisionDynamo(Items[0]) : null;
+      }
+      const results = await new DynamoQuery(RevisionDynamo, filter).limit(1).exec();
+      return results[0] || null;
     })();
     return new QueryProxy(promise);
   }

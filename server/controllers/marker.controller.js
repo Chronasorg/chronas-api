@@ -122,26 +122,26 @@ function update(req, res, next, fromRevision = false) {
                 const renamePromise = useDynamoLinks
                   ? linksStore.renameEntity(`0:${oldId}`, `0:${newId}`)
                   : Metadata.get('links', req.method).then((links) => {
-                      if (!links) return;
-                      const linkedItems = links.data[(`0:${oldId}`)];
-                      if (!linkedItems) return links.save();
-                      const linkedMarkers = linkedItems[0];
-                      const linkedMetadata = linkedItems[1];
-                      linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
-                        const currVal = links.data[key];
-                        if (currVal) {
-                          const mediaIndex = currVal[0].findIndex(el => el[0] === oldId);
-                          const mapIndex = currVal[1].findIndex(el => el[0] === oldId);
-                          if (mediaIndex > -1) currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]];
-                          if (mapIndex > -1) currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]];
-                          if (mediaIndex > -1 || mapIndex > -1) links.data[key] = currVal;
-                        }
-                      });
-                      links.data[(`0:${newId}`)] = linkedItems;
-                      delete links.data[(`0:${oldId}`)];
-                      links.markModified('data');
-                      return links.save();
+                    if (!links) return;
+                    const linkedItems = links.data[(`0:${oldId}`)];
+                    if (!linkedItems) return links.save();
+                    const linkedMarkers = linkedItems[0];
+                    const linkedMetadata = linkedItems[1];
+                    linkedMarkers.map(el => `0:${el[0]}`).concat(linkedMetadata.map(el => `1:${el[0]}`)).forEach((key) => {
+                      const currVal = links.data[key];
+                      if (currVal) {
+                        const mediaIndex = currVal[0].findIndex(el => el[0] === oldId);
+                        const mapIndex = currVal[1].findIndex(el => el[0] === oldId);
+                        if (mediaIndex > -1) currVal[0][mediaIndex] = [newId, currVal[0][mediaIndex][1]];
+                        if (mapIndex > -1) currVal[1][mapIndex] = [newId, currVal[1][mapIndex][1]];
+                        if (mediaIndex > -1 || mapIndex > -1) links.data[key] = currVal;
+                      }
                     });
+                    links.data[(`0:${newId}`)] = linkedItems;
+                    delete links.data[(`0:${oldId}`)];
+                    links.markModified('data');
+                    return links.save();
+                  });
 
                 renamePromise
                   .then(() => { if (!fromRevision) res.json(savedMarker); })

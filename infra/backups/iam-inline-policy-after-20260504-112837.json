@@ -1,0 +1,26 @@
+{
+    "RoleName": "ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI",
+    "PolicyName": "ChronasApiLambdaFunctionServiceRoleDefaultPolicy8E461284",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "DLQ",
+                "Action": "sqs:SendMessage",
+                "Resource": "arn:aws:sqs:eu-west-1:937826731833:ChronasApiLambdaStackV2-ChronasApiLambdaFunctionDeadLetterQueueE0BB-kQ5FG2we8vvn",
+                "Effect": "Allow"
+            },
+            {
+                "Sid": "AppConfigSecret",
+                "Action": [
+                    "secretsmanager:DescribeSecret",
+                    "secretsmanager:GetSecretValue"
+                ],
+                "Resource": [
+                    "arn:aws:secretsmanager:eu-west-1:937826731833:secret:/chronas/secrets-YDUZQG"
+                ],
+                "Effect": "Allow"
+            }
+        ]
+    }
+}

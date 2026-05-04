@@ -229,3 +229,25 @@ describe('Fix: Empty $in does not crash DynamoDB (getLinked alert)', () => {
     results.forEach(m => expect(m.type).to.equal('e'));
   });
 });
+
+describe('Fix: $in arrays larger than 100 do not crash DynamoDB (issue #132)', () => {
+  it('Marker.find with a $in of 510 ids runs without ValidationException', async () => {
+    // DynamoDB caps the IN operator at 100 operands. Before the fix a 510-id
+    // query crashed the Lambda with ValidationException and forced a cold
+    // start on the next request. This proves the chunking patch works.
+    const ids = Array.from({ length: 510 }, (_, i) => `not-a-real-marker-${i}`);
+    const results = await MarkerDynamo.find({ _id: { $in: ids } }).lean().exec();
+    expect(results).to.be.an('array').that.is.empty;
+  });
+
+  it('Marker.find with a $in that matches real ids across chunk boundaries finds them', async () => {
+    // Mix real ids at the start, middle and end of a 250-item input so we'd
+    // notice if a chunk got dropped by the chunking logic.
+    const real = ['Paris', 'Rome', 'London'];
+    const filler = Array.from({ length: 247 }, (_, i) => `filler-${i}`);
+    const ids = [real[0], ...filler.slice(0, 120), real[1], ...filler.slice(120), real[2]];
+    const results = await MarkerDynamo.find({ _id: { $in: ids } }).lean().exec();
+    const foundIds = results.map(m => m._id).sort();
+    expect(foundIds).to.deep.equal([...real].sort());
+  });
+});

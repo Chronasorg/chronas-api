@@ -12,15 +12,6 @@ describe('## Application Startup Tests', () => {
       }
     });
 
-    it('should load database configuration without errors', async () => {
-      try {
-        const dbConfig = await import('../../../config/database.js');
-        expect(dbConfig).to.exist;
-      } catch (error) {
-        throw new Error(`Database config failed to load: ${error.message}`);
-      }
-    });
-
     it('should load winston logger without errors', async () => {
       try {
         const winston = await import('../../../config/winston.js');
@@ -152,7 +143,6 @@ describe('## Application Startup Tests', () => {
 
   describe('# Utility Scripts', () => {
     const utilityScripts = [
-      'download-docdb-cert.js',
       'run-postman-tests.js',
       'setup-test-environment.js',
       'validate-deployment.js'

@@ -1,19 +1,13 @@
 /**
  * Health Check Routes
- *
- * Provides comprehensive health monitoring endpoints
  */
 
 import express from 'express';
 
-import { getConnectionStatus, testDatabaseConnectivity } from '../../config/database.js';
 import { cacheUtils } from '../middleware/cache.js';
 
 const router = express.Router();
 
-/**
- * Basic health check
- */
 router.get('/', (req, res) => {
   res.json({
     status: 'healthy',
@@ -24,10 +18,7 @@ router.get('/', (req, res) => {
   });
 });
 
-/**
- * Detailed health check
- */
-router.get('/detailed', async (req, res) => {
+router.get('/detailed', (req, res) => {
   const health = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -37,54 +28,17 @@ router.get('/detailed', async (req, res) => {
     checks: {}
   };
 
-  // Database health
-  try {
-    const connectionStatus = getConnectionStatus();
-
-    health.checks.database = {
-      status: connectionStatus.isConnected ? 'healthy' : 'unhealthy',
-      state: connectionStatus.state,
-      host: connectionStatus.host,
-      name: connectionStatus.name
-    };
-
-    if (connectionStatus.isConnected) {
-      // Test database connectivity
-      const pingResult = await testDatabaseConnectivity();
-      health.checks.database.ping = pingResult ? 'success' : 'failed';
-    }
-  } catch (error) {
-    health.checks.database = {
-      status: 'unhealthy',
-      error: error.message
-    };
-    health.status = 'degraded';
-  }
-
-  // Cache health
   try {
     health.checks.cache = {
       status: 'healthy',
-      type: cacheUtils.isRedisConnected() ? 'redis' : 'memory',
+      type: 'memory',
       stats: cacheUtils.getStats()
     };
-
-    // Test cache with a simple operation
-    const testKey = `health-check-${Date.now()}`;
-    await cacheUtils.set(testKey, 'test', 10);
-    const testValue = await cacheUtils.get(testKey);
-    await cacheUtils.del(testKey);
-
-    health.checks.cache.test = testValue === 'test' ? 'success' : 'failed';
   } catch (error) {
-    health.checks.cache = {
-      status: 'unhealthy',
-      error: error.message
-    };
+    health.checks.cache = { status: 'unhealthy', error: error.message };
     health.status = 'degraded';
   }
 
-  // Memory usage
   const memUsage = process.memoryUsage();
   health.checks.memory = {
     status: 'healthy',
@@ -96,62 +50,22 @@ router.get('/detailed', async (req, res) => {
     }
   };
 
-  // Check if memory usage is too high (>500MB heap)
   if (memUsage.heapUsed > 500 * 1024 * 1024) {
     health.checks.memory.status = 'warning';
     health.status = 'degraded';
   }
 
-  // Set appropriate HTTP status
-  const statusCode = health.status === 'healthy'
-    ? 200
-    : health.status === 'degraded' ? 200 : 503;
-
+  const statusCode = health.status === 'healthy' ? 200 : 200;
   res.status(statusCode).json(health);
 });
 
-/**
- * Readiness check (for Kubernetes)
- */
-router.get('/ready', async (req, res) => {
-  try {
-    // Check if database is ready
-    const connectionStatus = getConnectionStatus();
-    if (!connectionStatus.isConnected) {
-      return res.status(503).json({
-        status: 'not ready',
-        reason: 'database not connected',
-        state: connectionStatus.state,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Test database connectivity
-    const isConnected = await testDatabaseConnectivity();
-    if (!isConnected) {
-      return res.status(503).json({
-        status: 'not ready',
-        reason: 'database ping failed',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    res.json({
-      status: 'ready',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(503).json({
-      status: 'not ready',
-      reason: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
+router.get('/ready', (req, res) => {
+  res.json({
+    status: 'ready',
+    timestamp: new Date().toISOString()
+  });
 });
 
-/**
- * Liveness check (for Kubernetes)
- */
 router.get('/live', (req, res) => {
   res.json({
     status: 'alive',
@@ -160,9 +74,6 @@ router.get('/live', (req, res) => {
   });
 });
 
-/**
- * Metrics endpoint (basic)
- */
 router.get('/metrics', (req, res) => {
   const metrics = {
     timestamp: new Date().toISOString(),
@@ -174,10 +85,9 @@ router.get('/metrics', (req, res) => {
     arch: process.arch
   };
 
-  // Add cache metrics if available
   try {
     metrics.cache = cacheUtils.getStats();
-  } catch (error) {
+  } catch {
     // Ignore cache metrics errors
   }
 

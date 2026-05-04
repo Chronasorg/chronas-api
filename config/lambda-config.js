@@ -1,8 +1,8 @@
 /**
  * Lambda-Optimized Configuration Module
  *
- * This module provides optimized configuration loading for AWS Lambda
- * with caching, validation, and graceful fallbacks.
+ * DynamoDB-only: no database URI configuration. Secrets Manager still used for
+ * JWT/OAuth config under SECRET_CONFIG_NAME.
  */
 
 import Joi from 'joi';
@@ -11,31 +11,20 @@ import memoryCache from 'memory-cache';
 
 import { getApplicationConfig } from './secrets-manager.js';
 
-// Memory cache export for backward compatibility
-
 const debugLog = debug('chronas-api:lambda-config');
 
-// Configuration cache for Lambda optimization
 let cachedConfig = null;
 let configLoadTime = null;
 
-/**
- * Lambda environment detection
- */
 export const isLambdaEnvironment = () => {
   return !!(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
 };
 
-/**
- * Get environment variables with Lambda-specific handling and Secrets Manager integration
- */
 async function getEnvironmentVariables() {
   const mergedSecrets = {};
 
-  // Start with environment variables
   Object.assign(mergedSecrets, process.env);
 
-  // Lambda environment: Check for JSON-encoded configuration
   if (process.env.chronasConfig) {
     try {
       const lambdaEnv = JSON.parse(process.env.chronasConfig);
@@ -48,7 +37,6 @@ async function getEnvironmentVariables() {
     }
   }
 
-  // Load additional configuration from Secrets Manager (if configured)
   if (process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET) {
     const secretId = process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET;
 
@@ -56,7 +44,6 @@ async function getEnvironmentVariables() {
       debugLog(`Loading additional configuration from Secrets Manager: ${secretId}`);
       const secretConfig = await getApplicationConfig(secretId);
 
-      // Merge secrets manager config (don't override existing env vars)
       Object.keys(secretConfig).forEach(key => {
         if (!mergedSecrets[key]) {
           mergedSecrets[key] = secretConfig[key];
@@ -66,16 +53,13 @@ async function getEnvironmentVariables() {
       debugLog('Configuration loaded from Secrets Manager');
     } catch (error) {
       debugLog('Failed to load configuration from Secrets Manager:', error.message);
-      // Continue without Secrets Manager config (non-fatal)
     }
   }
 
-  // Local development: Load .env file (non-Lambda environments only)
   if (!isLambdaEnvironment()) {
     try {
       const dotenv = await import('dotenv');
       dotenv.config();
-      // Re-merge environment variables (in case .env added new ones)
       Object.assign(mergedSecrets, process.env);
       debugLog('Loaded configuration from .env file');
     } catch (error) {
@@ -86,9 +70,6 @@ async function getEnvironmentVariables() {
   return mergedSecrets;
 }
 
-/**
- * Configuration schema with Lambda-optimized defaults
- */
 const getConfigSchema = () => {
   const isLambda = isLambdaEnvironment();
 
@@ -98,14 +79,7 @@ const getConfigSchema = () => {
       .default(isLambda ? 'production' : 'development'),
 
     PORT: Joi.number()
-      .default(isLambda ? 3000 : 4040), // Lambda uses port 3000 by default
-
-    MONGOOSE_DEBUG: Joi.boolean()
-      .when('NODE_ENV', {
-        is: Joi.string().equal('development'),
-        then: Joi.boolean().default(true),
-        otherwise: Joi.boolean().default(false)
-      }),
+      .default(isLambda ? 3000 : 4040),
 
     JWT_SECRET: Joi.string()
       .when('NODE_ENV', {
@@ -114,13 +88,6 @@ const getConfigSchema = () => {
         otherwise: Joi.string().required()
       })
       .description('JWT Secret required to sign'),
-
-    SECRET_DB_NAME: Joi.string()
-      .default('/chronas/docdb/newpassword'),
-
-    SECRET_MODERNIZED_DB_NAME: Joi.string()
-      .allow('', null)
-      .default(''),
 
     SECRET_CONFIG_NAME: Joi.string()
       .allow('', null)
@@ -133,36 +100,17 @@ const getConfigSchema = () => {
     region: Joi.string()
       .default('eu-west-1'),
 
-    MONGO_HOST: Joi.string()
-      .when('NODE_ENV', {
-        is: Joi.string().equal('development'),
-        then: Joi.string().default('mongodb://localhost:27017/chronas-api'),
-        otherwise: Joi.string().when('SECRET_DB_NAME', {
-          is: Joi.string().min(1),
-          then: Joi.string().optional(), // Optional when Secrets Manager is configured
-          otherwise: Joi.string().required()
-        })
-      })
-      .description('MongoDB/DocumentDB host URL (optional when using Secrets Manager)'),
-
-    MONGO_PORT: Joi.number()
-      .default(27017),
-
-    // Lambda-specific optimizations
     LAMBDA_TIMEOUT: Joi.number()
-      .default(30000), // 30 seconds default timeout
+      .default(30000),
 
     LAMBDA_MEMORY: Joi.number()
-      .default(512), // 512MB default memory
+      .default(512),
 
-    // Optional configuration with graceful fallbacks
-    APPINSIGHTS_CONNECTION_STRING: Joi.string().allow('', null).default(''),
     MAILGUN_RECEIVER: Joi.string().allow('', null).default(''),
     GITHUB_CLIENT_ID: Joi.string().allow('', null).default(''),
     TWITTER_CONSUMER_SECRET: Joi.string().allow('', null).default(''),
     GOOGLE_CLIENT_SECRET: Joi.string().allow('', null).default(''),
     MAILGUN_KEY: Joi.string().allow('', null).default(''),
-    APPINSIGHTS_INSTRUMENTATIONKEY: Joi.string().allow('', null).default(''),
     GOOGLE_CLIENT_ID: Joi.string().allow('', null).default(''),
     GITHUB_CLIENT_SECRET: Joi.string().allow('', null).default(''),
     MAILGUN_DOMAIN: Joi.string().allow('', null).default(''),
@@ -182,13 +130,10 @@ const getConfigSchema = () => {
     RUMAPPLICATIONID: Joi.string().allow('', null).default(''),
     CHRONAS_HOST: Joi.string().allow('', null).default('')
 
-  }).unknown(true) // Allow unknown environment variables
+  }).unknown(true)
     .required();
 };
 
-/**
- * Validate and process configuration
- */
 function validateConfiguration(envVars) {
   const schema = getConfigSchema();
   const { error, value } = schema.validate(envVars, {
@@ -200,11 +145,10 @@ function validateConfiguration(envVars) {
     const errorMessage = `Configuration validation error: ${error.message}`;
     debugLog(errorMessage);
 
-    // In Lambda, log error but don't crash immediately
     if (isLambdaEnvironment()) {
       console.error(errorMessage);
       console.error('Continuing with partial configuration...');
-      return envVars; // Return unvalidated config as fallback
+      return envVars;
     } else {
       throw new Error(errorMessage);
     }
@@ -213,44 +157,26 @@ function validateConfiguration(envVars) {
   return value;
 }
 
-/**
- * Build configuration object
- */
 function buildConfig(envVars) {
   return {
-    // Environment
     env: envVars.NODE_ENV,
     port: envVars.PORT,
     isLambda: isLambdaEnvironment(),
 
-    // Database
-    mongooseDebug: envVars.MONGOOSE_DEBUG,
-    mongo: {
-      host: envVars.MONGO_HOST || null, // Allow null when using Secrets Manager
-      port: envVars.MONGO_PORT
-    },
-
-    // Security
     jwtSecret: envVars.JWT_SECRET,
 
-    // AWS - use original database secret
-    docDbsecretName: envVars.SECRET_DB_NAME,
     awsRegion: envVars.region,
 
-    // Lambda-specific
     lambda: {
       timeout: envVars.LAMBDA_TIMEOUT,
       memory: envVars.LAMBDA_MEMORY
     },
 
-    // External services (with fallbacks)
-    appInsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
     mailgunReceiver: envVars.MAILGUN_RECEIVER,
     githubClientId: envVars.GITHUB_CLIENT_ID,
     twitterConsumerSecret: envVars.TWITTER_CONSUMER_SECRET,
     googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
     mailgunKey: envVars.MAILGUN_KEY,
-    appinsightsInstrumentationkey: envVars.APPINSIGHTS_INSTRUMENTATIONKEY,
     googleClientId: envVars.GOOGLE_CLIENT_ID,
     githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
     mailgunDomain: envVars.MAILGUN_DOMAIN,
@@ -260,7 +186,6 @@ function buildConfig(envVars) {
     cloudinaryUrl: envVars.CLOUDINARY_URL,
     facebookClientSecret: envVars.FACEBOOK_CLIENT_SECRET,
     paypalClientSecret: envVars.PAYPAL_CLIENT_SECRET,
-    appinsightsConnectionString: envVars.APPINSIGHTS_CONNECTION_STRING,
     rumEndpoint: envVars.RUMENDPOINT,
     rumRoleArn: envVars.RUMROLEARN,
     rumIdentityPool: envVars.RUMIDENTITYPOOL,
@@ -271,7 +196,6 @@ function buildConfig(envVars) {
     rumApplicationId: envVars.RUMAPPLICATIONID,
     chronasHost: envVars.CHRONAS_HOST,
 
-    // DynamoDB feature flags
     dynamodb: {
       tablePrefix: envVars.DYNAMODB_TABLE_PREFIX || 'chronas',
       useAreas: envVars.USE_DYNAMODB_AREAS === 'true' || envVars.USE_DYNAMODB_AREAS === true,
@@ -280,18 +204,12 @@ function buildConfig(envVars) {
       useUsers: envVars.USE_DYNAMODB_USERS === 'true' || envVars.USE_DYNAMODB_USERS === true,
       useFlags: envVars.USE_DYNAMODB_FLAGS === 'true' || envVars.USE_DYNAMODB_FLAGS === true,
       useRevisions: envVars.USE_DYNAMODB_REVISIONS === 'true' || envVars.USE_DYNAMODB_REVISIONS === true,
-      useCollections: envVars.USE_DYNAMODB_COLLECTIONS === 'true' || envVars.USE_DYNAMODB_COLLECTIONS === true,
-      useGames: envVars.USE_DYNAMODB_GAMES === 'true' || envVars.USE_DYNAMODB_GAMES === true,
       useBoard: envVars.USE_DYNAMODB_BOARD === 'true' || envVars.USE_DYNAMODB_BOARD === true
     }
   };
 }
 
-/**
- * Load configuration with caching for Lambda optimization
- */
 export async function loadConfig(forceReload = false) {
-  // Return cached config if available and not forcing reload
   if (cachedConfig && !forceReload) {
     debugLog('Using cached configuration');
     return cachedConfig;
@@ -302,47 +220,25 @@ export async function loadConfig(forceReload = false) {
   try {
     debugLog('Loading configuration...');
 
-    // Get environment variables
     const envVars = await getEnvironmentVariables();
-
-    // Validate configuration
     const validatedVars = validateConfiguration(envVars);
 
-    // Build configuration object
     cachedConfig = buildConfig(validatedVars);
     configLoadTime = Date.now() - startTime;
 
     debugLog(`Configuration loaded successfully in ${configLoadTime}ms`);
 
-    // Log configuration summary (without sensitive data)
-    if (debugLog.enabled) {
-      const configSummary = {
-        env: cachedConfig.env,
-        isLambda: cachedConfig.isLambda,
-        port: cachedConfig.port,
-        mongoHost: cachedConfig.mongo.host ? '[CONFIGURED]' : '[NOT SET]',
-        jwtSecret: cachedConfig.jwtSecret ? '[CONFIGURED]' : '[NOT SET]'
-      };
-      debugLog('Configuration summary:', configSummary);
-    }
-
     return cachedConfig;
   } catch (error) {
     debugLog('Configuration loading failed:', error.message);
 
-    // In Lambda, provide minimal fallback configuration
     if (isLambdaEnvironment()) {
       console.error('Configuration loading failed, using minimal fallback');
       cachedConfig = {
         env: 'production',
         port: 3000,
         isLambda: true,
-        mongo: {
-          host: process.env.MONGO_HOST || 'mongodb://localhost:27017/chronas-api',
-          port: 27017
-        },
-        jwtSecret: process.env.JWT_SECRET || 'fallback-secret',
-        mongooseDebug: false
+        jwtSecret: process.env.JWT_SECRET || 'fallback-secret'
       };
       return cachedConfig;
     }
@@ -351,9 +247,6 @@ export async function loadConfig(forceReload = false) {
   }
 }
 
-/**
- * Get cached configuration (synchronous)
- */
 export function getConfig() {
   if (!cachedConfig) {
     throw new Error('Configuration not loaded. Call loadConfig() first.');
@@ -361,18 +254,12 @@ export function getConfig() {
   return cachedConfig;
 }
 
-/**
- * Clear configuration cache
- */
 export function clearConfigCache() {
   cachedConfig = null;
   configLoadTime = null;
   debugLog('Configuration cache cleared');
 }
 
-/**
- * Get configuration loading performance metrics
- */
 export function getConfigMetrics() {
   return {
     cached: !!cachedConfig,
@@ -381,7 +268,6 @@ export function getConfigMetrics() {
   };
 }
 
-// Initialize items and links to refresh (from original config)
 export const initItemsAndLinksToRefresh = [
   'provinces', 'links', 'ruler', 'culture', 'religion',
   'capital', 'province', 'religionGeneral'

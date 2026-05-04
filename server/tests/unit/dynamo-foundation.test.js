@@ -48,6 +48,20 @@ describe('buildFilterExpression', () => {
     expect(r.values).to.deep.equal({ ':v0': 'a', ':v1': 'b', ':v2': 'c' });
   });
 
+  it('chunks $in arrays larger than 100 into OR-joined groups', () => {
+    const ids = Array.from({ length: 250 }, (_, i) => `id-${i}`);
+    const r = buildFilterExpression({ _id: { $in: ids } });
+    // 250 -> three groups (100, 100, 50), wrapped in parentheses and OR-joined.
+    const chunks = r.expression.split(' OR ');
+    expect(chunks).to.have.length(3);
+    expect(Object.keys(r.values)).to.have.length(250);
+    // No single IN() group can have more than 100 operands.
+    for (const chunk of chunks) {
+      const operands = chunk.match(/:v\d+/g) || [];
+      expect(operands.length).to.be.at.most(100);
+    }
+  });
+
   it('handles $or without placeholder collision', () => {
     const r = buildFilterExpression({ $or: [{ name: 'x' }, { wiki: 'y' }] });
     expect(r.expression).to.equal('((#name = :v0) OR (#wiki = :v1))');
