@@ -1,0 +1,37 @@
+{
+    "RoleName": "ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI",
+    "PolicyName": "ChronasApiLambdaFunctionServiceRoleDefaultPolicy8E461284",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "sqs:SendMessage",
+                "Resource": "arn:aws:sqs:eu-west-1:937826731833:ChronasApiLambdaStackV2-ChronasApiLambdaFunctionDeadLetterQueueE0BB-kQ5FG2we8vvn",
+                "Effect": "Allow"
+            },
+            {
+                "Action": [
+                    "secretsmanager:DescribeSecret",
+                    "secretsmanager:GetSecretValue"
+                ],
+                "Resource": [
+                    "arn:aws:secretsmanager:eu-west-1:937826731833:secret:/chronas/docdb/newpassword-5Ecs1B",
+                    "arn:aws:secretsmanager:eu-west-1:937826731833:secret:/chronas/secrets-YDUZQG",
+                    "arn:aws:secretsmanager:eu-west-1:937826731833:secret:/chronas/dev/docdb/modernized-modernized*"
+                ],
+                "Effect": "Allow"
+            },
+            {
+                "Action": [
+                    "ec2:AttachNetworkInterface",
+                    "ec2:CreateNetworkInterface",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DetachNetworkInterface"
+                ],
+                "Resource": "*",
+                "Effect": "Allow"
+            }
+        ]
+    }
+}

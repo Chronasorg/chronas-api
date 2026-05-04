@@ -1,0 +1,32 @@
+{
+  "Variables": {
+    "GITHUB_CLIENT_ID": "034fc06088daa6624f9b",
+    "GOOGLE_CLIENT_SECRET": "3549fe3961dca679cbfe2f95ef65283c229e9701",
+    "SECRET_CONFIG_NAME": "/chronas/secrets",
+    "USE_DYNAMODB_AREAS": "true",
+    "NODE_OPTIONS": "--enable-source-maps --max-old-space-size=900",
+    "STATISTICS_S3_KEY": "api/statistics.json",
+    "USE_DYNAMODB_REVISIONS": "true",
+    "USE_DYNAMODB_FLAGS": "true",
+    "ALLOWED_ORIGINS": "https://chronas.org,https://new.chronas.org,http://localhost:3000,http://localhost:5173",
+    "USE_DYNAMODB_USERS": "true",
+    "DYNAMODB_TABLE_PREFIX": "chronas",
+    "TWITTER_CALLBACK_URL": "https://api.chronas.org/v1/auth/login/twitter",
+    "JWT_SECRET": "fallback-jwt-secret-for-lambda",
+    "GOOGLE_CALLBACK_URL": "https://api.chronas.org/v1/auth/login/google",
+    "PORT": "8080",
+    "GOOGLE_CLIENT_ID": "8962334459-5dlpusn5817ib31ut85v7h5eathcv9gg.apps.googleusercontent.com",
+    "GITHUB_CLIENT_SECRET": "dKB5ffOSrkhPxmTqPVUx6vQV",
+    "USE_DYNAMODB_MARKERS": "true",
+    "GITHUB_CALLBACK_URL": "https://api.chronas.org/v1/auth/login/github",
+    "FACEBOOK_CALLBACK_URL": "https://api.chronas.org/v1/auth/login/facebook",
+    "USE_DYNAMODB_BOARD": "true",
+    "CHRONAS_HOST": "https://chronas.org",
+    "DEBUG": "chronas-api:*",
+    "FACEBOOK_CLIENT_ID": "1535099886712488",
+    "STATISTICS_S3_BUCKET": "chronas-frontend-new",
+    "NODE_ENV": "production",
+    "USE_DYNAMODB_METADATA": "true",
+    "FACEBOOK_CLIENT_SECRET": "fefa6092c2eaf4a936b3b9ee9ac9a9ec"
+  }
+}

@@ -27,8 +27,6 @@
     "test:postman:prod": "node scripts/run-postman-tests.js prod enhanced",
     "test:setup": "node scripts/setup-test-environment.js",
     "validate:deployment": "node scripts/validate-deployment.js",
-    "deploy:dev": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-dev",
-    "deploy:prod": "cd ../chronas-cdk && npm run build && npx cdk deploy ChronasApiLambdaStackV2 --profile chronas-prod",
     "validate:religion": "node scripts/data-validation/validate-religion.js",
     "validate:culture": "node scripts/data-validation/validate-religion.js --dimension culture",
     "validate:scan": "node scripts/data-validation/scan-dimension.js",

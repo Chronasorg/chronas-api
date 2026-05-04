@@ -69,3 +69,15 @@ build-version.json
 
 # Migration script logs (DocumentDB → DynamoDB migration)
 scripts/migration/logs/
+
+# Postman result artifacts (written by scripts/run-postman-tests.js)
+postman-results-*.json
+
+# Future apply-lambda-config.sh snapshots (keep only the one historical
+# pre/post pair that's already committed)
+infra/backups/*-before-*.json
+infra/backups/*-after-*.json
+!infra/backups/lambda-config-before-20260504-112029.json
+!infra/backups/lambda-config-after-20260504-112835.json
+!infra/backups/iam-inline-policy-before-20260504-112031.json
+!infra/backups/iam-inline-policy-after-20260504-112837.json
