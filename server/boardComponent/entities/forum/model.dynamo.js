@@ -3,8 +3,10 @@ import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
 import QueryProxy from '../../../models/dynamo/query-proxy.js';
 import { getDocClient, tableName } from '../../../models/dynamo/dynamo-client.js';
+import { cache } from '../../../../config/config.js';
 
 const TABLE = tableName('board');
+const FORUM_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 export default class ForumDynamo extends DynamoDocument {
   static tableName = TABLE;
@@ -57,6 +59,9 @@ class ForumQuery {
 }
 
 async function scanForums() {
+  const cached = cache.get('forums:all');
+  if (cached) return cached;
+
   const client = getDocClient();
   const items = [];
   let next;
@@ -72,6 +77,7 @@ async function scanForums() {
     if (out.Items) items.push(...out.Items.map(toForum));
     next = out.LastEvaluatedKey;
   } while (next);
+  cache.put('forums:all', items, FORUM_CACHE_TTL);
   return items;
 }
 
