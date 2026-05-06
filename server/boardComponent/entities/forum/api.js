@@ -33,12 +33,10 @@ router.route('/:forum_slug/discussions').get(
         res.set('Access-Control-Expose-Headers', 'X-Total-Count');
         res.set('X-Total-Count', result[1]);
         res.json(result[0]);
-        // res.send(result)
       },
-      (error) => {
+      (_error) => {
         res.set('X-Total-Count', 0);
-        res.json(result[0]);
-        // res.send([])
+        res.json([]);
       }
     );
   });
@@ -47,10 +45,10 @@ router.route('/:forum_slug/discussions').get(
 router.route('/:forum_slug/pinned_discussions').get(
   // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
   (req, res) => {
-    const { q, offset, limit } = req.query;
+    const { offset, limit } = req.query;
     getDiscussions(req.params.forum_slug, true, false, false, offset, limit).then(
       (result) => { res.send(result[0]); },
-      (error) => { res.send([]); }
+      (_error) => { res.send([]); }
     );
   });
 

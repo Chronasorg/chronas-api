@@ -72,15 +72,6 @@ paths:
             schema:
                $ref: '#/definitions/errorResponse'                 
                
-  /auth/login/twitter:
-    get:
-      summary: Returns token if twitter auth was successful
-      description: Returns token if twitter auth was successful
-      responses:
-        200:
-          description: Redirects to twitter login
-        401:
-          description: Twitter Auth was not succesufll
   /auth/login/facebook:
     get:
       summary: Returns token if facebook auth was successful

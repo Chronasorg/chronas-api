@@ -1,10 +1,8 @@
 import passport from 'passport';
 import { OAuth2Strategy } from 'passport-google-oauth';
-import jwt from 'jsonwebtoken';
 
 import { config } from '../../config/config.js';
 import userCtrl from '../controllers/user.controller.js';
-import metadataCtrl from '../controllers/metadata.controller.js';
 
 const credentials = {
   clientID: config.googleClientId,
@@ -15,11 +13,6 @@ const credentials = {
 };
 
 function authenticateUser(req, res, next) {
-  const self = this;
-
-  let redirect = config.chronasHost;
-  if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app';
-
   // Begin process
   console.log('============================================================');
   console.log('[services.google] - Triggered authentication process...');
@@ -42,7 +35,7 @@ function authenticateUser(req, res, next) {
     console.log('[services.google] - Callback workflow detected, attempting to process data...');
     console.log('------------------------------------------------------------');
 
-    passport.authenticate('google', { session: false }, (err, data, info) => {
+    passport.authenticate('google', { session: false }, (err, data, _info) => {
       if (err || !data) {
         console.log(`[services.google] - Error retrieving Google account data - ${JSON.stringify(err)}`);
         return res.redirect(`${config.chronasHost}/#/login`);

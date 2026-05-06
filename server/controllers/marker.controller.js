@@ -1,7 +1,7 @@
 import httpStatus from 'http-status';
 
 import Marker from '../models/marker.model.js';
-import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
+import { APIError } from '../../server/helpers/APIError.js';
 import { config } from '../../config/config.js';
 import Metadata from '../models/metadata.model.js';
 import * as linksStore from '../models/dynamo/links-store.js';

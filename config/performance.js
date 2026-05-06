@@ -71,7 +71,7 @@ export function trackRequest(responseTime, statusCode) {
 
   // Update average response time
   metrics.averageResponseTime = (
-    (metrics.averageResponseTime * (metrics.totalRequests - 1) + responseTime) /
+    ((metrics.averageResponseTime * (metrics.totalRequests - 1)) + responseTime) /
     metrics.totalRequests
   );
 

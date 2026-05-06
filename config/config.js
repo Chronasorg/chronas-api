@@ -6,10 +6,10 @@ export const cache = memoryCache;
 
 const mergedSecrets = {};
 
-if (process.env.chronasConfig != null) {
+if (process.env.chronasConfig !== undefined && process.env.chronasConfig !== null) {
   const lambdaEnv = JSON.parse(process.env.chronasConfig);
   Object.assign(mergedSecrets, process.env);
-  Object.keys(lambdaEnv).forEach(key => mergedSecrets[key] = lambdaEnv[key]);
+  Object.keys(lambdaEnv).forEach((key) => { mergedSecrets[key] = lambdaEnv[key]; });
 } else {
   const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
   dotenv.config({ path: envFile });
@@ -55,14 +55,12 @@ export const config = {
   awsRegion: envVars.region,
   mailgunReceiver: envVars.MAILGUN_RECEIVER,
   githubClientId: envVars.GITHUB_CLIENT_ID,
-  twitterConsumerSecret: envVars.TWITTER_CONSUMER_SECRET,
   googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
   mailgunKey: envVars.MAILGUN_KEY,
   googleClientId: envVars.GOOGLE_CLIENT_ID,
   githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
   mailgunDomain: envVars.MAILGUN_DOMAIN,
   paypalClientId: envVars.PAYPAL_CLIENT_ID,
-  twitterConsumerKey: envVars.TWITTER_CONSUMER_KEY,
   facebookClientId: envVars.FACEBOOK_CLIENT_ID,
   cloudinaryUrl: envVars.CLOUDINARY_URL,
   facebookClientSecret: envVars.FACEBOOK_CLIENT_SECRET,
@@ -73,7 +71,6 @@ export const config = {
   facebookCallBackUrl: envVars.FACEBOOK_CALLBACK_URL,
   githubCallbackUrl: envVars.GITHUB_CALLBACK_URL,
   googleCallbackUrl: envVars.GOOGLE_CALLBACK_URL,
-  twitterCallbackUrl: envVars.TWITTER_CALLBACK_URL,
   rumApplicationId: envVars.RUMAPPLICATIONID,
   chronasHost: envVars.CHRONAS_HOST,
   dynamodb: {

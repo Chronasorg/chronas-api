@@ -53,7 +53,7 @@ async function login(req, res, next) {
 
     const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
     return next(err);
-  } catch (e) {
+  } catch {
     const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
     return next(err);
   }
@@ -114,7 +114,7 @@ function refresh(req, res, next) {
     }, config.jwtSecret);
 
     return res.json({ token, username });
-  } catch (e) {
+  } catch {
     return next(new APIError('Token refresh failed', httpStatus.UNAUTHORIZED, true));
   }
 }

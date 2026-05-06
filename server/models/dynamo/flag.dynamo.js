@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 import crypto from 'node:crypto';

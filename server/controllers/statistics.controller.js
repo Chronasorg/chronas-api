@@ -1,5 +1,4 @@
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import Marker from '../models/marker.model.js';
 import Metadata from '../models/metadata.model.js';
@@ -22,7 +21,7 @@ let memoryCache = null;
 let memoryCacheAt = 0;
 const MEMORY_TTL = 1000 * 60 * 60; // 1 hour in-memory cache
 
-function list(req, res, next) {
+function list(req, res, _next) {
   const now = Date.now();
   if (memoryCache && (now - memoryCacheAt) < MEMORY_TTL) {
     return res.json(memoryCache);

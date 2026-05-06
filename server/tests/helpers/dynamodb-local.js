@@ -13,7 +13,7 @@
  */
 
 import dynalite from 'dynalite';
-import { CreateTableCommand, DeleteTableCommand, ListTablesCommand } from '@aws-sdk/client-dynamodb';
+import { CreateTableCommand } from '@aws-sdk/client-dynamodb';
 import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
 let server = null;
@@ -26,7 +26,7 @@ export async function setupDynamoLocal() {
   await new Promise((resolve, reject) => {
     server.listen(0, (err) => {
       if (err) return reject(err);
-      port = server.address().port;
+      ({ port } = server.address());
       process.env.DYNAMODB_ENDPOINT = `http://localhost:${port}`;
       process.env.AWS_ACCESS_KEY_ID = 'fakeAccessKeyId';
       process.env.AWS_SECRET_ACCESS_KEY = 'fakeSecretAccessKey';
@@ -50,10 +50,6 @@ export async function teardownDynamoLocal() {
 }
 
 async function patchDynamoClient() {
-  // Re-import dynamo-client and reset cached clients so they
-  // reconnect to the local endpoint.
-  const mod = await import('../../models/dynamo/dynamo-client.js');
-
   // The module caches clients — we need to force recreation.
   // Since we can't easily reset module-level `let` vars from outside,
   // we'll create a fresh DynamoDB client pointed at dynalite and

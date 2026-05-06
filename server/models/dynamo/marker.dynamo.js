@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, BatchGetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 
@@ -95,8 +95,8 @@ export default class MarkerDynamo extends DynamoDocument {
     items.sort((a, b) => {
       const av = a[sort]; const bv = b[sort];
       if (av === bv) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
       return av < bv ? -dir : dir;
     });
 
@@ -153,29 +153,6 @@ function normalizeArray(val) {
     return arr.length ? arr : null;
   }
   return null;
-}
-
-// Fallback for year-only queries without types (new FE pattern, ~10 calls/day).
-// Full scan with filter — acceptable because the new FE always sends types.
-async function scanByYear(year, delta, end) {
-  const yearLo = year - delta;
-  const yearHi = end !== false && end !== undefined ? end : year + delta;
-  const client = getDocClient();
-  const items = [];
-  let next;
-  do {
-    const params = {
-      TableName: TABLE,
-      FilterExpression: '#y BETWEEN :lo AND :hi',
-      ExpressionAttributeNames: { '#y': 'year' },
-      ExpressionAttributeValues: { ':lo': yearLo, ':hi': yearHi }
-    };
-    if (next) params.ExclusiveStartKey = next;
-    const out = await client.send(new ScanCommand(params));
-    if (out.Items) items.push(...out.Items);
-    next = out.LastEvaluatedKey;
-  } while (next && items.length < 5000);
-  return items;
 }
 
 async function queryByTypeAndYear(typeArray, year, delta, end) {

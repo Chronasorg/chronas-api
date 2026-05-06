@@ -15,7 +15,6 @@ export const religionFromWikidata = {
   'Q432':    'sunni',           // Islam (default to sunni when unspecified)
   'Q812767': 'shiite',          // Shia Islam
   'Q9089':   'hinduism',        // Hinduism
-  'Q748':    'sunni',           // Sunni Islam
   'Q9268':   'buddhism',        // Buddhism
   'Q9159':   'protestant',      // Protestantism
   'Q178169': 'reformed',        // Calvinism
@@ -24,7 +23,6 @@ export const religionFromWikidata = {
   'Q131144': 'arianism',        // Arianism
   'Q42927':  'ibadi',           // Ibadi Islam
   'Q9232':   'jewish',          // Judaism
-  'Q9585':   'catholic',        // Catholic Church
   'Q170':    'secularism',      // Atheism/Secularism
   'Q47280':  'zoroastrianism',  // Zoroastrianism
   'Q131036': 'shinto',          // Shinto
@@ -32,7 +30,6 @@ export const religionFromWikidata = {
   'Q170168': 'tengri',          // Tengrism
   'Q483654': 'shamanism',       // Shamanism
   'Q748396': 'animism',         // Animism
-  'Q9268':   'buddhism',        // Buddhism
   'Q9579':   'sikhism',         // Sikhism
   'Q131149': 'jainism',         // Jainism
   'Q212117': 'manichaeism',     // Manichaeism

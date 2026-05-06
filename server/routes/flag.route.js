@@ -1,11 +1,8 @@
 import express from 'express';
 import { expressjwt as expressJwt } from 'express-jwt';
 
-import { validate } from '../helpers/validation.js';
-import paramValidation from '../../config/param-validation.js';
 import flagCtrl from '../controllers/flag.controller.js';
 import { config } from '../../config/config.js';
-import checkPrivilege from '../helpers/privileges.js';
 
 const router = express.Router();
 

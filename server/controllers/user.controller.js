@@ -1,9 +1,7 @@
 import jwt from 'jsonwebtoken';
 import httpStatus from 'http-status';
-import axios from 'axios';
 
 import User from '../models/user.model.js';
-import logger from '../../config/winston.js';
 import APIError from '../helpers/APIError.js';
 import { config } from '../../config/config.js';
 
@@ -169,17 +167,16 @@ async function changePoints(username, type, delta = 1) {
 }
 
 
-function optionallyCancelSub(doCancel, subId) {
-  return new Promise((resolve, reject) => {
+function optionallyCancelSub(doCancel, _subId) {
+  return new Promise((resolve) => {
     console.debug('doCancel', doCancel);
     return resolve();
   });
 }
 
-async function updateSubscription(req, res, next) {
-  const doCancel = req.params.doCancel == 'cancel';
+async function updateSubscription(req, res, _next) {
+  const doCancel = req.params.doCancel === 'cancel';
   const subId = req.params.subscriptionId;
-  const { user } = req;
   const { username } = req.user || {};
   // check if user is same as auth.username
   console.debug('go1');
@@ -259,8 +256,7 @@ async function incrementLoginCount(username) {
  * @returns {User[]}
  */
 async function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, patreon = false, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
-  const limit = end - start;
+  const { patreon = false } = req.query;
   let highscoreCount = (req.query.top || 10);
   if (highscoreCount > 15) highscoreCount = 15;
   const countOnly = req.query.countOnly || false;

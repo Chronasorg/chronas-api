@@ -1,11 +1,9 @@
 import { GetCommand, PutCommand, QueryCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import crypto from 'node:crypto';
 
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
 import QueryProxy from '../../../models/dynamo/query-proxy.js';
-import DynamoQuery from '../../../models/dynamo/dynamo-query.js';
-import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from '../../../models/dynamo/dynamo-client.js';
+import { getDocClient, tableName, batchGetWithRetry } from '../../../models/dynamo/dynamo-client.js';
 
 const TABLE = tableName('board');
 
@@ -121,8 +119,8 @@ class DiscussionQuery {
         for (const [key, dir] of entries) {
           const av = a[key]; const bv = b[key];
           if (av === bv) continue;
-          if (av == null) return 1;
-          if (bv == null) return -1;
+          if (av === null || av === undefined) return 1;
+          if (bv === null || bv === undefined) return -1;
           return av < bv ? -(dir) : dir;
         }
         return 0;

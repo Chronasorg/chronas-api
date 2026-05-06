@@ -10,19 +10,11 @@
     "npm": ">=10.0.0"
   },
   "engineStrict": false,
-  "lambda": {
-    "runtime": "nodejs22.x",
-    "note": "Perfect match: Developed and deployed with Node.js 22.x"
-  },
   "scripts": {
-    "build": "echo 'Build completed - using native Node.js 22.x runtime'",
-    "build:lambda": "echo 'Lambda build handled by CDK bundling'",
     "lint": "eslint *.js server config --fix",
     "test": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests --recursive --exit",
-    "test:integration": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests/integration --recursive --exit",
     "test:coverage": "cross-env NODE_ENV=test c8 mocha --require server/tests/helpers.js server/tests --recursive --exit",
     "test:check-coverage": "npm run test:coverage && c8 check-coverage",
-    "report-coverage": "c8 report --reporter=lcov && coveralls < ./coverage/lcov.info",
     "test:postman:dev": "node scripts/run-postman-tests.js dev enhanced",
     "test:postman:prod": "node scripts/run-postman-tests.js prod enhanced",
     "test:setup": "node scripts/setup-test-environment.js",
@@ -37,11 +29,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1037.0",
-    "@aws-sdk/client-lambda": "^3.1035.0",
     "@aws-sdk/client-s3": "^3.1035.0",
     "@aws-sdk/client-secrets-manager": "^3.1035.0",
     "@aws-sdk/lib-dynamodb": "^3.1037.0",
-    "@passport-js/passport-twitter": "^1.0.10",
     "@vendia/serverless-express": "4.12.6",
     "aws-xray-sdk": "^3.5.0",
     "axios": "^1.15.2",
@@ -70,7 +60,6 @@
     "passport-facebook": "^3.0.0",
     "passport-github": "^1.1.0",
     "passport-google-oauth": "2.0.0",
-    "passport-google-oauth20": "^2.0.0",
     "swagger-ui-express": "5.0.1",
     "winston": "^3.8.0",
     "yamljs": "0.3.0"
@@ -87,7 +76,6 @@
     "globals": "^16.0.0",
     "mocha": "^11.0.0",
     "newman": "6.2.2",
-    "newman-reporter-htmlextra": "1.23.1",
     "supertest": "^7.0.0"
   },
   "bugs": {

@@ -65,8 +65,8 @@ export default class UserDynamo extends DynamoDocument {
     items.sort((a, b) => {
       const av = a[sort]; const bv = b[sort];
       if (av === bv) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
       return av < bv ? -dir : dir;
     });
 

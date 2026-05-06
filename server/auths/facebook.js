@@ -1,6 +1,5 @@
 import passport from 'passport';
 import { Strategy } from 'passport-facebook';
-import jwt from 'jsonwebtoken';
 
 import { config } from '../../config/config.js';
 import userCtrl from '../controllers/user.controller.js';
@@ -14,11 +13,6 @@ const credentials = {
 };
 
 function authenticateUser(req, res, next) {
-  const self = this;
-
-  let redirect = config.chronasHost;
-  if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app';
-
   // Begin process
   console.log('============================================================');
   console.log('[services.facebook] - Triggered authentication process...');

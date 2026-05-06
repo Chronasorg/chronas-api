@@ -1,8 +1,6 @@
 import express from 'express';
 import { expressjwt as expressJwt } from 'express-jwt';
 
-import { validate } from '../helpers/validation.js';
-import paramValidation from '../../config/param-validation.js';
 import revisionCtrl from '../controllers/revision.controller.js';
 import { config } from '../../config/config.js';
 import checkPrivilege from '../helpers/privileges.js';

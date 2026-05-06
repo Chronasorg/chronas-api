@@ -11,12 +11,12 @@ The frontend is available at [Chronasorg/chronas-frontend](https://github.com/Ch
 ### Key Stack
 
 - **Runtime**: Node.js 22.x (native ESM) on AWS Lambda via [`@vendia/serverless-express`](https://github.com/vendia/serverless-express)
-- **Database**: Amazon DynamoDB (10 tables, on-demand billing)
+- **Database**: Amazon DynamoDB (8 in-use tables, on-demand billing)
 - **Caching**: CloudFront edge cache (free tier) + in-memory Lambda cache + `Cache-Control` headers
 - **Auth**: JWT + OAuth (Facebook, Google, GitHub)
 - **Validation**: Joi + express-validation
 - **Monitoring**: AWS X-Ray, CloudWatch dashboard
-- **Testing**: Mocha + Chai + Supertest (246 tests), Newman/Postman (76 assertions). See [PostmanTests/](PostmanTests/)
+- **Testing**: Mocha + Chai + Supertest (223 tests), Newman/Postman (65 assertions across 36 requests). See [PostmanTests/](PostmanTests/)
 - **Deployment**: GitHub Actions with CloudFront invalidation + auto-rollback on Postman failure
 - **Cost**: ~$5-8/mo total (DynamoDB ~$3, CloudFront $0, API Gateway ~$1, Lambda ~$1)
 
@@ -38,7 +38,6 @@ locally and run end-to-end checks against the deployed dev environment with
 
 ```sh
 npm test                     # Mocha unit tests against dynalite
-npm run test:integration     # Integration subset of the Mocha suite
 npm run test:coverage        # c8 coverage report
 npm run lint                 # ESLint with auto-fix
 npm run test:postman:dev     # Newman tests against the deployed dev API
@@ -85,7 +84,7 @@ npm run validate:apply       # Apply a generated correction report (dry-run by d
 │  └──────┬──────────────────────────────┘                                 │
 │         ▼                                                                │
 │  ┌─────────────────────────────────────┐                                 │
-│  │  DynamoDB (10 tables, on-demand)    │  Layer 3: Database              │
+│  │  DynamoDB (8 tables, on-demand)    │  Layer 3: Database              │
 │  │                                     │                                 │
 │  │  Markers:  GSI-TypeYear queries     │  Only ~10% of original          │
 │  │  Board:    GSI-ForumId queries      │  traffic reaches here           │
@@ -111,7 +110,7 @@ npm run validate:apply       # Apply a generated correction report (dry-run by d
 
 | Service | Cost | Notes |
 |---------|------|-------|
-| DynamoDB | ~$10 | 10 tables, on-demand, GSI queries |
+| DynamoDB | ~$10 | 8 tables, on-demand, GSI queries |
 | CloudFront | $0 | Free tier (1.7M req/mo < 10M limit) |
 | API Gateway | ~$0.50 | HTTP API, reduced by CF cache |
 | Lambda | ~$0.80 | ~24K invocations/day |

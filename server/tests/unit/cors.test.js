@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it, before } from 'mocha';
 import { expect } from 'chai';
 import express from 'express';
 import cors from 'cors';
@@ -29,7 +29,7 @@ function createCorsTestApp(envAllowedOrigins) {
   app.get('/test', (req, res) => res.json({ ok: true }));
 
   // Error handler so CORS errors return 500 instead of crashing
-  app.use((err, req, res, next) => {
+  app.use((err, req, res, _next) => {
     res.status(500).json({ error: err.message });
   });
 

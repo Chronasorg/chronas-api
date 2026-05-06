@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
 
-import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
+import { APIError } from '../../server/helpers/APIError.js';
 import Flag from '../models/flag.model.js';
 import { config } from '../../config/config.js';
 
@@ -75,7 +75,7 @@ function create(req, res, next) {
  * @returns {Flag[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'timestamp', entity = false, subentity = false, order = 'asc', filter = '' } = req.query;
+  const { start = 0, end = 10, sort = 'timestamp', entity = false, subentity = false, order = 'asc', filter = '' } = req.query;
   let potentialUser;
   let potentialReverted;
   const potentialEntity = false;

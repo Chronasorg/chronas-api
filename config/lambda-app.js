@@ -7,7 +7,7 @@
 
 import debug from 'debug';
 
-import { loadConfig, isLambdaEnvironment } from './lambda-config.js';
+import { loadConfig } from './lambda-config.js';
 
 const debugLog = debug('chronas-api:lambda-app');
 

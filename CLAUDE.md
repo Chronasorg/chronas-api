@@ -81,7 +81,7 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - Protected routes use `express-jwt` middleware (decoded token on `req.auth`)
 - Authorization in [server/helpers/privileges.js](server/helpers/privileges.js): `checkPrivilege(threshold)`, `checkPrivilegeOrOwnership(threshold)`, `checkPrivilegeForTypes(threshold, typesBlocked)`
 - Patreon subscribers bypass privilege checks
-- OAuth: Facebook, Google, GitHub active; Twitter commented out during modernization
+- OAuth: Facebook, Google, GitHub active
 
 **Database (DynamoDB)**:
 - User model uses email (lowercased) as `_id`

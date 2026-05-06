@@ -3,11 +3,11 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import { setupDynamoLocal, teardownDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-local.js';
+import { setupDynamoLocal, teardownDynamoLocal, seedTable } from '../helpers/dynamodb-local.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let UserDynamo, OpinionDynamo, MetadataDynamo;
+let UserDynamo, OpinionDynamo;
 
 before(async function () {
   this.timeout(15000);
@@ -22,7 +22,6 @@ before(async function () {
 
   UserDynamo = (await import('../../models/dynamo/user.dynamo.js')).default;
   OpinionDynamo = (await import('../../boardComponent/entities/opinion/model.dynamo.js')).default;
-  MetadataDynamo = (await import('../../models/dynamo/metadata.dynamo.js')).default;
 });
 
 after(async () => { await teardownDynamoLocal(); });

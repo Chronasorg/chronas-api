@@ -2,7 +2,6 @@ import httpStatus from 'http-status';
 
 import Metadata from '../models/metadata.model.js';
 import Marker from '../models/marker.model.js';
-import APIError from '../helpers/APIError.js';
 import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js';
 import * as linksStore from '../models/dynamo/links-store.js';
 
@@ -157,7 +156,7 @@ function createNodeOne(metadata, req, res, next) {
   }
 
   metadata.save()
-    .then(savedMetadata => res.json({}))
+    .then(() => res.json({}))
     .catch(e => next(e));
 }
 
@@ -445,7 +444,7 @@ function getLinked(req, res, next, resolve = false) {
  * @returns {Metadata[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, count = 0, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
+  const { start = 0, end = 10, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
   const fList = req.query.f || false;
   const locale = req.query.locale || false;
   const type = req.query.type || false;
