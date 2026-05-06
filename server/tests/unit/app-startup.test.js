@@ -144,8 +144,7 @@ describe('## Application Startup Tests', () => {
   describe('# Utility Scripts', () => {
     const utilityScripts = [
       'run-postman-tests.js',
-      'setup-test-environment.js',
-      'validate-deployment.js'
+      'setup-test-environment.js'
     ];
 
     utilityScripts.forEach(scriptFile => {

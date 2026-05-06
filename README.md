@@ -26,21 +26,27 @@ The frontend is available at [Chronasorg/chronas-frontend](https://github.com/Ch
 git clone https://github.com/Chronasorg/chronas-api
 cd chronas-api
 npm install
-cp .env.example .env   # configure JWT_SECRET
-npm start              # dev server on port 3001 (in-memory DB, no external deps)
+npm test               # runs the unit suite against dynalite (in-memory DynamoDB)
 ```
+
+There is no local-server dev mode — the API is DynamoDB-only and there is no
+in-memory database emulation outside the unit tests. Iterate via unit tests
+locally and run end-to-end checks against the deployed dev environment with
+`npm run test:postman:dev`.
 
 ## Scripts
 
 ```sh
-npm start                    # Dev server (port 4040)
-npm run start:debug          # Dev server with --inspect
-npm test                     # Mocha tests (150+ tests)
-npm run test:all             # Mocha + Postman tests
+npm test                     # Mocha unit tests against dynalite
+npm run test:integration     # Integration subset of the Mocha suite
 npm run test:coverage        # c8 coverage report
 npm run lint                 # ESLint with auto-fix
-npm run test:postman         # Newman tests against local server
+npm run test:postman:dev     # Newman tests against the deployed dev API
 npm run test:postman:prod    # Newman tests against production
+npm run validate:scan        # Inspect a data dimension across years
+npm run validate:religion    # Generate religion-data correction report
+npm run validate:culture     # Generate culture-data correction report
+npm run validate:apply       # Apply a generated correction report (dry-run by default)
 ```
 
 ## Architecture
@@ -132,6 +138,6 @@ Production deployment is fully automated via **GitHub Actions** (the sole active
 6. If Postman tests fail → **automatic Lambda rollback** to previous version
 7. If Postman tests pass → bumps version and pushes `[skip ci]` commit
 
-See [docs/DEPLOYMENT_AND_TESTING.md](docs/DEPLOYMENT_AND_TESTING.md) for full pipeline details, test coverage, and rollback behavior.
+The deploy workflow lives at [`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml). PR checks (Mocha unit tests) run via [`.github/workflows/pr-ci.yml`](.github/workflows/pr-ci.yml). See [CLAUDE.md](CLAUDE.md) and [infra/README.md](infra/README.md) for the full production architecture and infrastructure runbook.
 
 Legacy: AWS CodeBuild, Azure Pipelines, Docker/Kubernetes, and DocumentDB are all decommissioned. GitHub Actions is the sole deployment mechanism.
