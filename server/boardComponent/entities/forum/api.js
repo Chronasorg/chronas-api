@@ -7,6 +7,7 @@ const gone = (_req, res) => res.status(httpStatus.GONE).json({
   message: 'The forum API has been retired.'
 });
 
+router.all('/', gone);
 router.all('/*splat', gone);
 
 export default router;
