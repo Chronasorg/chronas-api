@@ -7,6 +7,7 @@
 
 import Joi from 'joi';
 import winston from 'winston';
+import sanitizeHtml from 'sanitize-html';
 
 import { ValidationError } from './errorHandler.js';
 
@@ -286,17 +287,12 @@ export const validate = (schema, source = 'body') => {
   };
 };
 
-/**
- * Sanitize input middleware
- */
+const SANITIZE_OPTS = { allowedTags: [], allowedAttributes: {} };
+
 export const sanitizeInput = (req, res, next) => {
-  // Remove potentially dangerous characters
   const sanitize = (obj) => {
     if (typeof obj === 'string') {
-      return obj
-        .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove script tags
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .trim();
+      return sanitizeHtml(obj, SANITIZE_OPTS).trim();
     }
 
     if (Array.isArray(obj)) {

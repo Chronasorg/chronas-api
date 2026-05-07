@@ -8,20 +8,21 @@ import authCtrl from '../controllers/auth.controller.js';
 import facebook from '../auths/facebook.js';
 import google from '../auths/google.js';
 import github from '../auths/github.js';
+import { authLimiter, refreshLimiter } from '../middleware/rate-limit.js';
 
 const router = express.Router();
 
 /** POST /v1/auth/login - Returns token if correct email and password is provided */
 router.route('/login')
-  .post(validate(paramValidation.login), authCtrl.login);
+  .post(authLimiter, validate(paramValidation.login), authCtrl.login);
 
 /** POST /v1/auth/signup - Returns token if email not duplicated */
 router.route('/signup')
-  .post(validate(paramValidation.signup), authCtrl.signup);
+  .post(authLimiter, validate(paramValidation.signup), authCtrl.signup);
 
 /** POST /v1/auth/refresh - Returns a fresh token for an authenticated user */
 router.route('/refresh')
-  .post(expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }), authCtrl.refresh);
+  .post(refreshLimiter, expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }), authCtrl.refresh);
 
 /** GET /v1/auth/login/facebook - Returns token if third party auth successful */
 router.route('/login/facebook')

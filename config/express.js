@@ -1,7 +1,6 @@
 import express from 'express';
 import logger from 'morgan';
 // body-parser is now built into Express 4.16+
-import cookieParser from 'cookie-parser';
 import compress from 'compression';
 import methodOverride from 'method-override';
 import cors from 'cors';
@@ -51,7 +50,6 @@ if (config.env === 'development') {
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
-app.use(cookieParser());
 app.use(compress());
 app.use(methodOverride());
 

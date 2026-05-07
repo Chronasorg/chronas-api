@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import nodemailer from 'nodemailer';
 import mg from 'nodemailer-mailgun-transport';
+import sanitizeHtml from 'sanitize-html';
 
 import { config } from '../../config/config.js';
 
@@ -42,10 +43,13 @@ async function create(req, res, doReturn = true) {
     return;
   }
 
+  const safeText = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} });
+  const safeSubject = sanitizeHtml(String(subject), { allowedTags: [], allowedAttributes: {} });
+
   const toSendBody = {
     from,
-    subject: `[Chronas Contact] ${subject}`,
-    html
+    subject: `[Chronas Contact] ${safeSubject}`,
+    text: safeText
   };
 
   if (Array.isArray(to) && to.length === 2) {
