@@ -34,7 +34,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1037.0",
     "@vendia/serverless-express": "4.12.6",
     "aws-xray-sdk": "^3.5.0",
-    "axios": "^1.15.2",
+    "axios": "^1.16.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
