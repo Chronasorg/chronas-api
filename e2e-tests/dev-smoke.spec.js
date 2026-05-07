@@ -75,9 +75,9 @@ test.describe('Dev Environment E2E Smoke Tests', () => {
     expect(Array.isArray(data)).toBeTruthy();
   });
 
-  test('API board/forum discussions', async ({ request }) => {
+  test('API board/forum discussions retired (410)', async ({ request }) => {
     const res = await request.get(`${API_URL}/board/forum/questions/discussions?pinned=false`);
-    expect(res.ok()).toBeTruthy();
+    expect(res.status()).toBe(410);
   });
 
   test('Frontend loads HTML', async ({ page }) => {

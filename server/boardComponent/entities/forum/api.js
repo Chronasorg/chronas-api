@@ -1,55 +1,12 @@
-// forum controllers
 import express from 'express';
-import { expressjwt as expressJwt } from 'express-jwt';
+import httpStatus from 'http-status';
 
-import { config } from '../../../../config/config.js';
+const router = express.Router();
 
-import forumController from './controller.js';
-const { getAllForums, getDiscussions } = forumController;
+const gone = (_req, res) => res.status(httpStatus.GONE).json({
+  message: 'The forum API has been retired.'
+});
 
-/**
- * forum apis
- */
-const router = express.Router() // eslint-disable-line
-
-// get all forums
-router.route('/').get(
-  expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-  (req, res) => {
-    getAllForums().then(
-      (result) => { res.send(result); },
-      (error) => { res.send(error); }
-    );
-  });
-
-// get discussions of a forum
-router.route('/:forum_slug/discussions').get(
-  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-  (req, res) => {
-    const { q, offset, limit } = req.query;
-    getDiscussions(req.params.forum_slug, false, req.query.sorting_method, q, offset, limit).then(
-      (result) => {
-        res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
-        res.set('Access-Control-Expose-Headers', 'X-Total-Count');
-        res.set('X-Total-Count', result[1]);
-        res.json(result[0]);
-      },
-      (_error) => {
-        res.set('X-Total-Count', 0);
-        res.json([]);
-      }
-    );
-  });
-
-// get pinned discussions of a forum
-router.route('/:forum_slug/pinned_discussions').get(
-  // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-  (req, res) => {
-    const { offset, limit } = req.query;
-    getDiscussions(req.params.forum_slug, true, false, false, offset, limit).then(
-      (result) => { res.send(result[0]); },
-      (_error) => { res.send([]); }
-    );
-  });
+router.all('/*splat', gone);
 
 export default router;

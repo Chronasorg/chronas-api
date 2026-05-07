@@ -17,28 +17,22 @@ before(async function () {
   const metadataFixture = JSON.parse(await readFile(path.join(__dirname, '../fixtures/dynamo/metadata-sample.json'), 'utf8'));
   const usersFixture = JSON.parse(await readFile(path.join(__dirname, '../fixtures/dynamo/users-sample.json'), 'utf8'));
   const revisionsFixture = JSON.parse(await readFile(path.join(__dirname, '../fixtures/dynamo/revisions-sample.json'), 'utf8'));
-  const boardFixture = JSON.parse(await readFile(path.join(__dirname, '../fixtures/dynamo/board-sample.json'), 'utf8'));
 
   await seedTable('chronas-markers', markersFixture);
   await seedTable('chronas-metadata', metadataFixture);
   await seedTable('chronas-users', usersFixture);
   await seedTable('chronas-revisions', revisionsFixture);
-  await seedTable('chronas-board', boardFixture);
 
   // Import DynamoDB models directly (bypassing switch files which already loaded Mongoose)
   const MarkerDynamo = (await import('../../models/dynamo/marker.dynamo.js')).default;
   const MetadataDynamo = (await import('../../models/dynamo/metadata.dynamo.js')).default;
   const UserDynamo = (await import('../../models/dynamo/user.dynamo.js')).default;
   const RevisionDynamo = (await import('../../models/dynamo/revision.dynamo.js')).default;
-  const DiscussionDynamo = (await import('../../boardComponent/entities/discussion/model.dynamo.js')).default;
-  const OpinionDynamo = (await import('../../boardComponent/entities/opinion/model.dynamo.js')).default;
 
   // Build a test-only statistics function using the DynamoDB models directly
   buildStats = async () => {
     const entityMetadatas = ['ruler', 'culture', 'religion', 'religionGeneral'];
-    const [comments, threads, users, revisions, markers, metaType, metaSub, entityMetas] = await Promise.all([
-      OpinionDynamo.aggregate([{ $group: { _id: '$forum_id', count: { $sum: 1 } } }]).exec(),
-      DiscussionDynamo.aggregate([{ $group: { _id: '$forum_id', count: { $sum: 1 } } }]).exec(),
+    const [users, revisions, markers, metaType, metaSub, entityMetas] = await Promise.all([
       UserDynamo.aggregate([{ $group: { _id: '$authType', count: { $sum: 1 } } }]).exec(),
       RevisionDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec(),
       MarkerDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec(),
@@ -51,8 +45,6 @@ before(async function () {
     entityMetas.forEach(o => { if (o.data && typeof o.data === 'object') entitySum += Object.keys(o.data).length; });
 
     return {
-      comments, commentsTotal: comments.reduce((a, el) => a + el.count, 0),
-      threads, threadsTotal: threads.reduce((a, el) => a + el.count, 0),
       user: users, userTotal: users.reduce((a, el) => a + el.count, 0),
       revision: revisions, revisionTotal: revisions.reduce((a, el) => a + el.count, 0),
       marker: markers, markerTotal: markers.reduce((a, el) => a + el.count, 0),
@@ -77,8 +69,6 @@ describe('statistics buildStatistics() with DynamoDB models', () => {
     expect(result).to.have.property('marker').that.is.an('array');
     expect(result).to.have.property('revision').that.is.an('array');
     expect(result).to.have.property('user').that.is.an('array');
-    expect(result).to.have.property('threads').that.is.an('array');
-    expect(result).to.have.property('comments').that.is.an('array');
     expect(result).to.have.property('metadata').that.is.an('array');
     expect(result).to.have.property('metadataI').that.is.an('array');
     expect(result).to.have.property('metadataEntityCount').that.is.a('number');
@@ -87,8 +77,6 @@ describe('statistics buildStatistics() with DynamoDB models', () => {
     expect(result.metadataTotal).to.be.greaterThan(0);
     expect(result.userTotal).to.be.greaterThan(0);
     expect(result.revisionTotal).to.be.greaterThan(0);
-    expect(result.commentsTotal).to.be.greaterThan(0);
-    expect(result.threadsTotal).to.be.greaterThan(0);
   });
 
   it('aggregate results have _id and count fields', async () => {
