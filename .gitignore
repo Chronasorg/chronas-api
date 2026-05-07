@@ -67,11 +67,11 @@ dataToMigrate
 CURRENT_PRODUCTION_SETUP.json
 build-version.json
 
-# Migration script logs (DocumentDB → DynamoDB migration)
-scripts/migration/logs/
-
-# Postman result artifacts (written by scripts/run-postman-tests.js)
+# Postman result artifacts (written by scripts/run-postman-tests.js
+# and PostmanTests/monitor_tests.sh)
 postman-results-*.json
+PostmanTests/test_monitoring_results.html
+PostmanTests/temp_results/
 
 # NEVER commit Lambda backups — they contain OAuth client secrets and
 # other sensitive env vars. The apply-lambda-config.sh script writes them

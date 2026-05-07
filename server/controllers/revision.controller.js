@@ -1,7 +1,5 @@
 import httpStatus from 'http-status';
 
-import { APICustomResponse, APIError } from '../../server/helpers/APIError.js';
-import logger from '../../config/winston.js';
 import Revision from '../models/revision.model.js';
 import Area from '../models/area.model.js';
 import Marker from '../models/marker.model.js';
@@ -203,7 +201,7 @@ function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
     });
 }
 
-function addUpdateManyRevision(req, res, next) {
+function addUpdateManyRevision(req, res, _next) {
   const { username } = req.auth;
   userCtrl.changePoints(username, 'updated', 1);
 

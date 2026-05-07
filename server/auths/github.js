@@ -1,6 +1,5 @@
 import passport from 'passport';
 import { Strategy } from 'passport-github';
-import jwt from 'jsonwebtoken';
 
 import { config } from '../../config/config.js';
 import userCtrl from '../controllers/user.controller.js';
@@ -12,11 +11,6 @@ const credentials = {
 };
 
 function authenticateUser(req, res, next) {
-  const self = this;
-
-  let redirect = config.chronasHost;
-  if (req.cookies.target && req.cookies.target === 'app') redirect = '/auth/app';
-
   // Begin process
   console.log('============================================================');
   console.log('[services.github] - Triggered authentication process...');
@@ -39,7 +33,7 @@ function authenticateUser(req, res, next) {
     console.log('[services.github] - Callback workflow detected, attempting to process data...');
     console.log('------------------------------------------------------------');
 
-    passport.authenticate('github', { session: false }, (err, data, info) => {
+    passport.authenticate('github', { session: false }, (err, data, _info) => {
       if (err || !data) {
         console.log(`[services.github] - Error retrieving GitHub account data - ${JSON.stringify(err)}`);
         return res.redirect('/signin');

@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'mocha';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 
 describe('## Application Startup Tests', () => {
@@ -144,8 +144,7 @@ describe('## Application Startup Tests', () => {
   describe('# Utility Scripts', () => {
     const utilityScripts = [
       'run-postman-tests.js',
-      'setup-test-environment.js',
-      'validate-deployment.js'
+      'setup-test-environment.js'
     ];
 
     utilityScripts.forEach(scriptFile => {

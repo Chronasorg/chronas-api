@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import crypto from 'node:crypto';
 
 import DynamoDocument from '../../../models/dynamo/dynamo-document.js';
@@ -104,8 +104,8 @@ class OpinionQuery {
   sort(s) { this._sort = s; return this; }
   populate(field) { if (field === 'user') this._popUser = true; return this; }
   lean() { return this; }
-  skip(n) { return this; }
-  limit(n) { return this; }
+  skip(_n) { return this; }
+  limit(_n) { return this; }
   async exec() {
     const items = await scanOpinions(this._filter);
     if (this._sort) {
@@ -114,8 +114,8 @@ class OpinionQuery {
         for (const [key, dir] of entries) {
           const av = a[key]; const bv = b[key];
           if (av === bv) continue;
-          if (av == null) return 1;
-          if (bv == null) return -1;
+          if (av === null || av === undefined) return 1;
+          if (bv === null || bv === undefined) return -1;
           return av < bv ? -(dir) : dir;
         }
         return 0;

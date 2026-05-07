@@ -1,75 +1,58 @@
-# Chronas API Test Collections
+# Chronas API Postman Tests
 
-This directory contains comprehensive API test collections for the Chronas API.
+Newman/Postman test collections for the deployed Chronas API. The collections
+run against the **dev** or **production** environment only — there is no
+local server (the API is DynamoDB-only with no in-memory emulation outside
+the Mocha unit tests).
 
-## 📁 Test Files
+## Files
 
 ### Collections
-- **`chronas.postman_collection.json`** - Original basic test collection (20 tests)
-- **`chronas-enhanced.postman_collection.json`** - Enhanced comprehensive test collection (40 requests, 70 assertions)
+
+- `chronas-enhanced.postman_collection.json` — primary collection used by the
+  deploy pipeline (post-deploy smoke + auto-rollback on failure)
+- `chronas.postman_collection.json` — older basic collection, retained for
+  ad-hoc manual runs via `node scripts/run-postman-tests.js <env> basic`
 
 ### Environments
-- **`chronas-api.postman_environment.json`** - Production API environment (api.chronas.org)
-- **`chronas-dev.postman_environment.json`** - Development environment
 
-### Monitoring
-- **`monitor_tests.sh`** - Automated test monitoring script
-- **`test_monitoring_results.html`** - Latest monitoring results dashboard
+- `chronas-dev.postman_environment.json` — dev API
+- `chronas-api.postman_environment.json` — production (`https://api.chronas.org`)
 
-## 🚀 Quick Start
+## Running
 
-### Run Original Tests
-```bash
-newman run chronas.postman_collection.json -e chronas-api.postman_environment.json
+From the repo root, use the npm scripts:
+
+```sh
+npm run test:postman:dev    # dev environment
+npm run test:postman:prod   # production
 ```
 
-### Run Enhanced Tests
-```bash
-newman run chronas-enhanced.postman_collection.json -e chronas-api.postman_environment.json
+Both wrap [`scripts/run-postman-tests.js`](../scripts/run-postman-tests.js),
+which uses the `enhanced` collection by default. To run the basic collection
+manually:
+
+```sh
+node scripts/run-postman-tests.js dev basic
+node scripts/run-postman-tests.js prod basic
 ```
 
-### Run Monitoring
-```bash
-./monitor_tests.sh
+Result JSONs are written to `postman-results-<env>-<collection>.json`
+(gitignored).
+
+## Continuous monitoring
+
+`monitor_tests.sh` runs the enhanced collection against production every 30
+seconds for 3 minutes and renders an HTML report. Useful for on-call spot
+checks; not part of any pipeline.
+
+```sh
+cd PostmanTests && ./monitor_tests.sh
 ```
 
-## 📊 Test Comparison
+## CI integration
 
-| Feature | Original Collection | Enhanced Collection |
-|---------|-------------------|-------------------|
-| **Tests** | 20 basic tests | 40 comprehensive tests |
-| **Assertions** | ~20 basic | 70 comprehensive |
-| **Coverage** | ~60% endpoints | 91% endpoints |
-| **Traffic Coverage** | Unknown | 97.4% production traffic |
-| **Performance Testing** | ❌ None | ✅ Response time validation |
-| **Data Validation** | ❌ Basic | ✅ Structure + business logic |
-| **Error Handling** | ❌ Limited | ✅ Comprehensive |
-| **CRUD Testing** | ❌ Partial | ✅ Complete with cleanup |
-| **Success Rate** | Variable | 100% |
-
-## 🎯 Enhanced Collection Features
-
-- **Performance Monitoring**: Response time validation for all endpoints
-- **Data Structure Validation**: Comprehensive object/array structure checks
-- **Business Logic Validation**: JWT format, email validation, coordinate ranges
-- **CRUD Operations**: Complete create, read, update, delete with proper cleanup
-- **Authentication Flow**: Full JWT token management
-- **Error Handling**: Graceful handling of 400, 401, 404, 500 responses
-- **Production Traffic Based**: Tests cover 97.4% of actual API usage patterns
-
-## 📈 Monitoring Results
-
-Latest monitoring run (5 minutes, every 30 seconds):
-- **Success Rate**: 100%
-- **Average Response Time**: 372ms
-- **Total Test Runs**: 10
-- **Total Assertions**: 700
-- **Failures**: 0
-
-## 🔧 Usage Recommendations
-
-- **Development**: Use original collection for quick smoke tests
-- **Production**: Use enhanced collection for comprehensive validation
-- **Monitoring**: Use monitor_tests.sh for continuous API health monitoring
-- **CI/CD**: Integrate enhanced collection for automated testing
-
+The production deploy workflow ([`.github/workflows/deploy-prod.yml`](../.github/workflows/deploy-prod.yml))
+runs the enhanced collection against `https://api.chronas.org` after every
+deploy and rolls the Lambda back to the previous S3 zip if any assertion
+fails.

@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, ScanCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 
@@ -44,7 +44,7 @@ export default class MetadataDynamo extends DynamoDocument {
     return new QueryProxy(promise);
   }
 
-  static async get(id, method = '') {
+  static async get(id, _method = '') {
     const doc = await MetadataDynamo.findById(id).exec();
     if (doc) return doc;
     throw new APIError('No such metadata exists!', httpStatus.NOT_FOUND);
@@ -68,9 +68,9 @@ export default class MetadataDynamo extends DynamoDocument {
 
   static async list(options = {}) {
     const {
-      start = 0, end = 50, sort, order, filter, locale = '',
+      start = 0, end = 50, locale = '',
       fList = false, type = false, subtype = '', year = false,
-      mustGeo = false, delta = false, wiki = false, search = false,
+      wiki = false, search = false,
       discover = false
     } = options;
 
@@ -109,7 +109,7 @@ export default class MetadataDynamo extends DynamoDocument {
     return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
-  async save(options = {}) {
+  async save(_options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     for (const key of cache.keys()) {

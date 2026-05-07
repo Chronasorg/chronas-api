@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
-import { setupDynamoLocal, teardownDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-local.js';
+import { setupDynamoLocal, teardownDynamoLocal, seedTable } from '../helpers/dynamodb-local.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

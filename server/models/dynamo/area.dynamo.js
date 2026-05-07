@@ -88,7 +88,7 @@ export default class AreaDynamo extends DynamoDocument {
     return this;
   }
 
-  static list(options = {}) {
+  static list(_options = {}) {
     return new DynamoQuery(AreaDynamo, {}).exec();
   }
 

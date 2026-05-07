@@ -182,7 +182,7 @@ function aggregateProvinces(req, res, next, resolve = false) {
     .catch(e => res.status(500).send(e));
 }
 
-function aggregateMetaCoo(req, res, next, resolve = false) {
+function aggregateMetaCoo(req, res, next, _resolve = false) {
   Metadata.get('links', req.method)
     .then((linkObj) => {
       req.entity = linkObj;
@@ -210,7 +210,7 @@ function aggregateMetaCoo(req, res, next, resolve = false) {
         new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve);
         }).then((linkedItems) => {
-          const elCoo = linkedItems.map.find(el => (((el || {}).geometry || {}).coordinates || []).length == 2) || linkedItems.media.find(el => (((el || {}).geometry || {}).coordinates || []).length == 2);
+          const elCoo = linkedItems.map.find(el => (((el || {}).geometry || {}).coordinates || []).length === 2) || linkedItems.media.find(el => (((el || {}).geometry || {}).coordinates || []).length === 2);
           if (elCoo) {
             _metadata.coo = elCoo.geometry.coordinates;
             _metadata.markModified('coo');
@@ -364,10 +364,8 @@ function aggregateDimension(req, res, next, resolve = false) {
     .catch(e => res.status(500).send(e));
 }
 
-let s = 0;
 function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
   return new Promise((resolve) => {
-    s++;
     req.body = {
       linkedItemType1: el.properties.ct,
       linkedItemType2: 'metadata', // because replace only affects area entities
@@ -376,8 +374,8 @@ function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId
       type1: eORa, // is for map
       type2: eORa // is for map
     };
-    new Promise((resolve, reject) => {
-      metadataCtrl.updateLinkAtom(req, res, next, true, resolve);
+    new Promise((innerResolve) => {
+      metadataCtrl.updateLinkAtom(req, res, next, true, innerResolve);
     }).then(() => {
       req.body = {
         linkedItemType1: el.properties.ct,
@@ -386,12 +384,10 @@ function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId
         linkedItemKey2: toReplaceLinkId
       };
 
-      new Promise((resolve, reject) => {
-        metadataCtrl.updateLinkAtom(req, res, next, false, resolve);
+      new Promise((innerResolve) => {
+        metadataCtrl.updateLinkAtom(req, res, next, false, innerResolve);
       })
-        .then(() => {
-          return resolve();
-        })
+        .then(() => resolve())
         .catch(() => resolve());
     })
       .catch(() => resolve());
@@ -465,10 +461,8 @@ function replaceAll(req, res, next) {
           if (typeof prevBody[currYear] !== 'undefined') {
             // need to update
             area.save()
-              .then((ar) => {
-                resolve();
-              })
-              .catch(e => reject(e));
+              .then(() => resolve())
+              .catch(() => resolve());
           } else {
             resolve();
           }
@@ -528,11 +522,11 @@ function replaceAll(req, res, next) {
                 if (waitForCompletion) {
                   return res.send('OK');
                 } else {
-                  new Promise((resolve, reject) => {
+                  new Promise((resolve) => {
                     req.query.dimension = typeDim;
                     aggregateDimension(req, res, next, resolve);
                   }).then(() => {
-                    new Promise((resolve, reject) => {
+                    new Promise((resolve) => {
                       aggregateProvinces(req, res, next, resolve);
                     }).then(() => {
                     });
@@ -540,7 +534,7 @@ function replaceAll(req, res, next) {
                 }
               });
             // Promise.all(mapItemsPromises).then(() => {
-          }, (error) => {
+          }, (_error) => {
             if (waitForCompletion) return res.send('NOTOK');
           });
         });
@@ -651,9 +645,7 @@ function updateMany(req, res, next) {
             // Skip schema validation: legacy area docs lack required fields (name, geometry,
             // createdBy) added in the modernized schema. We only modify the Mixed 'data' field.
             area.save({ validateBeforeSave: false })
-              .then((ar) => {
-                resolve();
-              })
+              .then(() => resolve())
               .catch(e => reject(e));
           } else {
             resolve();
@@ -672,11 +664,11 @@ function updateMany(req, res, next) {
     if (waitForCompletion) {
       return next();
     } else {
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         req.query.dimension = typeDim;
         aggregateDimension(req, res, next, resolve);
       }).then(() => {
-        new Promise((resolve, reject) => {
+        new Promise((resolve) => {
           aggregateProvinces(req, res, next, resolve);
         }).then(() => {
         });
@@ -767,9 +759,8 @@ function defineEntity(req, res, next) {
 function getRanges(obj) {
   const array = Object.keys(obj);
   const compressedObj = {};
-  const ranges = [];
-  let rstart,
-    rend;
+  let rstart;
+  let rend;
   for (let i = 0; i < array.length; i++) {
     rstart = array[i];
     rend = rstart;

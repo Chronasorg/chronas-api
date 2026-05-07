@@ -1,10 +1,7 @@
 import express from 'express';
 import { expressjwt as expressJwt } from 'express-jwt';
 
-import { validate } from '../helpers/validation.js';
-import paramValidation from '../../config/param-validation.js';
 import collectionCtrl from '../controllers/collection.controller.js';
-import markerCtrl from '../controllers/marker.controller.js';
 import { config } from '../../config/config.js';
 import checkPrivilege from '../helpers/privileges.js';
 

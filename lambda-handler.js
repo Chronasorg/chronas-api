@@ -80,7 +80,7 @@ async function getServerlessExpressInstance() {
 /**
  * Handle warm-up requests
  */
-function handleWarmUp(event) {
+function handleWarmUp(_event) {
   debugLog('Handling warm-up request');
 
   return {
@@ -101,7 +101,7 @@ function handleWarmUp(event) {
 /**
  * Handle health check requests
  */
-function handleHealthCheck(event) {
+function handleHealthCheck(_event) {
   debugLog('Handling health check request');
 
   const health = checkAppHealth();

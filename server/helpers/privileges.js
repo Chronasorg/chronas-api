@@ -33,7 +33,7 @@ function checkPrivilegeForTypes(threshold, typesBlocked) {
 
 function checkPrivilegeOrOwnership(threshold) {
   return function (req, res, next) {
-    if (req && req.auth && req.auth.privilege >= threshold || (req.params || {}).userId === (req.user || {})._id || (req.params || {}).userId === (req.user || {}).id) {
+    if ((req && req.auth && req.auth.privilege >= threshold) || (req.params || {}).userId === (req.user || {})._id || (req.params || {}).userId === (req.user || {}).id) {
       next();
     } else {
       const err = new APIError('Unauthorized. 3 Your profile does not have sufficient privileges to access this resource.', 401);

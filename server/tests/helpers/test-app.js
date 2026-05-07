@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   res.status(err.status || httpStatus.INTERNAL_SERVER_ERROR).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}

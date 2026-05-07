@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, ScanCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 import { getDocClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 

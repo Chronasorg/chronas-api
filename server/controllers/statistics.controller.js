@@ -1,12 +1,9 @@
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import Marker from '../models/marker.model.js';
 import Metadata from '../models/metadata.model.js';
 import User from '../models/user.model.js';
 import Revision from '../models/revision.model.js';
-import Discussion from '../boardComponent/entities/discussion/model.js';
-import Opinion from '../boardComponent/entities/opinion/model.js';
 
 const S3_BUCKET = process.env.STATISTICS_S3_BUCKET || 'chronas-csv';
 const S3_KEY = process.env.STATISTICS_S3_KEY || 'api/statistics.json';
@@ -22,7 +19,7 @@ let memoryCache = null;
 let memoryCacheAt = 0;
 const MEMORY_TTL = 1000 * 60 * 60; // 1 hour in-memory cache
 
-function list(req, res, next) {
+function list(req, res, _next) {
   const now = Date.now();
   if (memoryCache && (now - memoryCacheAt) < MEMORY_TTL) {
     return res.json(memoryCache);
@@ -86,16 +83,12 @@ async function buildStatistics() {
     marker: {},
     revision: {},
     user: {},
-    threads: {},
-    comments: {},
     metadata: {}
   };
 
   const entityMetadatas = ['ruler', 'culture', 'religion', 'religionGeneral'];
 
   const [
-    commentsBreakDown,
-    threadsBreakDown,
     userBreakDown,
     revisionBreakDown,
     markerBreakDown,
@@ -103,8 +96,6 @@ async function buildStatistics() {
     metadataIBreakDown,
     entityMetadatasObj
   ] = await Promise.all([
-    Opinion.aggregate([{ $group: { _id: '$forum_id', count: { $sum: 1 } } }]).exec(),
-    Discussion.aggregate([{ $group: { _id: '$forum_id', count: { $sum: 1 } } }]).exec(),
     User.aggregate([{ $group: { _id: '$authType', count: { $sum: 1 } } }]).exec(),
     Revision.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec(),
     Marker.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec(),
@@ -113,10 +104,6 @@ async function buildStatistics() {
     Metadata.find({ _id: { $in: entityMetadatas } }).lean().exec()
   ]);
 
-  statisticsObj.comments = commentsBreakDown;
-  statisticsObj.commentsTotal = commentsBreakDown.reduce((a, el) => a + el.count, 0);
-  statisticsObj.threads = threadsBreakDown;
-  statisticsObj.threadsTotal = threadsBreakDown.reduce((a, el) => a + el.count, 0);
   statisticsObj.user = userBreakDown;
   statisticsObj.userTotal = userBreakDown.reduce((a, el) => a + el.count, 0);
   statisticsObj.revision = revisionBreakDown;

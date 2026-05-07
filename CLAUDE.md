@@ -43,9 +43,9 @@ There is no local-server dev mode. The Lambda is DynamoDB-only; testing is done 
 
 ### DynamoDB Tables
 
-In use: `chronas-markers`, `chronas-areas`, `chronas-metadata`, `chronas-users`, `chronas-flags`, `chronas-revisions`, `chronas-links`, `chronas-board`.
+In use: `chronas-markers`, `chronas-areas`, `chronas-metadata`, `chronas-users`, `chronas-flags`, `chronas-revisions`, `chronas-links`.
 
-Unused but not deleted (kept for potential future reactivation): `chronas-collections`, `chronas-games`. The matching `/v1/collections` and `/v1/game` endpoints return **410 Gone**.
+Unused but not deleted (kept for potential future reactivation): `chronas-collections`, `chronas-games`, `chronas-board`. The matching `/v1/collections`, `/v1/game`, and `/v1/board/forum/*` endpoints return **410 Gone**. The new frontend has no forum/community functionality, so the board table is no longer read on the request path (retired 2026-05-07 after a CloudWatch RCU spike alarm — every `GET /v1/board/forum/:slug/discussions` was scanning the full 103 MB table for forum metadata).
 
 Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only. All in-scope flags are ON in production.
 
@@ -71,8 +71,8 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 
 **Conventions**:
 - Routes, controllers, and models follow 1:1 naming per resource (e.g., `marker.route.js` / `marker.controller.js` / `marker.model.js`)
-- Active resources: users, markers, areas, metadata, flags, revisions, contact, statistics, health, version, forum
-- Retired resources (410 Gone): collections, game
+- Active resources: users, markers, areas, metadata, flags, revisions, contact, statistics, health, version
+- Retired resources (410 Gone): collections, game, board/forum
 - Request validation uses Joi schemas in `config/param-validation.js`
 - All async code uses promises (not async/await in older controller code)
 
@@ -81,7 +81,7 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - Protected routes use `express-jwt` middleware (decoded token on `req.auth`)
 - Authorization in [server/helpers/privileges.js](server/helpers/privileges.js): `checkPrivilege(threshold)`, `checkPrivilegeOrOwnership(threshold)`, `checkPrivilegeForTypes(threshold, typesBlocked)`
 - Patreon subscribers bypass privilege checks
-- OAuth: Facebook, Google, GitHub active; Twitter commented out during modernization
+- OAuth: Facebook, Google, GitHub active
 
 **Database (DynamoDB)**:
 - User model uses email (lowercased) as `_id`

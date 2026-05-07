@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import { setupDynamoLocal, teardownDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-local.js';
-import { compressData, shouldCompress } from '../../models/dynamo/compression.js';
+import { shouldCompress } from '../../models/dynamo/compression.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = path.join(__dirname, '../fixtures/dynamo/metadata-sample.json');
