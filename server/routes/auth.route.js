@@ -1,5 +1,6 @@
 import express from 'express';
 import { expressjwt as expressJwt } from 'express-jwt';
+import rateLimit from 'express-rate-limit';
 
 import { validate } from '../helpers/validation.js';
 import paramValidation from '../../config/param-validation.js';
@@ -8,9 +9,24 @@ import authCtrl from '../controllers/auth.controller.js';
 import facebook from '../auths/facebook.js';
 import google from '../auths/google.js';
 import github from '../auths/github.js';
-import { authLimiter, refreshLimiter } from '../middleware/rate-limit.js';
 
 const router = express.Router();
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many auth attempts, try again later.' }
+});
+
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many refresh attempts, try again later.' }
+});
 
 /** POST /v1/auth/login - Returns token if correct email and password is provided */
 router.route('/login')
