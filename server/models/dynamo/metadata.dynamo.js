@@ -160,7 +160,8 @@ async function fListBranch(fList, type, subtype, locale) {
   const result = {};
   for (const item of items) {
     const decoded = decodeFromRead(item);
-    const key = countLength ? decoded._id.substr(0, decoded._id.length - countLength) : decoded._id;
+    const id = String(decoded._id);
+    const key = countLength ? id.substr(0, id.length - countLength) : id;
     result[key] = decoded.data;
   }
   cache.put(cacheKey, result, CACHETTL);

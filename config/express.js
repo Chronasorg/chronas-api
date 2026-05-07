@@ -94,7 +94,11 @@ if (config.env !== 'test') {
     secret: config.jwtSecret || 'test-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: {
+      secure: config.env === 'production',
+      httpOnly: true,
+      sameSite: 'lax'
+    }
   }));
 }
 

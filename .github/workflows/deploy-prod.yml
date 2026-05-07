@@ -8,6 +8,9 @@ concurrency:
   group: deploy-prod
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 env:
   S3_BUCKET: chronas-lambda-deployments
   AWS_REGION: eu-west-1

@@ -175,11 +175,11 @@ function aggregateProvinces(req, res, next, resolve = false) {
           if (resolve) return resolve();
           res.send('OK');
         } catch (e) {
-          res.status(500).send(e);
+          res.status(500).send(e.message || 'Internal error');
         }
       });
     })
-    .catch(e => res.status(500).send(e));
+    .catch(e => res.status(500).send(e.message || 'Internal error'));
 }
 
 function aggregateMetaCoo(req, res, next, _resolve = false) {
@@ -357,11 +357,11 @@ function aggregateDimension(req, res, next, resolve = false) {
           if (resolve) return resolve();
           res.send('OK');
         } catch (e) {
-          res.status(500).send(e);
+          res.status(500).send(e.message || 'Internal error');
         }
       });
     })
-    .catch(e => res.status(500).send(e));
+    .catch(e => res.status(500).send(e.message || 'Internal error'));
 }
 
 function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
