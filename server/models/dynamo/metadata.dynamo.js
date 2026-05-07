@@ -149,14 +149,14 @@ async function batchGetByIds(ids) {
 }
 
 async function fListBranch(fList, type, subtype, locale) {
-  const cacheKey = `init:${fList}:${locale || ''}`;
+  const localeStr = typeof locale === 'string' ? locale : '';
+  const cacheKey = `init:${fList}:${localeStr}`;
   const cachedInit = cache.get(cacheKey);
   if (cachedInit) return cachedInit;
 
-  const resourceArray = fList.split(',');
+  const resourceArray = String(fList).split(',');
   const items = await batchGetByIds(resourceArray);
-  let countLength = 0;
-  if (locale) countLength = locale.length + 1;
+  const countLength = localeStr ? localeStr.length + 1 : 0;
   const result = {};
   for (const item of items) {
     const decoded = decodeFromRead(item);
