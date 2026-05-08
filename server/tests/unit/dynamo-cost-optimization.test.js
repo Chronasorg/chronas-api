@@ -251,3 +251,27 @@ describe('Fix: $in arrays larger than 100 do not crash DynamoDB (issue #132)', (
     expect(foundIds).to.deep.equal([...real].sort());
   });
 });
+
+describe('Fix: $in expression byte-size limit (FilterExpression > 4096 bytes)', () => {
+  // Regression test for the production bug observed 2026-05-03..05-07: getLinked
+  // built FilterExpressions of 4767–9648 bytes when called with many long ids,
+  // crashing the Lambda with ValidationException ("Expression size has exceeded
+  // the maximum allowed size"). The fix routes _id $in queries through
+  // BatchGetItem, which uses Keys (not FilterExpression) and is immune to that
+  // limit. These tests exercise input shapes that would have busted the limit.
+  it('Marker.find with 200 long-id $in (~12kb of ids) does not crash', async () => {
+    const ids = Array.from({ length: 200 }, (_, i) =>
+      `e_some_very_long_event_identifier_with_lots_of_characters_${i}_${'x'.repeat(20)}`
+    );
+    const results = await MarkerDynamo.find({ _id: { $in: ids } }).lean().exec();
+    expect(results).to.be.an('array').that.is.empty;
+  });
+
+  it('Metadata.find with 200 long-id $in (~12kb of ids) does not crash', async () => {
+    const ids = Array.from({ length: 200 }, (_, i) =>
+      `a_ruler__Some_very_long_kingdom_name_that_makes_the_expression_huge_${i}`
+    );
+    const results = await MetadataDynamo.find({ _id: { $in: ids } }).lean().exec();
+    expect(results).to.be.an('array').that.is.empty;
+  });
+});
