@@ -167,76 +167,6 @@ async function changePoints(username, type, delta = 1) {
 }
 
 
-function optionallyCancelSub(doCancel, _subId) {
-  return new Promise((resolve) => {
-    console.debug('doCancel', doCancel);
-    return resolve();
-  });
-}
-
-async function updateSubscription(req, res, _next) {
-  const doCancel = req.params.doCancel === 'cancel';
-  const subId = req.params.subscriptionId;
-  const { username } = req.user || {};
-  // check if user is same as auth.username
-  console.debug('go1');
-
-  try {
-    await optionallyCancelSub(doCancel, subId);
-
-    const foundUser = await User.findOne({ username }).exec();
-    if (typeof foundUser !== 'undefined') {
-      if (!doCancel) {
-        foundUser.subscription = subId;
-        foundUser.privilege = 5;
-        console.debug('set subscription to ', subId, 'for user', foundUser);
-      } else {
-        console.debug('set subscription to -1 for user', foundUser);
-        foundUser.subscription = '-1';
-        foundUser.privilege = 1;
-      }
-      await foundUser.save();
-
-      if (doCancel) {
-        const token = jwt.sign({
-          id: foundUser._id || foundUser.id,
-          avatar: foundUser.avatar,
-          username: foundUser.username,
-          lastUpdated: foundUser.lastUpdated,
-          score: foundUser.karma,
-          privilege: (foundUser.privilege !== 'undefined') ? foundUser.privilege : 1,
-          subscription: '-1'
-        }, config.jwtSecret);
-        return res.json({
-          token,
-          username: foundUser.username || (((foundUser || {}).name || {}).first)
-        });
-      } else {
-        console.debug(`encoding token with sub ${foundUser.subscription}`);
-        const token = jwt.sign({
-          id: foundUser.email || foundUser._id || foundUser.id,
-          avatar: foundUser.avatar || foundUser.gravatar,
-          username: foundUser.username || (((foundUser || {}).name || {}).first),
-          score: foundUser.karma,
-          lastUpdated: foundUser.lastUpdated || foundUser.lastLogin,
-          privilege: foundUser.privilege ? foundUser.privilege : 1,
-          subscription: foundUser.subscription ? foundUser.subscription : '-1'
-        }, config.jwtSecret);
-
-        return res.json({
-          token,
-          username: foundUser.username || (((foundUser || {}).name || {}).first)
-        });
-      }
-    } else {
-      return res.send(404);
-    }
-  } catch (e) {
-    console.debug(e);
-    res.send(500);
-  }
-}
-
 async function incrementLoginCount(username) {
   try {
     const user = await User.findOne({ username }).exec();
@@ -336,4 +266,4 @@ async function remove(req, res, next) {
   }
 }
 
-export default { changePoints, updateSubscription, incrementLoginCount, load, get, create, update, list, remove };
+export default { changePoints, incrementLoginCount, load, get, create, update, list, remove };

@@ -19,12 +19,6 @@ export default {
     })
   },
 
-  createGame: {
-    body: Joi.object({
-      name: Joi.string().required()
-    })
-  },
-
   // POST /v1/markers
   createMarker: {
     body: Joi.object({
