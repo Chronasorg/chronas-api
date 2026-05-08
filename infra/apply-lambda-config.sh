@@ -153,6 +153,53 @@ run_or_print aws --profile "$PROFILE" iam put-role-policy \
   --policy-name "$INLINE_POLICY_NAME" \
   --policy-document "file://$INLINE_POLICY_FILE"
 
+# --- DynamoDB: rate-limit counter table -------------------------------------
+# Used by server/middleware/dynamo-rate-store.js for per-IP rate limiting on
+# /auth/* and /contact. Without this table the auth path fails open (logs a
+# warning and lets the request through), but a properly configured prod
+# environment should have it. Idempotent: skips if the table already exists.
+RATE_TABLE="chronas-rate-limits"
+if aws "${AWS_COMMON[@]}" dynamodb describe-table --table-name "$RATE_TABLE" >/dev/null 2>&1; then
+  log "DynamoDB table $RATE_TABLE exists — verifying TTL + deletion protection"
+
+  TTL_STATUS="$(aws "${AWS_COMMON[@]}" dynamodb describe-time-to-live \
+    --table-name "$RATE_TABLE" \
+    --query 'TimeToLiveDescription.TimeToLiveStatus' --output text 2>/dev/null || echo NONE)"
+  if [[ "$TTL_STATUS" != "ENABLED" && "$TTL_STATUS" != "ENABLING" ]]; then
+    log "Enabling TTL on expires_at"
+    run_or_print aws "${AWS_COMMON[@]}" dynamodb update-time-to-live \
+      --table-name "$RATE_TABLE" \
+      --time-to-live-specification "Enabled=true, AttributeName=expires_at"
+  fi
+
+  DEL_PROT="$(aws "${AWS_COMMON[@]}" dynamodb describe-table \
+    --table-name "$RATE_TABLE" \
+    --query 'Table.DeletionProtectionEnabled' --output text)"
+  if [[ "$DEL_PROT" != "True" ]]; then
+    log "Enabling deletion protection on $RATE_TABLE"
+    run_or_print aws "${AWS_COMMON[@]}" dynamodb update-table \
+      --table-name "$RATE_TABLE" \
+      --deletion-protection-enabled
+  fi
+else
+  log "Creating DynamoDB table $RATE_TABLE (PAY_PER_REQUEST + TTL + deletion-protection)"
+  run_or_print aws "${AWS_COMMON[@]}" dynamodb create-table \
+    --table-name "$RATE_TABLE" \
+    --attribute-definitions AttributeName=_id,AttributeType=S \
+    --key-schema AttributeName=_id,KeyType=HASH \
+    --billing-mode PAY_PER_REQUEST \
+    --tags Key=app,Value=chronas Key=auto-stop,Value=no Key=auto-delete,Value=never
+  if [[ "$APPLY" == "yes" ]]; then
+    aws "${AWS_COMMON[@]}" dynamodb wait table-exists --table-name "$RATE_TABLE"
+    aws "${AWS_COMMON[@]}" dynamodb update-time-to-live \
+      --table-name "$RATE_TABLE" \
+      --time-to-live-specification "Enabled=true, AttributeName=expires_at"
+    aws "${AWS_COMMON[@]}" dynamodb update-table \
+      --table-name "$RATE_TABLE" \
+      --deletion-protection-enabled
+  fi
+fi
+
 # --- Summary -----------------------------------------------------------------
 log "Done. Snapshotting post-apply state"
 aws "${AWS_COMMON[@]}" lambda get-function-configuration --function-name "$FN" \
