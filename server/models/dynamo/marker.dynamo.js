@@ -16,6 +16,9 @@ export default class MarkerDynamo extends DynamoDocument {
   static tableName = TABLE;
 
   static find(filter = {}) {
+    if (filter._id && filter._id.$in) {
+      return new BatchGetProxy(filter._id.$in);
+    }
     return new DynamoQuery(MarkerDynamo, filter);
   }
 
@@ -186,17 +189,44 @@ async function paginatedQuery(client, baseParams) {
 
 async function batchGetByWikis(wikiArray) {
   const ids = wikiArray.map(w => decodeURIComponent(w));
+  return batchGetByIds(ids);
+}
+
+async function batchGetByIds(ids) {
   const all = [];
   for (let i = 0; i < ids.length; i += 100) {
     const chunk = ids.slice(i, i + 100);
     const { Responses } = await batchGetWithRetry({
       RequestItems: {
-        [TABLE]: { Keys: chunk.map(_id => ({ _id })) }
+        [TABLE]: { Keys: chunk.map(_id => ({ _id: String(_id) })) }
       }
     });
     if (Responses?.[TABLE]) all.push(...Responses[TABLE]);
   }
   return all;
+}
+
+class BatchGetProxy {
+  constructor(ids) { this._ids = ids; this._lean = false; }
+  lean() { this._lean = true; return this; }
+  sort() { return this; }
+  skip() { return this; }
+  limit() { return this; }
+  async exec() {
+    const items = await batchGetByIds(this._ids);
+    if (this._lean) return items;
+    return items.map(i => new MarkerDynamo(i));
+  }
+  then(ok, fail) { return this.exec().then(ok, fail); }
+  catch(fn) { return this.exec().catch(fn); }
+  countDocuments() {
+    const promise = (async () => (await batchGetByIds(this._ids)).length)();
+    return {
+      exec: () => promise,
+      then: (ok, fail) => promise.then(ok, fail),
+      catch: (fn) => promise.catch(fn)
+    };
+  }
 }
 
 async function scanLimited(limit) {

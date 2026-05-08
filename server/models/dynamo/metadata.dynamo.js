@@ -134,6 +134,14 @@ class BatchGetProxy {
   }
   then(ok, fail) { return this.exec().then(ok, fail); }
   catch(fn) { return this.exec().catch(fn); }
+  countDocuments() {
+    const promise = (async () => (await batchGetByIds(this._ids)).length)();
+    return {
+      exec: () => promise,
+      then: (ok, fail) => promise.then(ok, fail),
+      catch: (fn) => promise.catch(fn)
+    };
+  }
 }
 
 async function batchGetByIds(ids) {
