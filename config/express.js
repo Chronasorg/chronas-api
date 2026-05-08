@@ -24,6 +24,8 @@ import { createPerformanceMiddleware } from './performance.js';
 
 const app = express();
 
+app.set('trust proxy', 2);
+
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
 // Set up Swagger documentation with graceful fallback
