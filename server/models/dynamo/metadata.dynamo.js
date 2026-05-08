@@ -6,6 +6,7 @@ import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
+import { BatchGetProxy } from './batch-get-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
 import { cache } from '../../../config/config.js';
@@ -18,7 +19,11 @@ export default class MetadataDynamo extends DynamoDocument {
 
   static find(filter = {}) {
     if (filter._id && filter._id.$in) {
-      return new BatchGetProxy(filter._id.$in);
+      return new BatchGetProxy({
+        ids: filter._id.$in,
+        fetch: batchGetByIds,
+        hydrate: (item, lean) => (lean ? decodeFromRead(item) : new MetadataDynamo(decodeFromRead(item)))
+      });
     }
     return new DynamoQuery(MetadataDynamo, filter);
   }
@@ -118,29 +123,6 @@ export default class MetadataDynamo extends DynamoDocument {
       }
     }
     return this;
-  }
-}
-
-class BatchGetProxy {
-  constructor(ids) { this._ids = ids; this._lean = false; }
-  lean() { this._lean = true; return this; }
-  sort() { return this; }
-  skip() { return this; }
-  limit() { return this; }
-  async exec() {
-    const items = await batchGetByIds(this._ids);
-    if (this._lean) return items.map(i => decodeFromRead(i));
-    return items.map(i => new MetadataDynamo(decodeFromRead(i)));
-  }
-  then(ok, fail) { return this.exec().then(ok, fail); }
-  catch(fn) { return this.exec().catch(fn); }
-  countDocuments() {
-    const promise = (async () => (await batchGetByIds(this._ids)).length)();
-    return {
-      exec: () => promise,
-      then: (ok, fail) => promise.then(ok, fail),
-      catch: (fn) => promise.catch(fn)
-    };
   }
 }
 

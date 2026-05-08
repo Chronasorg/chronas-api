@@ -6,6 +6,7 @@ import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
+import { BatchGetProxy } from './batch-get-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 
 const TABLE = tableName('markers');
@@ -17,7 +18,11 @@ export default class MarkerDynamo extends DynamoDocument {
 
   static find(filter = {}) {
     if (filter._id && filter._id.$in) {
-      return new BatchGetProxy(filter._id.$in);
+      return new BatchGetProxy({
+        ids: filter._id.$in,
+        fetch: batchGetByIds,
+        hydrate: (item, lean) => (lean ? item : new MarkerDynamo(item))
+      });
     }
     return new DynamoQuery(MarkerDynamo, filter);
   }
@@ -204,29 +209,6 @@ async function batchGetByIds(ids) {
     if (Responses?.[TABLE]) all.push(...Responses[TABLE]);
   }
   return all;
-}
-
-class BatchGetProxy {
-  constructor(ids) { this._ids = ids; this._lean = false; }
-  lean() { this._lean = true; return this; }
-  sort() { return this; }
-  skip() { return this; }
-  limit() { return this; }
-  async exec() {
-    const items = await batchGetByIds(this._ids);
-    if (this._lean) return items;
-    return items.map(i => new MarkerDynamo(i));
-  }
-  then(ok, fail) { return this.exec().then(ok, fail); }
-  catch(fn) { return this.exec().catch(fn); }
-  countDocuments() {
-    const promise = (async () => (await batchGetByIds(this._ids)).length)();
-    return {
-      exec: () => promise,
-      then: (ok, fail) => promise.then(ok, fail),
-      catch: (fn) => promise.catch(fn)
-    };
-  }
 }
 
 async function scanLimited(limit) {
