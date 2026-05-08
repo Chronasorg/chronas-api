@@ -9,22 +9,27 @@ import authCtrl from '../controllers/auth.controller.js';
 import facebook from '../auths/facebook.js';
 import google from '../auths/google.js';
 import github from '../auths/github.js';
+import { DynamoRateLimitStore } from '../middleware/dynamo-rate-store.js';
 
 const router = express.Router();
 
+const FIFTEEN_MIN = 15 * 60 * 1000;
+
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
+  windowMs: FIFTEEN_MIN,
+  limit: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  store: new DynamoRateLimitStore({ prefix: 'auth', windowMs: FIFTEEN_MIN }),
   message: { message: 'Too many auth attempts, try again later.' }
 });
 
 const refreshLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30,
+  windowMs: FIFTEEN_MIN,
+  limit: 60,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  store: new DynamoRateLimitStore({ prefix: 'refresh', windowMs: FIFTEEN_MIN }),
   message: { message: 'Too many refresh attempts, try again later.' }
 });
 

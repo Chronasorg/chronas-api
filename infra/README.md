@@ -41,6 +41,7 @@ deletion protection on). Pre-computed stats JSON is in S3.
 | `chronas-revisions` | Edit history (GSI-EntityTimestamp) |
 | `chronas-links` | Normalized per-entity links |
 | `chronas-board` | Forum posts/discussions/opinions |
+| `chronas-rate-limits` | Per-IP rate-limit counters for /auth/* and /contact (TTL on `expires_at`) |
 | `chronas-collections` | (unused — `/v1/collections` retired, returns 410) |
 | `chronas-games` | (unused — `/v1/game` retired, returns 410) |
 
