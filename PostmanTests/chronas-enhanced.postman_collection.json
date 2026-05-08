@@ -379,6 +379,66 @@
           }
         },
         {
+          "name": "Get Linked Metadata - high-fanout entity (regression #149)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Regression for the DynamoDB FilterExpression byte-overflow bug fixed in PR #149.",
+                  "// e_World_War_II has 178 marker links + 145 metadata links — enough that the",
+                  "// pre-fix Scan+FilterExpression path crashed with 'Expression size has exceeded",
+                  "// the maximum allowed size'. With the BatchGetItem fix this must respond cleanly.",
+                  "pm.test('Status is not 5xx (BatchGet path is used, not Scan+FilterExpression)', function () {",
+                  "    pm.expect(pm.response.code).to.be.lessThan(500);",
+                  "});",
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains map and media arrays', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('map');",
+                  "    pm.expect(jsonData).to.have.property('media');",
+                  "    pm.expect(jsonData.map).to.be.an('array');",
+                  "    pm.expect(jsonData.media).to.be.an('array');",
+                  "});",
+                  "pm.test('High-fanout entity returns substantial link payload (>50 total)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var total = jsonData.map.length + jsonData.media.length;",
+                  "    pm.expect(total).to.be.greaterThan(50);",
+                  "});",
+                  "pm.test('Response time under 3 seconds', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/metadata/culture/getLinked?source=1:e_World_War_II",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "metadata",
+                "culture",
+                "getLinked"
+              ],
+              "query": [
+                {
+                  "key": "source",
+                  "value": "1:e_World_War_II"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Create Metadata",
           "event": [
             {
