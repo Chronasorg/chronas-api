@@ -1,21 +1,13 @@
 import express from 'express';
-
-import { validate } from '../helpers/validation.js';
-import paramValidation from '../../config/param-validation.js';
-import gameCtrl from '../controllers/game.controller.js';
+import httpStatus from 'http-status';
 
 const router = express.Router();
 
-router.route('/')
-  /** POST /v1/game - Create new game */
-  .post(
-    validate(paramValidation.createGame),
-    gameCtrl.create);
+const gone = (_req, res) => res.status(httpStatus.GONE).json({
+  message: 'The game API has been retired.'
+});
 
-router.route('/highscore')
-/** GET /v1/game - Get list of game */
-  .get(
-    gameCtrl.list);
-
+router.all('/', gone);
+router.all('/*splat', gone);
 
 export default router;
