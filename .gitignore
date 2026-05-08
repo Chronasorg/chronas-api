@@ -78,3 +78,7 @@ PostmanTests/temp_results/
 # locally for rollback, but they must never be pushed.
 infra/backups/
 !infra/backups/.gitkeep
+
+# Playwright artifacts
+test-results/
+playwright-report/
