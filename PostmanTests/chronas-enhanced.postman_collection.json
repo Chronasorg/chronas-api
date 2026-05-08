@@ -386,13 +386,13 @@
               "script": {
                 "exec": [
                   "// Regression for the DynamoDB FilterExpression byte-overflow bug fixed in PR #149.",
-                  "// e_World_War_II has 178 marker links + 145 metadata links — enough that the",
-                  "// pre-fix Scan+FilterExpression path crashed with 'Expression size has exceeded",
-                  "// the maximum allowed size'. With the BatchGetItem fix this must respond cleanly.",
-                  "pm.test('Status is not 5xx (BatchGet path is used, not Scan+FilterExpression)', function () {",
-                  "    pm.expect(pm.response.code).to.be.lessThan(500);",
-                  "});",
-                  "pm.test('Status is 200', function () {",
+                  "// e_World_War_II has 178 marker links + 145 metadata links (323 total) — enough",
+                  "// that the pre-fix Scan+FilterExpression path crashed with 'Expression size has",
+                  "// exceeded the maximum allowed size; expression size: 4767' (DynamoDB hard limit",
+                  "// is 4096 bytes). With the BatchGetItem fix this must respond cleanly.",
+                  "pm.test('Status is 200 (not the historical 500 from FilterExpression overflow)', function () {",
+                  "    pm.expect(pm.response.code, 'historical failure modes were 500/502/503')",
+                  "        .to.not.be.oneOf([500, 502, 503]);",
                   "    pm.response.to.have.status(200);",
                   "});",
                   "pm.test('Response contains map and media arrays', function () {",
@@ -402,13 +402,17 @@
                   "    pm.expect(jsonData.map).to.be.an('array');",
                   "    pm.expect(jsonData.media).to.be.an('array');",
                   "});",
-                  "pm.test('High-fanout entity returns substantial link payload (>50 total)', function () {",
+                  "pm.test('Full fan-out fetched (>200 total — guards against silent partial-page truncation)', function () {",
+                  "    // Actual fan-out is 323. Threshold 200 catches an UnprocessedKeys",
+                  "    // bug, batch boundary loss, or BatchGet 16 MB ceiling truncation.",
                   "    var jsonData = pm.response.json();",
                   "    var total = jsonData.map.length + jsonData.media.length;",
-                  "    pm.expect(total).to.be.greaterThan(50);",
+                  "    pm.expect(total).to.be.greaterThan(200);",
                   "});",
-                  "pm.test('Response time under 3 seconds', function () {",
-                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "pm.test('Response time under 1 second (BatchGet, not Scan)', function () {",
+                  "    // BatchGet path is ~250ms; cold-start ~600ms. 1s threshold catches a",
+                  "    // regression to the old Scan+FilterExpression path (was ~1.87s).",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1610,6 +1614,80 @@
                 "users",
                 "testUser@test.de"
               ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CORS",
+      "item": [
+        {
+          "name": "Allowed origin: chronas.org returns exact origin (not wildcard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Strict CORS guard. config/express.js whitelists chronas.org subdomains via",
+                  "// regex. A regression that loosened CORS to '*' would silently let any site",
+                  "// embed the API; assert the EXACT echoed origin instead of accepting wildcard.",
+                  "pm.test('Preflight returns 2xx', function () {",
+                  "    pm.expect(pm.response.code).to.be.below(300);",
+                  "});",
+                  "pm.test('Access-Control-Allow-Origin is exactly https://chronas.org (not wildcard)', function () {",
+                  "    var allowOrigin = pm.response.headers.get('Access-Control-Allow-Origin');",
+                  "    pm.expect(allowOrigin).to.equal('https://chronas.org');",
+                  "    pm.expect(allowOrigin, 'wildcard would be a security regression').to.not.equal('*');",
+                  "});",
+                  "pm.test('Access-Control-Allow-Credentials is true', function () {",
+                  "    pm.expect(pm.response.headers.get('Access-Control-Allow-Credentials')).to.equal('true');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "https://chronas.org" },
+              { "key": "Access-Control-Request-Method", "value": "GET" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/health",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "v1", "health" ]
+            }
+          }
+        },
+        {
+          "name": "Disallowed origin: evil.example.com rejected (no Allow-Origin echo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Disallowed origin does NOT receive Access-Control-Allow-Origin: evil.example.com', function () {",
+                  "    var allowOrigin = pm.response.headers.get('Access-Control-Allow-Origin');",
+                  "    pm.expect(allowOrigin, 'must not echo a disallowed origin').to.not.equal('https://evil.example.com');",
+                  "    pm.expect(allowOrigin, 'must not be wildcard either').to.not.equal('*');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "https://evil.example.com" },
+              { "key": "Access-Control-Request-Method", "value": "GET" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/health",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "v1", "health" ]
             }
           }
         }
