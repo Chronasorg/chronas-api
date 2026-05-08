@@ -75,7 +75,7 @@ describe('DynamoRateLimitStore', () => {
       await store.increment('1.2.3.4');
 
       // craft a counter for the next window manually
-      const nextWindow = Math.floor(Date.now() / 60_000) * 60_000 + 60_000;
+      const nextWindow = (Math.floor(Date.now() / 60_000) * 60_000) + 60_000;
       const { getDocClient } = await import('../../models/dynamo/dynamo-client.js');
       const { UpdateCommand } = await import('@aws-sdk/lib-dynamodb');
       await getDocClient().send(new UpdateCommand({
