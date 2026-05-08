@@ -252,6 +252,12 @@ async function loadTableDefs() {
       ]
     },
     {
+      TableName: `${prefix}-rate-limits`,
+      AttributeDefinitions: [{ AttributeName: '_id', AttributeType: 'S' }],
+      KeySchema: [{ AttributeName: '_id', KeyType: 'HASH' }],
+      BillingMode: 'PAY_PER_REQUEST'
+    },
+    {
       TableName: `${prefix}-board`,
       AttributeDefinitions: [
         { AttributeName: 'PK', AttributeType: 'S' },
