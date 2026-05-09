@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 
@@ -168,52 +168,205 @@ async function queryBranch(options) {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const filter = {};
-  if (type) filter.type = type;
-  if (wiki) filter.wiki = wiki;
+  const subtypes = subtype
+    ? subtype.split(',').filter(s => s && s !== 'es')
+    : [];
+  const yearLo = year ? year - delta : null;
+  const yearHi = year ? year + delta : null;
 
-  if (year) {
-    filter.year = { $gt: year - delta, $lt: year + delta };
+  // GSI selection is conservative: items missing a GSI key attribute do not
+  // appear in that GSI (e.g. an item without `subtype` is invisible to
+  // GSI-TypeSubtype and GSI-SubtypeYear). To preserve correctness we only
+  // route through a GSI when the request constrains the index's hash key —
+  // i.e., subtype is provided. The hot-path bug from #154 was the
+  // type+subtype+year query (~99% of the RCU spike); type-only queries fall
+  // back to Scan so we never miss items lacking subtype.
+  let rawItems;
+  if (subtypes.length > 0 && year) {
+    rawItems = await querySubtypeYearGSI(subtypes, yearLo, yearHi, { type, wiki });
+  } else if (type && subtypes.length > 0) {
+    rawItems = await queryTypeSubtypeGSI(type, subtypes, { yearLo: null, yearHi: null, wiki });
+  } else {
+    rawItems = await scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes });
   }
 
-  if (subtype) {
-    const subtypes = subtype.split(',').filter(s => s !== 'es');
-    if (subtypes.length === 1) filter.subtype = subtypes[0];
-    else if (subtypes.length > 1) filter.subtype = { $in: subtypes };
-  }
+  let items = rawItems.map(i => decodeFromRead(i));
 
   if (search) {
-    filter.$or = [
-      { _id: { $regex: search } },
-      { name: { $regex: search } }
-    ];
+    const lc = String(search).toLowerCase();
+    items = items.filter(i =>
+      (i._id && String(i._id).toLowerCase().includes(lc)) ||
+      (i.name && String(i.name).toLowerCase().includes(lc))
+    );
   }
-
-  if (mustGeo) {
-    // coo exists check — DynamoDB doesn't have $exists, so we filter client-side
-  }
-
-  let items = await new DynamoQuery(MetadataDynamo, filter)
-    .skip(+start)
-    .limit(+end)
-    .sort({ score: -1 })
-    .lean()
-    .exec();
-
-  items = items.map(i => decodeFromRead(i));
 
   if (mustGeo) {
     items = items.filter(i => i.coo && Array.isArray(i.coo) && i.coo.length === 2);
   }
 
+  items.sort((a, b) => {
+    const av = a.score; const bv = b.score;
+    if (av === bv) return 0;
+    if (av === undefined || av === null) return 1;
+    if (bv === undefined || bv === null) return -1;
+    return av < bv ? 1 : -1;
+  });
+
+  const paged = items.slice(+start, (+start) + (+end));
+
   if (search) {
-    const result = items.map(item => item._id);
+    const result = paged.map(item => item._id);
     cache.put(cacheKey, result, CACHETTL);
     return result;
   }
 
-  cache.put(cacheKey, items, CACHETTL);
+  cache.put(cacheKey, paged, CACHETTL);
+  return paged;
+}
+
+async function querySubtypeYearGSI(subtypes, yearLo, yearHi, extra) {
+  const filterParts = [];
+  const filterValues = {};
+  const filterNames = {};
+  if (extra.type) {
+    filterValues[':__type'] = extra.type;
+    filterNames['#__type'] = 'type';
+    filterParts.push('#__type = :__type');
+  }
+  if (extra.wiki) {
+    filterValues[':__wiki'] = extra.wiki;
+    filterNames['#__wiki'] = 'wiki';
+    filterParts.push('#__wiki = :__wiki');
+  }
+
+  const queries = subtypes.map(st => paginatedQuery({
+    TableName: TABLE,
+    IndexName: 'GSI-SubtypeYear',
+    KeyConditionExpression: '#__subtype = :__subtype AND #__year BETWEEN :__yearLo AND :__yearHi',
+    ExpressionAttributeNames: {
+      '#__subtype': 'subtype',
+      '#__year': 'year',
+      ...filterNames
+    },
+    ExpressionAttributeValues: {
+      ':__subtype': st,
+      ':__yearLo': yearLo,
+      ':__yearHi': yearHi,
+      ...filterValues
+    },
+    ...(filterParts.length ? { FilterExpression: filterParts.join(' AND ') } : {})
+  }));
+
+  const results = await Promise.all(queries);
+  return dedupeById(results.flat());
+}
+
+async function queryTypeSubtypeGSI(type, subtypes, extra) {
+  const queries = subtypes.map(st => paginatedQuery(buildTypeSubtypeParams(type, st, extra)));
+  const results = await Promise.all(queries);
+  return dedupeById(results.flat());
+}
+
+function buildTypeSubtypeParams(type, subtype, extra) {
+  const filterParts = [];
+  const filterValues = {};
+  const filterNames = {};
+  if (extra.yearLo !== null && extra.yearHi !== null) {
+    filterValues[':__yearLo'] = extra.yearLo;
+    filterValues[':__yearHi'] = extra.yearHi;
+    filterNames['#__year'] = 'year';
+    filterParts.push('#__year BETWEEN :__yearLo AND :__yearHi');
+  }
+  if (extra.wiki) {
+    filterValues[':__wiki'] = extra.wiki;
+    filterNames['#__wiki'] = 'wiki';
+    filterParts.push('#__wiki = :__wiki');
+  }
+
+  const params = {
+    TableName: TABLE,
+    IndexName: 'GSI-TypeSubtype',
+    KeyConditionExpression: '#__type = :__type AND #__subtype = :__subtype',
+    ExpressionAttributeNames: { '#__type': 'type', '#__subtype': 'subtype', ...filterNames },
+    ExpressionAttributeValues: { ':__type': type, ':__subtype': subtype, ...filterValues }
+  };
+  if (filterParts.length) params.FilterExpression = filterParts.join(' AND ');
+  return params;
+}
+
+async function scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes = [] }) {
+  const filterParts = [];
+  const values = {};
+  const names = {};
+  if (year) {
+    values[':__yearLo'] = yearLo;
+    values[':__yearHi'] = yearHi;
+    names['#__year'] = 'year';
+    filterParts.push('#__year BETWEEN :__yearLo AND :__yearHi');
+  }
+  if (wiki) {
+    values[':__wiki'] = wiki;
+    names['#__wiki'] = 'wiki';
+    filterParts.push('#__wiki = :__wiki');
+  }
+  if (type) {
+    values[':__type'] = type;
+    names['#__type'] = 'type';
+    filterParts.push('#__type = :__type');
+  }
+  if (subtypes.length === 1) {
+    values[':__subtype'] = subtypes[0];
+    names['#__subtype'] = 'subtype';
+    filterParts.push('#__subtype = :__subtype');
+  } else if (subtypes.length > 1) {
+    names['#__subtype'] = 'subtype';
+    const placeholders = subtypes.map((s, i) => {
+      const k = `:__subtype${i}`;
+      values[k] = s;
+      return k;
+    });
+    filterParts.push(`#__subtype IN (${placeholders.join(', ')})`);
+  }
+  const params = { TableName: TABLE };
+  if (filterParts.length) {
+    params.FilterExpression = filterParts.join(' AND ');
+    params.ExpressionAttributeValues = values;
+    params.ExpressionAttributeNames = names;
+  }
+  const items = [];
+  let next;
+  do {
+    if (next) params.ExclusiveStartKey = next;
+    const out = await getDocClient().send(new ScanCommand(params));
+    if (out.Items) items.push(...out.Items);
+    next = out.LastEvaluatedKey;
+  } while (next);
   return items;
+}
+
+async function paginatedQuery(baseParams) {
+  const items = [];
+  let next;
+  do {
+    const params = next ? { ...baseParams, ExclusiveStartKey: next } : baseParams;
+    const out = await getDocClient().send(new QueryCommand(params));
+    if (out.Items) items.push(...out.Items);
+    next = out.LastEvaluatedKey;
+  } while (next);
+  return items;
+}
+
+function dedupeById(items) {
+  const seen = new Set();
+  const out = [];
+  for (const item of items) {
+    const id = item?._id;
+    if (id === undefined) { out.push(item); continue; }
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(item);
+  }
+  return out;
 }
 
 async function defaultBranch(start, end) {
