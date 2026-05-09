@@ -13,6 +13,11 @@ import { cache } from '../../../config/config.js';
 
 const TABLE = tableName('metadata');
 const CACHETTL = 1000 * 60 * 60 * 24 * 7; // 1 week
+// Sanity cap on in-memory materialization. Today the whole table is ~38k
+// items / 14 MB so this is several multiples of the largest realistic
+// fetch. If we ever hit it the request still succeeds (we just truncate
+// and warn) so we don't OOM the Lambda silently.
+const MAX_ITEMS_IN_MEMORY = 25000;
 
 export default class MetadataDynamo extends DynamoDocument {
   static tableName = TABLE;
@@ -206,10 +211,17 @@ async function queryBranch(options) {
 
   items.sort((a, b) => {
     const av = a.score; const bv = b.score;
-    if (av === bv) return 0;
-    if (av === undefined || av === null) return 1;
-    if (bv === undefined || bv === null) return -1;
-    return av < bv ? 1 : -1;
+    if (av !== bv) {
+      if (av === undefined || av === null) return 1;
+      if (bv === undefined || bv === null) return -1;
+      return av < bv ? 1 : -1;
+    }
+    // Stable tiebreaker so equal-score items have a deterministic order
+    // across requests (e.g. for paging consistency).
+    const aid = a._id ?? '';
+    const bid = b._id ?? '';
+    if (aid === bid) return 0;
+    return aid < bid ? -1 : 1;
   });
 
   const paged = items.slice(+start, (+start) + (+end));
@@ -294,6 +306,17 @@ function buildTypeSubtypeParams(type, subtype, extra) {
   return params;
 }
 
+function checkCap(items, source) {
+  if (items.length >= MAX_ITEMS_IN_MEMORY) {
+    console.warn(
+      `[metadata] ${source} hit MAX_ITEMS_IN_MEMORY=${MAX_ITEMS_IN_MEMORY} — truncating. ` +
+      'The table or matching item-set may have grown beyond expected bounds.'
+    );
+    return true;
+  }
+  return false;
+}
+
 async function scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes = [] }) {
   const filterParts = [];
   const values = {};
@@ -340,6 +363,7 @@ async function scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes = [] 
     const out = await getDocClient().send(new ScanCommand(params));
     if (out.Items) items.push(...out.Items);
     next = out.LastEvaluatedKey;
+    if (checkCap(items, 'scanWithFilter')) break;
   } while (next);
   return items;
 }
@@ -352,6 +376,7 @@ async function paginatedQuery(baseParams) {
     const out = await getDocClient().send(new QueryCommand(params));
     if (out.Items) items.push(...out.Items);
     next = out.LastEvaluatedKey;
+    if (checkCap(items, `paginatedQuery(${baseParams.IndexName || 'main'})`)) break;
   } while (next);
   return items;
 }

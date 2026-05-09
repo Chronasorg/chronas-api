@@ -158,11 +158,21 @@ describe('MetadataDynamo queryBranch — GSI routing (issue #154)', () => {
     expect(opCounts.QueryCommand || 0).to.be.greaterThan(0);
   });
 
-  it('mustGeo filters to items with valid coo array', async () => {
-    const items = await MetadataDynamo.list({
-      type: 'e', subtype: 'ew', year: 1300, delta: 500, geo: true
+  it('mustGeo filters to items with valid coo array (excludes items without coo)', async () => {
+    // Sanity: the unfiltered query returns all matching events including
+    // e_Hundred_Years_War, which has no `coo`.
+    const unfiltered = await MetadataDynamo.list({
+      type: 'e', subtype: 'ew', year: 1500, delta: 1000, end: 50
     });
-    items.forEach(i => {
+    const unfilteredIds = unfiltered.map(i => i._id);
+    expect(unfilteredIds).to.include('e_Hundred_Years_War');
+
+    const filtered = await MetadataDynamo.list({
+      type: 'e', subtype: 'ew', year: 1500, delta: 1000, end: 50, mustGeo: true
+    });
+    const filteredIds = filtered.map(i => i._id);
+    expect(filteredIds).to.not.include('e_Hundred_Years_War');
+    filtered.forEach(i => {
       expect(i.coo).to.be.an('array').with.lengthOf(2);
     });
   });

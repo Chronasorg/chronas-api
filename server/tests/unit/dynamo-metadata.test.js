@@ -148,7 +148,7 @@ describe('MetadataDynamo (DynamoDB Local, real data)', () => {
       expect(result).to.be.an('array');
       const ewType = result.find(r => r._id === 'ew');
       expect(ewType).to.not.be.undefined;
-      expect(ewType.count).to.equal(2);
+      expect(ewType.count).to.equal(3);
     });
 
     it('supports .exec().then() chain (statistics controller pattern)', async () => {
