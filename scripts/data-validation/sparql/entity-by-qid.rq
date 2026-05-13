@@ -1,0 +1,11 @@
+SELECT ?itemLabel ?itemDescription ?start ?end ?coord ?image WHERE {
+  BIND(wd:{{qid}} AS ?item)
+  OPTIONAL { ?item wdt:P571 ?start. }
+  OPTIONAL { ?item wdt:P576 ?end. }
+  OPTIONAL { ?item wdt:P580 ?start. }
+  OPTIONAL { ?item wdt:P582 ?end. }
+  OPTIONAL { ?item wdt:P625 ?coord. }
+  OPTIONAL { ?item wdt:P18 ?image. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 1

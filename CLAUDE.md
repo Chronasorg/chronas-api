@@ -11,12 +11,20 @@ The repo is fully decoupled from CDK as of 2026-05-04. Infrastructure is managed
 ## Build & Development Commands
 
 ```bash
-npm test                     # Mocha tests against dynalite (in-memory DynamoDB)
+npm test                     # Unit tests (server/tests/unit) against dynalite
+npm run test:integration     # Round-trip tests through real Express + dynalite (server/tests/integration)
 npm run test:coverage        # c8 coverage report
 npm run lint                 # ESLint with auto-fix
 npm run test:postman:dev     # Newman/Postman tests against dev
 npm run test:postman:prod    # Newman/Postman tests against production
 ```
+
+`test:integration` is a separate suite — it spins up the real Express app and
+exercises controllers end-to-end. CI runs it on every deploy. If you change
+`scripts/data-validation/apply-corrections-core.js`, keep it green — it pins
+write-shape contracts (e.g. `metadata.add` must use
+`PUT /v1/metadata/:dim/single`, not `POST /v1/metadata` which silently no-ops
+on flat dimension docs).
 
 Single test file:
 ```bash

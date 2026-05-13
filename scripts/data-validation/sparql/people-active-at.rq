@@ -1,0 +1,18 @@
+SELECT ?item ?itemLabel ?birth ?death ?coord WHERE {
+  ?item wdt:P31 wd:Q5 ;
+        wdt:P19 ?pob .
+  ?pob wdt:P625 ?coord .
+  OPTIONAL { ?item wdt:P569 ?birth. }
+  OPTIONAL { ?item wdt:P570 ?death. }
+  FILTER(
+    (!BOUND(?birth) || YEAR(?birth) <= {{yearEnd}}) &&
+    (!BOUND(?death) || YEAR(?death) >= {{yearStart}})
+  )
+  SERVICE wikibase:around {
+    ?pob wdt:P625 ?coord .
+    bd:serviceParam wikibase:center "Point({{lon}} {{lat}})"^^geo:wktLiteral .
+    bd:serviceParam wikibase:radius "{{radiusKm}}" .
+  }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 50

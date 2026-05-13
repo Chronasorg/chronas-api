@@ -1,0 +1,18 @@
+SELECT ?item ?itemLabel ?start ?end ?coord WHERE {
+  SERVICE wikibase:around {
+    ?item wdt:P625 ?coord .
+    bd:serviceParam wikibase:center "Point({{lon}} {{lat}})"^^geo:wktLiteral .
+    bd:serviceParam wikibase:radius "{{radiusKm}}" .
+  }
+  ?item wdt:P31/wdt:P279* wd:{{instanceOf}} .
+  OPTIONAL { ?item wdt:P571 ?start. }
+  OPTIONAL { ?item wdt:P576 ?end. }
+  OPTIONAL { ?item wdt:P580 ?start. }
+  OPTIONAL { ?item wdt:P582 ?end. }
+  FILTER (
+    (!BOUND(?start) || YEAR(?start) <= {{year}}) &&
+    (!BOUND(?end)   || YEAR(?end)   >= {{year}})
+  )
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 25

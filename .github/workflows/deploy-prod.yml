@@ -36,6 +36,9 @@ jobs:
 
       - run: npm test
 
+      - name: Integration tests (round-trip writes through real Express + dynalite)
+        run: npm run test:integration
+
       - name: Generate build version
         run: |
           VERSION=$(node -p "require('./package.json').version")

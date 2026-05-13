@@ -107,6 +107,48 @@ The `PUT /v1/areas` endpoint updates specific provinces across a year range. Are
 
 When you send `{ religion: "orthodox" }`, only index 2 is modified. The check `typeof nextBody[index] !== 'undefined'` ensures all other indices are skipped. This is called **dimension isolation** — ruler, culture, capital, and population are never touched.
 
+## Issue-driven workflow (issue #137)
+
+For curator-supplied fixes (e.g. "Powhatan Confederacy is missing entirely"), use the
+issue-driven validator. It takes a campaign input file under
+`scripts/data-validation/inputs/issue-{N}-*.json`, queries Wikidata for the
+declared QID + (year, region), and emits a report split into `auto` (PROVEN)
+and `manualReview`.
+
+```bash
+# 1. Generate the report
+npm run validate:from-issue -- --input scripts/data-validation/inputs/issue-136-powhatan.json --api-url https://api.chronas.org
+
+# 2. Dry-run the applier
+npm run validate:apply -- --report reports/issue-136-2026-05-13.json --dry-run
+
+# 3. Apply (PROVEN only, no extra flags)
+npm run validate:apply -- --report reports/issue-136-2026-05-13.json --apply --reviewed-by you@chronas.org
+
+# 4. Apply unproven entries (requires explicit reviewer)
+npm run validate:apply -- --report reports/issue-136-2026-05-13.json --apply --allow-unproven --reviewed-by you@chronas.org
+```
+
+**There is no automatic rollback.** The Chronas API does not surface revision
+ids in its write responses, so the applier cannot record them. To revert, use
+the revisions UI. The applier writes a `*.applied.json` sidecar with the list
+of proposals that succeeded — useful as a paper trail for which entries to
+revert manually.
+
+The applier **always re-queries Wikidata at apply time** for every (year, region)
+in the report. If the live Wikidata answer no longer matches what the report
+captured, the proposal is skipped with `wikidata-drift` and you must regenerate
+the report. This is the safety net against stale data.
+
+Write order is fixed: `metadata.add` → `marker.add` → `area.update`. After
+apply, edge caches (CloudFront, S-MaxAge on `/v1/areas/:year` and `/v1/metadata`)
+may serve stale responses for up to 24h. Issue a CloudFront invalidation on
+`/v1/markers*`, `/v1/metadata*`, and `/v1/areas/*` if you need changes visible
+immediately.
+
+`--use-cached-only` runs the validator against the local Wikidata disk cache
+(`cache/wikidata/`) only — useful when Wikidata is unreachable.
+
 ## Configuration
 
 ### Wikidata Mappings (`config/wikidata-mappings.js`)

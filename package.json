@@ -12,8 +12,9 @@
   "engineStrict": false,
   "scripts": {
     "lint": "eslint *.js server config --fix",
-    "test": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests --recursive --exit",
-    "test:coverage": "cross-env NODE_ENV=test c8 mocha --require server/tests/helpers.js server/tests --recursive --exit",
+    "test": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests/unit --recursive --exit",
+    "test:integration": "cross-env NODE_ENV=test mocha --require server/tests/helpers.js --reporter spec --colors server/tests/integration --recursive --exit",
+    "test:coverage": "cross-env NODE_ENV=test c8 mocha --require server/tests/helpers.js server/tests/unit --recursive --exit",
     "test:check-coverage": "npm run test:coverage && c8 check-coverage",
     "test:postman:dev": "node scripts/run-postman-tests.js dev enhanced",
     "test:postman:prod": "node scripts/run-postman-tests.js prod enhanced",
@@ -21,6 +22,7 @@
     "validate:religion": "node scripts/data-validation/validate-religion.js",
     "validate:culture": "node scripts/data-validation/validate-religion.js --dimension culture",
     "validate:scan": "node scripts/data-validation/scan-dimension.js",
+    "validate:from-issue": "node scripts/data-validation/validate-from-issue.js",
     "validate:apply": "node scripts/data-validation/apply-corrections.js"
   },
   "repository": {

@@ -82,3 +82,7 @@ infra/backups/
 # Playwright artifacts
 test-results/
 playwright-report/
+
+# Data-validation pipeline artefacts (generated)
+cache/wikidata/
+reports/
