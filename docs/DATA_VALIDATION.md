@@ -120,13 +120,13 @@ and `manualReview`.
 npm run validate:from-issue -- --input scripts/data-validation/inputs/issue-136-powhatan.json --api-url https://api.chronas.org
 
 # 2. Dry-run the applier
-npm run validate:apply -- --report reports/issue-136-2026-05-13.json --dry-run
+npm run validate:apply -- --report reports/issue-136-2026-05-15.json --dry-run
 
 # 3. Apply (PROVEN only, no extra flags)
-npm run validate:apply -- --report reports/issue-136-2026-05-13.json --apply --reviewed-by you@chronas.org
+npm run validate:apply -- --report reports/issue-136-2026-05-15.json --apply --reviewed-by you@chronas.org
 
 # 4. Apply unproven entries (requires explicit reviewer)
-npm run validate:apply -- --report reports/issue-136-2026-05-13.json --apply --allow-unproven --reviewed-by you@chronas.org
+npm run validate:apply -- --report reports/issue-136-2026-05-15.json --apply --allow-unproven --reviewed-by you@chronas.org
 ```
 
 **There is no automatic rollback.** The Chronas API does not surface revision
@@ -210,6 +210,45 @@ Shared SPARQL query helper. Rate-limited to 1 request/second per Wikidata policy
   - Bulgaria, Serbia, Thrace, Bosnia, Macedonia, Larissa, Kozani, Vidin, Plovdiv, Nis, Burgas, Banat, Transylvania, Dobruja, Torontal, Hamid, Kartli
 
 **Report:** `reports/religion-validation-refined-2026-04-20.json`
+
+### Issue #136 — Powhatan Confederacy + Paleo-Indian cultures (applied 2026-05-15, round 2)
+
+**Problem:** Pre-colonial North America was missing entirely. The Powhatan Confederacy
+(~1570–1646) had no ruler entry, no metadata record, and no map presence in Tidewater
+Virginia. Paleo-Indian cultures (Clovis, Folsom, Plano) were absent.
+
+**First validation case for the issue-driven pipeline (#137).** The campaign input
+file is [scripts/data-validation/inputs/issue-136-powhatan.json](../scripts/data-validation/inputs/issue-136-powhatan.json).
+
+**Round 2 fix applied (15 PROVEN proposals):**
+- Powhatan Confederacy metadata for 1570–1607 (peak years) and 1650–1700 (Roanoke remnant)
+- 7 Tidewater provinces set to `POW`: Powhatan, Roanoke, Conoy, Doeg, Moratok, Nanticoke, Pamlico (1570–1607)
+- Roanoke `POW` 1650–1700 (post-collapse persistence)
+- Clovis, Folsom, Plano culture metadata entries (Paleo-Indian period, no area scope)
+
+**Reports:** [reports/issue-136-2026-05-15.json](../reports/issue-136-2026-05-15.json) + `.md` summary + `.applied.json` sidecar.
+
+#### Cautionary tale — round 1 over-reach
+
+Round 1 (2026-05-13) applied POW too aggressively:
+- Provinces (Roanoke = Carolina Algonquian; Conoy/Doeg/Moratok/Nanticoke/Pamlico =
+  separate Algonquian peoples) were assigned to the Confederacy without Wikidata
+  evidence. The campaign-input province list was curator-supplied; the validator's
+  Wikidata drift check **does not catch this**, because Wikidata simply lacks
+  per-province polity-membership data for pre-colonial Indigenous nations.
+- Year span included 1500–1607 on Roanoke and 1650–1700 with no Wikidata support.
+
+**Lesson:** for thinly-documented pre-colonial / Indigenous polities, the
+campaign input itself is the trust boundary. The pipeline guards against
+*Wikidata drift*, not against *unsupported curator claims*. Treat first-round
+PROVEN output as a draft: review every (province, year-range) tuple by hand
+before `--apply`.
+
+**Revert:** see [scripts/data-validation/revert-issue-136-overreach.js](../scripts/data-validation/revert-issue-136-overreach.js)
+— a one-shot script that clears ruler='' for the 7 over-reached provinces in
+1570–1607 and restores Roanoke 1650–1700 to `_Kingdom_of_England`. Pattern is
+re-usable: `PUT /v1/areas` in ≤10-year batches, dry-run by default. Use it as a
+template for future revert scripts when a campaign mis-fires.
 
 ### Pending Issues
 

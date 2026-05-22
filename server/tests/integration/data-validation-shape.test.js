@@ -454,4 +454,49 @@ describe('integration: area.update lands and references real metadata children',
     expect(result.skipped[0].reason).to.equal('slot-occupied');
     expect(result.skipped[0].details.some(d => d.year === 1585)).to.equal(true);
   });
+
+  it('refuses area.update for province keys absent from the chronas-areas doc (silent-drop guard)', async function () {
+    // Confirms the unknown-province pre-flight against the real updateMany
+    // controller. The controller's `if (!area.data[province]) return;` would
+    // happily accept the request and silently drop the unknown provinces;
+    // the applier must catch this client-side instead.
+    //
+    // We use a year (1700) that the rest of this suite does NOT touch and
+    // seed it inline, so the test is independent of describe-level state.
+    this.timeout(30000);
+    await clearTable('chronas-areas');
+    await seedTable('chronas-areas', [
+      { _id: '1700', year: 1700, data: { 'Powhatan': ['', '', '', '', 0] } }
+    ]);
+
+    const chronas = new ChronasClient({ apiUrl: baseUrl, token: TOKEN });
+    const wikidata = { entityByQid: async () => null, queryAt: async () => [] };
+
+    const result = await applyProposals(
+      [{
+        kind: 'area.update',
+        body: {
+          start: 1700, end: 1700,
+          // Powhatan is real (just seeded). Chesapeake/Tidewater are not.
+          provinces: ['Powhatan', 'Chesapeake', 'Tidewater'],
+          ruler: 'POW'
+        },
+        yearRegionSamples: [],
+        citations: [{ source: 'A' }, { source: 'B' }],
+        wikidataMatch: null
+      }],
+      { chronas, wikidata },
+      { dryRun: false }
+    );
+
+    expect(result.applied, JSON.stringify(result.applied)).to.have.lengthOf(0);
+    expect(result.skipped[0].reason, JSON.stringify(result.skipped)).to.equal('unknown-province');
+    expect(result.skipped[0].details.unknown).to.deep.equal(['Chesapeake', 'Tidewater']);
+
+    const areaDoc = await request(app).get('/v1/areas/1700').expect(200);
+    expect(areaDoc.body).to.not.have.property('Chesapeake');
+    expect(areaDoc.body).to.not.have.property('Tidewater');
+    // Powhatan is still empty (no partial write happened).
+    expect(areaDoc.body.Powhatan?.[0] || '', JSON.stringify(areaDoc.body.Powhatan)).to.equal('');
+  });
 });

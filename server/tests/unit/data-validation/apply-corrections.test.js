@@ -175,6 +175,94 @@ describe('apply-corrections-core', () => {
       expect(result.skipped[0].reason).to.equal('slot-occupied');
     });
 
+    it('refuses area.update for province keys that do not exist in the area doc (silent-drop guard)', async () => {
+      // Real prod regression: the issue-136 campaign listed Chesapeake and
+      // Tidewater, neither of which is a chronas province. The updateMany
+      // controller silently skipped them and returned 200, hiding the loss.
+      // The applier must refuse the proposal up front instead.
+      const chronas = makeChronasMock({
+        fetchYear: async () => ({ ok: true, body: { Powhatan: ['', '', ''], Roanoke: ['', '', ''] } })
+      });
+      const wikidata = makeWikidataMock({
+        qid: 'Q1', start: 1570, end: 1646, coordinates: 'Point(-76.7 37.5)'
+      });
+      const result = await applyProposals(
+        [makeProposal('area.update', {
+          start: 1570, end: 1579,
+          provinces: ['Powhatan', 'Roanoke', 'Chesapeake', 'Tidewater'],
+          ruler: 'POW'
+        })],
+        { chronas, wikidata },
+        { dryRun: false }
+      );
+      expect(result.applied.length).to.equal(0);
+      expect(result.skipped[0].reason).to.equal('unknown-province');
+      expect(result.skipped[0].details.unknown).to.deep.equal(['Chesapeake', 'Tidewater']);
+      // Confirm we did not call updateAreas.
+      expect(chronas.calls.find(c => c[0] === 'updateAreas')).to.be.undefined;
+    });
+
+    it('honours proposal.overwrite — writes when occupied slot value is on the allowlist', async () => {
+      // Curator authorises replacing _Kingdom_of_England specifically.
+      // Existing slot has ENG → write proceeds.
+      const chronas = makeChronasMock({
+        fetchYear: async () => ({ ok: true, body: { Roanoke: ['_Kingdom_of_England', 'english', 'protestant'] } })
+      });
+      const wikidata = makeWikidataMock({
+        qid: 'Q1', start: null, end: null, coordinates: 'Point(-76.7 37.5)'
+      });
+      const result = await applyProposals(
+        [{
+          ...makeProposal('area.update', { start: 1650, end: 1651, provinces: ['Roanoke'], ruler: 'POW' }),
+          overwrite: { ruler: ['_Kingdom_of_England'] }
+        }],
+        { chronas, wikidata },
+        { dryRun: false }
+      );
+      expect(result.applied.length, JSON.stringify(result.skipped)).to.equal(1);
+      expect(chronas.calls.find(c => c[0] === 'updateAreas')).to.exist;
+    });
+
+    it('refuses overwrite when occupied slot value is NOT on the allowlist', async () => {
+      // ENG authorised, but the actual occupant is FRA → still skip.
+      const chronas = makeChronasMock({
+        fetchYear: async () => ({ ok: true, body: { Roanoke: ['FRA', 'french', 'catholic'] } })
+      });
+      const wikidata = makeWikidataMock({
+        qid: 'Q1', start: null, end: null, coordinates: 'Point(-76.7 37.5)'
+      });
+      const result = await applyProposals(
+        [{
+          ...makeProposal('area.update', { start: 1650, end: 1651, provinces: ['Roanoke'], ruler: 'POW' }),
+          overwrite: { ruler: ['_Kingdom_of_England'] }
+        }],
+        { chronas, wikidata },
+        { dryRun: false }
+      );
+      expect(result.applied).to.have.lengthOf(0);
+      expect(result.skipped[0].reason).to.equal('slot-occupied');
+    });
+
+    it('passes pre-flight when every requested province exists', async () => {
+      const chronas = makeChronasMock({
+        fetchYear: async () => ({ ok: true, body: { Powhatan: ['', '', ''], Roanoke: ['', '', ''] } })
+      });
+      const wikidata = makeWikidataMock({
+        qid: 'Q1', start: 1570, end: 1646, coordinates: 'Point(-76.7 37.5)'
+      });
+      const result = await applyProposals(
+        [makeProposal('area.update', {
+          start: 1570, end: 1579,
+          provinces: ['Powhatan', 'Roanoke'],
+          ruler: 'POW'
+        })],
+        { chronas, wikidata },
+        { dryRun: false }
+      );
+      expect(result.applied.length).to.equal(1);
+      expect(result.skipped.length).to.equal(0);
+    });
+
     it('apply-time slot pre-flight catches mid-window occupation (not just start year)', async () => {
       // Reproduces the asymmetry: builder samples start/mid/end via
       // findOccupiedSlots; the applier must too. With a 10-year batch, an

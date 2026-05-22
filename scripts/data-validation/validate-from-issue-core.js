@@ -176,41 +176,114 @@ async function buildPolityProposals(campaign, ctx) {
     sourceCampaign: campaign.name
   });
 
-  for (let year = campaign.yearStart; year <= campaign.yearEnd; year += 10) {
-    const batchEnd = Math.min(year + 9, campaign.yearEnd);
-    const midYear = Math.floor((year + batchEnd) / 2);
-    const occupiedSlots = await ctx.chronas.findOccupiedSlots(
-      'ruler',
-      campaign.chronasProvinces,
-      year,
-      batchEnd
-    );
-    if (occupiedSlots.length > 0) {
-      proposals.push({
-        kind: 'area.skip',
-        reason: 'slot-occupied',
-        details: occupiedSlots,
-        sourceCampaign: campaign.name
-      });
-      continue;
-    }
-    proposals.push({
+  proposals.push(...await buildAreaBatches({
+    campaign,
+    dimension: 'ruler',
+    valueField: 'ruler',
+    value: campaign.proposedRulerCode,
+    wdAlign,
+    ctx
+  }));
+
+  return proposals;
+}
+
+/**
+ * Walk year-by-year through [campaign.yearStart, campaign.yearEnd] and group
+ * consecutive years where every requested province has an empty slot into
+ * area.update batches. Years with any occupation get an area.skip record.
+ *
+ * Why not "decade-aligned batches with skip for the whole decade": the issue
+ * #136 case showed that the historical Powhatan rule overlapped the year
+ * 1600 (empty) and 1608 (England arrives). A decade-aligned batch would skip
+ * 1600–1609 entirely, losing the 1600–1607 fill that the curator wants.
+ */
+async function buildAreaBatches({ campaign, dimension, valueField, value, wdAlign, ctx }) {
+  const out = [];
+  // overwrite[<dim>] is an explicit allowlist: "I authorise replacing the
+  // existing value if it currently equals one of these". Empty/undefined
+  // means no overwrite — the apply will skip occupied slots.
+  const allowedReplacements = new Set(campaign.overwrite?.[dimension] || []);
+
+  // Pull each year's slot state once into a map so we don't refetch within a batch.
+  const occupancyByYear = new Map();
+  for (let year = campaign.yearStart; year <= campaign.yearEnd; year++) {
+    const occ = await ctx.chronas.findOccupiedSlots(dimension, campaign.chronasProvinces, year, year);
+    occupancyByYear.set(year, occ);
+  }
+
+  // For each year, classify as: empty (default fill), allowed-overwrite
+  // (existing value is in the campaign's overwrite allowlist), or
+  // occupied-not-allowed (must skip).
+  function classify(occupied) {
+    if (occupied.length === 0) return 'empty';
+    if (allowedReplacements.size === 0) return 'occupied';
+    const allMatched = occupied.every(o => allowedReplacements.has(o[dimension]));
+    return allMatched ? 'overwrite' : 'occupied';
+  }
+
+  let runStart = null;
+  let runMode = null; // 'empty' | 'overwrite'
+  const flushRun = (runEnd) => {
+    if (runStart === null) return;
+    const midYear = Math.floor((runStart + runEnd) / 2);
+    out.push({
       kind: 'area.update',
       body: {
-        start: year,
-        end: batchEnd,
+        start: runStart,
+        end: runEnd,
         provinces: campaign.chronasProvinces,
-        ruler: campaign.proposedRulerCode,
+        [valueField]: value,
         wikidataQid: campaign.wikidataQid
       },
       yearRegionSamples: geoSamplesFor(campaign, midYear),
+      overwrite: runMode === 'overwrite' ? { [dimension]: [...allowedReplacements] } : undefined,
       citations: campaign.citations,
       wikidataMatch: wdAlign,
       sourceCampaign: campaign.name
     });
-  }
+    runStart = null;
+    runMode = null;
+  };
 
-  return proposals;
+  // The chronas-api updateMany controller treats batches with end-start>=11
+  // as fire-and-forget (waitForCompletion=false) — the synchronous response
+  // races the per-year saves, and large area.update payloads can 500. Cap each
+  // emitted batch at MAX_BATCH_YEARS years so the controller stays in the
+  // synchronous path.
+  const MAX_BATCH_YEARS = 10;
+
+  for (let year = campaign.yearStart; year <= campaign.yearEnd; year++) {
+    const occupied = occupancyByYear.get(year);
+    const cls = classify(occupied);
+    if (cls === 'empty' || cls === 'overwrite') {
+      // Start a new run if there isn't one or the mode changed.
+      if (runStart === null) {
+        runStart = year;
+        runMode = cls;
+      } else if (runMode !== cls) {
+        flushRun(year - 1);
+        runStart = year;
+        runMode = cls;
+      } else if (year - runStart + 1 > MAX_BATCH_YEARS) {
+        // Same mode but batch is full — close it and start the next one.
+        flushRun(year - 1);
+        runStart = year;
+        runMode = cls;
+      }
+    } else {
+      flushRun(year - 1);
+      out.push({
+        kind: 'area.skip',
+        reason: 'slot-occupied',
+        details: occupied,
+        year,
+        sourceCampaign: campaign.name
+      });
+    }
+  }
+  flushRun(campaign.yearEnd);
+  return out;
 }
 
 async function buildCultureProposals(campaign, ctx) {
@@ -236,39 +309,14 @@ async function buildCultureProposals(campaign, ctx) {
     return proposals;
   }
 
-  for (let year = campaign.yearStart; year <= campaign.yearEnd; year += 10) {
-    const batchEnd = Math.min(year + 9, campaign.yearEnd);
-    const midYear = Math.floor((year + batchEnd) / 2);
-    const occupiedSlots = await ctx.chronas.findOccupiedSlots(
-      'culture',
-      campaign.chronasProvinces,
-      year,
-      batchEnd
-    );
-    if (occupiedSlots.length > 0) {
-      proposals.push({
-        kind: 'area.skip',
-        reason: 'slot-occupied',
-        details: occupiedSlots,
-        sourceCampaign: campaign.name
-      });
-      continue;
-    }
-    proposals.push({
-      kind: 'area.update',
-      body: {
-        start: year,
-        end: batchEnd,
-        provinces: campaign.chronasProvinces,
-        culture: campaign.chronasKey,
-        wikidataQid: campaign.wikidataQid
-      },
-      yearRegionSamples: geoSamplesFor(campaign, midYear),
-      citations: campaign.citations,
-      wikidataMatch: wdAlign,
-      sourceCampaign: campaign.name
-    });
-  }
+  proposals.push(...await buildAreaBatches({
+    campaign,
+    dimension: 'culture',
+    valueField: 'culture',
+    value: campaign.chronasKey,
+    wdAlign,
+    ctx
+  }));
   return proposals;
 }
 

@@ -13,6 +13,13 @@ import Joi from 'joi';
 const QID = Joi.string().pattern(/^Q\d+$/);
 const YEAR = Joi.number().integer().min(-13000).max(2100);
 
+const overwriteAllowlist = Joi.object({
+  ruler: Joi.array().items(Joi.string()).optional(),
+  culture: Joi.array().items(Joi.string()).optional(),
+  religion: Joi.array().items(Joi.string()).optional(),
+  capital: Joi.array().items(Joi.string()).optional()
+});
+
 const polityCampaign = Joi.object({
   type: Joi.string().valid('polity').required(),
   name: Joi.string().required(),
@@ -29,6 +36,9 @@ const polityCampaign = Joi.object({
     lat: Joi.number().required(),
     lon: Joi.number().required()
   }).optional(),
+  // Authorise replacement of existing values listed here. Default is
+  // fill-empty-only.
+  overwrite: overwriteAllowlist.optional(),
   citations: Joi.array().items(Joi.object({
     source: Joi.string().required(),
     url: Joi.string().uri().optional(),
@@ -52,6 +62,7 @@ const cultureCampaign = Joi.object({
   color: Joi.string().pattern(/^rgb\(\d+,\s*\d+,\s*\d+\)$/).optional(),
   wikiSlug: Joi.string().optional(),
   flag: Joi.string().optional(),
+  overwrite: overwriteAllowlist.optional(),
   citations: Joi.array().items(Joi.object({
     source: Joi.string().required(),
     url: Joi.string().uri().optional()

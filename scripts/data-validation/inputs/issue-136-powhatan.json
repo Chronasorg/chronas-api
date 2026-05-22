@@ -1,16 +1,42 @@
 {
   "issue": 136,
-  "title": "Powhatan Confederacy + Clovis culture",
+  "title": "Powhatan Confederacy + Clovis/Folsom/Plano cultures (round 2)",
   "campaigns": [
     {
       "type": "polity",
       "name": "Powhatan Confederacy",
       "wikidataQid": "Q49291",
       "yearStart": 1570,
-      "yearEnd": 1646,
-      "chronasProvinces": ["Powhatan", "Roanoke", "Chesapeake", "Tidewater"],
+      "yearEnd": 1607,
+      "chronasProvinces": [
+        "Powhatan",
+        "Roanoke",
+        "Conoy",
+        "Doeg",
+        "Moratok",
+        "Nanticoke",
+        "Pamlico"
+      ],
       "proposedRulerCode": "POW",
+      "color": "rgb(150,140,90)",
       "capital": { "name": "Werowocomoco", "lat": 37.52, "lon": -76.78 },
+      "overwrite": { "ruler": ["POW"] },
+      "citations": [
+        { "source": "Encyclopedia Virginia — Powhatan (d. 1618)", "url": "https://encyclopediavirginia.org/entries/powhatan-d-1618/" },
+        { "source": "National Park Service — Werowocomoco", "url": "https://www.nps.gov/places/werowocomoco.htm" }
+      ]
+    },
+    {
+      "type": "polity",
+      "name": "Powhatan Confederacy",
+      "wikidataQid": "Q49291",
+      "yearStart": 1650,
+      "yearEnd": 1700,
+      "chronasProvinces": ["Roanoke"],
+      "proposedRulerCode": "POW",
+      "color": "rgb(150,140,90)",
+      "capital": { "name": "Werowocomoco", "lat": 37.52, "lon": -76.78 },
+      "overwrite": { "ruler": ["_Kingdom_of_England", "_Kingdom_of_Great_Britain", "POW"] },
       "citations": [
         { "source": "Encyclopedia Virginia — Powhatan (d. 1618)", "url": "https://encyclopediavirginia.org/entries/powhatan-d-1618/" },
         { "source": "National Park Service — Werowocomoco", "url": "https://www.nps.gov/places/werowocomoco.htm" }
@@ -23,6 +49,7 @@
       "yearStart": -13000,
       "yearEnd": -7000,
       "chronasKey": "clovis",
+      "color": "rgb(180,140,80)",
       "areaScope": "none",
       "citations": [
         { "source": "Smithsonian — Clovis Points", "url": "https://humanorigins.si.edu/" },
@@ -30,48 +57,33 @@
       ]
     },
     {
-      "type": "marker",
-      "name": "Wahunsenacawh (Chief Powhatan)",
-      "wikidataQid": "Q578878",
-      "markerType": "p",
-      "year": 1547,
-      "end": 1618,
-      "coo": [-76.78, 37.52],
-      "rulerCode": "POW",
+      "type": "culture",
+      "name": "Folsom tradition",
+      "wikidataQid": "Q1257815",
+      "yearStart": -9000,
+      "yearEnd": -8000,
+      "chronasKey": "folsom",
+      "color": "rgb(170,130,70)",
+      "areaScope": "none",
       "citations": [
-        { "source": "Encyclopedia Virginia — Powhatan (d. 1618)", "url": "https://encyclopediavirginia.org/entries/powhatan-d-1618/" },
-        { "source": "Smithsonian — Powhatan biography" }
+        { "source": "Smithsonian — Folsom site" },
+        { "source": "Encyclopedia Britannica — Folsom complex" }
       ]
     },
     {
-      "type": "marker",
-      "name": "Jamestown",
-      "wikidataQid": "Q323813",
-      "markerType": "op",
-      "year": 1607,
-      "coo": [-76.7783, 37.2087],
+      "type": "culture",
+      "name": "Plano cultures",
+      "wikidataQid": "Q1989372",
+      "yearStart": -9000,
+      "yearEnd": -6000,
+      "chronasKey": "plano",
+      "color": "rgb(160,120,60)",
+      "areaScope": "none",
       "citations": [
-        { "source": "National Park Service — Historic Jamestowne", "url": "https://www.nps.gov/jame/" },
-        { "source": "Encyclopedia Virginia — Jamestown" }
+        { "source": "Smithsonian — Plano cultures" },
+        { "source": "Encyclopedia Britannica — Plano peoples" }
       ]
     }
   ],
-  "manualEntities": [
-    {
-      "scope": "marker",
-      "reason": "Werowocomoco — Powhatan capital. Wikidata QID exists but coordinates uncertain pre-archaeology; sourcing manual.",
-      "citations": [
-        { "source": "National Park Service — Werowocomoco", "url": "https://www.nps.gov/places/werowocomoco.htm" },
-        { "source": "Gallivan 2016 — The Powhatan Landscape (University Press of Florida)" }
-      ],
-      "payload": {
-        "name": "Werowocomoco",
-        "type": "op",
-        "year": 1570,
-        "coo": [-76.7831, 37.5147],
-        "rulerCode": "POW",
-        "wikidataQid": "Q301064"
-      }
-    }
-  ]
+  "manualEntities": []
 }

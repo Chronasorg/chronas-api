@@ -18,8 +18,8 @@
  * applier. To revert, use the revisions UI.
  *
  * Usage:
- *   npm run validate:apply -- --report reports/issue-136-2026-05-13.json --dry-run
- *   npm run validate:apply -- --report reports/issue-136-2026-05-13.json --apply --reviewed-by you@example.com
+ *   npm run validate:apply -- --report reports/issue-136-2026-05-15.json --dry-run
+ *   npm run validate:apply -- --report reports/issue-136-2026-05-15.json --apply --reviewed-by you@example.com
  */
 
 import fs from 'fs';

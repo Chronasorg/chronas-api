@@ -152,6 +152,10 @@ async function preflightAreaSlot(proposal, ctx) {
   const targetDimension = ['ruler', 'culture', 'religion', 'capital'].find(d => proposal.body[d] !== undefined);
   if (!targetDimension) return { ok: false, reason: 'no-dimension' };
   const dimIndex = { ruler: 0, culture: 1, religion: 2, capital: 3 }[targetDimension];
+  // Curator-authorised replacements for this dimension. The validator carries
+  // these from `campaign.overwrite[<dim>]` into proposal.overwrite[<dim>].
+  // An empty allowlist preserves the default "fill empty slots only" rule.
+  const allowedReplacements = new Set(proposal.overwrite?.[targetDimension] || []);
 
   // Match the builder: sample start/mid/end of the batch so we don't miss
   // a slot that was empty at start but occupied later in the window.
@@ -163,9 +167,26 @@ async function preflightAreaSlot(proposal, ctx) {
     yearsToSample.push(end);
   }
 
+  // Province-existence check. The chronas-api updateMany controller silently
+  // skips provinces it doesn't recognise (`if (!area.data[province]) return`),
+  // so an area.update with an unknown province name returns 200 with zero
+  // writes — silent data drop. Refuse the proposal up front instead.
+  //
+  // We only fire when the area doc clearly has data: real prod responses
+  // always carry hundreds of province keys. An empty/missing doc means we
+  // can't tell, so we let the request through (the slot-occupied check below
+  // and the controller itself remain backstops).
+  const refSample = await ctx.chronas.fetchYear(start);
+  if (refSample.ok && refSample.body && Object.keys(refSample.body).length > 0) {
+    const unknown = proposal.body.provinces.filter(p => !(p in refSample.body));
+    if (unknown.length > 0) {
+      return { ok: false, reason: 'unknown-province', details: { unknown, sampledYear: start } };
+    }
+  }
+
   const seen = new Map();
   for (const year of yearsToSample) {
-    const sample = await ctx.chronas.fetchYear(year);
+    const sample = year === start ? refSample : await ctx.chronas.fetchYear(year);
     if (!sample.ok || !sample.body) continue;
     for (const prov of proposal.body.provinces) {
       const arr = sample.body[prov];
@@ -176,8 +197,13 @@ async function preflightAreaSlot(proposal, ctx) {
     }
   }
   const occupied = Array.from(seen.values());
-  if (occupied.length > 0) return { ok: false, reason: 'slot-occupied', details: occupied };
-  return { ok: true };
+  if (occupied.length === 0) return { ok: true };
+  // Curator-authorised overwrite: pass only when EVERY occupied slot's
+  // current value is on the campaign's allowlist for this dimension.
+  if (allowedReplacements.size > 0 && occupied.every(o => allowedReplacements.has(o.currentValue))) {
+    return { ok: true, overwriting: occupied };
+  }
+  return { ok: false, reason: 'slot-occupied', details: occupied };
 }
 
 async function preflightMetadata(proposal, ctx) {

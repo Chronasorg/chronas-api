@@ -373,6 +373,164 @@ describe('validate-from-issue-core', () => {
     });
   });
 
+  describe('buildReport — partial-batch emission', () => {
+    it('splits a multi-year window around a mid-window occupation', async () => {
+      // Years 1570-1604 empty, 1605-1609 occupied by ENG. Builder must emit
+      // ONE area.update for 1570-1604 and area.skip records for 1605-1609 —
+      // not skip the entire 10y batch.
+      const wikidata = mockWikidata(async () => ({
+        qid: 'Q49291', label: 'Powhatan', start: null, end: null
+      }));
+      const chronas = {
+        findOccupiedSlots: async (_dim, _provs, year) => {
+          if (year >= 1605) return [{ province: 'Powhatan', year, ruler: '_Kingdom_of_England' }];
+          return [];
+        },
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+
+      const report = await buildReport({
+        issue: 1, title: 't',
+        campaigns: [{
+          type: 'polity',
+          name: 'Powhatan',
+          wikidataQid: 'Q49291',
+          yearStart: 1570, yearEnd: 1609,
+          chronasProvinces: ['Powhatan'],
+          proposedRulerCode: 'POW',
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      // Years 1570-1604 = 35 years. Builder caps each batch at 10 years (the
+      // chronas-api updateMany controller can't handle longer ones), so we
+      // expect 4 batches: 1570-1579, 1580-1589, 1590-1599, 1600-1604.
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      expect(updates).to.have.lengthOf(4);
+      expect(updates[0].body).to.include({ start: 1570, end: 1579 });
+      expect(updates[1].body).to.include({ start: 1580, end: 1589 });
+      expect(updates[2].body).to.include({ start: 1590, end: 1599 });
+      expect(updates[3].body).to.include({ start: 1600, end: 1604 });
+      // None of these batches should exceed 10 years.
+      updates.forEach(u => expect(u.body.end - u.body.start + 1).to.be.at.most(10));
+
+      const skips = [...report.auto, ...report.manualReview].filter(p => p.kind === 'area.skip');
+      // One skip per occupied year (1605–1609 = 5 years).
+      expect(skips).to.have.lengthOf(5);
+      expect(skips.every(s => s.year >= 1605 && s.year <= 1609)).to.equal(true);
+    });
+
+    it('emits two separate area.update batches when occupation interrupts and clears', async () => {
+      // Empty 1570-1579, occupied 1580-1584, empty 1585-1599. Two separate
+      // area.update runs.
+      const wikidata = mockWikidata(async () => ({
+        qid: 'Q49291', label: 'Powhatan', start: null, end: null
+      }));
+      const chronas = {
+        findOccupiedSlots: async (_dim, _provs, year) => {
+          if (year >= 1580 && year <= 1584) return [{ province: 'Powhatan', year, ruler: 'XYZ' }];
+          return [];
+        },
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+
+      const report = await buildReport({
+        issue: 1, title: 't',
+        campaigns: [{
+          type: 'polity',
+          name: 'Powhatan',
+          wikidataQid: 'Q49291',
+          yearStart: 1570, yearEnd: 1599,
+          chronasProvinces: ['Powhatan'],
+          proposedRulerCode: 'POW',
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      // 1570-1579 (10y, empty), 1580-1584 (occupied), 1585-1599 (15y, empty
+      // → split into 2 batches by the 10y cap). Total: 3 area.update.
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      expect(updates).to.have.lengthOf(3);
+      expect(updates[0].body).to.include({ start: 1570, end: 1579 });
+      expect(updates[1].body).to.include({ start: 1585, end: 1594 });
+      expect(updates[2].body).to.include({ start: 1595, end: 1599 });
+    });
+  });
+
+  describe('buildReport — overwrite allowlist', () => {
+    it('proposals carry the overwrite allowlist for occupied slots that match', async () => {
+      // Year 1650: Roanoke is occupied by _Kingdom_of_England. The campaign
+      // declares overwrite.ruler=['_Kingdom_of_England'] and so the builder
+      // must emit an area.update with overwrite metadata, NOT an area.skip.
+      const wikidata = mockWikidata(async () => ({
+        qid: 'Q49291', label: 'Powhatan', start: null, end: null
+      }));
+      const chronas = {
+        findOccupiedSlots: async (_dim, _provs, year) => [
+          { province: 'Roanoke', year, ruler: '_Kingdom_of_England' }
+        ],
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+
+      const report = await buildReport({
+        issue: 1, title: 't',
+        campaigns: [{
+          type: 'polity',
+          name: 'Powhatan',
+          wikidataQid: 'Q49291',
+          yearStart: 1650, yearEnd: 1652,
+          chronasProvinces: ['Roanoke'],
+          proposedRulerCode: 'POW',
+          overwrite: { ruler: ['_Kingdom_of_England'] },
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      expect(updates).to.have.lengthOf(1);
+      expect(updates[0].overwrite).to.deep.equal({ ruler: ['_Kingdom_of_England'] });
+      const skips = [...report.auto, ...report.manualReview].filter(p => p.kind === 'area.skip');
+      expect(skips).to.have.lengthOf(0);
+    });
+
+    it('still skips when the occupant is NOT on the campaign overwrite allowlist', async () => {
+      const wikidata = mockWikidata(async () => ({ qid: 'Q1', label: 'X', start: null, end: null }));
+      const chronas = {
+        findOccupiedSlots: async (_dim, _provs, year) => [
+          { province: 'P', year, ruler: 'SOMEONE_ELSE' }
+        ],
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+
+      const report = await buildReport({
+        issue: 1, title: 't',
+        campaigns: [{
+          type: 'polity',
+          name: 'Powhatan',
+          wikidataQid: 'Q1',
+          yearStart: 1650, yearEnd: 1651,
+          chronasProvinces: ['P'],
+          proposedRulerCode: 'POW',
+          overwrite: { ruler: ['_Kingdom_of_England'] }, // ENG only, not SOMEONE_ELSE
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      const skips = [...report.auto, ...report.manualReview].filter(p => p.kind === 'area.skip');
+      expect(updates).to.have.lengthOf(0);
+      expect(skips.length).to.be.greaterThan(0);
+    });
+  });
+
   describe('buildReport — culture areaScope=none', () => {
     it('does not emit any area.update', async () => {
       const wikidata = mockWikidata(async () => ({
