@@ -17,6 +17,7 @@ import APIError from '../server/helpers/APIError.js';
 
 import winstonInstance from './winston.js';
 import { config } from './config.js';
+import { buildErrorLoggerOptions } from './error-logger-options.js';
 
 
 // import versionRoutes from '../server/routes/version.router.js'; // Disabled for Lambda
@@ -146,11 +147,12 @@ app.use((req, res, next) => {
   return next(err);
 });
 
-// log error in winston transports except when executing test suite
+// log error in winston transports except when executing test suite.
+// Emit a structured payload (stack, message, status, request path/method, AWS
+// SDK metadata) instead of the bare literal "middlewareError" — see issue #158.
+// Options live in a shared module so this and the test stay in sync.
 if (config.env !== 'test') {
-  app.use(expressWinston.errorLogger({
-    winstonInstance
-  }));
+  app.use(expressWinston.errorLogger(buildErrorLoggerOptions(winstonInstance)));
 }
 
 

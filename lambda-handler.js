@@ -130,13 +130,20 @@ export const handler = async (event, context) => {
 
   const startTime = Date.now();
 
+  // This Lambda is fronted by an API Gateway HTTP API (payload format v2.0),
+  // so the HTTP method/path live under `requestContext.http` / `rawPath` — not
+  // the REST API v1 top-level `httpMethod` / `path` fields. Fall back to the v1
+  // fields so the handler also works if the integration is ever switched.
+  const httpMethod = event.requestContext?.http?.method ?? event.httpMethod ?? 'UNKNOWN';
+  const httpPath = event.rawPath ?? event.path ?? 'UNKNOWN';
+
   try {
     // Track Lambda context performance
     const lambdaPerf = trackLambdaContext(context);
 
     debugLog('Lambda handler invoked', {
-      httpMethod: event.httpMethod,
-      path: event.path,
+      httpMethod,
+      path: httpPath,
       requestId: context.awsRequestId,
       remainingTime: lambdaPerf.remainingTime
     });
@@ -151,7 +158,7 @@ export const handler = async (event, context) => {
       return handleWarmUp(event);
     }
 
-    if (event.path === '/health/lambda' || event.path === '/lambda-health') {
+    if (httpPath === '/health/lambda' || httpPath === '/lambda-health') {
       return handleHealthCheck(event);
     }
 
@@ -191,8 +198,8 @@ export const handler = async (event, context) => {
     console.error('Lambda handler error:', {
       message: error.message,
       requestId: context.awsRequestId,
-      path: event.path,
-      method: event.httpMethod,
+      path: httpPath,
+      method: httpMethod,
       processingTime
     });
 
