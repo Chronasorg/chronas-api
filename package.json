@@ -50,7 +50,7 @@
     "express-winston": "^4.0.4",
     "helmet": "^8.0.0",
     "http-status": "^2.0.0",
-    "joi": "^18.0.1",
+    "joi": "^18.2.1",
     "jsonwebtoken": "^9.0.0",
     "memory-cache": "0.2.0",
     "method-override": "^3.0.0",
