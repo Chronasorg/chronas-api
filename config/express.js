@@ -17,6 +17,7 @@ import APIError from '../server/helpers/APIError.js';
 
 import winstonInstance from './winston.js';
 import { config } from './config.js';
+import { buildErrorLoggerOptions } from './error-logger-options.js';
 
 
 // import versionRoutes from '../server/routes/version.router.js'; // Disabled for Lambda
@@ -149,29 +150,9 @@ app.use((req, res, next) => {
 // log error in winston transports except when executing test suite.
 // Emit a structured payload (stack, message, status, request path/method, AWS
 // SDK metadata) instead of the bare literal "middlewareError" — see issue #158.
-// `requestField: null` keeps request headers/body out of the logs (no PII/secrets).
+// Options live in a shared module so this and the test stay in sync.
 if (config.env !== 'test') {
-  app.use(expressWinston.errorLogger({
-    winstonInstance,
-    msg: 'middlewareError HTTP {{req.method}} {{req.originalUrl}}',
-    metaField: null,
-    requestField: null,
-    exceptionToMeta: err => ({
-      msg: err.message,
-      stack: err.stack,
-      name: err.name,
-      status: err.status ?? err.statusCode ?? 500,
-      code: err.code, // AWS SDK error codes: ThrottlingException, ResourceNotFoundException, ...
-      awsRequestId: err.$metadata?.requestId,
-      awsRetries: err.$metadata?.attempts
-    }),
-    dynamicMeta: (req) => ({
-      path: req.originalUrl,
-      method: req.method,
-      requestId: req.headers['x-amzn-requestid'] || req.headers['x-request-id'],
-      ip: req.ip
-    })
-  }));
+  app.use(expressWinston.errorLogger(buildErrorLoggerOptions(winstonInstance)));
 }
 
 

@@ -6,11 +6,17 @@ const CATEGORY = 'winston custom format';
 // Using the printf format. Serialize any structured metadata (e.g. the error
 // payload from express-winston's errorLogger) so it isn't silently dropped —
 // without this, the only thing written for a 5xx was the literal "middlewareError".
+// Guard JSON.stringify: a circular meta value (axios error, AWS SDK client, res)
+// would otherwise throw inside the formatter and turn a log call into a crash.
 const customFormat = printf(({ level, message, label, timestamp, ...meta }) => {
-  const metaKeys = Object.keys(meta).filter(key => typeof key === 'string');
-  const metaStr = metaKeys.length
-    ? ` ${JSON.stringify(metaKeys.reduce((acc, key) => { acc[key] = meta[key]; return acc; }, {}))}`
-    : '';
+  let metaStr = '';
+  if (Object.keys(meta).length) {
+    try {
+      metaStr = ` ${JSON.stringify(meta)}`;
+    } catch {
+      metaStr = ' [unserializable meta]';
+    }
+  }
   return `${timestamp} [${label}] ${level}: ${message}${metaStr}`;
 });
 

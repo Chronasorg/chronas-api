@@ -9,9 +9,10 @@
 
 import { expect } from 'chai';
 import expressWinston from 'express-winston';
-import { createLogger, format, transports } from 'winston';
+import { createLogger, transports } from 'winston';
 
 import winstonInstance from '../../../config/winston.js';
+import { buildErrorLoggerOptions } from '../../../config/error-logger-options.js';
 
 const MESSAGE = Symbol.for('message');
 
@@ -61,34 +62,15 @@ describe('Issue #158 — structured error logging', () => {
   });
 
   describe('expressWinston.errorLogger config', () => {
-    // Mirrors the options in config/express.js. Kept in sync intentionally:
-    // if the production config changes, this test documents the contract.
+    // Uses the REAL production options (config/error-logger-options.js) and the
+    // REAL production formatter, so this test guards the actual contract rather
+    // than a mirror that could drift.
     function buildErrorLogger(captureTransport) {
       const logger = createLogger({
-        format: format.combine(format.timestamp(), format.printf(({ level, message, timestamp, ...meta }) => {
-          const keys = Object.keys(meta);
-          return `${timestamp} ${level}: ${message}${keys.length ? ` ${JSON.stringify(meta)}` : ''}`;
-        })),
+        format: winstonInstance.format,
         transports: [captureTransport]
       });
-      return expressWinston.errorLogger({
-        winstonInstance: logger,
-        msg: 'middlewareError HTTP {{req.method}} {{req.originalUrl}}',
-        metaField: null,
-        requestField: null,
-        exceptionToMeta: err => ({
-          msg: err.message,
-          stack: err.stack,
-          name: err.name,
-          status: err.status ?? err.statusCode ?? 500,
-          code: err.code
-        }),
-        dynamicMeta: req => ({
-          path: req.originalUrl,
-          method: req.method,
-          requestId: req.headers['x-amzn-requestid'] || req.headers['x-request-id']
-        })
-      });
+      return expressWinston.errorLogger(buildErrorLoggerOptions(logger));
     }
 
     it('logs stack, msg, status, path and method for a forced error', (done) => {
@@ -147,6 +129,47 @@ describe('Issue #158 — structured error logging', () => {
           expect(line).to.not.contain('super-secret-token');
           expect(line).to.not.contain('hunter2');
           expect(line).to.not.contain('session=abc');
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('skips 4xx errors (low-signal client errors / bot scans)', (done) => {
+      const capture = new CaptureTransport();
+      const middleware = buildErrorLogger(capture);
+
+      const err = new Error('/bogus - API not found');
+      err.status = 404;
+      const req = { method: 'GET', originalUrl: '/bogus', url: '/bogus', headers: {}, connection: {}, query: {} };
+      // res.statusCode is still 200 here — the final error handler hasn't run yet.
+      // This guards against the skip predicate keying off res.statusCode (which
+      // would wrongly suppress real 500s instead).
+      const res = { statusCode: 200, on: () => {}, end: () => {} };
+
+      middleware(err, req, res, () => {
+        try {
+          expect(capture.lines).to.have.length(0);
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+
+    it('logs 5xx even though res.statusCode is still 200 at skip time', (done) => {
+      const capture = new CaptureTransport();
+      const middleware = buildErrorLogger(capture);
+
+      const err = new Error('downstream exploded');
+      err.status = 500;
+      const req = { method: 'GET', originalUrl: '/v1/areas/1000', url: '/v1/areas/1000', headers: {}, connection: {}, query: {} };
+      const res = { statusCode: 200, on: () => {}, end: () => {} };
+
+      middleware(err, req, res, () => {
+        try {
+          expect(capture.lines.join('\n')).to.contain('"status":500');
           done();
         } catch (e) {
           done(e);
