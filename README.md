@@ -140,3 +140,17 @@ Production deployment is fully automated via **GitHub Actions** (the sole active
 The deploy workflow lives at [`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml). PR checks (Mocha unit tests) run via [`.github/workflows/pr-ci.yml`](.github/workflows/pr-ci.yml). See [CLAUDE.md](CLAUDE.md) and [infra/README.md](infra/README.md) for the full production architecture and infrastructure runbook.
 
 Legacy: AWS CodeBuild, Azure Pipelines, Docker/Kubernetes, and DocumentDB are all decommissioned. GitHub Actions is the sole deployment mechanism.
+
+## License
+
+Chronas uses a split license for code and data:
+
+- **Code** — [MIT License](LICENSE). Reuse the source freely with attribution.
+- **Data** — [CC BY-SA 4.0](DATA-LICENSE.md). The historical data served by the
+  API (province/area geometry, per-year ruler/culture/religion/capital data, etc.)
+  is derived substantially from Wikipedia and inherits its attribution +
+  share-alike terms.
+
+If you build on the Chronas data, please credit Chronas (https://chronas.org)
+and honor the underlying Wikipedia sources. Caching a local copy is preferred
+over heavy live API use — see [DATA-LICENSE.md](DATA-LICENSE.md).

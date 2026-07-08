@@ -5,6 +5,7 @@
   "main": "lambda-handler.js",
   "type": "module",
   "private": false,
+  "license": "MIT",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
