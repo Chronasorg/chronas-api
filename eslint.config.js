@@ -58,7 +58,11 @@ export default [
       'n/handle-callback-err': 'off',
       'no-useless-escape': 'warn',
       'no-unused-expressions': 'off',
-      'no-mixed-operators': 'warn'
+      'no-mixed-operators': 'warn',
+      // Enabled by default in eslint 10's recommended set; not adopted here to
+      // keep this dependency bump behaviour-preserving. Revisit as a separate change.
+      'preserve-caught-error': 'off',
+      'no-unassigned-vars': 'off'
     }
   },
   {
