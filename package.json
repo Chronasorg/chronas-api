@@ -79,7 +79,7 @@
       "joi": "^17.13.4"
     },
     "node-forge": "^1.4.0",
-    "qs": "^6.15.3",
+    "qs": "^6.16.0",
     "serialize-javascript": "^7.0.5"
   },
   "devDependencies": {
