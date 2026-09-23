@@ -10,6 +10,11 @@ export class ChronasClient {
     this.apiUrl = apiUrl.replace(/\/$/, '');
     this.token = token;
     this.fetchImpl = fetchImpl;
+    // Per-instance cache of GET /v1/areas/:year responses. Report building for a
+    // century-spanning dimensionFix walks year-by-year and would otherwise
+    // re-fetch every year for each province; the applier's preflight samples
+    // multiple provinces per year. Invalidated whenever we write to /v1/areas.
+    this._yearCache = new Map();
   }
 
   setToken(token) { this.token = token; }
@@ -18,17 +23,36 @@ export class ChronasClient {
     const headers = { 'Accept': 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
-    const res = await this.fetchImpl(`${this.apiUrl}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined
-    });
-    const text = await res.text();
-    let json = null;
-    if (text) {
-      try { json = JSON.parse(text); } catch { /* keep as text */ }
+
+    // Retry transient network failures (ECONNRESET, socket hang-up, DNS blips).
+    // A long apply run makes thousands of serial round-trips against prod; a
+    // single dropped TLS connection used to crash the whole run mid-way. We
+    // retry the request itself — NOT HTTP error statuses, which the caller
+    // still sees via {ok:false} — so an application-level 4xx/5xx is untouched.
+    const MAX_ATTEMPTS = 4;
+    let lastErr = null;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const res = await this.fetchImpl(`${this.apiUrl}${path}`, {
+          method,
+          headers,
+          body: body !== undefined ? JSON.stringify(body) : undefined
+        });
+        const text = await res.text();
+        let json = null;
+        if (text) {
+          try { json = JSON.parse(text); } catch { /* keep as text */ }
+        }
+        return { ok: res.ok, status: res.status, body: json, text };
+      } catch (err) {
+        lastErr = err;
+        if (attempt === MAX_ATTEMPTS) break;
+        // Exponential backoff: 0.5s, 1s, 2s.
+        const delayMs = 500 * (2 ** (attempt - 1));
+        await new Promise(r => setTimeout(r, delayMs));
+      }
     }
-    return { ok: res.ok, status: res.status, body: json, text };
+    throw lastErr;
   }
 
   async login(email, password) {
@@ -44,8 +68,12 @@ export class ChronasClient {
     return data.token;
   }
 
-  fetchYear(year) {
-    return this._req('GET', `/v1/areas/${year}`);
+  async fetchYear(year) {
+    if (this._yearCache.has(year)) return this._yearCache.get(year);
+    const res = await this._req('GET', `/v1/areas/${year}`);
+    // Only cache successful reads; a transient failure must not be pinned.
+    if (res.ok) this._yearCache.set(year, res);
+    return res;
   }
 
   /**
@@ -115,6 +143,12 @@ export class ChronasClient {
   }
 
   updateAreas(payload) {
+    // A write invalidates any cached reads for the affected years so a
+    // subsequent preflight/read sees the new slot values rather than stale ones.
+    if (payload && typeof payload.start === 'number') {
+      const end = typeof payload.end === 'number' ? payload.end : payload.start;
+      for (let y = payload.start; y <= end; y++) this._yearCache.delete(y);
+    }
     return this._req('PUT', '/v1/areas', payload);
   }
 

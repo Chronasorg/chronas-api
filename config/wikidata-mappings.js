@@ -92,15 +92,24 @@ export const easternOrthodoxProvinces = {
   'Neva': 'Q193882', 'Ostrov': 'Q193882', 'Ingermanland': 'Q193882',
   'Kexholm': 'Q193882', 'Karelia': 'Q193882', 'Kola': 'Q193882',
   // Russian expansion (Wikidata: Russian Empire Q34266 P3075 = Eastern Orthodoxy)
-  'Kazan': 'Q193882', 'Astrakhan': 'Q193882', 'Sibir': 'Q193882',
-  'Tomsk': 'Q193882', 'Yeniseysk': 'Q193882', 'Irkutsk': 'Q193882',
-  'Yakutsk': 'Q193882', 'Okhotsk': 'Q193882', 'Kamchatka': 'Q193882',
+  // WARNING (issue #39): this flat map carries no date dimension, so
+  // validate-religion.js applies `orthodox` across the ENTIRE 1055-2000 range
+  // to every province listed here. For the native Siberian / Far-East provinces
+  // below that is historically wrong: they were Tengrist/shamanist until the
+  // Russian conquest (Sibir 1582, Tomsk 1604, Yeniseysk 1619, Yakutsk 1632,
+  // Irkutsk 1661, Kamchatka ~1697), and only became nominally Orthodox after.
+  // The confirmed issue-#39 provinces were removed from this list; the
+  // remaining native-Siberian entries still share this latent bug and must NOT
+  // be re-run through validate-religion.js without a per-province conquest date.
+  'Kazan': 'Q193882', 'Astrakhan': 'Q193882',
+  'Okhotsk': 'Q193882',
   'Barnaul': 'Q193882', 'Kuznetsk': 'Q193882', 'Mangazea': 'Q193882',
   'Berezov': 'Q193882', 'Obdorsk': 'Q193882', 'Surgut': 'Q193882',
   'Tyumen': 'Q193882', 'Nerchinsky': 'Q193882', 'Bratsk': 'Q193882',
   'Ilimsk': 'Q193882', 'Barguzinsky': 'Q193882', 'Narym': 'Q193882',
   'Ust-Kut': 'Q193882', 'Verkhoyansk': 'Q193882', 'Nizhe-Kolymsk': 'Q193882',
-  'Anadyrsk': 'Q193882', 'Gizhiga': 'Q193882', 'Koryak': 'Q193882',
+  // 'Koryak' removed (issue #39): shamanist until Russian subjugation ~1745-1756.
+  'Anadyrsk': 'Q193882', 'Gizhiga': 'Q193882',
   'Penchisky': 'Q193882', 'Tauisk': 'Q193882', 'Nukhtui': 'Q193882',
   'Butalsk': 'Q193882', 'Udinsky': 'Q193882', 'Verkne-Angarsky': 'Q193882',
   'Chara': 'Q193882', 'Urkan': 'Q193882', 'Uchurskoye': 'Q193882',
@@ -127,8 +136,12 @@ export const easternOrthodoxProvinces = {
   // Russian Empire western provinces
   'Vitebsk': 'Q193882', 'Mogilyov': 'Q193882', 'Brest': 'Q193882',
   'Grodno': 'Q193882', 'Polesia': 'Q193882', 'Turov': 'Q193882',
-  'Narva': 'Q193882', 'Lida': 'Q193882', 'Troki': 'Q193882',
-  'Lithuania': 'Q193882', 'Samogitia': 'Q193882', 'Podlasia': 'Q193882',
+  // 'Troki', 'Samogitia' removed (issue #39): pagan (romuva) until baptism
+  // (Lithuania 1387, Samogitia 1413), Catholic thereafter — never Orthodox.
+  // 'Podlasia' removed (issue #39): treated as Catholic per the issue triage.
+  // 'Lithuania' (sits at Lida, Belarus) is kept: genuinely Orthodox Ruthenian.
+  'Narva': 'Q193882', 'Lida': 'Q193882',
+  'Lithuania': 'Q193882',
   'Cherkasy': 'Q193882', 'Yedisan': 'Q193882', 'Zaporozhia': 'Q193882',
   'Mantrega': 'Q193882', 'Majar': 'Q193882', 'Azaraba': 'Q193882',
   // Russian America (Wikidata: Q910495 P3075 = Eastern Orthodoxy)
@@ -159,8 +172,10 @@ export const easternOrthodoxProvinces = {
   'Georgia': 'Q230', 'Kartli': 'Q188717', 'Imereti': 'Q211099',
   'Kakheti': 'Q193882', 'Guria': 'Q193882', 'Abkhazia': 'Q193882',
   // Polish territories under Russian rule
-  'Kalisz': 'Q193882', 'Leczyca': 'Q193882', 'Lodz': 'Q193882',
-  'Mazovia': 'Q193882', 'Plock': 'Q193882', 'Wizna': 'Q193882'
+  // 'Kalisz','Leczyca','Lodz','Plock','Wizna' removed (issue #39): Poland has
+  // been Catholic since 966 — these were never Orthodox, the Russian-partition
+  // ruler code does not change the population's religion.
+  'Mazovia': 'Q193882'
 };
 
 // Western territories — should stay chalcedonism pre-1054, then catholic post-1054
@@ -176,7 +191,8 @@ export const cultureCorrections = {
   'Flores':             'moluccan',
   'Timor':              'moluccan',
   'Sumba':              'moluccan',
-  'Aru':                'moluccan',
+  // Issue #39: Aru is NE Sumatra (the Batak/Malay Haru kingdom), not Moluccan.
+  'Aru':                'sumatran',
   'Eastern Sumbawa':    'moluccan',
   'Halmahera':          'papuan',
   'Rabaul':             'polynesian',

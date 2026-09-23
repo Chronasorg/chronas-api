@@ -104,6 +104,88 @@ describe('campaign-loader', () => {
     fs.unlinkSync(file);
   });
 
+  it('loads a valid dimensionFix campaign', () => {
+    const file = tmpFile({
+      issue: 39,
+      title: 'religion fix',
+      campaigns: [{
+        type: 'dimensionFix',
+        name: 'Poland catholic',
+        dimension: 'religion',
+        value: 'catholic',
+        yearStart: 1054,
+        yearEnd: 2000,
+        chronasProvinces: ['Kalisz', 'Lodz'],
+        overwrite: { religion: ['orthodox'] },
+        citations: [{ source: 'A' }, { source: 'B' }]
+      }]
+    });
+    const c = loadCampaign(file);
+    expect(c.campaigns[0].type).to.equal('dimensionFix');
+    expect(c.campaigns[0].dimension).to.equal('religion');
+    expect(c.campaigns[0].value).to.equal('catholic');
+    fs.unlinkSync(file);
+  });
+
+  it('rejects a dimensionFix with fewer than two citations', () => {
+    const file = tmpFile({
+      issue: 39,
+      title: 't',
+      campaigns: [{
+        type: 'dimensionFix',
+        name: 'X',
+        dimension: 'religion',
+        value: 'catholic',
+        yearStart: 1054,
+        yearEnd: 2000,
+        chronasProvinces: ['Kalisz'],
+        overwrite: { religion: ['orthodox'] },
+        citations: [{ source: 'A' }]
+      }]
+    });
+    expect(() => loadCampaign(file)).to.throw(/citations/);
+    fs.unlinkSync(file);
+  });
+
+  it('rejects a dimensionFix without an overwrite allowlist', () => {
+    const file = tmpFile({
+      issue: 39,
+      title: 't',
+      campaigns: [{
+        type: 'dimensionFix',
+        name: 'X',
+        dimension: 'religion',
+        value: 'catholic',
+        yearStart: 1054,
+        yearEnd: 2000,
+        chronasProvinces: ['Kalisz'],
+        citations: [{ source: 'A' }, { source: 'B' }]
+      }]
+    });
+    expect(() => loadCampaign(file)).to.throw(/overwrite/);
+    fs.unlinkSync(file);
+  });
+
+  it('rejects a dimensionFix targeting an unsupported dimension', () => {
+    const file = tmpFile({
+      issue: 39,
+      title: 't',
+      campaigns: [{
+        type: 'dimensionFix',
+        name: 'X',
+        dimension: 'ruler',
+        value: 'POL',
+        yearStart: 1054,
+        yearEnd: 2000,
+        chronasProvinces: ['Kalisz'],
+        overwrite: { ruler: ['XXX'] },
+        citations: [{ source: 'A' }, { source: 'B' }]
+      }]
+    });
+    expect(() => loadCampaign(file)).to.throw(/dimension/);
+    fs.unlinkSync(file);
+  });
+
   it('rejects unknown top-level fields', () => {
     const file = tmpFile({
       issue: 1,

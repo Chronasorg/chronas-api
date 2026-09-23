@@ -1,0 +1,279 @@
+{
+  "issue": 39,
+  "title": "Frontend #39 — religion/culture corrections (Sumatra, Poland, Lithuania, Siberia, Caucasus, Trebizond)",
+  "campaigns": [
+    {
+      "type": "dimensionFix",
+      "name": "Aru — Sumatran (Batak/Malay Haru), not Moluccan",
+      "dimension": "culture",
+      "value": "sumatran",
+      "yearStart": 1000,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Aru"],
+      "overwrite": { "culture": ["moluccan"] },
+      "citations": [
+        { "source": "Wikipedia — Aru Kingdom (Haru)", "url": "https://en.wikipedia.org/wiki/Aru_Kingdom" },
+        { "source": "Wikipedia — Batak", "url": "https://en.wikipedia.org/wiki/Batak" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Poland — Catholic (Kalisz, Łódź, Łęczyca, Płock, Wizna, Podlasia)",
+      "dimension": "religion",
+      "value": "catholic",
+      "yearStart": 1054,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Kalisz", "Lodz", "Leczyca", "Plock", "Wizna", "Podlasia"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Baptism of Poland (966)", "url": "https://en.wikipedia.org/wiki/Baptism_of_Poland" },
+        { "source": "Wikipedia — Catholic Church in Poland", "url": "https://en.wikipedia.org/wiki/Catholic_Church_in_Poland" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Troki — pagan (Romuva) before Lithuanian baptism 1387",
+      "dimension": "religion",
+      "value": "romuva",
+      "yearStart": 1054,
+      "yearEnd": 1386,
+      "chronasProvinces": ["Troki"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Christianization of Lithuania (1387)", "url": "https://en.wikipedia.org/wiki/Christianization_of_Lithuania" },
+        { "source": "Wikipedia — Lithuanian mythology / Romuva", "url": "https://en.wikipedia.org/wiki/Lithuanian_mythology" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Troki — Catholic from Lithuanian baptism 1387",
+      "dimension": "religion",
+      "value": "catholic",
+      "yearStart": 1387,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Troki"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Christianization of Lithuania (1387)", "url": "https://en.wikipedia.org/wiki/Christianization_of_Lithuania" },
+        { "source": "Wikipedia — Władysław II Jagiełło", "url": "https://en.wikipedia.org/wiki/W%C5%82adys%C5%82aw_II_Jagie%C5%82%C5%82o" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Samogitia — pagan (Romuva) before baptism 1413",
+      "dimension": "religion",
+      "value": "romuva",
+      "yearStart": 1054,
+      "yearEnd": 1412,
+      "chronasProvinces": ["Samogitia"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Samogitia (baptised 1413)", "url": "https://en.wikipedia.org/wiki/Samogitia" },
+        { "source": "Wikipedia — Christianization of Lithuania", "url": "https://en.wikipedia.org/wiki/Christianization_of_Lithuania" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Samogitia — Catholic from baptism 1413",
+      "dimension": "religion",
+      "value": "catholic",
+      "yearStart": 1413,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Samogitia"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Samogitia (baptised 1413)", "url": "https://en.wikipedia.org/wiki/Samogitia" },
+        { "source": "Wikipedia — Diocese of Samogitia (1417)", "url": "https://en.wikipedia.org/wiki/Diocese_of_%C5%BDemait%C4%97ija" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Alania — Orthodox, not Catholic",
+      "dimension": "religion",
+      "value": "orthodox",
+      "yearStart": 1054,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Alania"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Alania (Orthodox until the Mongols, 1239–40)", "url": "https://en.wikipedia.org/wiki/Alania" },
+        { "source": "Wikipedia — Metropolitanate of Alania", "url": "https://en.wikipedia.org/wiki/Alania" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Circassia — Orthodox, not Catholic (Sunni years left as-is)",
+      "dimension": "religion",
+      "value": "orthodox",
+      "yearStart": 1054,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Circassia"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Circassians (Christian before conversion to Sunni Islam)", "url": "https://en.wikipedia.org/wiki/Circassians" },
+        { "source": "Wikipedia — Christianity among Circassians", "url": "https://en.wikipedia.org/wiki/Circassians" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Kabardia — Orthodox, not Catholic (Sunni years left as-is)",
+      "dimension": "religion",
+      "value": "orthodox",
+      "yearStart": 1054,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Kabardia"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Circassians (Christian before conversion to Sunni Islam)", "url": "https://en.wikipedia.org/wiki/Circassians" },
+        { "source": "Wikipedia — Kabardians", "url": "https://en.wikipedia.org/wiki/Kabardians" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Ubykhia — Orthodox, not Catholic (Sunni years left as-is)",
+      "dimension": "religion",
+      "value": "orthodox",
+      "yearStart": 1054,
+      "yearEnd": 2000,
+      "chronasProvinces": ["Ubykhia"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Circassians (Christian before conversion to Sunni Islam)", "url": "https://en.wikipedia.org/wiki/Circassians" },
+        { "source": "Wikipedia — Ubykh people", "url": "https://en.wikipedia.org/wiki/Ubykh_people" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Trebizond — Greek Orthodox during the Empire (1204–1461)",
+      "dimension": "religion",
+      "value": "orthodox",
+      "yearStart": 1204,
+      "yearEnd": 1460,
+      "chronasProvinces": ["Trebizon"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Empire of Trebizond (1204–1461, Greek Orthodox)", "url": "https://en.wikipedia.org/wiki/Empire_of_Trebizond" },
+        { "source": "Wikipedia — Alexios I of Trebizond (founded 1204)", "url": "https://en.wikipedia.org/wiki/Alexios_I_of_Trebizond" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Trebizond — Sunni under the Ottomans from 1461",
+      "dimension": "religion",
+      "value": "sunni",
+      "yearStart": 1461,
+      "yearEnd": 1500,
+      "chronasProvinces": ["Trebizon"],
+      "overwrite": { "religion": ["catholic"] },
+      "citations": [
+        { "source": "Wikipedia — Empire of Trebizond (fell to Mehmed II, 1461)", "url": "https://en.wikipedia.org/wiki/Empire_of_Trebizond" },
+        { "source": "Wikipedia — Ottoman Trebizond / Islamisation", "url": "https://en.wikipedia.org/wiki/Trebizond_Eyalet" }
+      ]
+    },
+
+    {
+      "type": "dimensionFix",
+      "name": "Sibir — Shamanism before Russian conquest (1582)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1581,
+      "chronasProvinces": ["Sibir"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Khanate of Sibir (Yermak, 1582)", "url": "https://en.wikipedia.org/wiki/Khanate_of_Sibir" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Tomsk — Shamanism before Russian settlement (1604)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1603,
+      "chronasProvinces": ["Tomsk"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Tomsk (founded 1604)", "url": "https://en.wikipedia.org/wiki/Tomsk" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Yeniseysk — Shamanism before Russian settlement (1619)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1618,
+      "chronasProvinces": ["Yeniseysk"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Yeniseysk (founded 1619)", "url": "https://en.wikipedia.org/wiki/Yeniseysk" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Yakutsk — Shamanism before Russian settlement (1632)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1631,
+      "chronasProvinces": ["Yakutsk"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Yakutsk (founded 1632)", "url": "https://en.wikipedia.org/wiki/Yakutsk" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Irkutsk — Tengrism before Russian settlement (1661)",
+      "dimension": "religion",
+      "value": "tengri",
+      "yearStart": 1054,
+      "yearEnd": 1660,
+      "chronasProvinces": ["Irkutsk"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Irkutsk (founded 1661)", "url": "https://en.wikipedia.org/wiki/Irkutsk" },
+        { "source": "Wikipedia — Buryats (Tengrism/Buddhism)", "url": "https://en.wikipedia.org/wiki/Buryats" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Kamchatka — Shamanism before Russian conquest (~1697)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1696,
+      "chronasProvinces": ["Kamchatka"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Vladimir Atlasov (Kamchatka, 1697–99)", "url": "https://en.wikipedia.org/wiki/Vladimir_Atlasov" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    },
+    {
+      "type": "dimensionFix",
+      "name": "Koryak — Shamanism before Russian subjugation (~1750)",
+      "dimension": "religion",
+      "value": "shamanism",
+      "yearStart": 1054,
+      "yearEnd": 1749,
+      "chronasProvinces": ["Koryak"],
+      "overwrite": { "religion": ["orthodox"] },
+      "citations": [
+        { "source": "Wikipedia — Koryaks", "url": "https://en.wikipedia.org/wiki/Koryaks" },
+        { "source": "Wikipedia — Russian conquest of Siberia", "url": "https://en.wikipedia.org/wiki/Russian_conquest_of_Siberia" }
+      ]
+    }
+  ],
+  "manualEntities": []
+}

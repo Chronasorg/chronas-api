@@ -320,6 +320,25 @@ async function buildCultureProposals(campaign, ctx) {
   return proposals;
 }
 
+/**
+ * A dimensionFix corrects an existing religion/culture slot over a bounded year
+ * range. It adds NO metadata child (the value must already exist) and carries
+ * no wikidataQid — a region's religion has no single geo-entity to align
+ * against, so `wdAlign` is null and there are no yearRegionSamples. Correctness
+ * rests on the >=2-citation PROVEN gate and the apply-time `overwrite`
+ * allowlist, which refuses any slot whose current value isn't authorised.
+ */
+async function buildDimensionFixProposals(campaign, ctx) {
+  return buildAreaBatches({
+    campaign,
+    dimension: campaign.dimension,
+    valueField: campaign.dimension,
+    value: campaign.value,
+    wdAlign: null,
+    ctx
+  });
+}
+
 function defaultWikiSlug(name) {
   return name.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
@@ -377,7 +396,8 @@ async function buildMarkerProposals(campaign, ctx) {
 const BUILDERS = {
   polity: buildPolityProposals,
   culture: buildCultureProposals,
-  marker: buildMarkerProposals
+  marker: buildMarkerProposals,
+  dimensionFix: buildDimensionFixProposals
 };
 
 export async function buildReport(campaignFile, ctx) {

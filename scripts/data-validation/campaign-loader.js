@@ -69,6 +69,32 @@ const cultureCampaign = Joi.object({
   })).default([])
 });
 
+// A targeted correction to an existing dimension slot (religion or culture)
+// over a bounded year range. Unlike `polity`/`culture` campaigns this does NOT
+// add a metadata child — the value must already exist in the dimension's
+// metadata. It carries no wikidataQid (a region's religion has no single geo
+// entity), so it is PROVEN purely by >=2 citations and gated at apply time by
+// the `overwrite` allowlist. Used for issue #39 (religion/culture fixes).
+const dimensionFixCampaign = Joi.object({
+  type: Joi.string().valid('dimensionFix').required(),
+  name: Joi.string().required(),
+  dimension: Joi.string().valid('religion', 'culture').required(),
+  // Target Chronas key. Must already exist in /v1/metadata/<dimension>.
+  value: Joi.string().pattern(/^[A-Za-z0-9_-]+$/).required(),
+  yearStart: YEAR.required(),
+  yearEnd: YEAR.required(),
+  chronasProvinces: Joi.array().items(Joi.string()).min(1).required(),
+  // Existing values authorised for replacement. A dimensionFix corrects wrong
+  // data, so this is effectively required — an empty allowlist means "fill
+  // empty slots only" and would no-op against already-populated provinces.
+  overwrite: overwriteAllowlist.required(),
+  citations: Joi.array().items(Joi.object({
+    source: Joi.string().required(),
+    url: Joi.string().uri().optional(),
+    page: Joi.string().optional()
+  })).min(2).required()
+});
+
 const markerCampaign = Joi.object({
   type: Joi.string().valid('marker').required(),
   name: Joi.string().required(),
@@ -99,7 +125,8 @@ const manualEntity = Joi.object({
 const TYPE_SCHEMAS = {
   polity: polityCampaign,
   culture: cultureCampaign,
-  marker: markerCampaign
+  marker: markerCampaign,
+  dimensionFix: dimensionFixCampaign
 };
 
 const topLevelSchema = Joi.object({
@@ -130,7 +157,7 @@ export function loadCampaign(filePath) {
     const c = raw.campaigns[i];
     const schema = TYPE_SCHEMAS[c.type];
     if (!schema) {
-      throw new Error(`Invalid campaign file ${path.basename(abs)}:\n  - campaigns[${i}].type: must be one of polity|culture|marker (got "${c.type}")`);
+      throw new Error(`Invalid campaign file ${path.basename(abs)}:\n  - campaigns[${i}].type: must be one of polity|culture|marker|dimensionFix (got "${c.type}")`);
     }
     const r = schema.validate(c, { abortEarly: false, convert: false });
     if (r.error) {
@@ -148,4 +175,4 @@ export function loadCampaign(filePath) {
   };
 }
 
-export const _schemas = { topLevelSchema, polityCampaign, cultureCampaign, markerCampaign };
+export const _schemas = { topLevelSchema, polityCampaign, cultureCampaign, markerCampaign, dimensionFixCampaign };
