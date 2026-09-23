@@ -531,6 +531,101 @@ describe('validate-from-issue-core', () => {
     });
   });
 
+  describe('buildReport — dimensionFix campaign', () => {
+    it('emits only area.update proposals (no metadata.add) with the target religion', async () => {
+      const wikidata = mockWikidata(async () => null);
+      const chronas = {
+        // Every year is occupied by 'orthodox' — the value we're authorised to replace.
+        findOccupiedSlots: async (_dim, _provs, year) => [
+          { province: 'Kalisz', year, religion: 'orthodox' }
+        ],
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+      const report = await buildReport({
+        issue: 39, title: 't',
+        campaigns: [{
+          type: 'dimensionFix',
+          name: 'Poland catholic',
+          dimension: 'religion',
+          value: 'catholic',
+          yearStart: 1100, yearEnd: 1104,
+          chronasProvinces: ['Kalisz'],
+          overwrite: { religion: ['orthodox'] },
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      const all = [...report.auto, ...report.manualReview];
+      expect(all.some(p => p.kind === 'metadata.add')).to.equal(false);
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      expect(updates.length).to.be.greaterThan(0);
+      updates.forEach(u => {
+        expect(u.body.religion).to.equal('catholic');
+        expect(u.body.provinces).to.deep.equal(['Kalisz']);
+        expect(u.overwrite).to.deep.equal({ religion: ['orthodox'] });
+      });
+      // No wikidataQid on a dimensionFix — proven purely by citations.
+      updates.forEach(u => expect(u.body.wikidataQid).to.equal(undefined));
+    });
+
+    it('routes to auto via the two-citation PROVEN gate (no Wikidata match)', async () => {
+      const wikidata = mockWikidata(async () => null);
+      const report = await buildReport({
+        issue: 39, title: 't',
+        campaigns: [{
+          type: 'dimensionFix',
+          name: 'Aru sumatran',
+          dimension: 'culture',
+          value: 'sumatran',
+          yearStart: 1000, yearEnd: 1002,
+          chronasProvinces: ['Aru'],
+          overwrite: { culture: ['moluccan'] },
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas: {
+        findOccupiedSlots: async (_dim, _provs, year) => [{ province: 'Aru', year, culture: 'moluccan' }],
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      } });
+      expect(report.summary.auto).to.be.greaterThan(0);
+    });
+
+    it('skips years whose current value is NOT on the overwrite allowlist', async () => {
+      // Poland is correctly 'chalcedonism' pre-1054; a catholic fix must not
+      // clobber it. Only 'orthodox' is authorised for replacement.
+      const wikidata = mockWikidata(async () => null);
+      const chronas = {
+        findOccupiedSlots: async (_dim, _provs, year) => [
+          { province: 'Kalisz', year, religion: 'chalcedonism' }
+        ],
+        findOccupiedRulerSlots: async () => [],
+        fetchYear: async () => ({ ok: true, body: {} })
+      };
+      const report = await buildReport({
+        issue: 39, title: 't',
+        campaigns: [{
+          type: 'dimensionFix',
+          name: 'Poland catholic',
+          dimension: 'religion',
+          value: 'catholic',
+          yearStart: 1000, yearEnd: 1002,
+          chronasProvinces: ['Kalisz'],
+          overwrite: { religion: ['orthodox'] },
+          citations: [{ source: 'A' }, { source: 'B' }]
+        }],
+        manualEntities: []
+      }, { wikidata, chronas });
+
+      const updates = report.auto.filter(p => p.kind === 'area.update');
+      const skips = [...report.auto, ...report.manualReview].filter(p => p.kind === 'area.skip');
+      expect(updates).to.have.lengthOf(0);
+      expect(skips.length).to.be.greaterThan(0);
+    });
+  });
+
   describe('buildReport — culture areaScope=none', () => {
     it('does not emit any area.update', async () => {
       const wikidata = mockWikidata(async () => ({

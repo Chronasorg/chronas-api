@@ -455,6 +455,68 @@ describe('integration: area.update lands and references real metadata children',
     expect(result.skipped[0].details.some(d => d.year === 1585)).to.equal(true);
   });
 
+  it('dimensionFix religion overwrite: flips an authorised orthodox slot to catholic and leaves a non-authorised slot alone (issue #39)', async function () {
+    // Round-trips the issue-#39 write path: a religion overwrite must replace
+    // only slots whose current value is on the overwrite allowlist. Poland was
+    // wrongly 'orthodox' (fix → catholic) but 'chalcedonism' pre-1054 is
+    // historically correct and must survive.
+    this.timeout(30000);
+    await clearTable('chronas-areas');
+    await seedTable('chronas-areas', [
+      {
+        _id: '1100',
+        year: 1100,
+        data: {
+          'Kalisz': ['POL', 'polish', 'orthodox', 'Gniezno', 3300],
+          'PreSchism': ['POL', 'polish', 'chalcedonism', 'X', 1000]
+        }
+      }
+    ]);
+
+    const chronas = new ChronasClient({ apiUrl: baseUrl, token: TOKEN });
+    const wikidata = { entityByQid: async () => null, queryAt: async () => [] };
+
+    const result = await applyProposals(
+      [{
+        kind: 'area.update',
+        body: { start: 1100, end: 1100, provinces: ['Kalisz', 'PreSchism'], religion: 'catholic' },
+        // Only 'orthodox' authorised — 'chalcedonism' is not, so PreSchism must
+        // trip the slot-occupied guard and block the whole batch.
+        overwrite: { religion: ['orthodox'] },
+        yearRegionSamples: [],
+        citations: [{ source: 'A' }, { source: 'B' }],
+        wikidataMatch: null
+      }],
+      { chronas, wikidata },
+      { dryRun: false }
+    );
+
+    // The mixed batch is refused: not every occupied slot is on the allowlist.
+    expect(result.applied).to.have.lengthOf(0);
+    expect(result.skipped[0].reason).to.equal('slot-occupied');
+
+    // Now a clean, single-province overwrite of only the wrong slot succeeds.
+    const ok = await applyProposals(
+      [{
+        kind: 'area.update',
+        body: { start: 1100, end: 1100, provinces: ['Kalisz'], religion: 'catholic' },
+        overwrite: { religion: ['orthodox'] },
+        yearRegionSamples: [],
+        citations: [{ source: 'A' }, { source: 'B' }],
+        wikidataMatch: null
+      }],
+      { chronas, wikidata },
+      { dryRun: false }
+    );
+    expect(ok.skipped, JSON.stringify(ok.skipped)).to.have.lengthOf(0);
+    expect(ok.applied).to.have.lengthOf(1);
+
+    const areaDoc = await request(app).get('/v1/areas/1100').expect(200);
+    expect(areaDoc.body.Kalisz[2]).to.equal('catholic');
+    // The correct pre-schism value was never touched.
+    expect(areaDoc.body.PreSchism[2]).to.equal('chalcedonism');
+  });
+
   it('refuses area.update for province keys absent from the chronas-areas doc (silent-drop guard)', async function () {
     // Confirms the unknown-province pre-flight against the real updateMany
     // controller. The controller's `if (!area.data[province]) return;` would
