@@ -33,8 +33,9 @@ app.use(AWSXRay.express.openSegment('Chronas-Api'));
 async function setupSwaggerDocs() {
   try {
     const swaggerUi = (await import('swagger-ui-express')).default;
-    const YAML = (await import('yamljs')).default;
-    const swaggerDocument = YAML.load('./swagger.yaml');
+    const yaml = (await import('js-yaml')).default;
+    const { readFileSync } = await import('node:fs');
+    const swaggerDocument = yaml.load(readFileSync('./swagger.yaml', 'utf8'));
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     console.log('✅ Swagger API documentation enabled at /api-docs');
   } catch {
