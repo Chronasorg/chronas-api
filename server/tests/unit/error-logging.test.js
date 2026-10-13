@@ -11,7 +11,7 @@ import { expect } from 'chai';
 import expressWinston from 'express-winston';
 import { createLogger, transports } from 'winston';
 
-import winstonInstance from '../../../config/winston.js';
+import winstonInstance, { consoleTransportOptions } from '../../../config/winston.js';
 import { buildErrorLoggerOptions } from '../../../config/error-logger-options.js';
 
 const MESSAGE = Symbol.for('message');
@@ -175,6 +175,51 @@ describe('Issue #158 — structured error logging', () => {
           done(e);
         }
       });
+    });
+  });
+
+  // The Web Function runtime drops raw process.stdout/stderr writes at
+  // applicationLogLevel WARN; only console.warn/console.error survive.
+  describe('production logger uses console methods', () => {
+    const calls = [];
+    const original = {};
+
+    beforeEach(() => {
+      calls.length = 0;
+      for (const m of ['log', 'warn', 'error']) {
+        original[m] = console[m];
+        console[m] = (...args) => calls.push([m, args.join(' ')]);
+      }
+    });
+
+    afterEach(() => {
+      for (const m of ['log', 'warn', 'error']) console[m] = original[m];
+    });
+
+    // The transport binds console methods at construction, so build a fresh
+    // one with the production options while console is stubbed.
+    function productionLikeLogger() {
+      return createLogger({
+        level: 'debug',
+        format: winstonInstance.format,
+        transports: [new transports.Console(consoleTransportOptions)]
+      });
+    }
+
+    it('writes errors with console.error and warnings with console.warn', () => {
+      const logger = productionLikeLogger();
+      logger.error('middlewareError', { status: 500 });
+      logger.warn('slow');
+      logger.info('hello');
+      expect(calls.map(c => c[0])).to.deep.equal(['error', 'warn', 'log']);
+      expect(calls[0][1]).to.contain('middlewareError').and.contain('"status":500');
+    });
+
+    it('is the configuration of the exported logger', () => {
+      const [transport] = winstonInstance.transports;
+      expect(transport.forceConsole).to.equal(true);
+      expect(transport.stderrLevels).to.have.property('error', true);
+      expect(transport.consoleWarnLevels).to.have.property('warn', true);
     });
   });
 });

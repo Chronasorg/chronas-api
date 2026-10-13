@@ -19,14 +19,14 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
 | --- | --- |
 | Web Function | `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`; 2 vCPU / 2 GB per environment |
 | Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 2, `rateLimit` 100 req/s |
-| Revision settings | timeout 25 s, 64 concurrent requests per environment, environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
+| Revision settings | timeout 25 s, 64 concurrent requests per environment, `NODE_OPTIONS=--max-old-space-size=384` (memory is billed as consumed), environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
 | Execution role | `chronas-api-web-function-role`: policy in [`api-edge/web-function-role-policy.json`](api-edge/web-function-role-policy.json) |
 | Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
 | CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`), default on `ChronasApiDynamicV3`; both key on `Authorization`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
 | DNS | `api.chronas.org` A → alias of `d24mkpax7rmotx.cloudfront.net` (zone `Z005461139KF8GDMY491N`) |
 | Secrets | Secrets Manager `/chronas/secrets`; the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)) |
-| Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days |
-| Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh)), plus the DynamoDB RCU and throttle alarms |
+| Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days. Only `console.*` output is kept; raw stdout/stderr writes are dropped (hence `forceConsole` in `config/winston.js`) |
+| Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh)), plus the DynamoDB RCU and throttle alarms. `CloudFront-5xx-Rate-High` (5xx rate > 5 % for 10 min) is in us-east-1 and notifies the us-east-1 topic of the same name, which needs its own email subscription |
 
 ### Data layer
 
