@@ -14,6 +14,7 @@ on:
         required: true
         options:
           - smoke
+          - web-status
           - snapshot
           - verify
           - policies
@@ -70,6 +71,15 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
           aws configure set region ${{ env.AWS_REGION }} --profile chronas-prod
 
+      # Same pinned CLI as deploy-prod.yml: `aws lambda-web` needs >= 2.37.13.
+      - name: Install pinned AWS CLI
+        run: |
+          curl -sSf -o /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.37.13.zip"
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          sudo /tmp/aws/install --update
+          aws --version
+          aws lambda-web help > /dev/null
+
       - name: Run ${{ inputs.action }}
         env:
           ACTION: ${{ inputs.action }}
@@ -91,6 +101,7 @@ jobs:
                 -e ../../PostmanTests/chronas-api.postman_environment.json \
                 --env-var "baseUrl=$BASE_URL" --env-var "smokePassword=$SMOKE_PASSWORD" \
                 --timeout-request 60000 --delay-request 500 ;;
+            web-status)       ./web-function.sh status ;;
             snapshot)         ./snapshot.sh manual ;;
             verify)           node verify.mjs --base https://api.chronas.org --direct "$DIRECT" --out ../backups/verify.json "${EXTRA[@]}" ;;
             policies)         ./policies.sh "${APPLY[@]}" ;;
