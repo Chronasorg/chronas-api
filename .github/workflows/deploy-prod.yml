@@ -4,9 +4,12 @@ on:
   push:
     branches: [master]
 
+# Never cancel a running deploy: cancelling between the Lambda update and
+# the rollback step would leave an untested build live. Shared with the
+# edge workflow planned in docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md.
 concurrency:
-  group: deploy-prod
-  cancel-in-progress: true
+  group: chronas-api-production
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -43,6 +46,9 @@ jobs:
         run: |
           node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
             -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
+
+      - name: Lint (check only)
+        run: npx eslint '*.js' server config
 
       - run: npm test
 
@@ -117,14 +123,29 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --profile chronas-prod 2>/dev/null || true
 
+      # Roll back to the build that is live now. The newest zip in deploys/ is
+      # not necessarily it: after a failed deploy was rolled back, the newest
+      # zip is the failed build.
       - name: Save previous deployment for rollback
         id: previous
         run: |
-          PREV_KEY=$(aws s3 ls s3://${{ env.S3_BUCKET }}/deploys/ \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod | sort | tail -1 | awk '{print $4}')
-          echo "prev_key=deploys/$PREV_KEY" >> $GITHUB_OUTPUT
-          echo "Previous deployment: deploys/$PREV_KEY"
+          PREV_COMMIT=$(curl -sf --max-time 20 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+          echo "Live commit before deploy: ${PREV_COMMIT:-unknown}"
+          PREV_KEY=""
+          if [ -n "$PREV_COMMIT" ] && aws s3api head-object \
+              --bucket ${{ env.S3_BUCKET }} --key "deploys/chronas-api-$PREV_COMMIT.zip" \
+              --region ${{ env.AWS_REGION }} --profile chronas-prod >/dev/null 2>&1; then
+            PREV_KEY="deploys/chronas-api-$PREV_COMMIT.zip"
+          else
+            PREV_KEY="deploys/$(aws s3 ls s3://${{ env.S3_BUCKET }}/deploys/ \
+              --region ${{ env.AWS_REGION }} \
+              --profile chronas-prod | sort | tail -1 | awk '{print $4}')"
+            echo "::warning::No zip for the live commit; falling back to the newest zip"
+            PREV_COMMIT=""
+          fi
+          echo "prev_key=$PREV_KEY" >> $GITHUB_OUTPUT
+          echo "prev_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
+          echo "Previous deployment: $PREV_KEY"
 
       # Checked before the Lambda update: failing later would trigger a rollback.
       - name: Check smoke test secret
@@ -158,11 +179,16 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation \
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id E1KTIK2H0W8J2Q \
             --paths "/v1/*" \
-            --profile chronas-prod | cat
-          echo "CloudFront cache invalidated"
+            --profile chronas-prod \
+            --query 'Invalidation.Id' --output text)
+          aws cloudfront wait invalidation-completed \
+            --distribution-id E1KTIK2H0W8J2Q \
+            --id "$INVALIDATION_ID" \
+            --profile chronas-prod
+          echo "CloudFront invalidation $INVALIDATION_ID completed"
 
       - name: Warm up Lambda (cold start after deploy)
         run: |
@@ -175,8 +201,25 @@ jobs:
           sleep 3
           echo "Lambda warmed up"
 
+      # Postman only means something once the new build answers. A failure
+      # here is treated like a Postman failure (rollback below).
+      - name: Check the live version is the new commit
+        id: version
+        continue-on-error: true
+        run: |
+          EXPECTED="${GITHUB_SHA::7}"
+          for i in $(seq 1 24); do
+            LIVE=$(curl -sf --max-time 10 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+            if [ "$LIVE" = "$EXPECTED" ]; then echo "Live commit is $LIVE"; exit 0; fi
+            echo "Live commit is '${LIVE:-none}', waiting for $EXPECTED ($i/24)"
+            sleep 5
+          done
+          echo "::error::/v1/version did not report $EXPECTED within 2 minutes"
+          exit 1
+
       - name: Post-deploy Postman smoke tests
         id: postman
+        if: steps.version.outcome == 'success'
         continue-on-error: true
         env:
           SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
@@ -192,15 +235,15 @@ jobs:
       # fails Postman live (for example when rolling back would restore a
       # build with a known security hole). The run still fails.
       - name: Keep deployment despite test failure
-        if: steps.postman.outcome == 'failure' && vars.AUTO_ROLLBACK == 'false'
+        if: (steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
         run: |
           echo "::error::Postman tests FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
           exit 1
 
       - name: Rollback Lambda on test failure
-        if: steps.postman.outcome == 'failure' && vars.AUTO_ROLLBACK != 'false'
+        if: (steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
         run: |
-          echo "Postman tests FAILED -- rolling back Lambda to previous deployment"
+          echo "Post-deploy checks FAILED -- rolling back Lambda to previous deployment"
           aws lambda update-function-code \
             --function-name ${{ steps.lambda.outputs.function_name }} \
             --s3-bucket ${{ env.S3_BUCKET }} \
@@ -214,6 +257,25 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --profile chronas-prod
           echo "Rolled back to ${{ steps.previous.outputs.prev_key }}"
+          # Drop edge copies that the failed build may have produced.
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id E1KTIK2H0W8J2Q \
+            --paths "/v1/*" \
+            --profile chronas-prod \
+            --query 'Invalidation.Id' --output text)
+          aws cloudfront wait invalidation-completed \
+            --distribution-id E1KTIK2H0W8J2Q \
+            --id "$INVALIDATION_ID" \
+            --profile chronas-prod
+          EXPECTED="${{ steps.previous.outputs.prev_commit }}"
+          if [ -n "$EXPECTED" ]; then
+            for i in $(seq 1 24); do
+              LIVE=$(curl -sf --max-time 10 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+              if [ "$LIVE" = "$EXPECTED" ]; then echo "Rollback verified: live commit is $LIVE"; exit 1; fi
+              sleep 5
+            done
+            echo "::error::After rollback, /v1/version still doesn't report $EXPECTED"
+          fi
           exit 1
 
       - name: Verify deployment success

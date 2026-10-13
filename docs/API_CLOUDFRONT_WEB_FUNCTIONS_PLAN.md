@@ -299,6 +299,7 @@ Each WP is a separate PR, tested the way production runs: the packaged zip serve
 - **Concurrency:** group `chronas-api-production`, `cancel-in-progress: false`, shared with `api-edge-prod.yml`. Cancelling a deploy between the code update and the rollback step would leave an untested build live.
 - **Build once.** One zip contains both entries. Upload it to `deploys/chronas-api-<sha>.zip` (Event Function) and to the versioned artifact bucket under an immutable per-commit key (INF-2); record the S3 `VersionId`.
 - **Event Function** (from P1; until P9):
+  0. Record the rollback target: the zip of the commit `/v1/version` reports **before** the deploy. Not the newest zip in `deploys/`: after a failed deploy was rolled back, that is the failed build.
   1. `update-function-code`, then `wait function-updated`.
   2. Invalidate `/v1/*` and **wait** for `invalidation-completed`.
   3. Check that `/v1/version` on `api.chronas.org` returns the new commit (retry for up to 2 minutes).
