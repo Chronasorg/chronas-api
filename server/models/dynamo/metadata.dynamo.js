@@ -9,10 +9,24 @@ import QueryProxy from './query-proxy.js';
 import { BatchGetProxy } from './batch-get-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
-import { cache } from '../../../config/config.js';
+import BoundedCache from '../../helpers/bounded-cache.js';
 
 const TABLE = tableName('metadata');
-const CACHETTL = 1000 * 60 * 60 * 24 * 7; // 1 week
+const MB = 1024 * 1024;
+// List results, keyed by query parameters. Bounded so that a client sweeping
+// many parameter combinations evicts old entries instead of exhausting
+// memory. The 1 h TTL also bounds staleness in environments that didn't
+// handle a write (save() only clears the cache of the one that did). The
+// init dictionaries are about 1 MB of JSON, a type=e list about 165 KB.
+export const metadataCache = new BoundedCache({
+  maxEntries: 500,
+  maxBytes: 24 * MB,
+  maxEntryBytes: 4 * MB,
+  ttlMs: 60 * 60 * 1000
+});
+// Only the init dictionaries (optionally localized, e.g. ruler_de) are worth
+// caching for `f` lists; other ids are served but not cached.
+const CACHEABLE_F_ID = /^(provinces|ruler|culture|religion|capital|province|religionGeneral)(_[a-z]{2,3})?$/;
 // Sanity cap on in-memory materialization. Today the whole table is ~38k
 // items / 14 MB so this is several multiples of the largest realistic
 // fetch. If we ever hit it the request still succeeds (we just truncate
@@ -122,12 +136,14 @@ export default class MetadataDynamo extends DynamoDocument {
   async save(_options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
-    for (const key of cache.keys()) {
-      if (key.startsWith('query:') || key.startsWith('default:') || key.startsWith('init:')) {
-        cache.del(key);
-      }
-    }
+    metadataCache.clear();
     return this;
+  }
+
+  async deleteOne() {
+    const result = await super.deleteOne();
+    metadataCache.clear();
+    return result;
   }
 }
 
@@ -145,11 +161,12 @@ async function batchGetByIds(ids) {
 
 async function fListBranch(fList, type, subtype, locale) {
   const localeStr = typeof locale === 'string' ? locale : '';
+  const resourceArray = String(fList).split(',');
+  const cacheable = resourceArray.every(id => CACHEABLE_F_ID.test(id));
   const cacheKey = `init:${fList}:${localeStr}`;
-  const cachedInit = cache.get(cacheKey);
+  const cachedInit = cacheable ? metadataCache.get(cacheKey) : undefined;
   if (cachedInit) return cachedInit;
 
-  const resourceArray = String(fList).split(',');
   const items = await batchGetByIds(resourceArray);
   const countLength = localeStr ? localeStr.length + 1 : 0;
   const result = {};
@@ -159,7 +176,7 @@ async function fListBranch(fList, type, subtype, locale) {
     const key = countLength ? id.substr(0, id.length - countLength) : id;
     result[key] = decoded.data;
   }
-  cache.put(cacheKey, result, CACHETTL);
+  if (cacheable) metadataCache.set(cacheKey, result);
   return result;
 }
 
@@ -170,7 +187,7 @@ async function queryBranch(options) {
   } = options;
 
   const cacheKey = `query:${type}:${subtype}:${year}:${delta}:${start}:${end}:${wiki || ''}:${search || ''}:${mustGeo || ''}:${discover || ''}`;
-  const cached = cache.get(cacheKey);
+  const cached = metadataCache.get(cacheKey);
   if (cached) return cached;
 
   const subtypes = subtype
@@ -228,11 +245,11 @@ async function queryBranch(options) {
 
   if (search) {
     const result = paged.map(item => item._id);
-    cache.put(cacheKey, result, CACHETTL);
+    metadataCache.set(cacheKey, result);
     return result;
   }
 
-  cache.put(cacheKey, paged, CACHETTL);
+  metadataCache.set(cacheKey, paged);
   return paged;
 }
 
@@ -396,7 +413,7 @@ function dedupeById(items) {
 
 async function defaultBranch(start, end) {
   const cacheKey = `default:${start}:${end}`;
-  const cached = cache.get(cacheKey);
+  const cached = metadataCache.get(cacheKey);
   if (cached) return cached;
 
   const items = await new DynamoQuery(MetadataDynamo, {})
@@ -412,6 +429,6 @@ async function defaultBranch(start, end) {
     decoded.data = dataString + ((dataString.length === 200) ? '...' : '');
     return decoded;
   });
-  cache.put(cacheKey, result, CACHETTL);
+  metadataCache.set(cacheKey, result);
   return result;
 }

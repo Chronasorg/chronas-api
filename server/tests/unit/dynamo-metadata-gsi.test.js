@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import { setupDynamoLocal, teardownDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-local.js';
-import { cache } from '../../../config/config.js';
+import { metadataCache } from '../../models/dynamo/metadata.dynamo.js';
 
 // Issue #154: queryBranch was always running a full table Scan because
 // onIndex() was never invoked. Under a Lambda cold-start storm this consumed
@@ -71,11 +71,7 @@ describe('MetadataDynamo queryBranch — GSI routing (issue #154)', () => {
     // Wrap the live doc client and reset counts/cache so each test body
     // observes a fresh dispatch, not a memoized hit.
     instrumentDocClient();
-    for (const key of cache.keys()) {
-      if (key.startsWith('query:') || key.startsWith('default:') || key.startsWith('init:')) {
-        cache.del(key);
-      }
-    }
+    metadataCache.clear();
   });
 
   it('type+subtype+year goes through GSI-SubtypeYear (Query, not Scan)', async () => {

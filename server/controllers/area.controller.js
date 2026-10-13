@@ -32,7 +32,7 @@ async function load(req, res, next, id) {
  * @returns {Area}
  */
 function get(req, res) {
-  res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+  res.set('Cache-Control', 'public, max-age=86400, s-maxage=86400');
   if (req.entity.data && Object.keys(req.entity.data).length > 0) {
     return res.json(req.entity.data);
   }
