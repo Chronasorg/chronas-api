@@ -35,3 +35,6 @@ jobs:
             -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
 
       - run: npm test
+
+      - name: Integration tests (round-trip writes through real Express + dynalite)
+        run: npm run test:integration

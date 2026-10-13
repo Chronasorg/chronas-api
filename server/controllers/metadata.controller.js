@@ -324,6 +324,10 @@ function updateLinkAtom(req, res, next, isAddLink, resolve = false) {
     });
 }
 
+// Edge-cached like the other public metadata reads; browsers revalidate so an
+// editor sees their own link changes once the edge entry is invalidated.
+const LINKED_CACHE_CONTROL = 'public, max-age=0, s-maxage=3600';
+
 function getLinked(req, res, next, resolve = false) {
   const sourceItem = req.query.source || false;
 
@@ -345,6 +349,7 @@ function getLinked(req, res, next, resolve = false) {
 
     if (!linkedItems) {
       if (resolve) return resolve(resObj);
+      res.set('Cache-Control', LINKED_CACHE_CONTROL);
       return res.json(resObj);
     }
 
@@ -439,6 +444,7 @@ function getLinked(req, res, next, resolve = false) {
             });
 
             if (resolve) return resolve(resObj);
+            res.set('Cache-Control', LINKED_CACHE_CONTROL);
             return res.json(resObj);
           });
       })
