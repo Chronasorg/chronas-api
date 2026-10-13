@@ -109,4 +109,4 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 
 ## Infrastructure changes
 
-**Never use CDK.** The `chronas-cdk` sibling repo is retired. Infrastructure changes go through the idempotent script at [`infra/apply-lambda-config.sh`](infra/apply-lambda-config.sh), or a direct `aws` CLI command documented in [infra/README.md](infra/README.md). Always snapshot current state into `infra/backups/` before any change (the script does this automatically).
+**Never use CDK.** The `chronas-cdk` sibling repo is retired. Infrastructure changes go through the idempotent script at [`infra/apply-lambda-config.sh`](infra/apply-lambda-config.sh), or a direct `aws` CLI command documented in [infra/README.md](infra/README.md). CloudFront and Route 53 changes for `api.chronas.org` go through [`infra/api-edge/`](infra/api-edge/README.md) and the `API edge` workflow, phase by phase as in [docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md](docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). Always snapshot current state into `infra/backups/` before any change (the script does this automatically).
