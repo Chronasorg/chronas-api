@@ -1,8 +1,8 @@
 /**
  * AWS Secrets Manager Integration (SDK v3)
  *
- * DynamoDB-only: only used for application configuration (JWT_SECRET, OAuth
- * client secrets, etc.) retrieved via SECRET_CONFIG_NAME.
+ * DynamoDB-only: only used for application configuration (JWT_SECRET, etc.)
+ * retrieved via SECRET_CONFIG_NAME.
  */
 
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';

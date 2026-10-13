@@ -39,7 +39,7 @@ There is no local-server dev mode. The Lambda is DynamoDB-only; testing is done 
 - **API Gateway**: HTTP API (`ChronasApiGateway`) with custom domain `api.chronas.org`
 - **Database**: DynamoDB (8 in-use tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
 - **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
-- **Secrets**: AWS Secrets Manager — `/chronas/secrets` (JWT secret, OAuth keys). The old `/chronas/docdb/*` secrets were unlinked 2026-05-04.
+- **Secrets**: AWS Secrets Manager — `/chronas/secrets` (JWT secret). The old `/chronas/docdb/*` secrets were unlinked 2026-05-04.
 - **CloudFront (API)**: Distribution `E1KTIK2H0W8J2Q` (`d24mkpax7rmotx.cloudfront.net`) caches API responses at edge. DNS `api.chronas.org` → CloudFront → API Gateway origin. Cache policy respects origin `Cache-Control` headers. Invalidated on each deploy via `deploy-prod.yml`.
 - **Deployment**: GitHub Actions ([`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml)) on push to `master` — tests → zip → `aws lambda update-function-code` → CloudFront invalidation → Postman → auto-rollback on failure. **No CDK in the deploy path.** The workflow only reads the Lambda function name from a CloudFormation stack output.
 - **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org` via CloudFront
@@ -72,7 +72,7 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - [lambda-config.js](config/lambda-config.js) — Lambda-specific config loading
 - [lambda-app.js](config/lambda-app.js) — Lambda initialization (config load + Express app — no DB step)
 - [secrets-manager.js](config/secrets-manager.js) — AWS Secrets Manager client (SDK v3), used only for application config (`SECRET_CONFIG_NAME`)
-- [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Passport, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
+- [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
 - [performance.js](config/performance.js) — Cold/warm start tracking, Lambda metrics
 
 **Request flow**: API Gateway → Lambda handler → `@vendia/serverless-express` → Express middleware → `/v1` routes → controllers → DynamoDB models (`server/models/dynamo/`)
@@ -80,7 +80,7 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 **Conventions**:
 - Routes, controllers, and models follow 1:1 naming per resource (e.g., `marker.route.js` / `marker.controller.js` / `marker.model.js`)
 - Active resources: users, markers, areas, metadata, flags, revisions, statistics, health, version
-- Retired resources (410 Gone): collections, game, board/forum, contact (retired 2026-10-13: no traffic, Mailgun was never configured in prod, and its sanitize-html dependency became ESM-only, which the Lambda `nodejs22.x` runtime cannot `require()`)
+- Retired resources (410 Gone): collections, game, board/forum, contact (retired 2026-10-13: no traffic, Mailgun was never configured in prod, and its sanitize-html dependency became ESM-only, which the Lambda `nodejs22.x` runtime cannot `require()`), social logins `/v1/auth/login/{google,facebook,github,twitter}` (retired 2026-10-13: neither frontend could complete them, and the client secrets were revoked)
 - Request validation uses Joi schemas in `config/param-validation.js`
 - All async code uses promises (not async/await in older controller code)
 
@@ -89,7 +89,7 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - Protected routes use `express-jwt` middleware (decoded token on `req.auth`)
 - Authorization in [server/helpers/privileges.js](server/helpers/privileges.js): `checkPrivilege(threshold)`, `checkPrivilegeOrOwnership(threshold)`, `checkPrivilegeForTypes(threshold, typesBlocked)`
 - Patreon subscribers bypass privilege checks
-- OAuth: Facebook, Google, GitHub active
+- Social logins (Google, Facebook, GitHub) were retired 2026-10-13: `/v1/auth/login/{google,facebook,github,twitter}` return 410 Gone. Accounts log in with email and password only.
 
 **Database (DynamoDB)**:
 - User model uses email (lowercased) as `_id`

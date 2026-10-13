@@ -63,7 +63,7 @@ DynamoDB + the S3 statistics bucket.
 See [`backups/env-vars-after.json`](backups/env-vars-after.json) for the full
 set. Notable:
 
-- `SECRET_CONFIG_NAME=/chronas/secrets` — JWT + OAuth secrets
+- `SECRET_CONFIG_NAME=/chronas/secrets` — JWT secret
 - `USE_DYNAMODB_*=true` for all in-scope models (areas, markers, metadata,
   users, flags, revisions, board)
 - `STATISTICS_S3_BUCKET=chronas-frontend-new`, `STATISTICS_S3_KEY=api/statistics.json`

@@ -8,9 +8,7 @@ import httpStatus from 'http-status';
 import expressWinston from 'express-winston';
 import expressValidation from 'express-validation';
 import helmet from 'helmet';
-import passport from 'passport';
 import AWSXRay from 'aws-xray-sdk';
-import expressSession from 'express-session';
 
 import routes from '../server/routes/index.route.js';
 import APIError from '../server/helpers/APIError.js';
@@ -62,36 +60,6 @@ app.use(cors({
 // Add performance monitoring middleware
 app.use(createPerformanceMiddleware());
 
-
-/** Auth plans init **/
-
-passport.serializeUser((user, cb) => {
-  cb(null, user);
-});
-
-passport.deserializeUser((obj, cb) => {
-  cb(null, obj);
-});
-
-// Only configure session in non-test environments to avoid issues
-if (config.env !== 'test') {
-  app.use(expressSession({
-    secret: config.jwtSecret || 'test-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: config.env === 'production',
-      httpOnly: true,
-      sameSite: 'lax'
-    }
-  }));
-}
-
-app.use(passport.initialize());
-// Only use passport session in non-test environments
-if (config.env !== 'test') {
-  app.use(passport.session());
-}
 
 // // enable detailed API logging in dev env
 if (config.env === 'development') {

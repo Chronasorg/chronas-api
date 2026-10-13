@@ -111,7 +111,7 @@ describe('## Application Startup Tests', () => {
   });
 
   describe('# Express Application', () => {
-    it.skip('should create express app without errors (skipped - session config issue)', async () => {
+    it('should create express app without errors', async () => {
       try {
         const expressApp = await import('../../../config/express.js');
         expect(expressApp.default).to.exist;

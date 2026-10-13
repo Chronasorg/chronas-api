@@ -38,7 +38,6 @@ describe('## User and auth route security', () => {
   let app;
   let UserDynamo;
   let isPasswordHash;
-  let userCtrl;
 
   const ADMIN = token('admin@chronas.org', 5);
   const ALICE = token('alice@example.com', 1);
@@ -51,7 +50,6 @@ describe('## User and auth route security', () => {
     const userModule = await import('../../models/dynamo/user.dynamo.js');
     UserDynamo = userModule.default;
     ({ isPasswordHash } = userModule);
-    userCtrl = (await import('../../controllers/user.controller.js')).default;
   });
 
   beforeEach(async function () {
@@ -252,33 +250,13 @@ describe('## User and auth route security', () => {
     });
   });
 
-  describe('OAuth login', () => {
-    function fakeRes() {
-      return { location: null, redirect(url) { this.location = url; } };
-    }
-
-    function redirectToken(res) {
-      return claims(/[?&]token=([^&]+)/.exec(res.location)[1]);
-    }
-
-    it('creates new OAuth accounts with privilege 1', async () => {
-      const res = fakeRes();
-      let failure;
-      await userCtrl.loginOrCreateOAuthUser({}, res, (e) => { failure = e; }, {
-        id: 'google123', authType: 'google', email: 'dave@example.com', username: 'dave', name: 'Dave D'
-      });
-      expect(failure).to.equal(undefined);
-      const issued = redirectToken(res);
-      expect(issued.privilege).to.equal(1);
-      expect((await getUser('dave@example.com')).authType).to.equal('google');
-    });
-
-    it('logs into the existing account with the same email', async () => {
-      const res = fakeRes();
-      await userCtrl.loginOrCreateOAuthUser({}, res, () => {}, {
-        id: 'google456', authType: 'google', email: 'admin@chronas.org', username: 'admin'
-      });
-      expect(redirectToken(res).privilege).to.equal(5);
+  describe('social logins', () => {
+    it('are retired: every provider route answers 410 without redirecting', async () => {
+      for (const path of ['/v1/auth/login/google', '/v1/auth/login/google?code=abc', '/v1/auth/login/facebook', '/v1/auth/login/github', '/v1/auth/login/twitter', '/v1/auth/login/GOOGLE']) {
+        const res = await request(app).get(path);
+        expect(res.status, path).to.equal(410);
+        expect(res.headers.location, path).to.equal(undefined);
+      }
     });
   });
 

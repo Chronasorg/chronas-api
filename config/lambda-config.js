@@ -2,7 +2,7 @@
  * Lambda-Optimized Configuration Module
  *
  * DynamoDB-only: no database URI configuration. Secrets Manager still used for
- * JWT/OAuth config under SECRET_CONFIG_NAME.
+ * the JWT config under SECRET_CONFIG_NAME.
  */
 
 import Joi from 'joi';
@@ -105,22 +105,12 @@ const getConfigSchema = () => {
 
     LAMBDA_MEMORY: Joi.number()
       .default(512),
-
-    GITHUB_CLIENT_ID: Joi.string().allow('', null).default(''),
-    GOOGLE_CLIENT_SECRET: Joi.string().allow('', null).default(''),
-    GOOGLE_CLIENT_ID: Joi.string().allow('', null).default(''),
-    GITHUB_CLIENT_SECRET: Joi.string().allow('', null).default(''),
     PAYPAL_CLIENT_ID: Joi.string().allow('', null).default(''),
-    FACEBOOK_CLIENT_ID: Joi.string().allow('', null).default(''),
     CLOUDINARY_URL: Joi.string().allow('', null).default(''),
-    FACEBOOK_CLIENT_SECRET: Joi.string().allow('', null).default(''),
     PAYPAL_CLIENT_SECRET: Joi.string().allow('', null).default(''),
     RUMENDPOINT: Joi.string().allow('', null).default(''),
     RUMROLEARN: Joi.string().allow('', null).default(''),
     RUMIDENTITYPOOL: Joi.string().allow('', null).default(''),
-    FACEBOOK_CALLBACK_URL: Joi.string().allow('', null).default(''),
-    GITHUB_CALLBACK_URL: Joi.string().allow('', null).default(''),
-    GOOGLE_CALLBACK_URL: Joi.string().allow('', null).default(''),
     RUMAPPLICATIONID: Joi.string().allow('', null).default(''),
     CHRONAS_HOST: Joi.string().allow('', null).default('')
 
@@ -165,22 +155,12 @@ function buildConfig(envVars) {
       timeout: envVars.LAMBDA_TIMEOUT,
       memory: envVars.LAMBDA_MEMORY
     },
-
-    githubClientId: envVars.GITHUB_CLIENT_ID,
-    googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
-    googleClientId: envVars.GOOGLE_CLIENT_ID,
-    githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
     paypalClientId: envVars.PAYPAL_CLIENT_ID,
-    facebookClientId: envVars.FACEBOOK_CLIENT_ID,
     cloudinaryUrl: envVars.CLOUDINARY_URL,
-    facebookClientSecret: envVars.FACEBOOK_CLIENT_SECRET,
     paypalClientSecret: envVars.PAYPAL_CLIENT_SECRET,
     rumEndpoint: envVars.RUMENDPOINT,
     rumRoleArn: envVars.RUMROLEARN,
     rumIdentityPool: envVars.RUMIDENTITYPOOL,
-    facebookCallBackUrl: envVars.FACEBOOK_CALLBACK_URL,
-    githubCallbackUrl: envVars.GITHUB_CALLBACK_URL,
-    googleCallbackUrl: envVars.GOOGLE_CALLBACK_URL,
     rumApplicationId: envVars.RUMAPPLICATIONID,
     chronasHost: envVars.CHRONAS_HOST,
 
