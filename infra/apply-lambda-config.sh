@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Apply the expected Lambda configuration to the chronas-api production function.
 #
-# Idempotent — safe to re-run. Reconciles: architecture, env vars, VPC
-# attachment, IAM role policies. Does NOT upload new code (GitHub Actions
+# Idempotent — safe to re-run. Reconciles: architecture, env vars (removals
+# from env-vars-to-remove.txt, non-secret values from env-vars-to-set.txt),
+# VPC attachment, IAM role policies. Does NOT upload new code (GitHub Actions
 # does that on every push to master).
 #
 # Usage:
@@ -22,6 +23,7 @@ PROFILE="chronas-prod"
 FN="ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM"
 ROLE="ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI"
 INLINE_POLICY_NAME="ChronasApiLambdaFunctionServiceRoleDefaultPolicy8E461284"
+DATA_POLICY_NAME="ChronasDynamoDBAccess"
 S3_BUCKET="chronas-lambda-deployments"
 EXPECTED_ARCH="arm64"
 
@@ -64,6 +66,9 @@ aws "${AWS_COMMON[@]}" lambda get-function-configuration --function-name "$FN" \
 aws --profile "$PROFILE" iam get-role-policy --role-name "$ROLE" \
   --policy-name "$INLINE_POLICY_NAME" \
   > "$BACKUP_DIR/iam-inline-policy-before-$TS.json" || true
+aws --profile "$PROFILE" iam get-role-policy --role-name "$ROLE" \
+  --policy-name "$DATA_POLICY_NAME" \
+  > "$BACKUP_DIR/iam-data-policy-before-$TS.json" || true
 
 # --- Architecture ------------------------------------------------------------
 CURRENT_ARCH="$(aws "${AWS_COMMON[@]}" lambda get-function-configuration \
@@ -87,15 +92,19 @@ else
 fi
 
 # --- Environment variables ---------------------------------------------------
-# Remove keys listed in env-vars-to-remove.txt from the live env. We fetch the
-# current env, drop those keys, and write it back — never hardcoding secret
+# Remove keys listed in env-vars-to-remove.txt from the live env and set the
+# non-secret KEY=VALUE pairs from env-vars-to-set.txt. We fetch the current
+# env, change only those keys, and write it back — never hardcoding secret
 # values into the repo.
-log "Reconciling environment variables (removing retired keys only)"
+log "Reconciling environment variables"
 REMOVE_FILE="$SCRIPT_DIR/env-vars-to-remove.txt"
-if [[ ! -f "$REMOVE_FILE" ]]; then
-  echo "ERROR: missing $REMOVE_FILE" >&2
-  exit 1
-fi
+SET_FILE="$SCRIPT_DIR/env-vars-to-set.txt"
+for f in "$REMOVE_FILE" "$SET_FILE"; do
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: missing $f" >&2
+    exit 1
+  fi
+done
 
 TMP_ENV="$(mktemp)"
 trap 'rm -f "$TMP_ENV"' EXIT
@@ -109,9 +118,13 @@ remove = {line.strip() for line in open('$REMOVE_FILE') if line.strip() and not 
 changed = [k for k in list(variables) if k in remove]
 for k in changed:
     del variables[k]
+to_set = dict(line.strip().split('=', 1) for line in open('$SET_FILE') if line.strip() and not line.startswith('#'))
+set_changed = {k: v for k, v in to_set.items() if variables.get(k) != v}
+variables.update(to_set)
 json.dump({'Variables': variables}, sys.stdout)
 print('', file=sys.stderr)
 print(f'Removing {len(changed)} keys: {changed}', file=sys.stderr)
+print(f'Setting {len(set_changed)} non-secret keys: {set_changed}', file=sys.stderr)
 " > "$TMP_ENV"
 
 run_or_print aws "${AWS_COMMON[@]}" lambda update-function-configuration \
@@ -152,6 +165,15 @@ run_or_print aws --profile "$PROFILE" iam put-role-policy \
   --role-name "$ROLE" \
   --policy-name "$INLINE_POLICY_NAME" \
   --policy-document "file://$INLINE_POLICY_FILE"
+
+# DynamoDB tables plus the one S3 object the API writes (statistics). The
+# frontend's own files in the same bucket are out of reach. ListBucket stays
+# so that a missing statistics object is a 404 (NoSuchKey), not a 403.
+log "Reconciling inline policy $DATA_POLICY_NAME"
+run_or_print aws --profile "$PROFILE" iam put-role-policy \
+  --role-name "$ROLE" \
+  --policy-name "$DATA_POLICY_NAME" \
+  --policy-document "file://$SCRIPT_DIR/iam-dynamodb-policy.json"
 
 # --- DynamoDB: rate-limit counter table -------------------------------------
 # Used by server/middleware/dynamo-rate-store.js for per-IP rate limiting on
@@ -231,6 +253,9 @@ aws "${AWS_COMMON[@]}" lambda get-function-configuration --function-name "$FN" \
 aws --profile "$PROFILE" iam get-role-policy --role-name "$ROLE" \
   --policy-name "$INLINE_POLICY_NAME" \
   > "$BACKUP_DIR/iam-inline-policy-after-$TS.json" || true
+aws --profile "$PROFILE" iam get-role-policy --role-name "$ROLE" \
+  --policy-name "$DATA_POLICY_NAME" \
+  > "$BACKUP_DIR/iam-data-policy-after-$TS.json" || true
 
 log "Snapshots saved with suffix $TS in $BACKUP_DIR/"
 if [[ "$APPLY" != "yes" ]]; then

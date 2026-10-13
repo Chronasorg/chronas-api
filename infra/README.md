@@ -53,10 +53,9 @@ the pre-computed statistics JSON at `api/statistics.json`.
 **Managed policies attached:**
 - `AWSLambdaBasicExecutionRole` — CloudWatch Logs.
 
-**Inline policies:** see [`iam-inline-policy.json`](iam-inline-policy.json) for
-the app-level policy (SQS DLQ + Secrets Manager for `/chronas/secrets`). The
-`ChronasDynamoDBAccess` inline policy is managed separately and covers
-DynamoDB + the S3 statistics bucket.
+**Inline policies**, both applied by [`apply-lambda-config.sh`](apply-lambda-config.sh):
+- [`iam-inline-policy.json`](iam-inline-policy.json): the app-level policy (SQS DLQ + Secrets Manager for `/chronas/secrets`).
+- [`iam-dynamodb-policy.json`](iam-dynamodb-policy.json) (`ChronasDynamoDBAccess`): the `chronas-*` DynamoDB tables, plus read and write on the one S3 object the API owns, `chronas-frontend-new/api/statistics.json`. The frontend's files in the same bucket are out of reach. `s3:ListBucket` stays so a missing statistics object reads as 404, not 403.
 
 ### Environment variables
 
@@ -72,6 +71,12 @@ set. Notable:
 
 Removed on 2026-05-04 (no longer needed): `VPC_ID`, `SECRET_DB_NAME`,
 `SECRET_MODERNIZED_DB_NAME`, `DOCDB_TLS_ENABLED`.
+
+[`apply-lambda-config.sh`](apply-lambda-config.sh) removes the keys in
+[`env-vars-to-remove.txt`](env-vars-to-remove.txt) and sets the non-secret
+`KEY=VALUE` pairs in [`env-vars-to-set.txt`](env-vars-to-set.txt), currently
+`NODE_OPTIONS=--enable-source-maps --max-old-space-size=384` (a heap below the
+512 MB function size; it was 900).
 
 ### Edge / API layer
 
