@@ -24,4 +24,14 @@ jobs:
 
       - run: npm ci
 
+      - name: Load app with Lambda runtime module flags
+        # The Lambda nodejs22.x runtime disables require(esm). GitHub's Node 22
+        # does not, so a CJS dependency that require()s an ESM-only package
+        # (sanitize-html 2.18 → htmlparser2 12, #193) passes tests here and
+        # crashes every request in prod. Loading the app with Lambda's flags
+        # catches that before deploy.
+        run: |
+          node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
+            -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
+
       - run: npm test

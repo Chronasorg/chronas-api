@@ -106,13 +106,10 @@ const getConfigSchema = () => {
     LAMBDA_MEMORY: Joi.number()
       .default(512),
 
-    MAILGUN_RECEIVER: Joi.string().allow('', null).default(''),
     GITHUB_CLIENT_ID: Joi.string().allow('', null).default(''),
     GOOGLE_CLIENT_SECRET: Joi.string().allow('', null).default(''),
-    MAILGUN_KEY: Joi.string().allow('', null).default(''),
     GOOGLE_CLIENT_ID: Joi.string().allow('', null).default(''),
     GITHUB_CLIENT_SECRET: Joi.string().allow('', null).default(''),
-    MAILGUN_DOMAIN: Joi.string().allow('', null).default(''),
     PAYPAL_CLIENT_ID: Joi.string().allow('', null).default(''),
     FACEBOOK_CLIENT_ID: Joi.string().allow('', null).default(''),
     CLOUDINARY_URL: Joi.string().allow('', null).default(''),
@@ -169,13 +166,10 @@ function buildConfig(envVars) {
       memory: envVars.LAMBDA_MEMORY
     },
 
-    mailgunReceiver: envVars.MAILGUN_RECEIVER,
     githubClientId: envVars.GITHUB_CLIENT_ID,
     googleClientSecret: envVars.GOOGLE_CLIENT_SECRET,
-    mailgunKey: envVars.MAILGUN_KEY,
     googleClientId: envVars.GOOGLE_CLIENT_ID,
     githubClientSecret: envVars.GITHUB_CLIENT_SECRET,
-    mailgunDomain: envVars.MAILGUN_DOMAIN,
     paypalClientId: envVars.PAYPAL_CLIENT_ID,
     facebookClientId: envVars.FACEBOOK_CLIENT_ID,
     cloudinaryUrl: envVars.CLOUDINARY_URL,
