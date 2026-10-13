@@ -55,7 +55,7 @@ export async function loadSecrets({
     // The Event Function keeps working from its environment while it still
     // has the variable. The Web Function has no such fallback.
     if (!isWebFunction() && process.env.JWT_SECRET) {
-      console.warn(`Secrets Manager read of ${secretId} failed (${error.name}); using the environment`);
+      console.warn(`Secrets Manager read failed (${error.name}); using JWT_SECRET from the environment`);
       return 'environment';
     }
     throw error;
