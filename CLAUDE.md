@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Chronas API is a Node.js 22 / Express REST API for the Chronas historical timeline application. It runs as an AWS Lambda function (via `@vendia/serverless-express`) behind API Gateway at `api.chronas.org`, backed by **DynamoDB**. All API routes are under `/v1`. Uses native ESM (`"type": "module"` in package.json).
+Chronas API is a Node.js / Express REST API for the Chronas historical timeline application. It runs as an AWS Lambda Web Function behind CloudFront at `api.chronas.org`, backed by **DynamoDB**. All API routes are under `/v1`. Uses native ESM (`"type": "module"` in package.json).
 
 The repo is fully decoupled from CDK as of 2026-05-04. Infrastructure is managed via `aws` CLI; the source of truth lives in [infra/](infra/README.md).
 
@@ -35,19 +35,21 @@ There is no local-server dev mode. The Lambda is DynamoDB-only; testing is done 
 
 ## Production Architecture (AWS, eu-west-1, account 937826731833)
 
-- **Lambda**: `ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` — nodejs22.x, **arm64**, handler `lambda-handler.handler`, 512MB, 30s timeout, **NOT in VPC**
-- **API Gateway**: HTTP API (`ChronasApiGateway`) with custom domain `api.chronas.org`
+Since 2026-10-13: `api.chronas.org` and `d24mkpax7rmotx.cloudfront.net` → CloudFront `E1KTIK2H0W8J2Q` → **Lambda Web Function** `chronas-api`. Runbook and resource list: [docs/WEB_FUNCTION_CUTOVER.md](docs/WEB_FUNCTION_CUTOVER.md).
+
+- **Web Function** (serves all traffic): `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`. Endpoint `prod`, `IamAuth`: only CloudFront may call it (resource policy scoped to `E1KTIK2H0W8J2Q`, OAC `chronas-api-web-oac`); unsigned direct calls get 403. Routing is pinned (`autoDeploymentMode` Disabled) and moved only by deploys. Role `chronas-api-web-function-role`, code in the versioned bucket `chronas-lambda-web-artifacts` (one immutable key per commit; never delete object versions a revision uses). Logs `/aws/lambda/web/chronas-api` (WARN+, 3 days). Managed with [infra/api-edge/web-function.sh](infra/api-edge/web-function.sh); `aws lambda-web` needs AWS CLI ≥ 2.37.13.
+- **CloudFront (API)**: `E1KTIK2H0W8J2Q`. Behaviors `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` use `ChronasApiPublicV3` (cached only when the origin says `public`); the default uses `ChronasApiDynamicV3`. Both key on `Authorization`; origin request policy AllViewerExceptHostHeader; 5xx are not cached. Managed with [infra/api-edge/](infra/api-edge/README.md).
+- **Rollback path (no traffic, kept for now)**: API Gateway HTTP API `2g4uy0bdoe` with its `api.chronas.org` custom domain, and the classic Lambda `ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` (nodejs22.x, 512 MB, handler `lambda-handler.handler`), still updated by every deploy. Rollback: `infra/api-edge/route53.sh rollback` and `restore-cloudfront.sh`.
 - **Database**: DynamoDB (8 in-use tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
 - **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
-- **Secrets**: AWS Secrets Manager — `/chronas/secrets` (JWT secret). The old `/chronas/docdb/*` secrets were unlinked 2026-05-04.
-- **CloudFront (API)**: Distribution `E1KTIK2H0W8J2Q` (`d24mkpax7rmotx.cloudfront.net`) caches API responses at edge. DNS `api.chronas.org` → CloudFront → API Gateway origin. Cache policy respects origin `Cache-Control` headers. Invalidated on each deploy via `deploy-prod.yml`.
-- **Deployment**: GitHub Actions ([`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml)) on push to `master` — tests → zip → `aws lambda update-function-code` → CloudFront invalidation → Postman → auto-rollback on failure. **No CDK in the deploy path.** The workflow only reads the Lambda function name from a CloudFormation stack output.
+- **Secrets**: AWS Secrets Manager `/chronas/secrets`; `config/bootstrap.js` loads `JWT_SECRET` from it before the app is imported. No secrets in Web Function environment variables.
+- **Deployment**: GitHub Actions ([`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml)) on push to `master`: tests (Node 22 and 24) → zip → new Web Function revision → endpoint moved → CloudFront invalidation → `/v1/version` check → Postman → automatic rollback to the previous revision on failure → classic Lambda updated. **No CDK in the deploy path.**
 - **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org` via CloudFront
-- **Cost**: ~$5-8/mo (DynamoDB ~$3, CloudFront $0 free tier, API Gateway ~$1, Lambda on ARM64 ~$1, Secrets Manager + Logs ~$1). No NAT Gateway.
+- **Cost**: September 2026 was $5.56; the Web Function adds an estimated $3–6/mo (memory is billed while environments are up). Logs are kept 3 days. No NAT Gateway, no WAF.
 
 ### Lambda Entry Points
 
-[web-server.js](web-server.js) is the entry for the Lambda Web Function runtime (Node 24, `AWS_LAMBDA_NODEJS_ENTRYPOINT=web-server.js`, see [docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md](docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md)): it listens on `AWS_LAMBDA_HTTP_ENDPOINT` immediately and holds requests until bootstrap finishes. [lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config and creates the Express app — no database connection step (DynamoDB-only). App instance is cached across warm invocations.
+[index.js](index.js) → [web-server.js](web-server.js) is the entry for the Lambda Web Function runtime (Node 24; the runtime always loads `index.js`): it listens on `AWS_LAMBDA_HTTP_ENDPOINT` immediately and holds requests until bootstrap finishes. [lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config and creates the Express app — no database connection step (DynamoDB-only). App instance is cached across warm invocations.
 
 ### DynamoDB Tables
 
