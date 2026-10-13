@@ -2,14 +2,14 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import { expect } from 'chai';
 
 import BoundedCache from '../../helpers/bounded-cache.js';
-import AreaDynamo from '../../models/dynamo/area.dynamo.js';
+import AreaDynamo, { areaCache } from '../../models/dynamo/area.dynamo.js';
 import MetadataDynamo, { metadataCache } from '../../models/dynamo/metadata.dynamo.js';
 import { cache } from '../../../config/config.js';
 
 /**
  * In-process caches must stay bounded however many distinct URLs a client
  * requests: one client sweeping all ~3,942 area years used to fill the
- * 512 MB function until it timed out. These tests use a fake DynamoDB client,
+ * 512 MB function until it timed out, when the area cache had no limit. These tests use a fake DynamoDB client,
  * so they don't touch the shared dynalite tables.
  */
 
@@ -89,19 +89,42 @@ describe('## Bounded in-process caches', () => {
   });
 
   describe('# areas', () => {
-    it('5,000 distinct area reads add no cache entries and each one reads DynamoDB', async () => {
-      const fake = fakeDocClient((name, input) => ({
-        Item: { _id: input.Key._id, year: +input.Key._id, data: { P: ['RUL', 'cul', 'rel', 'Cap', 1] } }
-      }));
+    const areaItem = id => ({ Item: { _id: id, year: +id, data: { P: ['RUL', 'cul', 'rel', 'Cap', 1] } } });
+
+    beforeEach(() => areaCache.clear());
+    afterEach(() => areaCache.clear());
+
+    it('a 5,000-year sweep keeps at most 100 years in memory', async () => {
+      const fake = fakeDocClient((name, input) => areaItem(input.Key._id));
       globalThis.__TEST_DYNAMO_DOC_CLIENT = fake;
       const before = cache.size();
 
       for (let year = -2000; year < 3000; year += 1) await AreaDynamo.get(String(year));
-      await AreaDynamo.get('1000');
 
-      expect(fake.calls.GetCommand).to.equal(5001);
+      expect(fake.calls.GetCommand).to.equal(5000);
+      expect(areaCache.size).to.equal(100);
+      expect(areaCache.bytes).to.be.at.most(areaCache.maxBytes);
       expect(cache.size()).to.equal(before);
-      expect(metadataCache.size).to.equal(0);
+    });
+
+    it('a repeated read is served from memory', async () => {
+      const fake = fakeDocClient((name, input) => areaItem(input.Key._id));
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = fake;
+      await AreaDynamo.get('1000');
+      const area = await AreaDynamo.get('1000');
+      expect(fake.calls.GetCommand).to.equal(1);
+      expect(area.data.P[0]).to.equal('RUL');
+    });
+
+    it('writes read DynamoDB, and save() drops the cached year', async () => {
+      const fake = fakeDocClient((name, input) => (name === 'GetCommand' ? areaItem(input.Key._id) : {}));
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = fake;
+      await AreaDynamo.get('1000');
+      const forUpdate = await AreaDynamo.get('1000', 'PUT');
+      expect(fake.calls.GetCommand).to.equal(2);
+
+      await forUpdate.save();
+      expect(areaCache.get('1000')).to.equal(undefined);
     });
   });
 

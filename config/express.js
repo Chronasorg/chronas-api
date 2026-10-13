@@ -16,8 +16,7 @@ import APIError from '../server/helpers/APIError.js';
 import winstonInstance from './winston.js';
 import { config } from './config.js';
 import { corsOptions } from './cors.js';
-import { isWebFunction, runtimeName } from './bootstrap.js';
-import { createRequestMetrics } from './request-metrics.js';
+import { isWebFunction } from './bootstrap.js';
 import { buildErrorLoggerOptions } from './error-logger-options.js';
 
 
@@ -35,11 +34,6 @@ app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
-
-// Latency metric for both Lambda runtimes; not emitted in tests or local runs.
-if (runtimeName() !== 'local') {
-  app.use(createRequestMetrics());
-}
 
 // Lambda creates no X-Ray segments for Web Functions, so the SDK would only
 // try to reach a daemon that doesn't exist.

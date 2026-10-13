@@ -17,11 +17,6 @@ const SECRET_KEYS = ['JWT_SECRET'];
 
 export const isWebFunction = () => Boolean(process.env.AWS_LAMBDA_HTTP_ENDPOINT);
 
-export function runtimeName() {
-  if (isWebFunction()) return 'web';
-  return process.env.AWS_LAMBDA_FUNCTION_NAME ? 'event' : 'local';
-}
-
 let secretsClient = null;
 
 function getSecretsClient() {

@@ -8,8 +8,18 @@ import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
+import BoundedCache from '../../helpers/bounded-cache.js';
 
 const TABLE = tableName('areas');
+// Recently read years, so popular years don't cost a GetItem (~17 read units
+// for ~130 KB) on every edge miss. Bounded: one client sweeping all ~3,942
+// years used to fill the 512 MB function when this cache had no limit.
+export const areaCache = new BoundedCache({
+  maxEntries: 100,
+  maxBytes: 16 * 1024 * 1024,
+  maxEntryBytes: 1024 * 1024,
+  ttlMs: 24 * 60 * 60 * 1000
+});
 
 /**
  * Areas DynamoDB model. Simple PK-only table keyed on year (stored as a
@@ -42,13 +52,16 @@ export default class AreaDynamo extends DynamoDocument {
     return new QueryProxy(promise);
   }
 
-  // Not cached in memory: there are ~3,942 years at ~130 KB each, and one
-  // client sweeping them all used to exhaust the function's memory. The edge
-  // caches each year instead, so a miss here is one GetItem.
-  static async get(id) {
+  // Only reads use the cache: a write loads the area and changes it in place.
+  static async get(id, method = 'GET') {
+    const cacheable = method === 'GET' || method === 'HEAD';
+    const cached = cacheable ? areaCache.get(String(id)) : undefined;
+    if (cached) return new AreaDynamo(cached);
+
     const doc = await AreaDynamo.findById(id).exec();
-    if (doc) return doc;
-    throw new APIError('No such area exists!', httpStatus.NOT_FOUND);
+    if (!doc) throw new APIError('No such area exists!', httpStatus.NOT_FOUND);
+    if (cacheable) areaCache.set(String(id), doc.toObject());
+    return doc;
   }
 
   static findOne(filter = {}) {
@@ -78,6 +91,7 @@ export default class AreaDynamo extends DynamoDocument {
       TableName: TABLE,
       Item: item
     }));
+    areaCache.delete(String(item._id));
     return this;
   }
 

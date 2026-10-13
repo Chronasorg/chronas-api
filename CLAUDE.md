@@ -72,7 +72,6 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - [lambda-config.js](config/lambda-config.js) — Lambda-specific config loading
 - [lambda-app.js](config/lambda-app.js) — Lambda initialization (config load + Express app — no DB step)
 - [bootstrap.js](config/bootstrap.js) — runtime-neutral startup: loads `JWT_SECRET` from Secrets Manager (`SECRET_CONFIG_NAME`) into `process.env`, where it wins over an environment variable, **before** the Express app is imported (`config.js` and every route read it at module load)
-- [request-metrics.js](config/request-metrics.js) — one CloudWatch EMF line per request (`Chronas/Api` `LatencyMs`, dimensions `Runtime` and `Version` only; route template, method and status as plain fields)
 - [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
 - [performance.js](config/performance.js) — Cold/warm start tracking, Lambda metrics
 
