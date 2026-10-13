@@ -1,0 +1,123 @@
+name: API edge (CloudFront, Route 53)
+
+# Manual changes to the api.chronas.org edge, phase by phase
+# (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md, scripts in infra/api-edge/).
+# Every action is a dry run unless `confirm` holds the exact phrase that the
+# dry run prints. Runs in the `production-edge` environment, which must have
+# a required reviewer before this workflow is used.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Action
+        type: choice
+        required: true
+        options:
+          - snapshot
+          - verify
+          - policies
+          - logging
+          - test-dist-create
+          - test-dist-verify
+          - test-dist-delete
+          - behaviors
+          - origin
+          - restore
+          - dns-status
+          - dns-cutover
+          - dns-rollback
+      args:
+        description: "Extra arguments: e.g. '--assign markers=WebFunctionOrigin' for origin, '<run-id>/api-edge/<snapshot-dir>' for restore"
+        required: false
+        default: ''
+      confirm:
+        description: Exact confirmation phrase from the dry run (empty = dry run)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+# Shared with deploy-prod.yml: never change the edge during a deploy.
+concurrency:
+  group: chronas-api-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  BACKUP_PREFIX: s3://chronas-lambda-deployments/infra-backups/api-edge
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production-edge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile chronas-prod
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
+          aws configure set region ${{ env.AWS_REGION }} --profile chronas-prod
+
+      - name: Run ${{ inputs.action }}
+        env:
+          ACTION: ${{ inputs.action }}
+          ARGS: ${{ inputs.args }}
+          CONFIRM: ${{ inputs.confirm }}
+          SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          read -ra EXTRA <<< "$ARGS"
+          APPLY=()
+          if [ -n "$CONFIRM" ]; then APPLY=(--apply --confirm "$CONFIRM"); fi
+          cd infra/api-edge
+          DIRECT=https://2g4uy0bdoe.execute-api.eu-west-1.amazonaws.com
+          case "$ACTION" in
+            snapshot)         ./snapshot.sh manual ;;
+            verify)           node verify.mjs --base https://api.chronas.org --direct "$DIRECT" --out ../backups/verify.json "${EXTRA[@]}" ;;
+            policies)         ./policies.sh "${APPLY[@]}" ;;
+            logging)          ./logging.sh "${APPLY[@]}" ;;
+            test-dist-create) ./test-distribution.sh create "${APPLY[@]}" ;;
+            test-dist-delete) ./test-distribution.sh delete "${APPLY[@]}" ;;
+            test-dist-verify)
+              HOST="https://$(./test-distribution.sh domain)"
+              node verify.mjs --base "$HOST" --direct "$DIRECT" --expect-cloudfront --out ../backups/verify-test-distribution.json
+              npx --yes newman@6.2.3 run ../../PostmanTests/chronas-enhanced.postman_collection.json \
+                -e ../../PostmanTests/chronas-api.postman_environment.json \
+                --env-var "baseUrl=$HOST" --env-var "smokePassword=$SMOKE_PASSWORD" \
+                --timeout-request 60000 --delay-request 500 ;;
+            behaviors)        ./apply-cloudfront.sh "${APPLY[@]}" ;;
+            origin)           ./apply-cloudfront.sh "${EXTRA[@]}" "${APPLY[@]}" ;;
+            restore)
+              aws s3 cp "$BACKUP_PREFIX/${EXTRA[0]}/distribution-config.json" /tmp/restore.json --profile chronas-prod
+              ./restore-cloudfront.sh /tmp/restore.json "${APPLY[@]}" ;;
+            dns-status)       ./route53.sh status ;;
+            dns-cutover)      ./route53.sh cutover "${APPLY[@]}" ;;
+            dns-rollback)     ./route53.sh rollback "${APPLY[@]}" ;;
+          esac
+
+      # Snapshots hold distribution, policy, DNS and API Gateway configuration
+      # only: no Lambda environment and no secrets.
+      - name: Keep snapshots
+        if: always()
+        run: |
+          if [ -d infra/backups/api-edge ] || [ -f infra/backups/verify.json ]; then
+            aws s3 cp infra/backups "$BACKUP_PREFIX/${{ github.run_id }}/" --recursive \
+              --exclude '*' --include 'api-edge/*' --include 'verify*.json' --profile chronas-prod
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-edge-${{ inputs.action }}-${{ github.run_id }}
+          path: |
+            infra/backups/api-edge/
+            infra/backups/verify*.json
+          if-no-files-found: ignore
