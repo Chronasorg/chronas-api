@@ -1436,6 +1436,53 @@
       ]
     },
     {
+      "name": "Contact (retired - 410 Gone)",
+      "item": [
+        {
+          "name": "Send Contact Email (retired)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 410 Gone\", function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test(\"Response says the contact API is retired\", function () {",
+                  "    pm.expect(pm.response.json().message).to.include(\"retired\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"from\":\"postman@example.com\",\"subject\":\"retired endpoint check\",\"html\":\"<b>should not be sent</b>\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "contact"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "User Management",
       "item": [
         {
