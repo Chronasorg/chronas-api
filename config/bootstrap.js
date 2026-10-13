@@ -1,0 +1,81 @@
+/**
+ * Runtime-neutral startup, shared by the Event Function (lambda-app.js) and
+ * the Web Function (web-server.js).
+ *
+ * config/config.js reads JWT_SECRET from process.env when it is first
+ * imported, and every route captures config.jwtSecret at module load. So the
+ * secret has to be in process.env before the Express app is imported. The
+ * Secrets Manager value wins over an environment variable, so environment
+ * variables never need to carry it (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md
+ * D8).
+ */
+
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+// Keys copied from the Secrets Manager document into process.env.
+const SECRET_KEYS = ['JWT_SECRET'];
+
+export const isWebFunction = () => Boolean(process.env.AWS_LAMBDA_HTTP_ENDPOINT);
+
+export function runtimeName() {
+  if (isWebFunction()) return 'web';
+  return process.env.AWS_LAMBDA_FUNCTION_NAME ? 'event' : 'local';
+}
+
+let secretsClient = null;
+
+function getSecretsClient() {
+  // Worst case about 6 s (2 attempts × 1 s connect + 2 s response), inside
+  // the Web Function's 10 s listen window and far below the 30 s timeout.
+  secretsClient ||= new SecretsManagerClient({
+    region: process.env.AWS_REGION || process.env.region || 'eu-west-1',
+    maxAttempts: 2,
+    requestHandler: { connectionTimeout: 1000, requestTimeout: 2000 }
+  });
+  return secretsClient;
+}
+
+/**
+ * Copy the secrets from SECRET_CONFIG_NAME into process.env.
+ * @returns {Promise<'secrets-manager'|'environment'>} where JWT_SECRET came from
+ */
+export async function loadSecrets({
+  secretId = process.env.SECRET_CONFIG_NAME,
+  send = command => getSecretsClient().send(command)
+} = {}) {
+  if (!secretId) return 'environment';
+  try {
+    const { SecretString } = await send(new GetSecretValueCommand({ SecretId: secretId }));
+    const values = JSON.parse(SecretString);
+    for (const key of SECRET_KEYS) {
+      if (values[key]) process.env[key] = values[key];
+    }
+    return 'secrets-manager';
+  } catch (error) {
+    // The Event Function keeps working from its environment while it still
+    // has the variable. The Web Function has no such fallback.
+    if (!isWebFunction() && process.env.JWT_SECRET) {
+      console.warn(`Secrets Manager read of ${secretId} failed (${error.name}); using the environment`);
+      return 'environment';
+    }
+    throw error;
+  }
+}
+
+let appPromise = null;
+
+/**
+ * Load the secrets, then import the Express app. Concurrent callers share one
+ * attempt; a failed attempt is forgotten so the next call retries.
+ */
+export function createApp() {
+  appPromise ||= (async () => {
+    await loadSecrets();
+    const { default: app } = await import('./express.js');
+    return app;
+  })().catch((error) => {
+    appPromise = null;
+    throw error;
+  });
+  return appPromise;
+}

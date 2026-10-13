@@ -8,6 +8,7 @@
 import debug from 'debug';
 
 import { loadConfig } from './lambda-config.js';
+import { loadSecrets } from './bootstrap.js';
 
 const debugLog = debug('chronas-api:lambda-app');
 
@@ -95,9 +96,11 @@ export async function initializeApp(forceReload = false) {
     appState.initialized = false;
     appState.initError = null;
 
+    // Secrets must be in process.env before config.js and the routes are
+    // imported (createExpressApp), see config/bootstrap.js.
     const [, config] = await Promise.all([
       preInitializeDependencies(),
-      loadConfig(forceReload)
+      loadSecrets().then(() => loadConfig(forceReload))
     ]);
 
     appState.config = config;

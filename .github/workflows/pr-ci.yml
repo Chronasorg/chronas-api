@@ -14,12 +14,17 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # 22: the Event Function runtime. 24: the only Lambda Web Functions runtime.
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - run: npm ci
@@ -41,3 +46,15 @@ jobs:
 
       - name: Integration tests (round-trip writes through real Express + dynalite)
         run: npm run test:integration
+
+      - name: Start the Web Function entry with Lambda runtime module flags
+        # Whether the Web Functions runtime allows require(esm) is not
+        # documented, so web-server.js must start with it disabled too.
+        env:
+          NODE_ENV: test
+          JWT_SECRET: ci
+          AWS_LAMBDA_HTTP_ENDPOINT: 127.0.0.1:3900
+        run: |
+          node --no-experimental-require-module --no-experimental-detect-module web-server.js &
+          for i in $(seq 1 40); do curl -sf http://127.0.0.1:3900/v1/health && exit 0; sleep 0.25; done
+          echo "::error::web-server.js did not answer /v1/health"; exit 1

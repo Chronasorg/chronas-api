@@ -19,7 +19,31 @@ env:
   AWS_REGION: eu-west-1
 
 jobs:
+  # The Lambda Web Functions runtime is Node 24 only (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md
+  # APP-3). Fail the deploy if the app no longer runs there.
+  node24:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Load app with Lambda runtime module flags
+        run: |
+          node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
+            -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
+
+      - run: npm test
+
+      - run: npm run test:integration
+
   deploy:
+    needs: node24
     runs-on: ubuntu-latest
     environment:
       name: production
