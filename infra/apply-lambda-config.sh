@@ -155,7 +155,7 @@ run_or_print aws --profile "$PROFILE" iam put-role-policy \
 
 # --- DynamoDB: rate-limit counter table -------------------------------------
 # Used by server/middleware/dynamo-rate-store.js for per-IP rate limiting on
-# /auth/* and /contact. Without this table the auth path fails open (logs a
+# /auth/*. Without this table the auth path fails open (logs a
 # warning and lets the request through), but a properly configured prod
 # environment should have it. Idempotent: skips if the table already exists.
 RATE_TABLE="chronas-rate-limits"

@@ -1,11 +1,13 @@
 import express from 'express';
-
-import contactCtrl from '../controllers/contact.controller.js';
-import { contactLimiter } from '../middleware/rate-limit.js';
+import httpStatus from 'http-status';
 
 const router = express.Router();
 
-router.route('/')
-  .post(contactLimiter, contactCtrl.create);
+const gone = (_req, res) => res.status(httpStatus.GONE).json({
+  message: 'The contact API has been retired.'
+});
+
+router.all('/', gone);
+router.all('/*splat', gone);
 
 export default router;

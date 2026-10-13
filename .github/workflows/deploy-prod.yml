@@ -127,7 +127,9 @@ jobs:
             --s3-bucket ${{ env.S3_BUCKET }} \
             --s3-key $S3_KEY \
             --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod
+            --profile chronas-prod \
+            --query '{CodeSha256: CodeSha256, LastUpdateStatus: LastUpdateStatus}' \
+            --output json
           aws lambda wait function-updated \
             --function-name ${{ steps.lambda.outputs.function_name }} \
             --region ${{ env.AWS_REGION }} \
@@ -172,7 +174,9 @@ jobs:
             --s3-bucket ${{ env.S3_BUCKET }} \
             --s3-key ${{ steps.previous.outputs.prev_key }} \
             --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod
+            --profile chronas-prod \
+            --query '{CodeSha256: CodeSha256, LastUpdateStatus: LastUpdateStatus}' \
+            --output json
           aws lambda wait function-updated \
             --function-name ${{ steps.lambda.outputs.function_name }} \
             --region ${{ env.AWS_REGION }} \
