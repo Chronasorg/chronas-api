@@ -4,7 +4,8 @@
  * (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md §6), as pure functions so PR CI
  * can test them against a fixture of the live config.
  *
- *   node edge-config.mjs render   --live live.json --dynamic-id ID --public-id ID [--assign default=ApiGatewayOrigin,...] [--temporary] [--test-distribution]
+ *   node edge-config.mjs render   --live live.json --dynamic-id ID --public-id ID [--assign default=WebFunctionOrigin,...]
+ *                                 [--web-origin DOMAIN --oac ID] [--drop-api-gateway] [--temporary] [--test-distribution]
  *   node edge-config.mjs validate --config target.json --dynamic-id ID --public-id ID [--test-distribution]
  *   node edge-config.mjs policy-spec dynamic|public
  *   node edge-config.mjs check-policy --spec dynamic|public --config policy.json
@@ -125,9 +126,10 @@ export function webFunctionOrigin({ domainName, originAccessControlId }) {
  * @param options.temporary add the /v1/health and /v1/version behaviors (P8a)
  * @param options.webFunction { domainName, originAccessControlId } adds WebFunctionOrigin
  * @param options.testDistribution throwaway P3 copy: no alias, default certificate
+ * @param options.dropApiGateway remove ApiGatewayOrigin (API Gateway is retired)
  */
 export function renderDistributionConfig(live, {
-  policyIds, assign = {}, temporary = false, webFunction = null, testDistribution = false, callerReference
+  policyIds, assign = {}, temporary = false, webFunction = null, testDistribution = false, dropApiGateway = false, callerReference
 } = {}) {
   if (!policyIds?.dynamic || !policyIds?.public) throw new Error('policyIds.dynamic and policyIds.public are required');
   const config = clone(unwrap(live));
@@ -147,6 +149,13 @@ export function renderDistributionConfig(live, {
   }));
   config.CacheBehaviors = { Quantity: behaviors.length, Items: behaviors };
   config.DefaultCacheBehavior = behaviorFrom(template, { cachePolicyId: policyIds.dynamic, targetOriginId: originFor('default') });
+
+  if (dropApiGateway) {
+    const used = new Set([config.DefaultCacheBehavior.TargetOriginId, ...behaviors.map(b => b.TargetOriginId)]);
+    if (used.has(API_GATEWAY_ORIGIN_ID)) throw new Error('a behavior still targets ApiGatewayOrigin');
+    const kept = config.Origins.Items.filter(o => o.Id !== API_GATEWAY_ORIGIN_ID);
+    config.Origins = { Quantity: kept.length, Items: kept };
+  }
 
   config.CustomErrorResponses = {
     Quantity: NO_ERROR_CACHING_CODES.length,
@@ -198,8 +207,6 @@ export function validateDistributionConfig(input, { policyIds, testDistribution 
     if (item?.ResponsePagePath) errors.push(`no custom error page for ${code}`);
   }
 
-  const apiGateway = (config.Origins?.Items || []).find(o => o.Id === API_GATEWAY_ORIGIN_ID);
-  if (!apiGateway) errors.push('ApiGatewayOrigin must stay until P9');
   for (const origin of config.Origins?.Items || []) {
     if (origin.CustomOriginConfig?.OriginProtocolPolicy !== 'https-only') errors.push(`origin ${origin.Id} must be https-only`);
     if (origin.Id === WEB_FUNCTION_ORIGIN_ID && !origin.OriginAccessControlId) errors.push('WebFunctionOrigin needs an origin access control');
@@ -261,7 +268,8 @@ function main(argv) {
     case 'render': {
       const webFunction = args['web-origin'] ? { domainName: args['web-origin'], originAccessControlId: args.oac } : null;
       const config = renderDistributionConfig(readJson(args.live), {
-        policyIds, assign, temporary: Boolean(args.temporary), webFunction, testDistribution: Boolean(args['test-distribution'])
+        policyIds, assign, temporary: Boolean(args.temporary), webFunction, testDistribution: Boolean(args['test-distribution']),
+        dropApiGateway: Boolean(args['drop-api-gateway'])
       });
       const errors = validateDistributionConfig(config, { policyIds, testDistribution: Boolean(args['test-distribution']) });
       if (errors.length) throw new Error(`rendered config is invalid:\n- ${errors.join('\n- ')}`);

@@ -15,36 +15,11 @@ permissions:
   contents: write
 
 env:
-  S3_BUCKET: chronas-lambda-deployments
   AWS_REGION: eu-west-1
   AWS_CLI_VERSION: 2.37.13
 
 jobs:
-  # The Lambda Web Functions runtime is Node 24 only (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md
-  # APP-3). Fail the deploy if the app no longer runs there.
-  node24:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - run: npm ci
-
-      - name: Load app with Lambda runtime module flags
-        run: |
-          node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
-            -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
-
-      - run: npm test
-
-      - run: npm run test:integration
-
   deploy:
-    needs: node24
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -57,17 +32,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - run: npm ci
 
       - name: Load app with Lambda runtime module flags
-        # The Lambda nodejs22.x runtime disables require(esm). GitHub's Node 22
-        # does not, so a CJS dependency that require()s an ESM-only package
-        # (sanitize-html 2.18 → htmlparser2 12, #193) passes tests here and
-        # crashes every request in prod. Loading the app with Lambda's flags
-        # catches that before deploy.
+        # Whether the Web Functions runtime allows require(esm) is not
+        # documented, so the app must load with it disabled (#193).
         run: |
           node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
             -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
@@ -114,17 +86,6 @@ jobs:
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile chronas-prod
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
           aws configure set region ${{ env.AWS_REGION }} --profile chronas-prod
-
-      - name: Get Lambda function name
-        id: lambda
-        run: |
-          FUNCTION_NAME=$(aws cloudformation describe-stacks \
-            --stack-name ChronasApiLambdaStackV2 \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod \
-            --query "Stacks[0].Outputs[?OutputKey=='LambdaFunctionName'].OutputValue" \
-            --output text)
-          echo "function_name=$FUNCTION_NAME" >> $GITHUB_OUTPUT
 
       - name: Create deployment package
         run: |
@@ -259,23 +220,6 @@ jobs:
             echo "::error::After rollback, /v1/version still doesn't report $EXPECTED"
           fi
           exit 1
-
-      # The old path (API Gateway → Event Function) stays current, so a DNS or
-      # CloudFront rollback lands on the same build. It serves no traffic.
-      - name: Update the Event Function (rollback path)
-        if: steps.postman.outcome == 'success'
-        run: |
-          S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
-          aws s3 cp lambda-deployment.zip s3://${{ env.S3_BUCKET }}/$S3_KEY \
-            --region ${{ env.AWS_REGION }} --profile chronas-prod
-          aws lambda update-function-code \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --s3-bucket ${{ env.S3_BUCKET }} --s3-key $S3_KEY \
-            --region ${{ env.AWS_REGION }} --profile chronas-prod \
-            --query LastUpdateStatus --output text
-          aws lambda wait function-updated \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --region ${{ env.AWS_REGION }} --profile chronas-prod
 
       - name: Verify deployment success
         if: steps.postman.outcome == 'success'

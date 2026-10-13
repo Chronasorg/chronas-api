@@ -4,7 +4,7 @@
  * against any base URL. Read-only apart from one login.
  *
  *   SMOKE_PASSWORD=… node verify.mjs --base https://d24mkpax7rmotx.cloudfront.net \
- *     [--direct https://2g4uy0bdoe.execute-api.eu-west-1.amazonaws.com] [--expect-cloudfront] [--out summary.json]
+ *     [--direct <another base URL to compare bodies with>] [--expect-cloudfront] [--out summary.json]
  *
  * Without SMOKE_PASSWORD the authenticated checks are skipped (not passed).
  * Never prints tokens. Exit code 1 if any check fails.

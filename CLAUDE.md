@@ -31,7 +31,7 @@ Single test file:
 cross-env NODE_ENV=test mocha --require server/tests/helpers.js server/tests/unit/dynamo-foundation.test.js --exit
 ```
 
-There is no local-server dev mode. The Lambda is DynamoDB-only; testing is done end-to-end against dev/prod or via dynalite in unit tests. Key required env var: `JWT_SECRET`. Entry point for Lambda is `lambda-handler.js`.
+Local run: `AWS_LAMBDA_HTTP_ENDPOINT=127.0.0.1:3000 JWT_SECRET=dev node index.js` (needs AWS credentials or `DYNAMODB_ENDPOINT` for data). Testing is otherwise via dynalite in unit/integration tests and Postman against production. Key required env var: `JWT_SECRET` (or `SECRET_CONFIG_NAME`). Entry point: `index.js` → `web-server.js`.
 
 ## Production Architecture (AWS, eu-west-1, account 937826731833)
 
@@ -39,7 +39,7 @@ Since 2026-10-13: `api.chronas.org` and `d24mkpax7rmotx.cloudfront.net` → Clou
 
 - **Web Function** (serves all traffic): `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`. Endpoint `prod`, `IamAuth`: only CloudFront may call it (resource policy scoped to `E1KTIK2H0W8J2Q`, OAC `chronas-api-web-oac`); unsigned direct calls get 403. Routing is pinned (`autoDeploymentMode` Disabled) and moved only by deploys. Role `chronas-api-web-function-role`, code in the versioned bucket `chronas-lambda-web-artifacts` (one immutable key per commit; never delete object versions a revision uses). Logs `/aws/lambda/web/chronas-api` (WARN+, 3 days). Managed with [infra/api-edge/web-function.sh](infra/api-edge/web-function.sh); `aws lambda-web` needs AWS CLI ≥ 2.37.13.
 - **CloudFront (API)**: `E1KTIK2H0W8J2Q`. Behaviors `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` use `ChronasApiPublicV3` (cached only when the origin says `public`); the default uses `ChronasApiDynamicV3`. Both key on `Authorization`; origin request policy AllViewerExceptHostHeader; 5xx are not cached. Managed with [infra/api-edge/](infra/api-edge/README.md).
-- **Rollback path (no traffic, kept for now)**: API Gateway HTTP API `2g4uy0bdoe` with its `api.chronas.org` custom domain, and the classic Lambda `ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` (nodejs22.x, 512 MB, handler `lambda-handler.handler`), still updated by every deploy. Rollback: `infra/api-edge/route53.sh rollback` and `restore-cloudfront.sh`.
+- **Retired 2026-10-13**: API Gateway (`2g4uy0bdoe`, its `api.chronas.org` custom domain and regional certificate) and the classic Lambda functions with their CloudFormation stacks. There is no second path to roll back to: a bad deploy rolls back to the previous Web Function revision, and CloudFront changes roll back with `infra/api-edge/restore-cloudfront.sh`.
 - **Database**: DynamoDB (8 in-use tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
 - **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
 - **Secrets**: AWS Secrets Manager `/chronas/secrets`; `config/bootstrap.js` loads `JWT_SECRET` from it before the app is imported. No secrets in Web Function environment variables.
@@ -49,7 +49,7 @@ Since 2026-10-13: `api.chronas.org` and `d24mkpax7rmotx.cloudfront.net` → Clou
 
 ### Lambda Entry Points
 
-[index.js](index.js) → [web-server.js](web-server.js) is the entry for the Lambda Web Function runtime (Node 24; the runtime always loads `index.js`): it listens on `AWS_LAMBDA_HTTP_ENDPOINT` immediately and holds requests until bootstrap finishes. [lambda-handler.js](lambda-handler.js) uses `@vendia/serverless-express` to wrap the Express app. It initializes via [config/lambda-app.js](config/lambda-app.js) which loads config and creates the Express app — no database connection step (DynamoDB-only). App instance is cached across warm invocations.
+[index.js](index.js) → [web-server.js](web-server.js) is the entry for the Lambda Web Function runtime (Node 24; the runtime always loads `index.js`): it listens on `AWS_LAMBDA_HTTP_ENDPOINT` immediately and holds requests until [config/bootstrap.js](config/bootstrap.js) has loaded the secret and imported the Express app. One process serves many concurrent requests, so keep request data out of module-level state.
 
 ### DynamoDB Tables
 
@@ -63,7 +63,8 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 
 - **Mongoose + DocumentDB**: All driver code removed 2026-05-04. Final DocumentDB snapshot: `chronas-docdb-final-snapshot-2026-04-29`.
 - **VPC**: Lambda detached from VPC 2026-04-29. VPC ENI IAM permissions removed 2026-05-04.
-- **CDK**: `chronas-cdk` sibling repo retired as the infra source 2026-05-04. The stacks still exist in CloudFormation (needed for the `LambdaFunctionName` output the deploy workflow reads) — but **do not run `cdk deploy`** and **do not run `cdk destroy`**. See [infra/README.md](infra/README.md).
+- **CDK**: `chronas-cdk` sibling repo retired as the infra source 2026-05-04. **Never run `cdk deploy` or `cdk destroy`.** The API stacks (`ApiGatewayStack`, `ChronasApiLambdaStack*`, `DnsStack`, `MetaDataLinkStack`, `LambdaDeploymentStack`, `CloudwatchStack`) were deleted 2026-10-13. The remaining stacks (`SecretStack` holds `/chronas/secrets`; frontend, certificate, Amplify, network, CodeBuild and the GitHub user stacks) are not part of the API path; don't delete them without checking what they hold.
+- **API Gateway + classic Lambda**: retired 2026-10-13 after the move to the Web Function (see [docs/WEB_FUNCTION_CUTOVER.md](docs/WEB_FUNCTION_CUTOVER.md)).
 - **Application Insights**: Azure telemetry removed 2026-05-04.
 - Azure Pipelines, Travis CI, Docker/Kubernetes, CodeBuild — all disabled. GitHub Actions is the sole deployment pipeline.
 
@@ -71,13 +72,11 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 
 **Config layer** (`config/`):
 - [config.js](config/config.js) — Joi-validated env vars. Supports Lambda env (`process.env.chronasConfig` JSON) or local `.env` via dotenv
-- [lambda-config.js](config/lambda-config.js) — Lambda-specific config loading
-- [lambda-app.js](config/lambda-app.js) — Lambda initialization (config load + Express app — no DB step)
 - [bootstrap.js](config/bootstrap.js) — runtime-neutral startup: loads `JWT_SECRET` from Secrets Manager (`SECRET_CONFIG_NAME`) into `process.env`, where it wins over an environment variable, **before** the Express app is imported (`config.js` and every route read it at module load)
-- [express.js](config/express.js) — Middleware stack: body-parser, CORS, Helmet, Winston, AWS X-Ray, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
+- [express.js](config/express.js) — Middleware stack: `no-store` default, body-parser, CORS, Helmet, Winston, performance monitoring. CORS allows any `https://*.chronas.org` subdomain by default via regex; additional origins can be added via `ALLOWED_ORIGINS` env var (comma-separated)
 - [performance.js](config/performance.js) — Cold/warm start tracking, Lambda metrics
 
-**Request flow**: API Gateway → Lambda handler → `@vendia/serverless-express` → Express middleware → `/v1` routes → controllers → DynamoDB models (`server/models/dynamo/`)
+**Request flow**: CloudFront → Web Function endpoint (OAC) → `web-server.js` → Express middleware → `/v1` routes → controllers → DynamoDB models (`server/models/dynamo/`)
 
 **Conventions**:
 - Routes, controllers, and models follow 1:1 naming per resource (e.g., `marker.route.js` / `marker.controller.js` / `marker.model.js`)
@@ -110,4 +109,4 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 
 ## Infrastructure changes
 
-**Never use CDK.** The `chronas-cdk` sibling repo is retired. Infrastructure changes go through the idempotent script at [`infra/apply-lambda-config.sh`](infra/apply-lambda-config.sh), or a direct `aws` CLI command documented in [infra/README.md](infra/README.md). CloudFront and Route 53 changes for `api.chronas.org` go through [`infra/api-edge/`](infra/api-edge/README.md) and the `API edge` workflow, phase by phase as in [docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md](docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). Always snapshot current state into `infra/backups/` before any change (the script does this automatically).
+**Never use CDK.** The `chronas-cdk` sibling repo is retired. Infrastructure changes go through the scripts in [`infra/api-edge/`](infra/api-edge/README.md) (Web Function, CloudFront, alarms), described in [infra/README.md](infra/README.md). Each is a dry run unless called with `--apply --confirm "<phrase>"` and snapshots state into the gitignored `infra/backups/` first. `aws lambda-web` needs AWS CLI ≥ 2.37.13.

@@ -1,189 +1,73 @@
 # Chronas API Infrastructure
 
-**This directory is the source of truth for the chronas-api AWS infrastructure.**
-No CDK, no CloudFormation `cdk deploy` — every resource is either created by
-the GitHub Actions pipeline (`code`) or by the idempotent bash script at
-[`apply-lambda-config.sh`](apply-lambda-config.sh) (`configuration`).
+**This directory is the source of truth for the chronas-api AWS infrastructure.** No CDK. Every resource is created either by the GitHub Actions pipeline (code) or by the scripts in [`api-edge/`](api-edge/README.md) (configuration). The `chronas-cdk` sibling repo is legacy and must not be deployed.
 
-The `chronas-cdk` sibling repo is **legacy and must not be deployed**. The CDK
-stacks still exist in CloudFormation but their templates have drifted from
-reality. Keep them for CloudFormation-output lookups only (the deploy workflow
-reads `LambdaFunctionName` from stack outputs).
+Since 2026-10-13 the API runs as a **Lambda Web Function behind CloudFront**. API Gateway and the classic Lambda function were retired the same day. History: [docs/WEB_FUNCTION_CUTOVER.md](../docs/WEB_FUNCTION_CUTOVER.md).
 
-## Current production state
+## Current production state (account `937826731833`, `eu-west-1`)
+
+```text
+chronas.org (frontend) ──► d24mkpax7rmotx.cloudfront.net ─┐
+api.chronas.org (legacy site, third parties) ── alias ────┤  CloudFront E1KTIK2H0W8J2Q
+                                                           ▼  OAC (SigV4, always-amz-auth)
+                                       Lambda Web Function "chronas-api", endpoint "prod"
+                                                           ▼
+                                       DynamoDB · S3 (statistics) · Secrets Manager
+```
 
 | Resource | Setting |
 | --- | --- |
-| Lambda function | `ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` |
-| Region | `eu-west-1` |
-| Account | `937826731833` |
-| Runtime | `nodejs22.x` |
-| **Architecture** | **`arm64`** (switched 2026-05-04 for ~20% Lambda cost reduction + faster cold starts) |
-| Memory | 512 MB |
-| Timeout | 30 s |
-| **VPC** | **None** (detached; DynamoDB/Secrets Manager/S3 reach over public internet) |
-| Handler | `lambda-handler.handler` |
-| Package size | ~35 MB (down from 62.5 MB after Mongoose/DocumentDB removal) |
-| Execution role | `ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI` |
+| Web Function | `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`; 2 vCPU / 2 GB per environment |
+| Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 2, `rateLimit` 100 req/s |
+| Revision settings | timeout 25 s, 64 concurrent requests per environment, environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
+| Execution role | `chronas-api-web-function-role`: policy in [`api-edge/web-function-role-policy.json`](api-edge/web-function-role-policy.json) |
+| Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
+| CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`), default on `ChronasApiDynamicV3`; both key on `Authorization`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
+| DNS | `api.chronas.org` A → alias of `d24mkpax7rmotx.cloudfront.net` (zone `Z005461139KF8GDMY491N`) |
+| Secrets | Secrets Manager `/chronas/secrets`; the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)) |
+| Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days |
+| Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh)), plus the DynamoDB RCU and throttle alarms |
 
 ### Data layer
 
-All persistent state lives in **DynamoDB** (PAY_PER_REQUEST, PITR enabled,
-deletion protection on). Pre-computed stats JSON is in S3.
+All persistent state lives in **DynamoDB** (PAY_PER_REQUEST, PITR enabled, deletion protection on). Pre-computed statistics JSON is in S3.
 
 | Table | Purpose |
 | --- | --- |
 | `chronas-markers` | Markers (GSI-TypeYear, GSI-PartOf) |
 | `chronas-areas` | Province/area snapshots per year |
-| `chronas-metadata` | Entity metadata (provinces, ruler, religion, culture) — large items gzip-compressed |
+| `chronas-metadata` | Entity metadata (provinces, ruler, religion, culture); large items gzip-compressed |
 | `chronas-users` | User accounts (PK = lowercased email) |
 | `chronas-flags` | Crowdsourced correction flags |
 | `chronas-revisions` | Edit history (GSI-EntityTimestamp) |
 | `chronas-links` | Normalized per-entity links |
-| `chronas-board` | Forum posts/discussions/opinions |
-| `chronas-rate-limits` | Per-IP rate-limit counters for /auth/* and /contact (TTL on `expires_at`) |
-| `chronas-collections` | (unused — `/v1/collections` retired, returns 410) |
-| `chronas-games` | (unused — `/v1/game` retired, returns 410) |
+| `chronas-rate-limits` | Per-IP rate-limit counters for `/auth/*` (TTL on `expires_at`) |
+| `chronas-board` | Forum posts (unused: `/v1/board/forum/*` returns 410) |
+| `chronas-collections` | (unused: `/v1/collections` retired, returns 410) |
+| `chronas-games` | (unused: `/v1/game` retired, returns 410) |
 
-S3 bucket `chronas-frontend-new` hosts both the frontend (`chronas.org`) and
-the pre-computed statistics JSON at `api/statistics.json`.
+The bucket `chronas-frontend-new` hosts both the frontend (`chronas.org`) and the pre-computed statistics JSON at `api/statistics.json`. The API may only read, write and list that one key.
 
-### IAM role policies
+## Deployment
 
-**Managed policies attached:**
-- `AWSLambdaBasicExecutionRole` — CloudWatch Logs.
+GitHub Actions, [`.github/workflows/deploy-prod.yml`](../.github/workflows/deploy-prod.yml), on every push to `master`:
 
-**Inline policies**, both applied by [`apply-lambda-config.sh`](apply-lambda-config.sh):
-- [`iam-inline-policy.json`](iam-inline-policy.json): the app-level policy (SQS DLQ + Secrets Manager for `/chronas/secrets`).
-- [`iam-dynamodb-policy.json`](iam-dynamodb-policy.json) (`ChronasDynamoDBAccess`): the `chronas-*` DynamoDB tables, plus read and write on the one S3 object the API owns, `chronas-frontend-new/api/statistics.json`. The frontend's files in the same bucket are out of reach. `s3:ListBucket` stays so a missing statistics object reads as 404, not 403.
+1. Tests on Node 24, including a load with Lambda's module flags.
+2. `npm ci --omit=dev` and `zip`.
+3. `web-function.sh deploy`: upload, new revision with the full configuration, wait for Active, move the `prod` endpoint, wait.
+4. CloudFront invalidation of `/v1/*` (waits).
+5. `/v1/version` must report the new commit.
+6. Postman smoke tests against `https://api.chronas.org`.
+7. If 3–6 fail: the endpoint goes back to the previous revision automatically.
 
-### Environment variables
+## Changing infrastructure
 
-See [`backups/env-vars-after.json`](backups/env-vars-after.json) for the full
-set. Notable:
+Everything goes through [`api-edge/`](api-edge/README.md), never the console. Every script checks the account, is a dry run unless called with `--apply --confirm "<phrase>"`, and snapshots into the gitignored `backups/`.
 
-- `SECRET_CONFIG_NAME=/chronas/secrets` — JWT secret
-- `USE_DYNAMODB_*=true` for all in-scope models (areas, markers, metadata,
-  users, flags, revisions, board)
-- `STATISTICS_S3_BUCKET=chronas-frontend-new`, `STATISTICS_S3_KEY=api/statistics.json`
-- `ALLOWED_ORIGINS` — CORS allowlist (chronas.org subdomains are also
-  accepted by regex in [config/express.js](../config/express.js))
-
-Removed on 2026-05-04 (no longer needed): `VPC_ID`, `SECRET_DB_NAME`,
-`SECRET_MODERNIZED_DB_NAME`, `DOCDB_TLS_ENABLED`.
-
-[`apply-lambda-config.sh`](apply-lambda-config.sh) removes the keys in
-[`env-vars-to-remove.txt`](env-vars-to-remove.txt) and sets the non-secret
-`KEY=VALUE` pairs in [`env-vars-to-set.txt`](env-vars-to-set.txt), currently
-`NODE_OPTIONS=--enable-source-maps --max-old-space-size=384` (a heap below the
-512 MB function size; it was 900).
-
-### Edge / API layer
-
-| Layer | Value |
-| --- | --- |
-| Domain | `api.chronas.org` → CloudFront → API Gateway HTTP API |
-| CloudFront distribution | `E1KTIK2H0W8J2Q` (`d24mkpax7rmotx.cloudfront.net`) |
-| API Gateway | `ChronasApiGateway` (HTTP API) |
-| Cache policy | Respects origin `Cache-Control`; invalidated on every deploy |
-| DLQ | SQS: `ChronasApiLambdaStackV2-ChronasApiLambdaFunctionDeadLetterQueueE0BB-kQ5FG2we8vvn` |
-
-### CloudWatch Logs retention
-
-| Log group | Retention |
-| --- | --- |
-| `/aws/lambda/ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` | 3 days |
-| `ApiGatewayStack-ChronasApiGatewayAPIGWAccessLogsA52DB10A-iojowSf05IEk` | 3 days |
-
-Logs are kept only briefly (maintainer decision, 2026-10-13; 14 days before,
-per issue #160). The verbose `DEBUG=chronas-api:*` output is off; errors are
-still logged. Reconciled idempotently by
-[`apply-lambda-config.sh`](apply-lambda-config.sh) (`logs put-retention-policy`).
-
-### Deployment
-
-GitHub Actions — [`.github/workflows/deploy-prod.yml`](../.github/workflows/deploy-prod.yml).
-Triggered on `push` to `master`. Steps:
-
-1. `npm ci && npm test` (dynalite-backed mocha)
-2. `npm ci --omit=dev` + `zip` the package
-3. Upload to S3 (`chronas-lambda-deployments/deploys/`)
-4. `aws lambda update-function-code --s3-bucket ... --s3-key ...`
-5. `aws cloudfront create-invalidation --paths /v1/*`
-6. Warm-up curls
-7. Newman post-deploy smoke tests (auto-rollback to previous S3 zip on failure)
-8. `npm version patch` + push
-
-**No CDK involved in deploys.** The only CDK touchpoint is step 4 which reads
-the Lambda function name from a CloudFormation stack output. That remains
-stable even if CDK is never run again.
-
-## Making infra changes
-
-**Always use the CLI**, not CDK. Two options:
-
-1. Edit [`apply-lambda-config.sh`](apply-lambda-config.sh) and re-run it
-   (it's idempotent).
-2. One-off fix? Run the exact `aws` command, then snapshot the result into
-   `backups/lambda-config-after-*.json` and update this README.
-
-⚠️ **`infra/backups/` is gitignored and contains secrets.** Lambda
-`get-function-configuration` output includes `FACEBOOK_CLIENT_SECRET`,
-`GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_SECRET`, `JWT_SECRET` etc. in
-cleartext. Keep the snapshots local-only for your own rollback; never
-commit them. `apply-lambda-config.sh` refuses to run if the directory is
-not gitignored.
-
-Before any change:
-
-```bash
-FN=ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM
-ROLE=ChronasApiLambdaStackV2-ChronasApiLambdaFunctionSer-qZwYlfEnXSFI
-
-# Snapshot current state for rollback (stays LOCAL, not committed)
-aws lambda get-function-configuration --function-name "$FN" \
-  --region eu-west-1 --profile chronas-prod \
-  > infra/backups/lambda-config-before-$(date +%Y%m%d-%H%M%S).json
-
-aws iam get-role-policy --role-name "$ROLE" \
-  --policy-name ChronasApiLambdaFunctionServiceRoleDefaultPolicy8E461284 \
-  --profile chronas-prod \
-  > infra/backups/iam-inline-policy-before-$(date +%Y%m%d-%H%M%S).json
-```
-
-After any change, run the Postman smoke against prod:
-
-```bash
-npm run test:postman:prod
-```
-
-## Rollback
-
-Every change is reversible from the snapshots in [`backups/`](backups/):
-
-- **Revert env vars:** `aws lambda update-function-configuration --function-name "$FN" --environment 'file://backups/<before>.json'` (pass the `Environment` field only).
-- **Revert inline IAM:** `aws iam put-role-policy --role-name "$ROLE" --policy-name ChronasApiLambdaFunctionServiceRoleDefaultPolicy8E461284 --policy-document 'file://backups/iam-inline-policy-before-*.json'`.
-- **Revert ARM64 → x86_64:** `aws lambda update-function-code --function-name "$FN" --s3-bucket chronas-lambda-deployments --s3-key deploys/<last-x86-zip> --architectures x86_64`.
-- **Re-attach VPC policy:** `aws iam attach-role-policy --role-name "$ROLE" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole`.
-
-## Safety rules
-
-- **Never run `cdk destroy`** against any stack — the Lambda, its IAM role, and
-  the CloudFormation outputs the deploy workflow depends on would disappear.
-- **Never run `cdk deploy`** — templates have drifted and would re-introduce
-  VPC attachment, Mongoose secrets, and x86_64 architecture.
-- **Do not delete** the `ChronasApiLambdaStackV2` CloudFormation stack for the
-  same reason — the deploy workflow reads `LambdaFunctionName` from its
-  outputs.
+- Web Function: `api-edge/web-function.sh` (`status`, `deploy`, `rollback <revision>`, distribution access). It needs AWS CLI ≥ 2.37.13 for `aws lambda-web`; set `AWS_WEB_CLI` if your `aws` is older. Endpoint settings such as `maxEnvironments` and `rateLimit`: `aws lambda-web update-web-function-endpoint`.
+- CloudFront: `api-edge/apply-cloudfront.sh` (render, validate, diff, apply with the ETag), and `restore-cloudfront.sh <snapshot>` to undo.
+- Checks against any base URL: `api-edge/verify.mjs`, or the `API edge` workflow's `smoke` action (adds the full Postman suite).
 
 ## Cost
 
-~$5–8/month as of 2026-05-04:
-
-- DynamoDB: ~$3 (pay-per-request, dominated by the forum scan — cached 1 h)
-- CloudFront: $0 (within free tier)
-- API Gateway: ~$1
-- Lambda: ~$1 (ARM64)
-- Secrets Manager, CloudWatch Logs: ~$1
-
-No NAT Gateway cost — Lambda is not in a VPC.
+September 2026: $5.56 (DynamoDB $2.04, Route 53 $0.74, Secrets Manager $0.42, CloudWatch $0.31, S3 $0.22, tax $0.89). The Web Function adds roughly $8–12/month: memory is billed while its environments are up, and Lambda keeps about two of them running. API Gateway (≈ $0.85) is gone. No NAT Gateway, no WAF.
