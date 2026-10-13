@@ -8,10 +8,8 @@ import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
-import { cache } from '../../../config/config.js';
 
 const TABLE = tableName('areas');
-const AREA_CACHE_TTL = 1000 * 60 * 60 * 24;
 
 /**
  * Areas DynamoDB model. Simple PK-only table keyed on year (stored as a
@@ -44,16 +42,12 @@ export default class AreaDynamo extends DynamoDocument {
     return new QueryProxy(promise);
   }
 
+  // Not cached in memory: there are ~3,942 years at ~130 KB each, and one
+  // client sweeping them all used to exhaust the function's memory. The edge
+  // caches each year instead, so a miss here is one GetItem.
   static async get(id) {
-    const cacheKey = `area:${id}`;
-    const cached = cache.get(cacheKey);
-    if (cached) return new AreaDynamo(cached);
-
     const doc = await AreaDynamo.findById(id).exec();
-    if (doc) {
-      cache.put(cacheKey, doc.toObject(), AREA_CACHE_TTL);
-      return doc;
-    }
+    if (doc) return doc;
     throw new APIError('No such area exists!', httpStatus.NOT_FOUND);
   }
 
@@ -84,7 +78,6 @@ export default class AreaDynamo extends DynamoDocument {
       TableName: TABLE,
       Item: item
     }));
-    cache.del(`area:${item._id}`);
     return this;
   }
 
