@@ -97,41 +97,6 @@ async function createLocalUser({ email, password, username }) {
 }
 
 /**
- * Log in or register a user returning from Google, Facebook or GitHub.
- * Only the passport callbacks call this, with a profile built server-side.
- */
-async function loginOrCreateOAuthUser(req, res, next, profile) {
-  try {
-    const id = profile.email || profile.id;
-    const existing = await User.findById(id).exec();
-
-    if (existing) {
-      if (profile.email === existing.email) {
-        existing.loginCount = (Number(existing.loginCount) || 0) + 1;
-        await existing.save();
-        return res.redirect(`${config.chronasHost}/?token=${signToken(existing)}`);
-      }
-      return next(new APIError('This username/ email already exists with a different email address!', 400));
-    }
-
-    const user = new User({
-      ...newUserDefaults(),
-      _id: id,
-      avatar: profile.avatar,
-      website: profile.website,
-      username: profile.username,
-      name: profile.name || profile.username || profile.id,
-      email: profile.email,
-      authType: profile.authType
-    });
-    await user.save();
-    return res.redirect(`${config.chronasHost}/?token=${signToken(user)}`);
-  } catch (e) {
-    return next(e);
-  }
-}
-
-/**
  * Update existing user. Owners may change their profile fields and their
  * password (with the current one); privilege, karma and subscription are
  * admin-only, and the email (the account id) can't be changed.
@@ -294,4 +259,4 @@ async function remove(req, res, next) {
   }
 }
 
-export default { changePoints, incrementLoginCount, load, get, createLocalUser, loginOrCreateOAuthUser, signToken, update, list, remove };
+export default { changePoints, incrementLoginCount, load, get, createLocalUser, update, list, remove };

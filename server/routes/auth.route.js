@@ -1,4 +1,5 @@
 import express from 'express';
+import httpStatus from 'http-status';
 import { expressjwt as expressJwt } from 'express-jwt';
 import rateLimit from 'express-rate-limit';
 
@@ -6,9 +7,6 @@ import { validate } from '../helpers/validation.js';
 import paramValidation from '../../config/param-validation.js';
 import { config } from '../../config/config.js';
 import authCtrl from '../controllers/auth.controller.js';
-import facebook from '../auths/facebook.js';
-import google from '../auths/google.js';
-import github from '../auths/github.js';
 import { DynamoRateLimitStore } from '../middleware/dynamo-rate-store.js';
 
 const router = express.Router();
@@ -45,17 +43,15 @@ router.route('/signup')
 router.route('/refresh')
   .post(refreshLimiter, expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }), authCtrl.refresh);
 
-/** GET /v1/auth/login/facebook - Returns token if third party auth successful */
-router.route('/login/facebook')
-  .get(facebook.authenticateUser);
+// Google, Facebook and GitHub logins were retired on 2026-10-13: their client
+// secrets were revoked and neither frontend could complete these logins.
+const socialLoginGone = (_req, res) => res.status(httpStatus.GONE).json({
+  message: 'Social logins have been retired. Log in with email and password.'
+});
 
-/** GET /v1/auth/login/google - Returns token if third party auth successful */
-router.route('/login/google')
-  .get(google.authenticateUser);
-
-/** GET /v1/auth/login/github - Returns token if third party auth successful */
-router.route('/login/github')
-  .get(github.authenticateUser);
-
+['facebook', 'google', 'github', 'twitter'].forEach((provider) => {
+  router.all(`/login/${provider}`, socialLoginGone);
+  router.all(`/login/${provider}/*splat`, socialLoginGone);
+});
 
 export default router;

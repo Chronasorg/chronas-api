@@ -13,7 +13,7 @@ The frontend is available at [Chronasorg/chronas-frontend](https://github.com/Ch
 - **Runtime**: Node.js 22.x (native ESM) on AWS Lambda via [`@vendia/serverless-express`](https://github.com/vendia/serverless-express)
 - **Database**: Amazon DynamoDB (8 in-use tables, on-demand billing)
 - **Caching**: CloudFront edge cache (free tier) + in-memory Lambda cache + `Cache-Control` headers
-- **Auth**: JWT + OAuth (Facebook, Google, GitHub)
+- **Auth**: JWT (email and password; social logins retired 2026-10-13)
 - **Validation**: Joi + express-validation
 - **Monitoring**: AWS X-Ray, CloudWatch dashboard
 - **Testing**: Mocha + Chai + Supertest (223 tests), Newman/Postman (65 assertions across 36 requests). See [PostmanTests/](PostmanTests/)
