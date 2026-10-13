@@ -181,8 +181,11 @@ jobs:
           infra/api-edge/web-function.sh deploy lambda-deployment.zip "${GITHUB_SHA::7}" \
             --apply --confirm "deploy chronas-api"
 
+      # The endpoint has already moved here: a failure must roll back too.
       - name: Invalidate CloudFront cache
+        id: invalidate
         if: steps.web.outcome == 'success'
+        continue-on-error: true
         run: |
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id E1KTIK2H0W8J2Q \
@@ -199,7 +202,7 @@ jobs:
       # real response proves the deploy. Failing counts like a Postman failure.
       - name: Check the live version is the new commit
         id: version
-        if: steps.web.outcome == 'success'
+        if: steps.web.outcome == 'success' && steps.invalidate.outcome == 'success'
         continue-on-error: true
         run: |
           EXPECTED="${GITHUB_SHA::7}"
@@ -230,13 +233,13 @@ jobs:
       # fails Postman live (for example when rolling back would restore a
       # build with a known security hole). The run still fails.
       - name: Keep deployment despite test failure
-        if: (steps.web.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
+        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
         run: |
           echo "::error::Post-deploy checks FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
           exit 1
 
       - name: Roll back the Web Function on test failure
-        if: (steps.web.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
+        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
         run: |
           echo "Deploy or checks FAILED -- moving the endpoint back to ${{ steps.previous.outputs.prev_revision }}"
           infra/api-edge/web-function.sh rollback "${{ steps.previous.outputs.prev_revision }}" \

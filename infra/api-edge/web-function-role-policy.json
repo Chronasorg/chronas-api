@@ -23,14 +23,22 @@
     {
       "Sid": "StatisticsObject",
       "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
       "Resource": "arn:aws:s3:::chronas-frontend-new/api/statistics.json"
     },
     {
-      "Sid": "StatisticsMissingIs404",
+      "Sid": "StatisticsListOnlyItsKey",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::chronas-frontend-new"
+      "Resource": "arn:aws:s3:::chronas-frontend-new",
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": "api/statistics.json"
+        }
+      }
     },
     {
       "Sid": "JwtSecret",
@@ -41,7 +49,11 @@
     {
       "Sid": "Logs",
       "Effect": "Allow",
-      "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
       "Resource": [
         "arn:aws:logs:eu-west-1:937826731833:log-group:/aws/lambda/web/chronas-api:*",
         "arn:aws:logs:*:937826731833:log-group:/aws/lambda/web/chronas-api.local:*"
