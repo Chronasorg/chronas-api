@@ -1,23 +1,23 @@
 /**
  * Lambda-Optimized Configuration Module
  *
- * DynamoDB-only: no database URI configuration. Secrets Manager still used for
- * the JWT config under SECRET_CONFIG_NAME.
+ * DynamoDB-only: no database URI configuration. Secrets from SECRET_CONFIG_NAME
+ * are already in process.env when this runs: config/bootstrap.js loads them.
  */
 
 import Joi from 'joi';
 import debug from 'debug';
 import memoryCache from 'memory-cache';
 
-import { getApplicationConfig } from './secrets-manager.js';
-
 const debugLog = debug('chronas-api:lambda-config');
 
 let cachedConfig = null;
 let configLoadTime = null;
 
+// Web Functions are only documented to set AWS_LAMBDA_HTTP_ENDPOINT, not the
+// other two, so check it as well.
 export const isLambdaEnvironment = () => {
-  return !!(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+  return !!(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT || process.env.AWS_LAMBDA_HTTP_ENDPOINT);
 };
 
 async function getEnvironmentVariables() {
@@ -34,25 +34,6 @@ async function getEnvironmentVariables() {
       debugLog('Loaded configuration from Lambda environment variable');
     } catch (error) {
       debugLog('Failed to parse chronasConfig JSON:', error.message);
-    }
-  }
-
-  if (process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET) {
-    const secretId = process.env.SECRET_CONFIG_NAME || process.env.CHRONAS_CONFIG_SECRET;
-
-    try {
-      debugLog(`Loading additional configuration from Secrets Manager: ${secretId}`);
-      const secretConfig = await getApplicationConfig(secretId);
-
-      Object.keys(secretConfig).forEach(key => {
-        if (!mergedSecrets[key]) {
-          mergedSecrets[key] = secretConfig[key];
-        }
-      });
-
-      debugLog('Configuration loaded from Secrets Manager');
-    } catch (error) {
-      debugLog('Failed to load configuration from Secrets Manager:', error.message);
     }
   }
 
