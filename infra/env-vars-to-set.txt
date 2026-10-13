@@ -1,0 +1,7 @@
+# Non-secret Lambda environment variables to set on apply, one KEY=VALUE per
+# line. apply-lambda-config.sh merges these into the live environment. Never
+# put a secret here: this file is public. Secrets live in /chronas/secrets.
+
+# V8 heap below the 512 MB function size, so the GC runs before Lambda kills
+# the sandbox (was 900, see docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md §4.3).
+NODE_OPTIONS=--enable-source-maps --max-old-space-size=384
