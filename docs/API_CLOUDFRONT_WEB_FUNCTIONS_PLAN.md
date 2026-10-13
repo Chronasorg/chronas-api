@@ -1,6 +1,6 @@
 # api.chronas.org on CloudFront, with a Lambda Web Function origin
 
-**Status:** revision 2. Phase P1 is in progress; no other phase has started.
+**Status:** revision 2. **Stopped after Phase P1 (2026-10-13).** The maintainer decided that login through CloudFront isn't needed for chronas.org, and that the API must not cost more or keep more logs. P1 is live; P2–P9 are not planned. The P1 latency metric was removed again and a bounded area cache restored to keep costs at the September level.
 **Supersedes:** revision 1 of this plan (2026-10-13) and the 2026-09-23 hard-cutover plan (never executed, deleted 2026-10-13).
 **Implements:** issue #197 (Lambda Web Functions as a CloudFront origin). Tracking issue: #198.
 **Prepared:** 2026-10-13, from read-only inspection of account `937826731833`, AWS documentation current on that date, and a code audit of `chronas-api` and `chronas-frontend`. Revision 2 adds the changes from an external review of revision 1, re-checked against the docs, the code and the account (§16).

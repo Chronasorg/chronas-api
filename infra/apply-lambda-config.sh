@@ -228,11 +228,10 @@ else
 fi
 
 # --- CloudWatch Logs: retention ---------------------------------------------
-# Keep at least 14 days of logs so a 5xx reported 24-72h late (e.g. a weekend
-# incident reported Monday) can still be correlated with surrounding traffic.
-# See issue #160. Cost impact is negligible (<100 MB at current rates).
+# Logs are kept only briefly: they aren't needed beyond recent debugging
+# (maintainer decision 2026-10-13; it was 14 days per issue #160).
 # Idempotent: only calls put-retention-policy when the value differs.
-LOG_RETENTION_DAYS=14
+LOG_RETENTION_DAYS=3
 LOG_GROUPS=(
   "/aws/lambda/$FN"
   "ApiGatewayStack-ChronasApiGatewayAPIGWAccessLogsA52DB10A-iojowSf05IEk"

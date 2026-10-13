@@ -92,14 +92,13 @@ Removed on 2026-05-04 (no longer needed): `VPC_ID`, `SECRET_DB_NAME`,
 
 | Log group | Retention |
 | --- | --- |
-| `/aws/lambda/ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` | 14 days |
-| `ApiGatewayStack-ChronasApiGatewayAPIGWAccessLogsA52DB10A-iojowSf05IEk` | 14 days |
+| `/aws/lambda/ChronasApiLambdaStackV2-ChronasApiLambdaFunction7C-UhX6kGn4FXqM` | 3 days |
+| `ApiGatewayStack-ChronasApiGatewayAPIGWAccessLogsA52DB10A-iojowSf05IEk` | 3 days |
 
-Both raised from the previous 7-day (Lambda) and 3-day (API Gateway access logs)
-settings on 2026-06-18 — 3 days was too short to correlate a 5xx investigation
-with surrounding traffic once a report lands 24–72 h after the fact (issue #160).
-Reconciled idempotently by [`apply-lambda-config.sh`](apply-lambda-config.sh)
-(`logs put-retention-policy`); cost impact is negligible (<100 MB at current rates).
+Logs are kept only briefly (maintainer decision, 2026-10-13; 14 days before,
+per issue #160). The verbose `DEBUG=chronas-api:*` output is off; errors are
+still logged. Reconciled idempotently by
+[`apply-lambda-config.sh`](apply-lambda-config.sh) (`logs put-retention-policy`).
 
 ### Deployment
 

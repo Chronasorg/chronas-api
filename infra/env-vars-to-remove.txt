@@ -21,3 +21,6 @@ FACEBOOK_CLIENT_ID
 FACEBOOK_CLIENT_SECRET
 FACEBOOK_CALLBACK_URL
 TWITTER_CALLBACK_URL
+
+# Verbose debug-module output (chronas-api:*) is not needed (2026-10-13)
+DEBUG
