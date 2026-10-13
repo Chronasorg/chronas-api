@@ -52,7 +52,6 @@
     "helmet": "^8.2.0",
     "http-status": "^2.0.0",
     "joi": "^18.2.3",
-    "js-yaml": "^4.3.2",
     "jsonwebtoken": "^9.0.0",
     "memory-cache": "0.2.0",
     "method-override": "^3.0.0",
@@ -62,7 +61,6 @@
     "passport-facebook": "^3.0.0",
     "passport-github": "^1.1.0",
     "passport-google-oauth": "2.0.0",
-    "swagger-ui-express": "5.0.1",
     "winston": "^3.8.0"
   },
   "overrides": {

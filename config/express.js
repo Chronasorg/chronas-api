@@ -29,23 +29,6 @@ app.set('trust proxy', 2);
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
-// Set up Swagger documentation with graceful fallback
-async function setupSwaggerDocs() {
-  try {
-    const swaggerUi = (await import('swagger-ui-express')).default;
-    const yaml = (await import('js-yaml')).default;
-    const { readFileSync } = await import('node:fs');
-    const swaggerDocument = yaml.load(readFileSync('./swagger.yaml', 'utf8'));
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-    console.log('✅ Swagger API documentation enabled at /api-docs');
-  } catch {
-    console.log('⚠️  Swagger UI not available, API documentation disabled');
-  }
-}
-
-// Initialize Swagger docs asynchronously
-setupSwaggerDocs();
-
 if (config.env === 'development') {
   app.use(logger('dev'));
 }
