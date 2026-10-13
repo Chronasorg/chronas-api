@@ -34,6 +34,9 @@ jobs:
           node --no-experimental-require-module --no-experimental-detect-module --input-type=module \
             -e 'process.env.NODE_ENV="test"; process.env.JWT_SECRET="ci"; await import("./config/express.js"); process.exit(0)'
 
+      - name: Lint (check only)
+        run: npx eslint '*.js' server config
+
       - run: npm test
 
       - name: Integration tests (round-trip writes through real Express + dynalite)
