@@ -61,19 +61,16 @@ function authenticateUser(req, res, next) {
         refreshToken: data.refreshToken
       };
 
-      req.body = {
+      userCtrl.loginOrCreateOAuthUser(req, res, next, {
         id: auth.type + auth.profileId,
         authType: auth.type,
         avatar: auth.avatar,
         email: auth.email,
-        privilege: 1,
         username: auth.username || `${auth.name.first} ${auth.name.last}`,
         name: `${auth.name.first} ${auth.name.last}`,
-        thirdParty: true,
         website: auth.website
-      };
+      });
 
-      userCtrl.create(req, res, next);
 
       // req.session.auth = auth
       //

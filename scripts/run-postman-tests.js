@@ -37,6 +37,8 @@ async function runNewman(collection, environment, outputFile) {
     newman.default.run({
       collection: collectionData,
       environment: environmentData,
+      // The smoke account's password is not in the repo; pass it as API_SMOKE_PASSWORD.
+      envVar: [{ key: 'smokePassword', value: process.env.API_SMOKE_PASSWORD || '' }],
       reporters: ['cli'],
       reporter: {
         cli: { noAssertions: false, noSummary: false }

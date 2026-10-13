@@ -168,15 +168,31 @@ jobs:
       - name: Post-deploy Postman smoke tests
         id: postman
         continue-on-error: true
+        env:
+          SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
         run: |
+          if [ -z "$SMOKE_PASSWORD" ]; then
+            echo "::error::Repository secret API_SMOKE_PASSWORD is not set"
+            exit 1
+          fi
           npm install -g newman
           newman run PostmanTests/chronas-enhanced.postman_collection.json \
             -e PostmanTests/chronas-api.postman_environment.json \
+            --env-var "smokePassword=$SMOKE_PASSWORD" \
             --timeout-request 60000 \
             --delay-request 500
 
+      # Set the repository variable AUTO_ROLLBACK=false to keep a deploy that
+      # fails Postman live (for example when rolling back would restore a
+      # build with a known security hole). The run still fails.
+      - name: Keep deployment despite test failure
+        if: steps.postman.outcome == 'failure' && vars.AUTO_ROLLBACK == 'false'
+        run: |
+          echo "::error::Postman tests FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
+          exit 1
+
       - name: Rollback Lambda on test failure
-        if: steps.postman.outcome == 'failure'
+        if: steps.postman.outcome == 'failure' && vars.AUTO_ROLLBACK != 'false'
         run: |
           echo "Postman tests FAILED -- rolling back Lambda to previous deployment"
           aws lambda update-function-code \

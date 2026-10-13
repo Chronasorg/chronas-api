@@ -36,7 +36,7 @@ router.route('/:metadataId')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // validate(paramValidation.updateSingle),
-    // checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addUpdateRevision,
     metadataCtrl.update)
@@ -55,6 +55,7 @@ router.route('/:metadataId/single')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // validate(paramValidation.updateSingle),
+    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateSingle,
     revisionCtrl.addUpdateSingleRevision

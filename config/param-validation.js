@@ -1,24 +1,6 @@
 import Joi from 'joi';
 
 export default {
-  // POST /v1/users
-  createUser: {
-    body: Joi.object({
-      username: Joi.string().required(),
-      email: Joi.string().email(),
-      password: Joi.string(),
-      avatar: Joi.string(),
-      bio: Joi.string(),
-      website: Joi.string(),
-      name: Joi.string(),
-      education: Joi.string(),
-      authType: Joi.string(),
-      privilege: Joi.number(),
-      thirdParty: Joi.boolean(),
-      signup: Joi.boolean()
-    })
-  },
-
   // POST /v1/markers
   createMarker: {
     body: Joi.object({

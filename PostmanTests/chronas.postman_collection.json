@@ -54,7 +54,7 @@
 					"urlencoded": [
 						{
 							"key": "password",
-							"value": "postman123",
+							"value": "{{smokePassword}}",
 							"type": "text"
 						},
 						{
@@ -1103,19 +1103,22 @@
 			"name": "/users - should create a User",
 			"event": [
 				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.collectionVariables.set(\"testUserPassword\", \"pw-\" + Date.now() + \"-\" + Math.random().toString(36).slice(2));"
+						]
+					}
+				},
+				{
 					"listen": "test",
 					"script": {
 						"id": "314cf22e-909f-4a12-b418-bb73d642c03d",
 						"type": "text/javascript",
 						"exec": [
-							"pm.test(\"Response should contain a valid user\", function () {",
-							"    var jsonData = pm.response.json();",
-							"    ",
-							"    pm.expect(jsonData).to.have.property('username');",
-							"    pm.expect(jsonData).to.have.property('name');",
-							"    pm.expect(jsonData).to.have.property('privilege');",
-							"    pm.expect(jsonData._id).to.eql(\"testUser@test.de\");",
-							"    ",
+							"pm.test(\"Signup returns a token\", function () {",
+							"    pm.expect(pm.response.json().token).to.not.be.empty;",
 							"});",
 							"",
 							"pm.test(\"Status code is 200\", function () {",
@@ -1146,17 +1149,17 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"username\":\"testUser\",\n\t\"email\":\"testUser@test.de\",\n\t\"privilege\":\"1\"\n}"
+					"raw": "{\n\t\"username\":\"testUser\",\n\t\"email\":\"testUser@test.de\",\n\t\"password\":\"{{testUserPassword}}\"\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/v1/users/",
+					"raw": "{{baseUrl}}/v1/auth/signup",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"v1",
-						"users",
-						""
+						"auth",
+						"signup"
 					]
 				}
 			},

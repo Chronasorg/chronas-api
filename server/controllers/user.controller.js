@@ -3,15 +3,17 @@ import httpStatus from 'http-status';
 
 import User from '../models/user.model.js';
 import APIError from '../helpers/APIError.js';
+import checkPrivilege from '../helpers/privileges.js';
 import { config } from '../../config/config.js';
 
 
 /**
- * Load user and append to req.
+ * Load the user named in the URL. Runs after the JWT and ownership checks so
+ * the response can't be used to probe which emails are registered.
  */
-async function load(req, res, next, id) {
+async function load(req, res, next) {
   try {
-    const user = await User.findOne({ email: id });
+    const user = await User.findOne({ email: req.params.userId });
     if (!user) {
       return res.status(httpStatus.NOT_FOUND).json({
         message: 'Not Found'
@@ -27,127 +29,142 @@ async function load(req, res, next, id) {
   }
 }
 
+const PROFILE_FIELDS = ['avatar', 'username', 'name', 'bio', 'education', 'website'];
+const COUNTERS = ['count_linked', 'count_voted', 'count_deleted', 'count_updated', 'count_reverted', 'count_created', 'count_mistakes'];
+const ADMIN_FIELDS = ['email', 'subscription', 'patreon', 'privilege', 'karma'];
+
+/**
+ * Response shape for a user. toJSON() drops the password.
+ */
+function serializeUser(user) {
+  const out = user.toJSON();
+  out.id = out._id;
+  return out;
+}
+
+/**
+ * Fields every new account starts with (the defaults of the pre-DynamoDB schema).
+ */
+function newUserDefaults() {
+  const now = new Date().toISOString();
+  const defaults = { karma: 1, loginCount: 1, privilege: 1, subscription: '-1', createdAt: now, lastUpdated: now };
+  COUNTERS.forEach((counter) => { defaults[counter] = 0; });
+  return defaults;
+}
+
+function signToken(user) {
+  return jwt.sign({
+    id: user._id || user.id,
+    avatar: user.avatar,
+    username: user.username,
+    lastUpdated: user.lastUpdated,
+    score: user.karma,
+    privilege: user.privilege ? user.privilege : 1,
+    subscription: user.subscription ? user.subscription : '-1'
+  }, config.jwtSecret);
+}
+
 /**
  * Get user
  * @returns {User}
  */
 function get(req, res) {
-  const userPlus = req.user.toObject();
-  userPlus.id = userPlus._id;
-  return res.json(userPlus);
+  return res.json(serializeUser(req.user));
 }
 
 /**
- * Create new user
- * @property {string} req.body.username - The username of user.
- * @property {string} req.body.privilege - The privilege of user.
- * @returns {User}
+ * Create a local (email + password) account. Callers pass explicit values;
+ * nothing is read from the request body, so clients can't set privilege.
  */
-async function create(req, res, next) {
-  console.log('Attempting to create user');
-  console.log('------------------------------------------------------------');
+async function createLocalUser({ email, password, username }) {
+  const existing = await User.findById(email).exec();
+  if (existing) {
+    throw new APIError('This username/ email already exists!', 400);
+  }
 
+  const user = new User({
+    ...newUserDefaults(),
+    _id: email,
+    email,
+    username,
+    name: username,
+    authType: 'chronas'
+  });
+  await user.setPassword(password);
+  await user.save();
+  return { user, token: signToken(user) };
+}
+
+/**
+ * Log in or register a user returning from Google, Facebook or GitHub.
+ * Only the passport callbacks call this, with a profile built server-side.
+ */
+async function loginOrCreateOAuthUser(req, res, next, profile) {
   try {
-    const duplicatedUsername = await User.findById(req.body.email || req.body.id || req.body.username).exec();
+    const id = profile.email || profile.id;
+    const existing = await User.findById(id).exec();
 
-    if (duplicatedUsername) {
-      if (req.body.thirdParty) {
-        if (req.body.email === duplicatedUsername.email) {
-          duplicatedUsername.loginCount += 1;
-          await duplicatedUsername.save();
-
-          const token = jwt.sign({
-            id: duplicatedUsername._id,
-            avatar: duplicatedUsername.avatar,
-            username: duplicatedUsername.username,
-            lastUpdated: duplicatedUsername.lastUpdated,
-            score: duplicatedUsername.karma,
-            privilege: (duplicatedUsername.privilege !== 'undefined') ? duplicatedUsername.privilege : 1,
-            subscription: (duplicatedUsername.subscription !== 'undefined') ? duplicatedUsername.subscription : '-1'
-          }, config.jwtSecret);
-          return res.redirect(`${config.chronasHost}/?token=${token}`);
-        }
-        // throw err?
-        const err = new APIError('This username/ email already exists with a different email address!', 400);
-        return next(err);
+    if (existing) {
+      if (profile.email === existing.email) {
+        existing.loginCount = (Number(existing.loginCount) || 0) + 1;
+        await existing.save();
+        return res.redirect(`${config.chronasHost}/?token=${signToken(existing)}`);
       }
-      const err = new APIError('This username/ email already exists!', 400);
-      return next(err);
+      return next(new APIError('This username/ email already exists with a different email address!', 400));
     }
 
     const user = new User({
-      _id: req.body.email || req.body.id || req.body.username,
-      avatar: req.body.avatar,
-      bio: req.body.bio,
-      website: req.body.website,
-      username: req.body.username,
-      name: req.body.name || req.body.username || req.body.id,
-      password: req.body.password,
-      education: req.body.education,
-      email: req.body.email,
-      authType: req.body.authType || 'chronas',
-      privilege: (req.body.privilege !== 'undefined') ? req.body.privilege : 1
+      ...newUserDefaults(),
+      _id: id,
+      avatar: profile.avatar,
+      website: profile.website,
+      username: profile.username,
+      name: profile.name || profile.username || profile.id,
+      email: profile.email,
+      authType: profile.authType
     });
-
-    try {
-      const savedUser = await user.save();
-      if (!req.body.thirdParty && !req.body.signup) {
-        res.json(savedUser);
-      } else {
-        const token = jwt.sign({
-          id: savedUser._id || savedUser.id,
-          avatar: savedUser.avatar,
-          username: savedUser.username,
-          lastUpdated: savedUser.lastUpdated,
-          score: savedUser.karma,
-          privilege: (savedUser.privilege !== 'undefined') ? savedUser.privilege : 1,
-          subscription: (savedUser.subscription !== 'undefined') ? savedUser.subscription : '-1'
-        }, config.jwtSecret);
-        if (req.body.thirdParty) {
-          return res.redirect(`${config.chronasHost}/?token=${token}`);
-        }
-        return res.json({
-          token,
-          username: savedUser.username
-        });
-      }
-    } catch (e) {
-      console.log('ERROR Attempt to save user', e);
-      console.log('------------------------------------------------------------');
-      next(e);
-    }
+    await user.save();
+    return res.redirect(`${config.chronasHost}/?token=${signToken(user)}`);
   } catch (e) {
-    console.log('ERROR Attempt to find user', e);
-    console.log('------------------------------------------------------------');
-    next(e);
+    return next(e);
   }
 }
 
 /**
- * Update existing user
- * @property {string} req.body.username - The username of user.
- * @property {string} req.body.privilege - The privilege of user.
+ * Update existing user. Owners may change their profile fields and their
+ * password (with the current one); everything else is admin-only.
  * @returns {User}
  */
 async function update(req, res, next) {
   const { user } = req;
-  const isAdmin = (req.auth && req.auth.privilege >= 5);
-  if (typeof req.body.avatar !== 'undefined') user.avatar = req.body.avatar;
-  if (typeof req.body.username !== 'undefined') user.username = req.body.username;
-  if (typeof req.body.name !== 'undefined') user.name = req.body.name;
-  if (typeof req.body.bio !== 'undefined') user.bio = req.body.bio;
-  if (typeof req.body.privilege !== 'undefined' && isAdmin) user.privilege = req.body.privilege;
-  if (typeof req.body.education !== 'undefined') user.education = req.body.education;
-  if (typeof req.body.email !== 'undefined') user.email = req.body.email;
-  if (typeof req.body.patreon !== 'undefined' && isAdmin) user.patreon = req.body.patreon;
-  if (typeof req.body.subscription !== 'undefined') user.subscription = req.body.subscription;
-  if (typeof req.body.karma !== 'undefined' && isAdmin) user.karma = req.body.karma;
-  if (typeof req.body.website !== 'undefined') user.website = req.body.website;
-  if (typeof req.body.password !== 'undefined') user.password = req.body.password;
+  const body = req.body || {};
+  const isAdmin = checkPrivilege.isAdmin(req.auth);
+  const isSelf = String((req.auth || {}).id || '').toLowerCase() === String(user._id || '').toLowerCase();
 
   try {
+    PROFILE_FIELDS.forEach((field) => {
+      if (typeof body[field] !== 'undefined') user[field] = body[field];
+    });
+    if (isAdmin) {
+      ADMIN_FIELDS.forEach((field) => {
+        if (typeof body[field] !== 'undefined') user[field] = body[field];
+      });
+    }
+
+    if (typeof body.password !== 'undefined') {
+      // Admins can set another user's password (there is no reset flow yet).
+      // Changing your own password requires the current one, if there is one.
+      if (isSelf && user.password) {
+        const ok = typeof body.currentPassword === 'string' && await user.comparePassword(body.currentPassword);
+        if (!ok) return next(new APIError('Current password is incorrect', httpStatus.UNAUTHORIZED, true));
+      } else if (!isSelf && !isAdmin) {
+        return next(new APIError('Unauthorized', httpStatus.UNAUTHORIZED, true));
+      }
+      await user.setPassword(body.password);
+    }
+
     const savedUser = await user.save();
-    res.json(savedUser);
+    res.json(serializeUser(savedUser));
   } catch (e) {
     next(e);
   }
@@ -157,8 +174,8 @@ async function changePoints(username, type, delta = 1) {
   try {
     const user = await User.findOne({ username }).exec();
     if (typeof user !== 'undefined') {
-      user.karma += delta;
-      user[`count_${type}`] += delta;
+      user.karma = (Number(user.karma) || 0) + delta;
+      user[`count_${type}`] = (Number(user[`count_${type}`]) || 0) + delta;
       await user.save();
     }
   } catch (e) {
@@ -171,7 +188,7 @@ async function incrementLoginCount(username) {
   try {
     const user = await User.findOne({ username }).exec();
     if (typeof user !== 'undefined') {
-      user.loginCount += 1;
+      user.loginCount = (Number(user.loginCount) || 0) + 1;
       await user.save();
     }
   } catch (e) {
@@ -258,7 +275,7 @@ async function list(req, res, next) {
 async function remove(req, res, next) {
   try {
     const { user } = req;
-    const userToReturn = user.toObject(); // Get the user document before deletion
+    const userToReturn = serializeUser(user);
     await user.deleteOne();
     res.json(userToReturn);
   } catch (e) {
@@ -266,4 +283,4 @@ async function remove(req, res, next) {
   }
 }
 
-export default { changePoints, incrementLoginCount, load, get, create, update, list, remove };
+export default { changePoints, incrementLoginCount, load, get, createLocalUser, loginOrCreateOAuthUser, signToken, update, list, remove };

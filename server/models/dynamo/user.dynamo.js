@@ -11,6 +11,14 @@ import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
 
 const TABLE = tableName('users');
 
+// Matches the work factor of the hashes written before the DynamoDB migration.
+const BCRYPT_ROUNDS = 10;
+const BCRYPT_HASH = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+
+export function isPasswordHash(value) {
+  return typeof value === 'string' && BCRYPT_HASH.test(value);
+}
+
 export default class UserDynamo extends DynamoDocument {
   static tableName = TABLE;
 
@@ -120,8 +128,19 @@ export default class UserDynamo extends DynamoDocument {
     return bcrypt.compare(candidatePassword, this.password);
   }
 
+  async setPassword(plain) {
+    if (typeof plain !== 'string' || plain.length === 0) {
+      throw new APIError('Password must be a non-empty string', httpStatus.BAD_REQUEST, true);
+    }
+    this.password = await bcrypt.hash(plain, BCRYPT_ROUNDS);
+  }
+
   async save() {
     const item = this.toObject();
+    // Passwords must go through setPassword(); never persist a plaintext value.
+    if (item.password !== undefined && item.password !== null && item.password !== '' && !isPasswordHash(item.password)) {
+      throw new APIError('Refusing to store an unhashed password', httpStatus.INTERNAL_SERVER_ERROR);
+    }
     if (item._id) item._id = String(item._id).toLowerCase();
     if (item.email) item.email = String(item.email).toLowerCase();
     this._id = item._id;

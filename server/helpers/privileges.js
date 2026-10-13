@@ -16,16 +16,28 @@ function checkPrivilege(threshold) {
   };
 }
 
+const ADMIN_PRIVILEGE = 5;
+
+/**
+ * Admin check without the subscription bypass that checkPrivilege grants.
+ */
+function isAdmin(auth) {
+  return Boolean(auth && Number(auth.privilege) >= ADMIN_PRIVILEGE);
+}
+
 function checkPrivilegeForTypes(threshold, typesBlocked) {
   return function (req, res, next) {
-    const typeToChecked = (req.body || {}).type || ((req.entity || {})[0] || {}).type;
+    if (req && req.auth && req.auth.privilege >= threshold) return next();
 
-    if (typesBlocked.indexOf(typeToChecked) === -1 || (req && req.auth && req.auth.privilege >= threshold)) {
-      next();
-    } else {
-      const err = new APIError('Unauthorized. 2 Your profile does not have sufficient privileges to access this resource.', 401);
-      next(err);
-    }
+    // Changes to an existing item are judged by its stored type, not by what the body claims.
+    // req.entity is set by the route's param loader; if it is missing, fail closed.
+    const entity = Array.isArray(req.entity) ? req.entity[0] : req.entity;
+    const err = new APIError('Unauthorized. 2 Your profile does not have sufficient privileges to access this resource.', 401);
+    if (req.method !== 'POST' && !entity) return next(err);
+
+    const types = [(entity || {}).type, (req.body || {}).type];
+    if (types.some(type => typesBlocked.indexOf(type) !== -1)) return next(err);
+    return next();
   };
 }
 
@@ -33,7 +45,9 @@ function checkPrivilegeForTypes(threshold, typesBlocked) {
 
 function checkPrivilegeOrOwnership(threshold) {
   return function (req, res, next) {
-    if ((req && req.auth && req.auth.privilege >= threshold) || (req.params || {}).userId === (req.user || {})._id || (req.params || {}).userId === (req.user || {}).id) {
+    const callerId = String((req.auth || {}).id || '').toLowerCase();
+    const targetId = String((req.params || {}).userId || '').toLowerCase();
+    if ((req && req.auth && req.auth.privilege >= threshold) || (callerId !== '' && callerId === targetId)) {
       next();
     } else {
       const err = new APIError('Unauthorized. 3 Your profile does not have sufficient privileges to access this resource.', 401);
@@ -42,4 +56,4 @@ function checkPrivilegeOrOwnership(threshold) {
   };
 }
 
-export default { checkPrivilege, checkPrivilegeForTypes, checkPrivilegeOrOwnership };
+export default { checkPrivilege, checkPrivilegeForTypes, checkPrivilegeOrOwnership, isAdmin };
