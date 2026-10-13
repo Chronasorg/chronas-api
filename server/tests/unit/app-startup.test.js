@@ -3,15 +3,6 @@ import { expect } from 'chai';
 
 describe('## Application Startup Tests', () => {
   describe('# Core Module Loading', () => {
-    it('should load lambda configuration without errors', async () => {
-      try {
-        const { isLambdaEnvironment } = await import('../../../config/lambda-config.js');
-        expect(isLambdaEnvironment).to.be.a('function');
-      } catch (error) {
-        throw new Error(`Lambda config failed to load: ${error.message}`);
-      }
-    });
-
     it('should load winston logger without errors', async () => {
       try {
         const winston = await import('../../../config/winston.js');
@@ -121,23 +112,11 @@ describe('## Application Startup Tests', () => {
     });
   });
 
-  describe('# Lambda Integration', () => {
-    it('should load lambda app configuration without errors', async () => {
-      try {
-        const { initializeApp } = await import('../../../config/lambda-app.js');
-        expect(initializeApp).to.exist;
-      } catch (error) {
-        throw new Error(`Lambda app failed to load: ${error.message}`);
-      }
-    });
-
-    it('should load lambda handler without errors', async () => {
-      try {
-        const lambdaHandler = await import('../../../lambda-handler.js');
-        expect(lambdaHandler.handler).to.exist;
-      } catch (error) {
-        throw new Error(`Lambda handler failed to load: ${error.message}`);
-      }
+  describe('# Web Function entry', () => {
+    it('should load the bootstrap without errors', async () => {
+      const { createApp, loadSecrets } = await import('../../../config/bootstrap.js');
+      expect(createApp).to.be.a('function');
+      expect(loadSecrets).to.be.a('function');
     });
   });
 

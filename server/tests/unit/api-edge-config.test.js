@@ -83,6 +83,15 @@ describe('## api-edge CloudFront config', () => {
       expect(TEMPORARY_PATHS.every(p => config.CacheBehaviors.Items.find(b => b.PathPattern === p).CachePolicyId === policyIds.dynamic)).to.equal(true);
     });
 
+    it('drops the API Gateway origin once nothing targets it', () => {
+      const allWeb = { default: WEB_FUNCTION_ORIGIN_ID, areas: WEB_FUNCTION_ORIGIN_ID, metadata: WEB_FUNCTION_ORIGIN_ID, markers: WEB_FUNCTION_ORIGIN_ID };
+      const config = renderDistributionConfig(LIVE, { policyIds, webFunction, assign: allWeb, dropApiGateway: true });
+      expect(validateDistributionConfig(config, { policyIds })).to.deep.equal([]);
+      expect(config.Origins.Items.map(o => o.Id)).to.deep.equal([WEB_FUNCTION_ORIGIN_ID]);
+      expect(() => renderDistributionConfig(LIVE, { policyIds, webFunction, assign: { ...allWeb, markers: 'ApiGatewayOrigin' }, dropApiGateway: true }))
+        .to.throw('a behavior still targets ApiGatewayOrigin');
+    });
+
     it('rejects a behavior that points at a missing origin', () => {
       const config = renderDistributionConfig(LIVE, { policyIds, assign: { markers: WEB_FUNCTION_ORIGIN_ID } });
       expect(validateDistributionConfig(config, { policyIds })).to.include(`behavior /v1/markers*: unknown origin ${WEB_FUNCTION_ORIGIN_ID}`);

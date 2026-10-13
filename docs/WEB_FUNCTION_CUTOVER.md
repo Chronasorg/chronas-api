@@ -1,5 +1,7 @@
 # Cutover: api.chronas.org → CloudFront → Lambda Web Function
 
+**Done on 2026-10-13** (steps 1–4 at about 15:52–16:15 UTC). API Gateway, the classic Lambda and their CloudFormation stacks were then retired, so the rollback table below is historical: today a bad deploy rolls back to the previous Web Function revision, and CloudFront changes roll back with `restore-cloudfront.sh`.
+
 Runbook for the production switch decided on 2026-10-13: Lambda Web Functions with CloudFront in front, done directly in production (a few minutes of disruption is acceptable). Background and decisions: [API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md](API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). Scripts: [infra/api-edge/](../infra/api-edge/README.md).
 
 All commands run from the repo root with the `chronas-prod` profile. `AWS_WEB_CLI` must point at an AWS CLI ≥ 2.37.13, because older versions have no `lambda-web`.

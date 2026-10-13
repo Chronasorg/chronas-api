@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Render the §6 configuration from the live distribution, validate it, show
 # the diff, and apply it with the captured ETag (plan phases P4 and P8).
-#   ./apply-cloudfront.sh [--assign default=ApiGatewayOrigin,markers=WebFunctionOrigin,…]
-#                         [--temporary] [--web-origin <domain> --oac <id>]
+#   ./apply-cloudfront.sh [--assign default=WebFunctionOrigin,markers=WebFunctionOrigin,…]
+#                         [--temporary] [--web-origin <domain> --oac <id>] [--drop-api-gateway]
 #                         [--apply --confirm "apply E1KTIK2H0W8J2Q"]
 # After applying: wait for Deployed, invalidate /v1/* and wait.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -13,7 +13,7 @@ RENDER_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --assign|--web-origin|--oac) RENDER_ARGS+=("$1" "$2"); shift ;;
-    --temporary) RENDER_ARGS+=("$1") ;;
+    --temporary|--drop-api-gateway) RENDER_ARGS+=("$1") ;;
     *) die "unknown argument $1" ;;
   esac
   shift

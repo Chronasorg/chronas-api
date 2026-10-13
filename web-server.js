@@ -1,7 +1,6 @@
 /**
- * Entry point for the Lambda Web Function runtime
- * (AWS_LAMBDA_NODEJS_ENTRYPOINT=web-server.js). The Event Function keeps
- * using lambda-handler.js.
+ * The HTTP server the Lambda Web Function runs (loaded through index.js).
+ * Run it locally with `node index.js`.
  *
  * Lambda routes requests to an environment as soon as the server listens and
  * requires that within 10 s, so the server listens first and every request

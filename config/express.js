@@ -8,7 +8,6 @@ import httpStatus from 'http-status';
 import expressWinston from 'express-winston';
 import expressValidation from 'express-validation';
 import helmet from 'helmet';
-import AWSXRay from 'aws-xray-sdk';
 
 import routes from '../server/routes/index.route.js';
 import APIError from '../server/helpers/APIError.js';
@@ -16,7 +15,6 @@ import APIError from '../server/helpers/APIError.js';
 import winstonInstance from './winston.js';
 import { config } from './config.js';
 import { corsOptions } from './cors.js';
-import { isWebFunction } from './bootstrap.js';
 import { buildErrorLoggerOptions } from './error-logger-options.js';
 
 
@@ -34,13 +32,6 @@ app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
-
-// Lambda creates no X-Ray segments for Web Functions, so the SDK would only
-// try to reach a daemon that doesn't exist.
-const useXRay = !isWebFunction();
-if (useXRay) {
-  app.use(AWSXRay.express.openSegment('Chronas-Api'));
-}
 
 if (config.env === 'development') {
   app.use(logger('dev'));
@@ -118,9 +109,5 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}
   });
 });
-
-if (useXRay) {
-  app.use(AWSXRay.express.closeSegment());
-}
 
 export default app;

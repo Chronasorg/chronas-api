@@ -1,6 +1,5 @@
 /**
- * Runtime-neutral startup, shared by the Event Function (lambda-app.js) and
- * the Web Function (web-server.js).
+ * Startup for web-server.js.
  *
  * config/config.js reads JWT_SECRET from process.env when it is first
  * imported, and every route captures config.jwtSecret at module load. So the
@@ -47,8 +46,8 @@ export async function loadSecrets({
     }
     return 'secrets-manager';
   } catch (error) {
-    // The Event Function keeps working from its environment while it still
-    // has the variable. The Web Function has no such fallback.
+    // Local runs and tests may use an environment secret instead; the Web
+    // Function never does.
     if (!isWebFunction() && process.env.JWT_SECRET) {
       console.warn(`Secrets Manager read failed (${error.name}); using JWT_SECRET from the environment`);
       return 'environment';

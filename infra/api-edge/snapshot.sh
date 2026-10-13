@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Read-only snapshot of the edge: distribution config and ETag, the cache
-# policies it uses, the api.chronas.org record, and the API Gateway domain and
-# stage. No Lambda environment, no secrets.
+# policies it uses, and the api.chronas.org record. No secrets.
 #   ./snapshot.sh [label]        prints the snapshot directory
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 require_identity
@@ -14,7 +13,5 @@ done
 aws_cli cloudfront get-distribution --id "$DISTRIBUTION_ID" --query 'Distribution.{Status:Status,LastModifiedTime:LastModifiedTime,DomainName:DomainName}' --output json > "$DIR/distribution-status.json"
 aws_cli route53 list-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" \
   --query "ResourceRecordSets[?Name=='$RECORD_NAME']" --output json > "$DIR/route53-record.json"
-aws_cli apigatewayv2 get-domain-name --domain-name api.chronas.org --region "$REGION" --output json > "$DIR/apigw-domain.json"
-aws_cli apigatewayv2 get-stage --api-id "$API_ID" --stage-name "$API_STAGE" --region "$REGION" --output json > "$DIR/apigw-stage.json"
 log "Snapshot written to $DIR"
 echo "$DIR"
