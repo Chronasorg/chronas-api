@@ -15,6 +15,7 @@ import APIError from '../server/helpers/APIError.js';
 
 import winstonInstance from './winston.js';
 import { config } from './config.js';
+import { corsOptions } from './cors.js';
 import { buildErrorLoggerOptions } from './error-logger-options.js';
 
 
@@ -24,6 +25,14 @@ import { createPerformanceMiddleware } from './performance.js';
 const app = express();
 
 app.set('trust proxy', 2);
+
+// Nothing is cacheable unless a handler opts in with `Cache-Control: public`
+// (the public map-data reads). CloudFront and browsers must never store
+// identity-dependent or dynamic responses, including errors and preflights.
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 app.use(AWSXRay.express.openSegment('Chronas-Api'));
 
@@ -42,20 +51,7 @@ app.use(methodOverride());
 app.use(helmet());
 
 // enable CORS - Cross Origin Resource Sharing
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. server-to-server, curl, mobile apps)
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173').split(',');
-
-    if (allowedOrigins.includes(origin) || /^https:\/\/([a-z0-9-]+\.)?chronas\.org$/.test(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Add performance monitoring middleware
 app.use(createPerformanceMiddleware());
@@ -110,6 +106,7 @@ if (config.env !== 'test') {
 
 // error handler, send stacktrace only during development
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  res.set('Cache-Control', 'no-store');
   res.status(err.status).json({
     message: err.isPublic ? err.message : httpStatus[err.status],
     stack: config.env === 'development' || config.env === 'test' ? err.stack : {}

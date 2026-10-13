@@ -1,38 +1,19 @@
-import { describe, it, before } from 'mocha';
+import { describe, it, before, after } from 'mocha';
 import { expect } from 'chai';
 import express from 'express';
 import cors from 'cors';
 import request from 'supertest';
 
+import { corsOptions } from '../../../config/cors.js';
+
 /**
- * Build a minimal Express app using the same CORS origin logic as config/express.js.
- * We replicate the callback here so we can test it in isolation without loading the
- * full app (which requires DB, sessions, etc.).
+ * Minimal Express app with the production CORS options from config/cors.js,
+ * so the origin rules are tested without loading the full app.
  */
-function createCorsTestApp(envAllowedOrigins) {
+function createCorsTestApp() {
   const app = express();
-
-  app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      const allowedOrigins = (envAllowedOrigins || 'http://localhost:3000,http://localhost:5173').split(',');
-
-      if (allowedOrigins.includes(origin) || /^https:\/\/([a-z0-9-]+\.)?chronas\.org$/.test(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true
-  }));
-
+  app.use(cors(corsOptions));
   app.get('/test', (req, res) => res.json({ ok: true }));
-
-  // Error handler so CORS errors return 500 instead of crashing
-  app.use((err, req, res, _next) => {
-    res.status(500).json({ error: err.message });
-  });
-
   return app;
 }
 
@@ -106,12 +87,15 @@ describe('## CORS Configuration', () => {
 
     blockedOrigins.forEach((origin) => {
       it(`should block ${origin}`, async () => {
+        // Answered normally but without CORS headers, so the browser blocks it.
+        // Not a 500: CloudFront caches 5xx for the error-caching TTL.
         const res = await request(app)
           .get('/test')
           .set('Origin', origin)
-          .expect(500);
+          .expect(200);
 
-        expect(res.body.error).to.equal('Not allowed by CORS');
+        expect(res.headers).to.not.have.property('access-control-allow-origin');
+        expect(res.headers).to.not.have.property('access-control-allow-credentials');
       });
     });
   });
@@ -128,22 +112,43 @@ describe('## CORS Configuration', () => {
       expect(res.headers['access-control-allow-credentials']).to.equal('true');
     });
 
-    it('should reject preflight from blocked origin', async () => {
+    it('should reflect the requested headers to an allowed origin', async () => {
+      const res = await request(app)
+        .options('/test')
+        .set('Origin', 'https://chronas.org')
+        .set('Access-Control-Request-Method', 'POST')
+        .set('Access-Control-Request-Headers', 'content-type,authorization')
+        .expect(204);
+
+      expect(res.headers['access-control-allow-headers']).to.equal('content-type,authorization');
+    });
+
+    it('should answer a preflight from a blocked origin without CORS headers', async () => {
       const res = await request(app)
         .options('/test')
         .set('Origin', 'https://evil.com')
         .set('Access-Control-Request-Method', 'GET')
-        .expect(500);
+        .set('Access-Control-Request-Headers', 'content-type,authorization');
 
-      expect(res.body.error).to.equal('Not allowed by CORS');
+      expect(res.status).to.be.below(500);
+      expect(res.headers).to.not.have.property('access-control-allow-origin');
+      expect(res.headers).to.not.have.property('access-control-allow-headers');
     });
   });
 
   describe('# Custom ALLOWED_ORIGINS env override', () => {
     let customApp;
+    let savedAllowedOrigins;
 
     before(() => {
-      customApp = createCorsTestApp('https://custom.example.com,http://localhost:8080');
+      savedAllowedOrigins = process.env.ALLOWED_ORIGINS;
+      process.env.ALLOWED_ORIGINS = 'https://custom.example.com,http://localhost:8080';
+      customApp = createCorsTestApp();
+    });
+
+    after(() => {
+      if (savedAllowedOrigins === undefined) delete process.env.ALLOWED_ORIGINS;
+      else process.env.ALLOWED_ORIGINS = savedAllowedOrigins;
     });
 
     it('should allow a custom origin from env', async () => {
@@ -168,9 +173,9 @@ describe('## CORS Configuration', () => {
       const res = await request(customApp)
         .get('/test')
         .set('Origin', 'http://localhost:3000')
-        .expect(500);
+        .expect(200);
 
-      expect(res.body.error).to.equal('Not allowed by CORS');
+      expect(res.headers).to.not.have.property('access-control-allow-origin');
     });
   });
 });

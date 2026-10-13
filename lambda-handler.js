@@ -87,6 +87,7 @@ function handleWarmUp(_event) {
     statusCode: 200,
     headers: {
       'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
       'X-Lambda-Warm-Up': 'true'
     },
     body: JSON.stringify({
@@ -111,7 +112,7 @@ function handleHealthCheck(_event) {
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-store'
     },
     body: JSON.stringify({
       status: health.initialized ? 'healthy' : 'unhealthy',
@@ -208,6 +209,7 @@ export const handler = async (event, context) => {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
         'X-Lambda-Request-Id': context.awsRequestId,
         'X-Lambda-Processing-Time': processingTime.toString(),
         'X-Lambda-Error': 'true'
