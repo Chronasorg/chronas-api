@@ -206,7 +206,7 @@ export function validateDistributionConfig(input, { policyIds, testDistribution 
   if (testDistribution) {
     if ((config.Aliases?.Quantity || 0) !== 0) errors.push('test distribution must have no alias');
   } else {
-    if (!(config.Aliases?.Items || []).includes(ALIAS)) errors.push(`alias ${ALIAS} missing`);
+    if (!(config.Aliases?.Items || []).some(alias => alias === ALIAS)) errors.push(`alias ${ALIAS} missing`);
     if (config.ViewerCertificate?.MinimumProtocolVersion !== 'TLSv1.2_2021') errors.push('TLS minimum must stay TLSv1.2_2021');
   }
   if (config.HttpVersion !== 'http2and3') errors.push('HTTP/2 and 3 must stay enabled');
