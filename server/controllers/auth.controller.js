@@ -36,7 +36,9 @@ async function login(req, res, next) {
   try {
     const user = await User.findOne({ email: req.body.email }).select('+password').exec();
 
-    if (user && req.body.email === user.email) {
+    // Accounts without a password (OAuth-only or wiped) answer like a wrong
+    // password, so the status code doesn't reveal which accounts they are.
+    if (user && req.body.email === user.email && user.password) {
       try {
         const isMatch = await user.comparePassword(req.body.password);
 

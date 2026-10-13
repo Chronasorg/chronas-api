@@ -113,6 +113,15 @@ describe('## User and auth route security', () => {
       expect(login.status).to.equal(200);
     });
 
+    it('login for an account without a password looks like a wrong password', async () => {
+      await new UserDynamo({ _id: 'nopass@example.com', email: 'nopass@example.com', authType: 'google' }).save();
+      const noPassword = await request(app).post('/v1/auth/login').send({ email: 'nopass@example.com', password: 'guess-123' });
+      const wrongPassword = await request(app).post('/v1/auth/login').send({ email: 'alice@example.com', password: 'guess-123' });
+      expect(noPassword.status).to.equal(401);
+      expect(noPassword.status).to.equal(wrongPassword.status);
+      expect(noPassword.body.message).to.equal(wrongPassword.body.message);
+    });
+
     it('signup refuses an email that already has an account', async () => {
       const res = await request(app).post('/v1/auth/signup')
         .send({ email: 'alice@example.com', password: 'other-pass', username: 'alice2' });
