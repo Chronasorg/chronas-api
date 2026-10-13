@@ -5,6 +5,13 @@
 
 const DIM_INDEX = { ruler: 0, culture: 1, religion: 2, capital: 3, population: 4 };
 
+// Reads bypass the CloudFront cache: the validator and applier decide on what
+// they read, often right after their own writes, and an edge copy of an area
+// or metadata document can be up to a day old.
+function withCacheBuster(path) {
+  return `${path}${path.includes('?') ? '&' : '?'}_cb=${crypto.randomUUID()}`;
+}
+
 export class ChronasClient {
   constructor({ apiUrl, token = null, fetchImpl = fetch }) {
     this.apiUrl = apiUrl.replace(/\/$/, '');
@@ -33,7 +40,7 @@ export class ChronasClient {
     let lastErr = null;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        const res = await this.fetchImpl(`${this.apiUrl}${path}`, {
+        const res = await this.fetchImpl(`${this.apiUrl}${method === 'GET' ? withCacheBuster(path) : path}`, {
           method,
           headers,
           body: body !== undefined ? JSON.stringify(body) : undefined

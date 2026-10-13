@@ -78,7 +78,10 @@
                   "});",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.version).to.not.be.empty;",
-                  "    pm.expect(jsonData.version).to.match(/^\\d+\\.\\d+/);"
+                  "    pm.expect(jsonData.version).to.match(/^\\d+\\.\\d+/);",
+                  "pm.test('Cache-Control is no-store (never cached at the edge)', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.equal('no-store');",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -146,6 +149,9 @@
                   "});",
                   "pm.test(\"Health check returns OK\", function () {",
                   "    pm.expect(pm.response.text()).to.include('Health OK');",
+                  "});",
+                  "pm.test('Cache-Control is no-store (never cached at the edge)', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.equal('no-store');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -163,6 +169,39 @@
               "path": [
                 "v1",
                 "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unknown route is 404 and no-store",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Cache-Control is no-store (never cached at the edge)', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.equal('no-store');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/does-not-exist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "does-not-exist"
               ]
             }
           }
@@ -1148,7 +1187,10 @@
                   "        pm.expect(jsonData[firstKey]).to.satisfy(function(value) {",
                   "            return Array.isArray(value) || typeof value === \"object\";",
                   "        });",
-                  "    }"
+                  "    }",
+                  "pm.test('Cache-Control is public with an edge TTL', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.match(/^public, max-age=\\d+, s-maxage=\\d+$/);",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -1236,7 +1278,7 @@
     },
     {
       "name": "Data Corrections (updateMany)",
-      "description": "Tests for the updateMany endpoint (PUT /v1/areas) used for targeted data corrections like Issue #10 (chalcedonism\u2192orthodox). updateMany changes ONLY the specified dimensions for ONLY the specified provinces, leaving all other data untouched.",
+      "description": "Tests for the updateMany endpoint (PUT /v1/areas) used for targeted data corrections like Issue #10 (chalcedonism→orthodox). updateMany changes ONLY the specified dimensions for ONLY the specified provinces, leaving all other data untouched.",
       "item": [
         {
           "name": "updateMany - Get area before correction",
@@ -1271,7 +1313,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/areas/1000",
+              "raw": "{{baseUrl}}/v1/areas/1000?_cb={{$guid}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1279,6 +1321,12 @@
                 "v1",
                 "areas",
                 "1000"
+              ],
+              "query": [
+                {
+                  "key": "_cb",
+                  "value": "{{$guid}}"
+                }
               ]
             }
           }
@@ -1369,7 +1417,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/areas/1000",
+              "raw": "{{baseUrl}}/v1/areas/1000?_cb={{$guid}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1377,6 +1425,12 @@
                 "v1",
                 "areas",
                 "1000"
+              ],
+              "query": [
+                {
+                  "key": "_cb",
+                  "value": "{{$guid}}"
+                }
               ]
             }
           }
@@ -1395,6 +1449,9 @@
                 "exec": [
                   "pm.test(\"Status code is 410 Gone\", function () {",
                   "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Cache-Control is no-store (never cached at the edge)', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.equal('no-store');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1450,6 +1507,9 @@
                   "});",
                   "pm.test(\"Response says the contact API is retired\", function () {",
                   "    pm.expect(pm.response.json().message).to.include(\"retired\");",
+                  "});",
+                  "pm.test('Cache-Control is no-store (never cached at the edge)', function () {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.equal('no-store');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1526,6 +1586,46 @@
                 "users",
                 "postman@aui.de"
               ]
+            }
+          }
+        },
+        {
+          "name": "Profile re-read without a token is refused",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Not served from an edge cache', function () {",
+                  "    pm.expect(pm.response.headers.get('X-Cache') || '').to.not.match(/^Hit/i);",
+                  "});",
+                  "pm.test('No profile data is returned', function () {",
+                  "    pm.expect(pm.response.text()).to.not.include('postman@aui.de');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/users/postman@aui.de",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "users",
+                "postman@aui.de"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
             }
           }
         },
@@ -1864,13 +1964,24 @@
           "request": {
             "method": "OPTIONS",
             "header": [
-              { "key": "Origin", "value": "https://chronas.org" },
-              { "key": "Access-Control-Request-Method", "value": "GET" }
+              {
+                "key": "Origin",
+                "value": "https://chronas.org"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/v1/health",
-              "host": [ "{{baseUrl}}" ],
-              "path": [ "v1", "health" ]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "health"
+              ]
             }
           }
         },
@@ -1885,6 +1996,9 @@
                   "    var allowOrigin = pm.response.headers.get('Access-Control-Allow-Origin');",
                   "    pm.expect(allowOrigin, 'must not echo a disallowed origin').to.not.equal('https://evil.example.com');",
                   "    pm.expect(allowOrigin, 'must not be wildcard either').to.not.equal('*');",
+                  "});",
+                  "pm.test('Disallowed origin is not an error (a 5xx would be edge-cached)', function () {",
+                  "    pm.expect(pm.response.code).to.be.below(500);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1894,13 +2008,24 @@
           "request": {
             "method": "OPTIONS",
             "header": [
-              { "key": "Origin", "value": "https://evil.example.com" },
-              { "key": "Access-Control-Request-Method", "value": "GET" }
+              {
+                "key": "Origin",
+                "value": "https://evil.example.com"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/v1/health",
-              "host": [ "{{baseUrl}}" ],
-              "path": [ "v1", "health" ]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "health"
+              ]
             }
           }
         }

@@ -326,11 +326,11 @@ Each WP is a separate PR, tested the way production runs: the packaged zip serve
 ### APP-6: tests that would otherwise read edge caches
 
 - **Postman:**
-  - Add a cache-buster (`?_cb={{$timestamp}}`) to every read-after-write check, and to the reads they are compared against.
+  - Add a cache-buster (`?_cb={{$guid}}`) to every read-after-write check, and to the reads they are compared against. Not `{{$timestamp}}`: CI sends requests 500 ms apart, so two reads in the same second would share an edge key.
   - Add an "anonymous re-read" step: the authenticated `GET /v1/users/…` URL requested without a token must return 401, never `x-cache: Hit`.
   - Assert the APP-1 headers: `no-store` on `/v1/version`, `/v1/health`, a 404 and a 410; `public` on `/v1/areas/:year`.
   - After P5, assert that `via` contains `CloudFront`.
-- **Data validation:** add the same cache-buster to post-write reads in `scripts/data-validation/chronas-client.js`. Keep `npm run test:integration` green.
+- **Data validation:** `scripts/data-validation/chronas-client.js` adds a cache-buster to every GET, because the validator and applier decide on what they read before and after their own writes. Keep `npm run test:integration` green.
 
 ### APP-7: frontend (`chronas-frontend`, separate PRs)
 
