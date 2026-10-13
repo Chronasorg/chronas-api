@@ -84,7 +84,8 @@ if [[ "$CURRENT_ARCH" != "$EXPECTED_ARCH" ]]; then
   log "Re-pointing Lambda to s3://$S3_BUCKET/deploys/$LATEST_ZIP with --architectures $EXPECTED_ARCH"
   run_or_print aws "${AWS_COMMON[@]}" lambda update-function-code \
     --function-name "$FN" --s3-bucket "$S3_BUCKET" \
-    --s3-key "deploys/$LATEST_ZIP" --architectures "$EXPECTED_ARCH"
+    --s3-key "deploys/$LATEST_ZIP" --architectures "$EXPECTED_ARCH" \
+    --query LastUpdateStatus --output text
   run_or_print aws "${AWS_COMMON[@]}" lambda wait function-updated \
     --function-name "$FN"
 else
@@ -127,8 +128,11 @@ print(f'Removing {len(changed)} keys: {changed}', file=sys.stderr)
 print(f'Setting {len(set_changed)} non-secret keys: {set_changed}', file=sys.stderr)
 " > "$TMP_ENV"
 
+# --query: the full response contains every environment value, secrets
+# included. Print only the update status.
 run_or_print aws "${AWS_COMMON[@]}" lambda update-function-configuration \
-  --function-name "$FN" --environment "file://$TMP_ENV"
+  --function-name "$FN" --environment "file://$TMP_ENV" \
+  --query LastUpdateStatus --output text
 run_or_print aws "${AWS_COMMON[@]}" lambda wait function-updated \
   --function-name "$FN"
 
@@ -139,7 +143,8 @@ if [[ "$VPC_SUBNET_COUNT" != "0" ]]; then
   log "Lambda is still in VPC — detaching"
   run_or_print aws "${AWS_COMMON[@]}" lambda update-function-configuration \
     --function-name "$FN" \
-    --vpc-config "SubnetIds=[],SecurityGroupIds=[]"
+    --vpc-config "SubnetIds=[],SecurityGroupIds=[]" \
+    --query LastUpdateStatus --output text
   run_or_print aws "${AWS_COMMON[@]}" lambda wait function-updated \
     --function-name "$FN"
 else
