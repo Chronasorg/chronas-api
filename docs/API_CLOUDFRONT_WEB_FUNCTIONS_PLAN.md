@@ -452,7 +452,6 @@ A rollback target only works while its revision is `Active`: never delete the ar
 | **Total delta vs today** | — | **+$0.8** | **+$5–8.5, plus smoke idle** | **+$4–7, plus smoke idle** |
 
 - Web Function memory is billed for the environment's whole lifetime, idle time included. `maxEnvironments` 3 caps the worst case for `prod`.
-- **Not counted:** a WAF web ACL for abuse control would add $5 per web ACL and $1 per rule per month, plus $0.60 per million requests (Price List API, eu-west-1), so about $7/month at today's traffic (§12).
 - With `Route` as a dimension (revision 1), `LatencyMs` alone would have been about 80 metrics, $24/month; that is why it's a property now.
 
 ## 12. Open decisions for the maintainer
@@ -467,7 +466,7 @@ A rollback target only works while its revision is `Active`: never delete the ar
    - S3: `s3:PutObject`, `s3:GetObject` and `s3:GetObjectVersion` on the artifact bucket; the backup prefix.
    - **Not** `lambda:InvokeWebFunctionEndpoint` (P9).
 2. **GitHub:** create environment `production-edge` and choose its reviewer.
-3. **Throttle and abuse control:** keep the 10 req/s API Gateway throttle until P8 (recommended). After P8 there is no equivalent: the endpoint `rateLimit` floor is 100 req/s. Options: accept that (the app limits auth routes per IP, and `maxEnvironments` caps cost), or add a WAF rate-based rule on the distribution for about $7/month (§11). Recommended: accept, and revisit if P2/P8 logs show abuse.
+3. **Throttle:** keep the 10 req/s API Gateway throttle until P8 (recommended). After P8 there is no equivalent, because the endpoint `rateLimit` floor is 100 req/s. **Decided: no WAF.** Abuse control after P8 is the app's per-IP limits on the auth routes, plus `rateLimit` 100 and `maxEnvironments` 3 as a cost cap.
 4. **Error caching (D7):** decided as "don't cache 5xx". The alternative is to accept 10 s of cached 5xx; then the P5 rollback triggers need cache-busters.
 5. **Retirement:** remove API Gateway and the Event Function out-of-band (they belong to CloudFormation stacks the deploy workflow still reads, so this creates drift), or leave them in place, blocked. Recommended: leave them in place and blocked until a dedicated cleanup.
 6. **Bulk importers:** publish a downloadable dataset (CC BY-SA) so bulk importers stop crawling 3,942 URLs. Three sweeps happened in two weeks.
@@ -537,7 +536,7 @@ Engineering is roughly 4–6 working days in total.
   - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/continuous-deployment-quotas-considerations.html
   - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PayingForInvalidation.html
   - https://aws.amazon.com/cloudfront/pricing/pay-as-you-go/
-- **CloudWatch and WAF prices:** AWS Price List API (`AmazonCloudWatch`, `awswaf`, location EU (Ireland)), 2026-10-13; https://aws.amazon.com/cloudwatch/pricing/
+- **CloudWatch prices:** AWS Price List API (`AmazonCloudWatch`, location EU (Ireland)), 2026-10-13; https://aws.amazon.com/cloudwatch/pricing/
 - **Route 53 and API Gateway:**
   - https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html
   - https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-cloudfront-distribution.html
@@ -554,7 +553,7 @@ An external review checked revision 1 against the docs, both repos and the live 
 | Secrets on the Web Function not designed | **Confirmed** in the code (`config.js` import-time read, route-level `config.jwtSecret`, the merge in `lambda-config.js` never reaching `config.js`, 10 s × 3 × 3 retries) and in the docs (immutable per-revision variables, no secrets in them, no listen check at activation). | D8, APP-3 bootstrap and `web-server.js`, APP-4 "never `JWT_SECRET`", rotation runbook. |
 | Artifact lifecycle can break live revisions | **Confirmed** (web-functions-code-s3). | INF-2 bucket rules, rollback note, V15. |
 | EMF cost not counted | **Confirmed**: $0.30 per metric-month in eu-west-1; each dimension combination is a metric. | Dimensions `Runtime` + `Version` only; `Route` and `Status` as properties; §11 rows. |
-| Rate limit not equivalent | **Confirmed** (floor 100 req/s). WAF priced from the Price List API. | §5 scaling row, §12 decision 3. |
+| Rate limit not equivalent | **Confirmed** (floor 100 req/s). The suggested WAF rule was rejected by the maintainer. | §5 scaling row, §12 decision 3 (no WAF). |
 | "Only CloudFront can reach the origin" too strong | **Confirmed**, including that a same-account identity policy suffices. | §1, §5 endpoint row, P9 IAM audit, §12 "not `InvokeWebFunctionEndpoint`". |
 | Pipeline steps incomplete | **Confirmed** (async endpoint updates, six documented waiters, Active ≠ healthy). | APP-4 rewritten with waits, version checks, Postman after promotion, dual-run order and failure handling. |
 | Canary too small | **Agreed** (~18 requests). | D9: smoke gate + post-promotion Postman + version-tagged 10-minute watch. |
