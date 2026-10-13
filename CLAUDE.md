@@ -43,13 +43,15 @@ Since 2026-10-13: `api.chronas.org` and `d24mkpax7rmotx.cloudfront.net` → Clou
 - **Database**: DynamoDB (8 in-use tables, `chronas-*` prefix, PAY_PER_REQUEST). PITR backups + deletion protection enabled.
 - **Statistics**: Pre-computed JSON in S3 (`s3://chronas-frontend-new/api/statistics.json`)
 - **Secrets**: AWS Secrets Manager `/chronas/secrets`; `config/bootstrap.js` loads `JWT_SECRET` from it before the app is imported. No secrets in Web Function environment variables.
-- **Deployment**: GitHub Actions ([`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml)) on push to `master`: tests (Node 22 and 24) → zip → new Web Function revision → endpoint moved → CloudFront invalidation → `/v1/version` check → Postman → automatic rollback to the previous revision on failure → classic Lambda updated. **No CDK in the deploy path.**
+- **Deployment**: GitHub Actions ([`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml)) on push to `master`: tests (Node 24) → zip → new Web Function revision → endpoint moved → CloudFront invalidation → `/v1/version` check → Postman → automatic rollback to the previous revision on failure. **No CDK in the deploy path.**
 - **Frontend**: S3 bucket `chronas-frontend-new`, served at `chronas.org` via CloudFront
-- **Cost**: September 2026 was $5.56; the Web Function adds an estimated $3–6/mo (memory is billed while environments are up). Logs are kept 3 days. No NAT Gateway, no WAF.
+- **Cost**: September 2026 was $5.56; the Web Function adds about $8–12/mo, measured on 2026-10-13: memory is billed while environments are up, and Lambda keeps `maxEnvironments` (2) of them running around the clock, at about 0.4 GB each. Logs are kept 3 days. No NAT Gateway, no WAF.
 
 ### Lambda Entry Points
 
 [index.js](index.js) → [web-server.js](web-server.js) is the entry for the Lambda Web Function runtime (Node 24; the runtime always loads `index.js`): it listens on `AWS_LAMBDA_HTTP_ENDPOINT` immediately and holds requests until [config/bootstrap.js](config/bootstrap.js) has loaded the secret and imported the Express app. One process serves many concurrent requests, so keep request data out of module-level state.
+
+**Logging**: the runtime keeps only `console.*` output and filters it by level (`WARN` in prod). Raw `process.stdout`/`stderr` writes are dropped, which is why [config/winston.js](config/winston.js) sets `forceConsole`. Use `console.warn`/`console.error` (or winston) for anything that must reach CloudWatch.
 
 ### DynamoDB Tables
 

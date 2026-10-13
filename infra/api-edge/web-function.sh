@@ -50,6 +50,10 @@ revision_json() {
       maxConcurrencyPerEnvironment: 64,
       environmentVariables: {
         NODE_ENV: "production",
+        # Memory is billed as consumed for the whole environment lifetime, and
+        # the default V8 heap here is 1 GB, so the heap grows lazily. 384 MB is
+        # the cap the classic Lambda ran with in production since 2026-05.
+        NODE_OPTIONS: "--max-old-space-size=384",
         APP_VERSION: $commit,
         SECRET_CONFIG_NAME: "/chronas/secrets",
         DYNAMODB_TABLE_PREFIX: "chronas",
@@ -109,7 +113,7 @@ case "$ACTION" in
   provision)
     ZIP="${1:?zip}"; COMMIT="${2:?commit}"
     log "Plan: bucket $WEB_ARTIFACT_BUCKET (versioned, private, TLS only), role $WEB_ROLE_NAME, log groups (${WEB_LOG_RETENTION_DAYS} d),"
-    log "      web function $WEB_FUNCTION_NAME with endpoint $WEB_ENDPOINT_NAME (IamAuth, routing Disabled, maxEnvironments 3, rateLimit 100),"
+    log "      web function $WEB_FUNCTION_NAME with endpoint $WEB_ENDPOINT_NAME (IamAuth, routing Disabled, maxEnvironments 2, rateLimit 100),"
     log "      CloudFront access for $DISTRIBUTION_ID only, OAC $WEB_OAC_NAME. Serves no traffic until CloudFront points at it."
     confirmed "provision chronas-api" || exit 0
 
@@ -151,7 +155,7 @@ case "$ACTION" in
       read -r KEY VERSION <<< "$(upload_artifact "$ZIP" "$COMMIT")"
       web_cli create-web-function --function-name "$WEB_FUNCTION_NAME" --tags app=chronas \
         --revision-config "$(revision_json "$KEY" "$VERSION" "$COMMIT")" \
-        --endpoint-config "{\"endpointName\":\"$WEB_ENDPOINT_NAME\",\"endpointType\":\"HomeRegion\",\"authType\":\"IamAuth\",\"autoDeploymentMode\":\"Disabled\",\"scalingConfig\":{\"maxEnvironments\":3},\"throttleConfig\":{\"rateLimit\":100}}" \
+        --endpoint-config "{\"endpointName\":\"$WEB_ENDPOINT_NAME\",\"endpointType\":\"HomeRegion\",\"authType\":\"IamAuth\",\"autoDeploymentMode\":\"Disabled\",\"scalingConfig\":{\"maxEnvironments\":2},\"throttleConfig\":{\"rateLimit\":100}}" \
         --query functionArn --output text
     fi
     web_cli wait web-function-endpoint-active --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME"

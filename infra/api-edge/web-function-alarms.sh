@@ -4,7 +4,11 @@
 # Web Functions publish no latency metric, so there is no duration alarm.
 # EndpointActiveEnvironments isn't alarmed: Lambda keeps spare environments
 # up, so it sits at the cap even at low traffic; the throttle metric is the
-# real "out of capacity" signal.
+# real "out of capacity" signal. maxEnvironments is 2 to save cost, so a
+# single throttle happens now and then (one on 2026-10-13 21:54); the alarm
+# waits for 5 in 5 minutes.
+# The CloudFront 5xx-rate alarm (CloudFront-5xx-Rate-High) lives in us-east-1
+# and notifies the us-east-1 topic of the same name; it is not managed here.
 #   ./web-function-alarms.sh [--apply --confirm "set web function alarms"]
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 parse_common_args "$@"
@@ -18,7 +22,7 @@ USAGE_DIMS=("${EP_DIMS[@]}" Name=ExecutionRegion,Value="$REGION")
 ALARMS=(
   "chronas-api-web-5xx|AWS/Lambda/Web|HTTPResponseStatusClass5XX|Sum|10|1|10 or more 5xx responses in 5 minutes (replaces the Lambda error alarm)"
   "chronas-api-web-throttled|AWS/Lambda/Web/Usage|EndpointRequestThrottles|Sum|10|1|10 or more requests over the endpoint rate limit in 5 minutes (replaces the API Gateway 429 alarm)"
-  "chronas-api-web-capacity|AWS/Lambda/Web/Usage|EndpointActiveEnvironmentThrottles|Sum|1|1|Requests needed more environments than maxEnvironments allows (replaces the Lambda concurrency alarm)"
+  "chronas-api-web-capacity|AWS/Lambda/Web/Usage|EndpointActiveEnvironmentThrottles|Sum|5|1|5 or more requests in 5 minutes got 429 because maxEnvironments (2) was reached (replaces the Lambda concurrency alarm)"
   "chronas-api-web-memory|AWS/Lambda/Web|EnvironmentMaxMemoryUsage|Maximum|1536|1|An environment used more than 1.5 of its 2 GB (timeouts and out-of-memory)"
 )
 

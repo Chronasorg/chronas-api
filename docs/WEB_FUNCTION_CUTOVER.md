@@ -11,7 +11,7 @@ All commands run from the repo root with the `chronas-prod` profile. `AWS_WEB_CL
 | Resource | Value |
 | --- | --- |
 | Web Function | `chronas-api` (eu-west-1, `nodejs24.x`, arm64), entry `index.js` → `web-server.js` |
-| Endpoint | `prod`, `IamAuth`, routing `Disabled` (moved only by deploys), `maxEnvironments` 3, `rateLimit` 100. Domain `qsysmsjd39s9mwkf.1p2.lambda-web.eu-west-1.on.aws`. Unsigned direct calls get 403 |
+| Endpoint | `prod`, `IamAuth`, routing `Disabled` (moved only by deploys), `maxEnvironments` 3 at cutover (2 since 2026-10-13 21:36, for cost), `rateLimit` 100. Domain `qsysmsjd39s9mwkf.1p2.lambda-web.eu-west-1.on.aws`. Unsigned direct calls get 403 |
 | Resource policy | `lambda:InvokeWebFunctionEndpoint` for `cloudfront.amazonaws.com`, only from distribution `E1KTIK2H0W8J2Q` (plus the test distribution until it is deleted) |
 | Execution role | `chronas-api-web-function-role`: the `chronas-*` tables, the statistics object, `/chronas/secrets`, its own two log groups |
 | Artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by this function's revisions, no expiry |
