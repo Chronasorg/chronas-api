@@ -94,3 +94,9 @@ invalidate_and_wait() {
   log "Invalidation $id created; waiting"
   aws_cli cloudfront wait invalidation-completed --distribution-id "$1" --id "$id"
 }
+
+web_cli() { "${AWS_WEB_CLI:-aws}" --profile "$PROFILE" --region "$REGION" lambda-web "$@"; }
+
+require_web_cli() {
+  web_cli help >/dev/null 2>&1 || die "this AWS CLI has no 'lambda-web' (needs >= 2.37.13); set AWS_WEB_CLI"
+}
