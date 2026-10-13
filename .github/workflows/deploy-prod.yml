@@ -17,6 +17,7 @@ permissions:
 env:
   S3_BUCKET: chronas-lambda-deployments
   AWS_REGION: eu-west-1
+  AWS_CLI_VERSION: 2.37.13
 
 jobs:
   # The Lambda Web Functions runtime is Node 24 only (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md
@@ -141,37 +142,16 @@ jobs:
             -x "eslint.config.js"
           echo "Package size: $(du -h lambda-deployment.zip | cut -f1)"
 
-      - name: Ensure S3 bucket exists
+      # `aws lambda-web` needs CLI >= 2.37.13; the runner's preinstalled CLI may be older.
+      - name: Install pinned AWS CLI
         run: |
-          aws s3 mb s3://${{ env.S3_BUCKET }} \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod 2>/dev/null || true
+          curl -sSf -o /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${{ env.AWS_CLI_VERSION }}.zip"
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          sudo /tmp/aws/install --update
+          aws --version
+          aws lambda-web help > /dev/null
 
-      # Roll back to the build that is live now. The newest zip in deploys/ is
-      # not necessarily it: after a failed deploy was rolled back, the newest
-      # zip is the failed build.
-      - name: Save previous deployment for rollback
-        id: previous
-        run: |
-          PREV_COMMIT=$(curl -sf --max-time 20 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
-          echo "Live commit before deploy: ${PREV_COMMIT:-unknown}"
-          PREV_KEY=""
-          if [ -n "$PREV_COMMIT" ] && aws s3api head-object \
-              --bucket ${{ env.S3_BUCKET }} --key "deploys/chronas-api-$PREV_COMMIT.zip" \
-              --region ${{ env.AWS_REGION }} --profile chronas-prod >/dev/null 2>&1; then
-            PREV_KEY="deploys/chronas-api-$PREV_COMMIT.zip"
-          else
-            PREV_KEY="deploys/$(aws s3 ls s3://${{ env.S3_BUCKET }}/deploys/ \
-              --region ${{ env.AWS_REGION }} \
-              --profile chronas-prod | sort | tail -1 | awk '{print $4}')"
-            echo "::warning::No zip for the live commit; falling back to the newest zip"
-            PREV_COMMIT=""
-          fi
-          echo "prev_key=$PREV_KEY" >> $GITHUB_OUTPUT
-          echo "prev_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
-          echo "Previous deployment: $PREV_KEY"
-
-      # Checked before the Lambda update: failing later would trigger a rollback.
+      # Checked before anything changes: failing later would trigger a rollback.
       - name: Check smoke test secret
         env:
           SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
@@ -181,27 +161,31 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy to Lambda via S3
+      - name: Record the live commit and revision
+        id: previous
         run: |
-          S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
-          aws s3 cp lambda-deployment.zip s3://${{ env.S3_BUCKET }}/$S3_KEY \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod
-          aws lambda update-function-code \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --s3-bucket ${{ env.S3_BUCKET }} \
-            --s3-key $S3_KEY \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod \
-            --query '{CodeSha256: CodeSha256, LastUpdateStatus: LastUpdateStatus}' \
-            --output json
-          aws lambda wait function-updated \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod
-          echo "Lambda deployment completed successfully!"
+          PREV_COMMIT=$(curl -sf --max-time 20 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+          PREV_REVISION=$(aws lambda-web get-web-function-endpoint --function-name chronas-api --endpoint-name prod \
+            --region ${{ env.AWS_REGION }} --profile chronas-prod --query 'revisionWeights[0].revisionId' --output text)
+          echo "prev_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
+          echo "prev_revision=$PREV_REVISION" >> $GITHUB_OUTPUT
+          echo "Live before deploy: commit ${PREV_COMMIT:-unknown}, revision $PREV_REVISION"
 
+      # api.chronas.org → CloudFront → Lambda Web Function "chronas-api"
+      # (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). New revision, then the
+      # prod endpoint moves to it; the previous revision is the rollback target.
+      - name: Deploy to the Lambda Web Function
+        id: web
+        continue-on-error: true
+        run: |
+          infra/api-edge/web-function.sh deploy lambda-deployment.zip "${GITHUB_SHA::7}" \
+            --apply --confirm "deploy chronas-api"
+
+      # The endpoint has already moved here: a failure must roll back too.
       - name: Invalidate CloudFront cache
+        id: invalidate
+        if: steps.web.outcome == 'success'
+        continue-on-error: true
         run: |
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id E1KTIK2H0W8J2Q \
@@ -214,21 +198,11 @@ jobs:
             --profile chronas-prod
           echo "CloudFront invalidation $INVALIDATION_ID completed"
 
-      - name: Warm up Lambda (cold start after deploy)
-        run: |
-          echo "Sending warmup request to trigger cold start..."
-          curl -sf --max-time 60 https://api.chronas.org/v1/health || true
-          sleep 5
-          echo "Warming DB connection..."
-          curl -sf --max-time 60 https://api.chronas.org/v1/flags || true
-          curl -sf --max-time 60 https://api.chronas.org/v1/statistics || true
-          sleep 3
-          echo "Lambda warmed up"
-
-      # Postman only means something once the new build answers. A failure
-      # here is treated like a Postman failure (rollback below).
+      # A revision is Active even when its server fails to start, so only a
+      # real response proves the deploy. Failing counts like a Postman failure.
       - name: Check the live version is the new commit
         id: version
+        if: steps.web.outcome == 'success' && steps.invalidate.outcome == 'success'
         continue-on-error: true
         run: |
           EXPECTED="${GITHUB_SHA::7}"
@@ -259,38 +233,22 @@ jobs:
       # fails Postman live (for example when rolling back would restore a
       # build with a known security hole). The run still fails.
       - name: Keep deployment despite test failure
-        if: (steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
+        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
         run: |
-          echo "::error::Postman tests FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
+          echo "::error::Post-deploy checks FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
           exit 1
 
-      - name: Rollback Lambda on test failure
-        if: (steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
+      - name: Roll back the Web Function on test failure
+        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
         run: |
-          echo "Post-deploy checks FAILED -- rolling back Lambda to previous deployment"
-          aws lambda update-function-code \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --s3-bucket ${{ env.S3_BUCKET }} \
-            --s3-key ${{ steps.previous.outputs.prev_key }} \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod \
-            --query '{CodeSha256: CodeSha256, LastUpdateStatus: LastUpdateStatus}' \
-            --output json
-          aws lambda wait function-updated \
-            --function-name ${{ steps.lambda.outputs.function_name }} \
-            --region ${{ env.AWS_REGION }} \
-            --profile chronas-prod
-          echo "Rolled back to ${{ steps.previous.outputs.prev_key }}"
-          # Drop edge copies that the failed build may have produced.
+          echo "Deploy or checks FAILED -- moving the endpoint back to ${{ steps.previous.outputs.prev_revision }}"
+          infra/api-edge/web-function.sh rollback "${{ steps.previous.outputs.prev_revision }}" \
+            --apply --confirm "roll back chronas-api"
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
-            --distribution-id E1KTIK2H0W8J2Q \
-            --paths "/v1/*" \
-            --profile chronas-prod \
-            --query 'Invalidation.Id' --output text)
+            --distribution-id E1KTIK2H0W8J2Q --paths "/v1/*" \
+            --profile chronas-prod --query 'Invalidation.Id' --output text)
           aws cloudfront wait invalidation-completed \
-            --distribution-id E1KTIK2H0W8J2Q \
-            --id "$INVALIDATION_ID" \
-            --profile chronas-prod
+            --distribution-id E1KTIK2H0W8J2Q --id "$INVALIDATION_ID" --profile chronas-prod
           EXPECTED="${{ steps.previous.outputs.prev_commit }}"
           if [ -n "$EXPECTED" ]; then
             for i in $(seq 1 24); do
@@ -301,6 +259,23 @@ jobs:
             echo "::error::After rollback, /v1/version still doesn't report $EXPECTED"
           fi
           exit 1
+
+      # The old path (API Gateway → Event Function) stays current, so a DNS or
+      # CloudFront rollback lands on the same build. It serves no traffic.
+      - name: Update the Event Function (rollback path)
+        if: steps.postman.outcome == 'success'
+        run: |
+          S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
+          aws s3 cp lambda-deployment.zip s3://${{ env.S3_BUCKET }}/$S3_KEY \
+            --region ${{ env.AWS_REGION }} --profile chronas-prod
+          aws lambda update-function-code \
+            --function-name ${{ steps.lambda.outputs.function_name }} \
+            --s3-bucket ${{ env.S3_BUCKET }} --s3-key $S3_KEY \
+            --region ${{ env.AWS_REGION }} --profile chronas-prod \
+            --query LastUpdateStatus --output text
+          aws lambda wait function-updated \
+            --function-name ${{ steps.lambda.outputs.function_name }} \
+            --region ${{ env.AWS_REGION }} --profile chronas-prod
 
       - name: Verify deployment success
         if: steps.postman.outcome == 'success'

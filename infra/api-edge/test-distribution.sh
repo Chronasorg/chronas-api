@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # P3 throwaway distribution: the §6 target config with no alias and the
 # default certificate, all behaviors on the API Gateway origin.
-#   ./test-distribution.sh create [--apply --confirm "create test distribution"]
+#   ./test-distribution.sh create [--web-origin <domain> --oac <id> --assign default=WebFunctionOrigin,…]
+#                                 [--apply --confirm "create test distribution"]
 #   ./test-distribution.sh status|domain
 #   ./test-distribution.sh delete [--apply --confirm "delete test distribution"]
 # The throwaway distribution is found by its comment, so CI runs don't need
@@ -23,7 +24,8 @@ case "${ARGS[0]:-}" in
     read -r DYNAMIC_ID PUBLIC_ID <<< "$(policy_ids)"
     DIR="$(backup_dir test-distribution)"
     aws_cli cloudfront get-distribution-config --id "$DISTRIBUTION_ID" --output json > "$DIR/live.json"
-    edge_config render --live "$DIR/live.json" --dynamic-id "$DYNAMIC_ID" --public-id "$PUBLIC_ID" --test-distribution > "$DIR/test-config.json"
+    edge_config render --live "$DIR/live.json" --dynamic-id "$DYNAMIC_ID" --public-id "$PUBLIC_ID" --test-distribution \
+      "${ARGS[@]:1}" > "$DIR/test-config.json"
     log "Test distribution config: $DIR/test-config.json"
     if confirmed "create test distribution"; then
       CREATED="$(aws_cli cloudfront create-distribution --distribution-config "file://$DIR/test-config.json" \

@@ -3,8 +3,8 @@ name: API edge (CloudFront, Route 53)
 # Manual changes to the api.chronas.org edge, phase by phase
 # (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md, scripts in infra/api-edge/).
 # Every action is a dry run unless `confirm` holds the exact phrase that the
-# dry run prints. Runs in the `production-edge` environment, which must have
-# a required reviewer before this workflow is used.
+# dry run prints. `smoke` runs the gate checks and the full Postman suite
+# against any base URL (it needs the smoke-account secret, so it runs here).
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +13,8 @@ on:
         type: choice
         required: true
         options:
+          - smoke
+          - web-status
           - snapshot
           - verify
           - policies
@@ -34,6 +36,10 @@ on:
         description: Exact confirmation phrase from the dry run (empty = dry run)
         required: false
         default: ''
+      base_url:
+        description: "Base URL for smoke, e.g. https://d24mkpax7rmotx.cloudfront.net"
+        required: false
+        default: https://api.chronas.org
 
 permissions:
   contents: read
@@ -51,7 +57,6 @@ jobs:
   edge:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: production-edge
     steps:
       - uses: actions/checkout@v4
 
@@ -66,9 +71,19 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile chronas-prod
           aws configure set region ${{ env.AWS_REGION }} --profile chronas-prod
 
+      # Same pinned CLI as deploy-prod.yml: `aws lambda-web` needs >= 2.37.13.
+      - name: Install pinned AWS CLI
+        run: |
+          curl -sSf -o /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.37.13.zip"
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          sudo /tmp/aws/install --update
+          aws --version
+          aws lambda-web help > /dev/null
+
       - name: Run ${{ inputs.action }}
         env:
           ACTION: ${{ inputs.action }}
+          BASE_URL: ${{ inputs.base_url }}
           ARGS: ${{ inputs.args }}
           CONFIRM: ${{ inputs.confirm }}
           SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
@@ -80,6 +95,13 @@ jobs:
           cd infra/api-edge
           DIRECT=https://2g4uy0bdoe.execute-api.eu-west-1.amazonaws.com
           case "$ACTION" in
+            smoke)
+              node verify.mjs --base "$BASE_URL" --direct "$DIRECT" --expect-cloudfront --out ../backups/verify-smoke.json
+              npx --yes newman@6.2.3 run ../../PostmanTests/chronas-enhanced.postman_collection.json \
+                -e ../../PostmanTests/chronas-api.postman_environment.json \
+                --env-var "baseUrl=$BASE_URL" --env-var "smokePassword=$SMOKE_PASSWORD" \
+                --timeout-request 60000 --delay-request 500 ;;
+            web-status)       ./web-function.sh status ;;
             snapshot)         ./snapshot.sh manual ;;
             verify)           node verify.mjs --base https://api.chronas.org --direct "$DIRECT" --out ../backups/verify.json "${EXTRA[@]}" ;;
             policies)         ./policies.sh "${APPLY[@]}" ;;

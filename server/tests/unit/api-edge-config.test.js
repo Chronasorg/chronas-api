@@ -48,7 +48,7 @@ describe('## api-edge CloudFront config', () => {
     it('does not cache 500, 502, 503 or 504 (D7)', () => {
       expect(config.CustomErrorResponses).to.deep.equal({
         Quantity: 4,
-        Items: [500, 502, 503, 504].map(code => ({ ErrorCode: code, ErrorCachingMinTTL: 0 }))
+        Items: [500, 502, 503, 504].map(code => ({ ErrorCode: code, ResponsePagePath: '', ResponseCode: '', ErrorCachingMinTTL: 0 }))
       });
     });
 

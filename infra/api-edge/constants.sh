@@ -35,3 +35,15 @@ CF_LOG_GROUP="chronas-api-cloudfront-access"
 CF_LOG_RETENTION_DAYS=14
 
 TEST_DISTRIBUTION_COMMENT="chronas-api P3 throwaway test distribution (delete after use)"
+
+# Lambda Web Function (plan §5, INF-2). Needs AWS CLI >= 2.37.13 for
+# `aws lambda-web`; set AWS_WEB_CLI to its path if the default `aws` is older.
+WEB_FUNCTION_NAME="chronas-api"
+WEB_ENDPOINT_NAME="prod"
+WEB_FUNCTION_ARN="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:web-function/${WEB_FUNCTION_NAME}"
+WEB_ROLE_NAME="chronas-api-web-function-role"
+WEB_ARTIFACT_BUCKET="chronas-lambda-web-artifacts"
+WEB_OAC_NAME="chronas-api-web-oac"
+WEB_LOG_GROUP="/aws/lambda/web/${WEB_FUNCTION_NAME}"
+WEB_LOG_RETENTION_DAYS=3
+SECRET_ARN="arn:aws:secretsmanager:${REGION}:${ACCOUNT_ID}:secret:/chronas/secrets-YDUZQG"

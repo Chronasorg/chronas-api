@@ -150,7 +150,9 @@ export function renderDistributionConfig(live, {
 
   config.CustomErrorResponses = {
     Quantity: NO_ERROR_CACHING_CODES.length,
-    Items: NO_ERROR_CACHING_CODES.map(code => ({ ErrorCode: code, ErrorCachingMinTTL: 0 }))
+    // UpdateDistribution rejects items without the two (empty) page fields;
+    // CreateDistribution fills them in itself.
+    Items: NO_ERROR_CACHING_CODES.map(code => ({ ErrorCode: code, ResponsePagePath: '', ResponseCode: '', ErrorCachingMinTTL: 0 }))
   };
 
   if (testDistribution) {
