@@ -35,7 +35,7 @@ function checkPrivilegeForTypes(threshold, typesBlocked) {
     const err = new APIError('Unauthorized. 2 Your profile does not have sufficient privileges to access this resource.', 401);
     if (req.method !== 'POST' && !entity) return next(err);
 
-    const types = [(entity || {}).type, (req.body || {}).type];
+    const types = [(entity || {}).type, req.storedType, (req.body || {}).type];
     if (types.some(type => typesBlocked.indexOf(type) !== -1)) return next(err);
     return next();
   };

@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 
+import APIError from '../helpers/APIError.js';
 import Metadata from '../models/metadata.model.js';
 import Marker from '../models/marker.model.js';
 import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js';
@@ -168,7 +169,15 @@ function createNodeOne(metadata, req, res, next) {
  */
 function update(req, res, next, fromRevision = false) {
   const metadata = req.entity;
-  if (typeof req.body._id !== 'undefined') metadata._id = req.body._id;
+  if (!fromRevision) {
+    // The id is the storage key: changing it would overwrite another document.
+    if (typeof req.body._id !== 'undefined' && req.body._id !== metadata._id) {
+      return next(new APIError('The _id of a metadata entry cannot be changed', httpStatus.BAD_REQUEST, true));
+    }
+    if (typeof req.body.type !== 'undefined' && req.body.type !== metadata.type && !(req.auth && req.auth.privilege >= 5)) {
+      return next(new APIError('Unauthorized. Changing the type needs admin privileges.', httpStatus.UNAUTHORIZED, true));
+    }
+  }
   if (typeof req.body.coo !== 'undefined') metadata.coo = req.body.coo;
   if (typeof req.body.data !== 'undefined') metadata.data = req.body.data;
   if (typeof req.body.type !== 'undefined') metadata.type = req.body.type;
@@ -490,6 +499,21 @@ function defineEntity(req, res, next) {
   next();
 }
 
+/**
+ * For POST: if the body targets an existing document, record its stored type
+ * so privilege checks can't be sidestepped by omitting `type`.
+ */
+function loadStoredType(req, res, next) {
+  const id = (req.body || {})._id;
+  if (typeof id === 'undefined') return next();
+  return Metadata.findById(id).exec()
+    .then((existing) => {
+      if (existing) req.storedType = existing.type;
+      next();
+    })
+    .catch(e => next(e));
+}
+
 function _isInvalidRgb(rgb) {
   const rxValidRgb = /([R][G][B][A]?[(]\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])(\s*,\s*((0\.[0-9]{1})|(1\.0)|(1)))?[)])/i;
 
@@ -500,4 +524,4 @@ function _isInvalidRgb(rgb) {
   }
 }
 
-export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote };
+export default { defineEntity, loadStoredType, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote };

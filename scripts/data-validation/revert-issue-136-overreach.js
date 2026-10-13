@@ -18,7 +18,7 @@
  * Usage:
  *   node scripts/data-validation/revert-issue-136-overreach.js \
  *     --api-url https://api.chronas.org \
- *     --email postman@aui.de --password postman123 \
+ *     --email <editor email> --password "$CHRONAS_PASSWORD" \
  *     --dry-run    # default — prints calls
  *     --apply      # actually writes
  */

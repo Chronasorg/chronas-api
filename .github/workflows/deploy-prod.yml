@@ -126,6 +126,16 @@ jobs:
           echo "prev_key=deploys/$PREV_KEY" >> $GITHUB_OUTPUT
           echo "Previous deployment: deploys/$PREV_KEY"
 
+      # Checked before the Lambda update: failing later would trigger a rollback.
+      - name: Check smoke test secret
+        env:
+          SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
+        run: |
+          if [ -z "$SMOKE_PASSWORD" ]; then
+            echo "::error::Repository secret API_SMOKE_PASSWORD is not set"
+            exit 1
+          fi
+
       - name: Deploy to Lambda via S3
         run: |
           S3_KEY="deploys/chronas-api-${GITHUB_SHA::7}.zip"
@@ -171,10 +181,6 @@ jobs:
         env:
           SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
         run: |
-          if [ -z "$SMOKE_PASSWORD" ]; then
-            echo "::error::Repository secret API_SMOKE_PASSWORD is not set"
-            exit 1
-          fi
           npm install -g newman
           newman run PostmanTests/chronas-enhanced.postman_collection.json \
             -e PostmanTests/chronas-api.postman_environment.json \

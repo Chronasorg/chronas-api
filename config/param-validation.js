@@ -93,7 +93,7 @@ export default {
   // POST /v1/auth/signup
   signup: {
     body: Joi.object({
-      email: Joi.string().required(),
+      email: Joi.string().email().required(),
       password: Joi.string().required(),
       username: Joi.string()
     })

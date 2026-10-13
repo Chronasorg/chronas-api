@@ -18,6 +18,7 @@ router.route('/')
   /** POST /v1/metadata - Create new metadata */
   .post(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
+    metadataCtrl.loadStoredType,
     checkPrivilege.checkPrivilegeForTypes(5, ['g']),
     checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
@@ -55,7 +56,8 @@ router.route('/:metadataId/single')
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     // validate(paramValidation.updateSingle),
-    checkPrivilege.checkPrivilegeForTypes(5, ['g']),
+    // Single-entry edits of type g dictionaries stay open to editors (privilege 3);
+    // replacing or deleting a whole type g document needs privilege 5.
     checkPrivilege.checkPrivilege(3),
     metadataCtrl.updateSingle,
     revisionCtrl.addUpdateSingleRevision

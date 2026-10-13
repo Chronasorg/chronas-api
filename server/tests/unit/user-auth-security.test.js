@@ -66,7 +66,8 @@ describe('## User and auth route security', () => {
     ]);
     await clearTable('chronas-metadata');
     await seedTable('chronas-metadata', [
-      { _id: 'ruler', type: 'g', data: { ENG: ['Kingdom of England', 'rgb(181,0,51)', 'Kingdom_of_England', ''] } }
+      { _id: 'ruler', type: 'g', data: { ENG: ['Kingdom of England', 'rgb(181,0,51)', 'Kingdom_of_England', ''] } },
+      { _id: 'e_Some_Event', type: 'e', data: { title: 'Some event' } }
     ]);
   });
 
@@ -274,23 +275,77 @@ describe('## User and auth route security', () => {
 
   describe('type g metadata', () => {
     const SINGLE = { subEntityId: 'POW', nextBody: ['Powhatan', 'rgb(150,150,150)', 'Powhatan', ''] };
+    const EDITOR_AUTH = () => ({ Authorization: `Bearer ${EDITOR}` });
 
-    it('privilege 3 cannot delete or rewrite type g dictionaries, even without a type in the body', async () => {
-      const auth = { Authorization: `Bearer ${EDITOR}` };
-      expect((await request(app).delete('/v1/metadata/ruler').set(auth)).status).to.equal(401);
-      expect((await request(app).put('/v1/metadata/ruler').set(auth).send({ data: {} })).status).to.equal(401);
-      expect((await request(app).put('/v1/metadata/ruler').set(auth).send({ type: 'e', data: {} })).status).to.equal(401);
-      expect((await request(app).put('/v1/metadata/ruler/single').set(auth).send(SINGLE)).status).to.equal(401);
+    it('privilege 3 cannot delete or replace a type g document, even without a type in the body', async () => {
+      expect((await request(app).delete('/v1/metadata/ruler').set(EDITOR_AUTH())).status).to.equal(401);
+      expect((await request(app).put('/v1/metadata/ruler').set(EDITOR_AUTH()).send({ data: {} })).status).to.equal(401);
+      expect((await request(app).put('/v1/metadata/ruler').set(EDITOR_AUTH()).send({ type: 'e', data: {} })).status).to.equal(401);
 
       const stored = await getMetadata('ruler');
-      expect(stored).to.not.equal(undefined);
-      expect(stored.data).to.not.have.property('POW');
+      expect(stored.type).to.equal('g');
+      expect(stored.data).to.have.property('ENG');
     });
 
-    it('privilege 5 can still add a single entry', async () => {
-      const res = await request(app).put('/v1/metadata/ruler/single').set('Authorization', `Bearer ${ADMIN}`).send(SINGLE);
+    it('a PUT cannot move a document onto another id', async () => {
+      const res = await request(app).put('/v1/metadata/e_Some_Event').set(EDITOR_AUTH())
+        .send({ _id: 'ruler', type: 'e', data: { x: 1 } });
+      expect(res.status).to.equal(400);
+      const ruler = await getMetadata('ruler');
+      expect(ruler.type).to.equal('g');
+      expect(ruler.data).to.have.property('ENG');
+    });
+
+    it('only admins can change the type of a document', async () => {
+      expect((await request(app).put('/v1/metadata/e_Some_Event').set(EDITOR_AUTH()).send({ type: 'g' })).status).to.equal(401);
+      expect((await getMetadata('e_Some_Event')).type).to.equal('e');
+    });
+
+    it('privilege 3 cannot write into a type g document through POST', async () => {
+      const res = await request(app).post('/v1/metadata').set(EDITOR_AUTH())
+        .send({ _id: 'ruler', parentId: 'ENG', childId: '4', childValue: 'injected' });
+      expect(res.status).to.equal(401);
+      expect((await getMetadata('ruler')).data.ENG).to.have.length(4);
+    });
+
+    it('editors can still change single entries, which is the dictionary editing workflow', async () => {
+      const res = await request(app).put('/v1/metadata/ruler/single').set(EDITOR_AUTH()).send(SINGLE);
       expect(res.status).to.not.equal(401);
       expect((await getMetadata('ruler')).data).to.have.property('POW');
+    });
+
+    it('privilege 5 can replace a type g document', async () => {
+      const res = await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${ADMIN}`)
+        .send({ data: { ENG: ['England', 'rgb(1,2,3)', 'England', ''] } });
+      expect(res.status).to.equal(200);
+      expect((await getMetadata('ruler')).data.ENG[0]).to.equal('England');
+    });
+  });
+
+  describe('profile field validation', () => {
+    it('rejects non-string profile fields', async () => {
+      const res = await request(app).put('/v1/users/alice@example.com').set('Authorization', `Bearer ${ALICE}`)
+        .send({ username: { $ne: null } });
+      expect(res.status).to.equal(400);
+      expect((await getUser('alice@example.com')).username).to.equal('alice');
+    });
+
+    it('rejects a username that belongs to someone else', async () => {
+      const res = await request(app).put('/v1/users/alice@example.com').set('Authorization', `Bearer ${ALICE}`)
+        .send({ username: 'bob' });
+      expect(res.status).to.equal(400);
+      expect((await getUser('alice@example.com')).username).to.equal('alice');
+    });
+
+    it('admins cannot change an email, which is the account id', async () => {
+      await request(app).put('/v1/users/bob@example.com').set('Authorization', `Bearer ${ADMIN}`)
+        .send({ email: 'other@example.com' });
+      expect((await getUser('bob@example.com')).email).to.equal('bob@example.com');
+    });
+
+    it('signup needs an email address', async () => {
+      const res = await request(app).post('/v1/auth/signup').send({ email: 'google12345', password: 'pw-123456', username: 'x' });
+      expect(res.status).to.equal(400);
     });
   });
 });

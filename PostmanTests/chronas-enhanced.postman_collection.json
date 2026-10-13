@@ -1530,6 +1530,42 @@
           }
         },
         {
+          "name": "Remove leftover test user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Leftover test user removed or absent\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/users/testUser@test.de",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "users",
+                "testUser@test.de"
+              ]
+            }
+          }
+        },
+        {
           "name": "Create User",
           "event": [
             {
@@ -1546,16 +1582,15 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200 or 400\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "pm.test(\"Signup succeeds\", function () {",
+                  "    pm.response.to.have.status(200);",
                   "});",
                   "if (pm.response.code === 200) {",
-                  "    pm.test(\"Signup returns a token\", function () {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData.token).to.not.be.empty;",
-                  "        pm.collectionVariables.set(\"testUserToken\", jsonData.token);",
-                  "    });",
-                  "}"
+                  "    pm.collectionVariables.set(\"testUserToken\", pm.response.json().token);",
+                  "}",
+                  "pm.test(\"Signup returns a token\", function () {",
+                  "    pm.expect(pm.collectionVariables.get(\"testUserToken\")).to.not.equal(\"none\");",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -1672,6 +1707,9 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "pm.test(\"Ran with a real test-user token\", function () {",
+                  "    pm.expect(pm.collectionVariables.get(\"testUserToken\")).to.not.equal(\"none\");",
+                  "});",
                   "pm.test(\"Status code is 401\", function () {",
                   "    pm.response.to.have.status(401);",
                   "});",

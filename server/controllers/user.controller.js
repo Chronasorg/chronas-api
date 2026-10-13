@@ -31,7 +31,8 @@ async function load(req, res, next) {
 
 const PROFILE_FIELDS = ['avatar', 'username', 'name', 'bio', 'education', 'website'];
 const COUNTERS = ['count_linked', 'count_voted', 'count_deleted', 'count_updated', 'count_reverted', 'count_created', 'count_mistakes'];
-const ADMIN_FIELDS = ['email', 'subscription', 'patreon', 'privilege', 'karma'];
+// email is not editable: it is the account's storage key.
+const ADMIN_FIELDS = ['subscription', 'patreon', 'privilege', 'karma'];
 
 /**
  * Response shape for a user. toJSON() drops the password.
@@ -132,7 +133,8 @@ async function loginOrCreateOAuthUser(req, res, next, profile) {
 
 /**
  * Update existing user. Owners may change their profile fields and their
- * password (with the current one); everything else is admin-only.
+ * password (with the current one); privilege, karma and subscription are
+ * admin-only, and the email (the account id) can't be changed.
  * @returns {User}
  */
 async function update(req, res, next) {
@@ -142,6 +144,15 @@ async function update(req, res, next) {
   const isSelf = String((req.auth || {}).id || '').toLowerCase() === String(user._id || '').toLowerCase();
 
   try {
+    if (PROFILE_FIELDS.some(field => typeof body[field] !== 'undefined' && typeof body[field] !== 'string')) {
+      return next(new APIError('Profile fields must be strings', httpStatus.BAD_REQUEST, true));
+    }
+    if (typeof body.username !== 'undefined' && body.username !== user.username) {
+      const taken = await User.findOne({ username: body.username }).exec();
+      if (taken && taken._id !== user._id) {
+        return next(new APIError('This username is already taken', httpStatus.BAD_REQUEST, true));
+      }
+    }
     PROFILE_FIELDS.forEach((field) => {
       if (typeof body[field] !== 'undefined') user[field] = body[field];
     });
