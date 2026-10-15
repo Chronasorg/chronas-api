@@ -19,12 +19,14 @@ export const isWebFunction = () => Boolean(process.env.AWS_LAMBDA_HTTP_ENDPOINT)
 let secretsClient = null;
 
 function getSecretsClient() {
-  // Worst case about 6 s (2 attempts × 1 s connect + 2 s response), inside
-  // the Web Function's 10 s listen window and far below the 30 s timeout.
+  // Worst case about 6 s (2 attempts × 1 s connect + 2 s response), far
+  // below the 25 s request timeout. Without throwOnRequestTimeout the SDK's
+  // requestTimeout only logs a warning and the call waits indefinitely, so
+  // a stalled Secrets Manager would hold every request of the environment.
   secretsClient ||= new SecretsManagerClient({
     region: process.env.AWS_REGION || process.env.region || 'eu-west-1',
     maxAttempts: 2,
-    requestHandler: { connectionTimeout: 1000, requestTimeout: 2000 }
+    requestHandler: { connectionTimeout: 1000, requestTimeout: 2000, throwOnRequestTimeout: true }
   });
   return secretsClient;
 }

@@ -53,7 +53,13 @@ revision_json() {
         # Memory is billed as consumed for the whole environment lifetime, and
         # the default V8 heap here is 1 GB, so the heap grows lazily. 384 MB is
         # the cap the classic Lambda ran with in production since 2026-05.
-        NODE_OPTIONS: "--max-old-space-size=384",
+        # With only that flag set, Lambda does not set --max-semi-space-size
+        # (web-functions-runtimes.html), so the young generation grows to the
+        # Node default. 4 MB semi-spaces lowered peak RSS in a 400-year area
+        # sweep on Node 24 from 331 to 222 MB (concurrency 4) and from 392 to
+        # 276 MB (concurrency 16), at about 10% more CPU (2026-10-15, macOS).
+        # No apostrophes in these comments: this jq program is single-quoted.
+        NODE_OPTIONS: "--max-old-space-size=384 --max-semi-space-size=4",
         APP_VERSION: $commit,
         SECRET_CONFIG_NAME: "/chronas/secrets",
         DYNAMODB_TABLE_PREFIX: "chronas",

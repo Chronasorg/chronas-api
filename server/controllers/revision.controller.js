@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
 
+import passError from '../helpers/pass-error.js';
 import Revision from '../models/revision.model.js';
 import Area from '../models/area.model.js';
 import Marker from '../models/marker.model.js';
@@ -44,10 +45,14 @@ function load(req, res, next, id) {
             req.entity = entity;
             return next();
           })
-          .catch(e => res.status(httpStatus.NOT_FOUND).json({
-            message: e.isPublic ? e.message : httpStatus[e.status],
-            stack: config.env === 'development' ? e.stack : {}
-          }));
+          .catch((e) => {
+            // Only a missing entity is a 404; throttling or an outage is a 5xx.
+            if (e.status !== httpStatus.NOT_FOUND) return next(e);
+            return res.status(httpStatus.NOT_FOUND).json({
+              message: e.isPublic ? e.message : httpStatus[e.status],
+              stack: config.env === 'development' ? e.stack : {}
+            });
+          });
       }
     })
     .catch(e => next(e));
@@ -197,11 +202,11 @@ function addUpdateSingleRevision(req, res, next, shouldReturn = true) {
       if (shouldReturn) return res.status(200).send('Metadata successfully updated.');
     })
     .catch((e) => {
-      if (shouldReturn) return res.status(500).send(e);
+      if (shouldReturn) return passError(req, res, next, e);
     });
 }
 
-function addUpdateManyRevision(req, res, _next) {
+function addUpdateManyRevision(req, res, next) {
   const { username } = req.auth;
   userCtrl.changePoints(username, 'updated', 1);
 
@@ -224,12 +229,12 @@ function addUpdateManyRevision(req, res, _next) {
     prevBody: JSON.stringify(prevBody)
   });
 
-  // add revision record
+  // add revision record. Long area ranges have already answered.
   revision.save()
     .then(() => {
-      res.status(200).send('Areas successfully updated.');
+      if (!res.headersSent) res.status(200).send('Areas successfully updated.');
     })
-    .catch(e => res.status(500).send(e));
+    .catch(e => passError(req, res, next, e));
 }
 
 /**

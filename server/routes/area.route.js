@@ -1,5 +1,6 @@
 import express from 'express';
 import { expressjwt as expressJwt } from 'express-jwt';
+import httpStatus from 'http-status';
 
 import areaCtrl from '../controllers/area.controller.js';
 import revisionCtrl from '../controllers/revision.controller.js';
@@ -30,30 +31,23 @@ router.route('/')
 
 router.route('/replace')
   .all(areaCtrl.defineEntity)
-/** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
+  /** PUT /v1/areas/replace - Replace a ruler, culture or religion across a year range */
   .put(
     expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
     checkPrivilege.checkPrivilege(3),
     areaCtrl.replaceAll,
     revisionCtrl.addUpdateManyRevision);
 
-router.route('/aggregateProvinces')
-  /** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
-  .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateProvinces);
-
-router.route('/aggregateMetaCoo')
-/** GET /v1/areas/aggregateProvinces - Aggregate all years by provinces */
-  .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateMetaCoo);
-
-router.route('/aggregateDimension')
-/** GET /v1/areas/aggregateDimension - Aggregate all years by selected dimension (ruler, religion, religionGeneral or culture) */
-  .get(
-    // expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    areaCtrl.aggregateDimension);
+// The aggregation endpoints (aggregateProvinces, aggregateMetaCoo,
+// aggregateDimension) streamed every year through a database cursor, which
+// the DynamoDB models don't have, so they have not worked since the
+// migration. Retired on 2026-10-15; no frontend calls them.
+const aggregationGone = (_req, res) => res.status(httpStatus.GONE).json({
+  message: 'The area aggregation API has been retired.'
+});
+router.route('/aggregateProvinces').all(aggregationGone);
+router.route('/aggregateMetaCoo').all(aggregationGone);
+router.route('/aggregateDimension').all(aggregationGone);
 
 router.route('/:areaId')
   .all(areaCtrl.defineEntity)

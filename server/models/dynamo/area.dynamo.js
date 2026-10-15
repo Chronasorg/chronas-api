@@ -6,7 +6,7 @@ import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
-import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, isPossibleKey } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
 import BoundedCache from '../../helpers/bounded-cache.js';
 
@@ -14,9 +14,13 @@ const TABLE = tableName('areas');
 // Recently read years, so popular years don't cost a GetItem (~17 read units
 // for ~130 KB) on every edge miss. Bounded: one client sweeping all ~3,942
 // years used to fill the 512 MB function when this cache had no limit.
+// maxBytes counts JSON length; the parsed objects take about 4× that in the
+// heap, and Web Function memory is billed for the environment's lifetime.
+// 4 MB (about 30 years) instead of 16 MB lowered RSS by ~60 MB in a
+// 400-year sweep on Node 24 (2026-10-15).
 export const areaCache = new BoundedCache({
   maxEntries: 100,
-  maxBytes: 16 * 1024 * 1024,
+  maxBytes: 4 * 1024 * 1024,
   maxEntryBytes: 1024 * 1024,
   ttlMs: 24 * 60 * 60 * 1000
 });
@@ -39,6 +43,7 @@ export default class AreaDynamo extends DynamoDocument {
 
   static findById(id) {
     const promise = (async () => {
+      if (!isPossibleKey(id)) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
         Key: { _id: String(id) }

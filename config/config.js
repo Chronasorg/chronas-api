@@ -12,7 +12,7 @@ if (process.env.chronasConfig !== undefined && process.env.chronasConfig !== nul
   Object.keys(lambdaEnv).forEach((key) => { mergedSecrets[key] = lambdaEnv[key]; });
 } else {
   const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-  dotenv.config({ path: envFile });
+  dotenv.config({ path: envFile, quiet: true });
   Object.assign(mergedSecrets, process.env);
 }
 

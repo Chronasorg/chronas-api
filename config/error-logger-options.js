@@ -10,6 +10,9 @@
  * `skip` *before* the final error handler calls `res.status(err.status)`, so at
  * skip-time `res.statusCode` is still the default 200 — only `err.status` is
  * trustworthy here.
+ *
+ * This line carries the error details for 5xx that went through next(err).
+ * The count of all app 5xx is the `http5xx` line (config/http-5xx-log.js).
  */
 
 export function errorStatus(err) {
@@ -25,7 +28,7 @@ export function buildErrorLoggerOptions(winstonInstance) {
     metaField: null,
     requestField: null, // keep request headers/body out of logs (no PII/secrets)
     // 4xx are client errors (bad paths, bot scans, validation) — low signal and
-    // high volume. Only log server faults; this keeps the 14-day retention cheap.
+    // high volume. Only log server faults; the log groups keep 3 days.
     skip: (req, res, err) => errorStatus(err) < 500,
     exceptionToMeta: err => ({
       msg: err.message,
@@ -39,11 +42,13 @@ export function buildErrorLoggerOptions(winstonInstance) {
     dynamicMeta: (req) => ({
       path: req.originalUrl,
       method: req.method,
-      requestId: req.headers['x-amzn-requestid'] || req.headers['x-request-id'],
+      // Lambda Web Functions add lambda-web-request-id to every request and
+      // return it as a response header (x-amzn-requestid was API Gateway's).
+      requestId: req.headers['lambda-web-request-id'] || req.headers['x-request-id'],
       // Client IP is logged deliberately: the 5xx-burst investigation that
       // motivated #158 needs it for abuse/source correlation. It is personal
-      // data under GDPR, so it lives only in the 14-day error log, never in
-      // request-level logging.
+      // data under GDPR, so it lives only in the error log (3-day retention),
+      // never in request-level logging.
       ip: req.ip
     })
   };

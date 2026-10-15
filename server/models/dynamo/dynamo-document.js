@@ -2,7 +2,7 @@ import { PutCommand, DeleteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import httpStatus from 'http-status';
 
 import APIError from '../../helpers/APIError.js';
-import { getDocClient } from './dynamo-client.js';
+import { getDocClient, isPossibleKey } from './dynamo-client.js';
 import QueryProxy from './query-proxy.js';
 
 /**
@@ -78,6 +78,7 @@ export default class DynamoDocument {
       if (!Model.tableName) {
         throw new Error(`${Model.name} is missing static tableName`);
       }
+      if (!isPossibleKey(id)) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: Model.tableName,
         Key: { _id: id }

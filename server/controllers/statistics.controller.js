@@ -11,7 +11,13 @@ const REGION = process.env.AWS_REGION || process.env.region || 'eu-west-1';
 
 let s3Client = null;
 function getS3() {
-  if (!s3Client) s3Client = new S3Client({ region: REGION });
+  // Same bounded timeouts as the DynamoDB client (dynamo-client.js).
+  if (!s3Client) {
+    s3Client = new S3Client({
+      region: REGION,
+      requestHandler: { connectionTimeout: 1000, requestTimeout: 5000, throwOnRequestTimeout: true }
+    });
+  }
   return s3Client;
 }
 
@@ -32,20 +38,23 @@ function list(req, res, _next) {
         memoryCacheAt = Date.now();
         return res.json(stats);
       }
-      res.status(503).json({ error: 'Statistics not yet computed. POST /v1/statistics/refresh to generate.' });
+      // A missing object is a state, not an outage: 404, so it doesn't count
+      // toward the 5xx alarm. An admin creates it with POST /v1/statistics/refresh.
+      res.status(404).json({ message: 'Statistics have not been computed yet' });
     })
     .catch((err) => {
-      console.error('Statistics S3 read error:', err.name, err.message, 'Bucket:', S3_BUCKET, 'Key:', S3_KEY);
-      res.status(503).json({ error: `Statistics unavailable: ${err.name}: ${err.message}`, bucket: S3_BUCKET, key: S3_KEY });
+      // Bucket and key stay in the log, not in the response.
+      console.error({ msg: 'statisticsReadFailed', name: err.name, message: err.message, bucket: S3_BUCKET, key: S3_KEY });
+      res.status(503).json({ message: 'Statistics are unavailable, try again later' });
     });
 }
 
-async function refresh(req, res) {
+async function refresh(req, res, next) {
   try {
     const stats = await buildAndStore();
     res.json({ refreshed: true, markerTotal: stats.markerTotal, updatedAt: stats._updatedAt });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 }
 

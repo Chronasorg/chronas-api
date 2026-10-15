@@ -17,6 +17,8 @@ async function load(req, res, next, id) {
     req.entity = marker;
     return next();
   } catch (e) {
+    // Only a missing marker is a 404; throttling or an outage is a 5xx.
+    if (e.status !== httpStatus.NOT_FOUND) return next(e);
     res.status(httpStatus.NOT_FOUND).json({
       message: e.isPublic ? e.message : httpStatus[e.status],
       stack: config.env === 'development' ? e.stack : {}

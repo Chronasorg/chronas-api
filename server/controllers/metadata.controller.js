@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 
 import APIError from '../helpers/APIError.js';
+import passError from '../helpers/pass-error.js';
 import Metadata from '../models/metadata.model.js';
 import Marker from '../models/marker.model.js';
 import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js';
@@ -76,6 +77,9 @@ function load(req, res, next, id) {
       return next();
     })
     .catch((e) => {
+      // Only a missing item is a 404 (or an empty a_ placeholder); throttling
+      // or an outage is a 5xx, and must not be edge-cached as empty data.
+      if (e.status !== httpStatus.NOT_FOUND) return next(e);
       if ((id || '').substr(0, 2) === 'a_') {
         req.entity = {
           _id: id,
@@ -374,7 +378,7 @@ function getLinked(req, res, next, resolve = false) {
     const mongoSearchQueryMarker = { _id: { $in: markerIdList } };
     const mongoSearchQueryMetadata = { _id: { $in: allMetadataIds } };
 
-    Metadata.find(mongoSearchQueryMetadata)
+    return Metadata.find(mongoSearchQueryMetadata)
       .lean()
       .exec()
       .then((metadataPre) => {
@@ -399,7 +403,7 @@ function getLinked(req, res, next, resolve = false) {
           }
         });
 
-        Marker.find(mongoSearchQueryMarker)
+        return Marker.find(mongoSearchQueryMarker)
           .lean()
           .exec()
           .then((markers) => {
@@ -447,9 +451,8 @@ function getLinked(req, res, next, resolve = false) {
             res.set('Cache-Control', LINKED_CACHE_CONTROL);
             return res.json(resObj);
           });
-      })
-      .catch(e => res.status(500).send(e));
-  }).catch(e => res.status(500).send(e));
+      });
+  }).catch(e => passError(req, res, next, e));
 }
 
 /**

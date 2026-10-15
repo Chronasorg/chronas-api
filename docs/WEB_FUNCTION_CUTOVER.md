@@ -11,7 +11,7 @@ All commands run from the repo root with the `chronas-prod` profile. `AWS_WEB_CL
 | Resource | Value |
 | --- | --- |
 | Web Function | `chronas-api` (eu-west-1, `nodejs24.x`, arm64), entry `index.js` → `web-server.js` |
-| Endpoint | `prod`, `IamAuth`, routing `Disabled` (moved only by deploys), `maxEnvironments` 3 at cutover (2 since 2026-10-13 21:36, for cost), `rateLimit` 100. Domain `qsysmsjd39s9mwkf.1p2.lambda-web.eu-west-1.on.aws`. Unsigned direct calls get 403 |
+| Endpoint | `prod`, `IamAuth`, routing `Disabled` (moved only by deploys), `maxEnvironments` 3 at cutover, 2 since 2026-10-13 19:36:04 UTC (CloudTrail `UpdateWebFunctionEndpoint`; an earlier note said 21:36, which was CEST), for cost. The live revision moved to `rev-omgkb` at 20:36:09 UTC. `rateLimit` 100. Domain `qsysmsjd39s9mwkf.1p2.lambda-web.eu-west-1.on.aws`. Unsigned direct calls get 403 |
 | Resource policy | `lambda:InvokeWebFunctionEndpoint` for `cloudfront.amazonaws.com`, only from distribution `E1KTIK2H0W8J2Q` (plus the test distribution until it is deleted) |
 | Execution role | `chronas-api-web-function-role`: the `chronas-*` tables, the statistics object, `/chronas/secrets`, its own two log groups |
 | Artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by this function's revisions, no expiry |
@@ -40,9 +40,12 @@ Expected disruption: none, or seconds. During step 1, edge locations switch orig
 | Problems after step 2 | `infra/api-edge/route53.sh rollback --apply --confirm "point api.chronas.org at API Gateway"`, then restore CloudFront if needed | 1–2 min (TTL 60) |
 | A bad deploy after step 3 | Automatic: the pipeline moves the endpoint back to the previous revision. By hand: `infra/api-edge/web-function.sh rollback <revision-id> --apply --confirm "roll back chronas-api"` | about 1 min |
 
-API Gateway, its custom domain and the Event Function stay in place and current (the pipeline still updates the Event Function), so every rollback lands on the same build.
+During the switch, API Gateway, its custom domain and the Event Function stayed in place and current. **Retired on 2026-10-13** (about 19:50 UTC), together with the Event Function's `JWT_SECRET`, so the "Problems after step 2" row (back to API Gateway) no longer applies; restoring a CloudFront snapshot still does.
 
-## Afterwards (not part of the switch)
+## Afterwards (done 2026-10-13)
 
-- After a few quiet days, block the API Gateway path, then retire it with the Event Function. Plan P9.
-- Remove `JWT_SECRET` from the Event Function environment.
+- API Gateway and the Event Function were retired the same day instead of after a few quiet days (plan P9, compressed).
+
+## Since the switch (2026-10-15)
+
+- Lambda cleans up revisions beyond about 50, oldest first among those no endpoint routes to.

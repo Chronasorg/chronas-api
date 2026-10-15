@@ -7,7 +7,7 @@ import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
-import { getDocClient, getDynamoClient, tableName } from './dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, isPossibleKey } from './dynamo-client.js';
 
 const TABLE = tableName('flags');
 
@@ -20,6 +20,7 @@ export default class FlagDynamo extends DynamoDocument {
 
   static findById(id) {
     const promise = (async () => {
+      if (!isPossibleKey(id)) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
         Key: { _id: String(id) }

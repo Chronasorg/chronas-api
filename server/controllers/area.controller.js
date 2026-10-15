@@ -2,6 +2,8 @@ import httpStatus from 'http-status';
 import Area from '../models/area.model.js';
 import Metadata from '../models/metadata.model.js';
 import metadataCtrl from '../controllers/metadata.controller.js';
+import APIError from '../helpers/APIError.js';
+import passError, { logLateError } from '../helpers/pass-error.js';
 import { config } from '../../config/config.js';
 
 const dimAccessor = {
@@ -20,6 +22,8 @@ async function load(req, res, next, id) {
     req.entity = area;
     return next();
   } catch (e) {
+    // Only a missing year is a 404; throttling or an outage is a 5xx.
+    if (e.status !== httpStatus.NOT_FOUND) return next(e);
     res.status(httpStatus.NOT_FOUND).json({
       message: e.isPublic ? e.message : httpStatus[e.status],
       stack: config.env === 'development' ? e.stack : {}
@@ -134,7 +138,7 @@ function aggregateProvinces(req, res, next, resolve = false) {
           }
         });
       }).on('error', (e) => {
-        res.status(500).send(e);
+        passError(req, res, next, e);
       }).on('close', async () => {
         try {
           // Collect all metadata IDs to query in a single batch
@@ -175,63 +179,20 @@ function aggregateProvinces(req, res, next, resolve = false) {
           if (resolve) return resolve();
           res.send('OK');
         } catch (e) {
-          res.status(500).send('Internal error');
+          passError(req, res, next, e);
         }
       });
     })
-    .catch(e => res.status(500).send('Internal error'));
-}
-
-function aggregateMetaCoo(req, res, next, _resolve = false) {
-  Metadata.get('links', req.method)
-    .then((linkObj) => {
-      req.entity = linkObj;
-
-      const { start = 0, end = 1, type = 'i' } = req.query;
-      const metadataStream = Metadata
-        .find({
-          coo: { $exists: false },
-          type
-        // $and: [
-        //   { 'data.poster':  { $exists: true } },
-        //   { 'data.poster':  {$ne : false} },
-        // ]
-        })
-        .skip(+start)
-        .limit(end - start)
-      // .limit(100)
-        .cursor();
-      metadataStream.on('data', (_metadata) => {
-        // const allMetadata = dimensionMetaRes.data
-        req.query.source = `1:${_metadata._id}`;
-
-        // const linkedItems = req.entity.data[ '1:' + _metadata._id] || false
-
-        new Promise((resolve) => {
-          metadataCtrl.getLinked(req, res, next, resolve);
-        }).then((linkedItems) => {
-          const elCoo = linkedItems.map.find(el => (((el || {}).geometry || {}).coordinates || []).length === 2) || linkedItems.media.find(el => (((el || {}).geometry || {}).coordinates || []).length === 2);
-          if (elCoo) {
-            _metadata.coo = elCoo.geometry.coordinates;
-            _metadata.markModified('coo');
-            _metadata.save();
-          }
-        });
-      })
-        .on('error', (e) => {
-          res.status(500).send(e);
-        }).on('close', () => {
-        // the stream is closed
-
-          // if(resolve) return resolve()
-          res.send(`${end - start}updated`);
-        });
-    });
+    .catch(e => passError(req, res, next, e));
 }
 
 function aggregateDimension(req, res, next, resolve = false) {
   const dimension = req.query.dimension || false;
-  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) return res.status(400).send('No valid dimension specified.');
+  if (!dimension || (dimension !== 'ruler' && dimension !== 'culture' && dimension !== 'religion' && dimension !== 'religionGeneral')) {
+    // updateMany calls this after answering, also for capital or population edits.
+    if (resolve) return resolve();
+    return res.status(400).send('No valid dimension specified.');
+  }
 
   Metadata.findById((dimension === 'religionGeneral') ? 'religion' : dimension)
     .lean()
@@ -319,7 +280,7 @@ function aggregateDimension(req, res, next, resolve = false) {
         });
         // popTotal
       }).on('error', (e) => {
-        res.status(500).send(e);
+        passError(req, res, next, e);
       }).on('close', async () => {
         try {
           const dimKeys = Object.keys(aggregatedData);
@@ -357,11 +318,11 @@ function aggregateDimension(req, res, next, resolve = false) {
           if (resolve) return resolve();
           res.send('OK');
         } catch (e) {
-          res.status(500).send('Internal error');
+          passError(req, res, next, e);
         }
       });
     })
-    .catch(e => res.status(500).send('Internal error'));
+    .catch(e => passError(req, res, next, e));
 }
 
 function _addRemoveLink(req, res, next, el, eORa, replaceWithId, toReplaceLinkId) {
@@ -429,10 +390,11 @@ function replaceAll(req, res, next) {
 
   const waitForCompletion = (end - start) < 11;
   yearToUpdate.reduce(
-    (p, x) => p.then(_ => new Promise((resolve) => {
+    (p, x) => p.then(_ => new Promise((resolve, reject) => {
       Area.findOne({ year: x })
         .exec()
         .then((area) => {
+          if (!area || !area.data) return resolve();
           const currYear = +area.year;
           const areaData = area.data;
           const provincesList = Object.keys(areaData);
@@ -466,79 +428,75 @@ function replaceAll(req, res, next) {
           } else {
             resolve();
           }
-        });
-      // Promise.all(areaPromises).then(() => {
+        })
+        .catch(reject);
     }))
-    // })
-    // .catch(e => next(e))
     , Promise.resolve()
   ).then(() => {
-    // Promise.all(mapItemsPromises).then(() => {.
+    // Links and war participants are updated in the background, next to the
+    // revision middleware that answers (next() below). Whatever answers
+    // second must not answer again, and a failure here is only logged.
     Metadata.get('links', req.method)
       .then((linkObj) => {
         req.entity = linkObj;
         req.query.source = `1:${toReplaceLinkId}`;
-        new Promise((resolve) => {
+        return new Promise((resolve) => {
           metadataCtrl.getLinked(req, res, next, resolve);
-        }).then((linkedItems) => {
-          const filteredMapItems = linkedItems.map.filter(el => {
-            const itemYear = ((el || {}).properties || {}).y;
-            return itemYear >= start && itemYear <= end;
-          });
-          const filteredMediaItems = linkedItems.media.filter(el => {
-            const itemYear = ((el || {}).properties || {}).y;
-            return itemYear >= start && itemYear <= end;
-          });
-
-          const mapItemsPromises = filteredMapItems.map(el => {
-            return [el, 'a', replaceWithId, toReplaceLinkId];
-          });
-          const mediaItemsPromises = filteredMediaItems.map(el => {
-            return [el, 'e', replaceWithId, toReplaceLinkId];
-          });
-          mapItemsPromises.concat(mediaItemsPromises).reduce(
-            (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3])),
-            Promise.resolve()
-          ).then(() => {
-            Metadata.find({ subtype: 'ew', year: { $gt: start, $lt: end } })
-              .then((warMetadatas) => {
-                warMetadatas.forEach((warMetadata) => {
-                  const attackersDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[0] || []).findIndex(el => el === toReplace);
-                  const defenderDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[1] || []).findIndex(el => el === toReplace);
-
-                  if (attackersDirtyIndex !== -1) {
-                    warMetadata.data.participants[0][attackersDirtyIndex] = replaceWith;
-                  }
-                  if (defenderDirtyIndex !== -1) {
-                    warMetadata.data.participants[1][defenderDirtyIndex] = replaceWith;
-                  }
-
-                  if (attackersDirtyIndex !== -1 || defenderDirtyIndex !== -1) {
-                    warMetadata.markModified('data');
-                    warMetadata.save();
-                  }
-                });
-
-                if (waitForCompletion) {
-                  return res.send('OK');
-                } else {
-                  new Promise((resolve) => {
-                    req.query.dimension = typeDim;
-                    aggregateDimension(req, res, next, resolve);
-                  }).then(() => {
-                    new Promise((resolve) => {
-                      aggregateProvinces(req, res, next, resolve);
-                    }).then(() => {
-                    });
-                  });
-                }
-              });
-            // Promise.all(mapItemsPromises).then(() => {
-          }, (_error) => {
-            if (waitForCompletion) return res.send('NOTOK');
-          });
         });
-      });
+      })
+      .then((linkedItems) => {
+        const filteredMapItems = linkedItems.map.filter(el => {
+          const itemYear = ((el || {}).properties || {}).y;
+          return itemYear >= start && itemYear <= end;
+        });
+        const filteredMediaItems = linkedItems.media.filter(el => {
+          const itemYear = ((el || {}).properties || {}).y;
+          return itemYear >= start && itemYear <= end;
+        });
+
+        const mapItemsPromises = filteredMapItems.map(el => {
+          return [el, 'a', replaceWithId, toReplaceLinkId];
+        });
+        const mediaItemsPromises = filteredMediaItems.map(el => {
+          return [el, 'e', replaceWithId, toReplaceLinkId];
+        });
+        return mapItemsPromises.concat(mediaItemsPromises).reduce(
+          (p, x) => p.then(_ => _addRemoveLink(req, res, next, x[0], x[1], x[2], x[3])),
+          Promise.resolve()
+        ).then(() => Metadata.find({ subtype: 'ew', year: { $gt: start, $lt: end } })
+          .then((warMetadatas) => {
+            warMetadatas.forEach((warMetadata) => {
+              const attackersDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[0] || []).findIndex(el => el === toReplace);
+              const defenderDirtyIndex = ((((warMetadata || {}).data || {}).participants || {})[1] || []).findIndex(el => el === toReplace);
+
+              if (attackersDirtyIndex !== -1) {
+                warMetadata.data.participants[0][attackersDirtyIndex] = replaceWith;
+              }
+              if (defenderDirtyIndex !== -1) {
+                warMetadata.data.participants[1][defenderDirtyIndex] = replaceWith;
+              }
+
+              if (attackersDirtyIndex !== -1 || defenderDirtyIndex !== -1) {
+                warMetadata.markModified('data');
+                warMetadata.save().catch(e => logLateError(req, e));
+              }
+            });
+
+            if (waitForCompletion) {
+              if (!res.headersSent) res.send('OK');
+            } else {
+              new Promise((resolve) => {
+                req.query.dimension = typeDim;
+                aggregateDimension(req, res, next, resolve);
+              }).then(() => {
+                aggregateProvinces(req, res, next, () => {});
+              });
+            }
+          }), (_error) => {
+          if (waitForCompletion && !res.headersSent) res.send('NOTOK');
+        });
+      })
+      .catch(e => logLateError(req, e));
 
     // optimize prevBody and add revision record
     req.body.prevBody = getRanges(prevBody);
@@ -546,7 +504,7 @@ function replaceAll(req, res, next) {
 
     next();
   }, (error) => {
-    next(error);
+    passError(req, res, next, error);
   });
 
   if (!waitForCompletion) return res.send('OK');
@@ -600,6 +558,9 @@ function replaceAll(req, res, next) {
  */
 function updateMany(req, res, next) {
   const { start, end = start, provinces, ruler, culture, religion, capital, population } = req.body;
+  if (!Array.isArray(provinces) || !provinces.every(province => typeof province === 'string')) {
+    return next(new APIError('provinces must be an array of province names', httpStatus.BAD_REQUEST, true));
+  }
   const typeDim = ruler ? 'ruler' : culture ? 'culture' : religion ? 'religion' : null;
   const nextBody = []; // "SWE","swedish","redo","Stockholm",1000
 
@@ -650,11 +611,9 @@ function updateMany(req, res, next) {
           } else {
             resolve();
           }
-        });
-      // Promise.all(areaPromises).then(() => {
+        })
+        .catch(reject);
     }))
-    // })
-    // .catch(e => next(e))
     , Promise.resolve()
   ).then(() => {
     // optimize prevBody and add revision record
@@ -668,14 +627,12 @@ function updateMany(req, res, next) {
         req.query.dimension = typeDim;
         aggregateDimension(req, res, next, resolve);
       }).then(() => {
-        new Promise((resolve) => {
-          aggregateProvinces(req, res, next, resolve);
-        }).then(() => {
-        });
+        aggregateProvinces(req, res, next, () => {});
       });
     }
   }, (error) => {
-    next(error);
+    // Long ranges answered before the years were written.
+    passError(req, res, next, error);
   });
 
   if (!waitForCompletion) return next();
@@ -777,4 +734,4 @@ function getRanges(obj) {
   return compressedObj;
 }
 
-export default { aggregateProvinces, aggregateDimension, aggregateMetaCoo, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity };
+export default { aggregateProvinces, aggregateDimension, load, get, create, update, updateMany, replaceAll, list, remove, revertSingle, defineEntity };

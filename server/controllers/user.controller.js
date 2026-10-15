@@ -22,6 +22,8 @@ async function load(req, res, next) {
     req.user = user;
     return next();
   } catch (e) {
+    // A missing user resolves to null above; anything thrown is a 5xx.
+    if (e.status !== httpStatus.NOT_FOUND) return next(e);
     res.status(httpStatus.NOT_FOUND).json({
       message: e.isPublic ? e.message : httpStatus[e.status],
       stack: config.env === 'development' ? e.stack : {}
