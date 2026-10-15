@@ -11,7 +11,7 @@ Scripts for the edge and the Web Function ([docs/API_CLOUDFRONT_WEB_FUNCTIONS_PL
 | Script | Phase | What it does |
 | --- | --- | --- |
 | `edge-config.mjs` | all | Renders and validates the §6 distribution config from the live one. Pure functions, tested in `server/tests/unit/api-edge-config.test.js` against `fixtures/live-distribution-config-2026-10-13.json`. |
-| `snapshot.sh` | all | Distribution config and ETag, its cache policies, the DNS record, the API Gateway domain and stage. |
+| `snapshot.sh` | all | Distribution config and ETag, its cache policies, the distribution status and the DNS record. |
 | `policies.sh` | P3 | Creates `ChronasApiDynamicV3` and `ChronasApiPublicV3`, or checks them against the spec. Never modifies an existing policy. |
 | `test-distribution.sh` | P3 | Creates, finds (`status`, `domain`) and deletes the throwaway distribution: the §6 config with no alias and the default certificate. Refuses to delete anything else. |
 | `verify.mjs` | P3–P8 | Gate checks against any base URL, JSON summary, exit code 1 on failure. Authenticated checks need `SMOKE_PASSWORD`. |

@@ -68,3 +68,22 @@ process.on('SIGTERM', () => {
   server.closeIdleConnections();
   setTimeout(() => process.exit(0), SHUTDOWN_GRACE_MS).unref();
 });
+
+const describeError = error => ({ name: error?.name, message: error?.message ?? String(error), stack: error?.stack });
+
+// Every concurrent request in an environment shares this process, and Node
+// exits on an unhandled rejection by default, which would fail all of them.
+// A rejection nobody handled belongs to one request: log it, keep serving.
+process.on('unhandledRejection', (reason) => {
+  console.error({ msg: 'unhandledRejection', ...describeError(reason) });
+});
+
+// After an uncaught exception the process state is unknown. Stop taking
+// requests, give the in-flight ones the shutdown grace period, then exit so
+// Lambda replaces the environment.
+process.on('uncaughtException', (error) => {
+  console.error({ msg: 'uncaughtException', ...describeError(error) });
+  server.close();
+  server.closeIdleConnections();
+  setTimeout(() => process.exit(1), SHUTDOWN_GRACE_MS);
+});

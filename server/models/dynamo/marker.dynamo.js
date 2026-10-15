@@ -7,7 +7,7 @@ import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { BatchGetProxy } from './batch-get-proxy.js';
-import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, batchGetWithRetry, isPossibleKey } from './dynamo-client.js';
 
 const TABLE = tableName('markers');
 // Must match the type values stored in GSI-TypeYear. Update if new types are added.
@@ -29,6 +29,7 @@ export default class MarkerDynamo extends DynamoDocument {
 
   static findById(id) {
     const promise = (async () => {
+      if (!isPossibleKey(id)) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
         Key: { _id: String(id) }

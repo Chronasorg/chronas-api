@@ -169,9 +169,11 @@ await check('(7) bodies match the direct API', async () => {
   return null;
 });
 
+// /v1/statistics answers 503 only when S3 fails (a missing object is a 404
+// since 2026-10-15), so most runs have no 503 to test with.
 await check('(8) a 503 is not cached', async () => {
   const a = await request('GET', `${BASE}/v1/statistics`);
-  if (a.status !== 503) return { note: `statistics returned ${a.status}; check not applicable` };
+  if (a.status !== 503) return { note: `statistics returned ${a.status}, not a 503; nothing to check` };
   const b = await request('GET', `${BASE}/v1/statistics`);
   expect(!isHit(b), `second 503 was ${b.headers['x-cache']}`);
   return null;

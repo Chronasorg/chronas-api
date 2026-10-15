@@ -18,15 +18,15 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
 | Resource | Setting |
 | --- | --- |
 | Web Function | `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`; 2 vCPU / 2 GB per environment |
-| Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 2, `rateLimit` 100 req/s |
-| Revision settings | timeout 25 s, 64 concurrent requests per environment, `NODE_OPTIONS=--max-old-space-size=384` (memory is billed as consumed), environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
+| Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 2 (the smallest value allowed), `rateLimit` 100 req/s |
+| Revision settings | timeout 25 s, 64 concurrent requests per environment, `NODE_OPTIONS=--max-old-space-size=384` (live revision `rev-omgkb`; the next deploy adds `--max-semi-space-size=4`, see below), environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
 | Execution role | `chronas-api-web-function-role`: policy in [`api-edge/web-function-role-policy.json`](api-edge/web-function-role-policy.json) |
 | Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
-| CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`), default on `ChronasApiDynamicV3`; both key on `Authorization`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
+| CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`, at most 1 day), default on `ChronasApiDynamicV3`; both key on `Authorization` and the public one also on `Origin`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
 | DNS | `api.chronas.org` A → alias of `d24mkpax7rmotx.cloudfront.net` (zone `Z005461139KF8GDMY491N`) |
 | Secrets | Secrets Manager `/chronas/secrets`; the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)) |
-| Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days. Only `console.*` output is kept; raw stdout/stderr writes are dropped (hence `forceConsole` in `config/winston.js`) |
-| Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh)), plus the DynamoDB RCU and throttle alarms. `CloudFront-5xx-Rate-High` (5xx rate > 5 % for 10 min) is in us-east-1 and notifies the us-east-1 topic of the same name, which needs its own email subscription |
+| Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days; Lambda writes every event to both. The runtime captures stdout and stderr and filters them by `applicationLogLevel`; raw lines carry no level and were not delivered at WARN in our test (hence `forceConsole` in `config/winston.js`). Every app 5xx logs one `http5xx` line, so `HTTPResponseStatusClass5XX` minus those lines counts the 5xx Lambda returned itself (apart from the startup-failure 503s of `web-server.js`, logged as `Startup failed`) |
+| Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh); since 2026-10-15: 5xx ≥ 10 in 5 min, rate throttles ≥ 10 in two 5-min periods in a row, capacity throttles ≥ 10 in 15 min, environment memory ≥ 768 MB), plus the DynamoDB RCU and throttle alarms (none on `chronas-users`). `CloudFront-5xx-Rate-High` (5xx rate > 5 % for 10 min) is in us-east-1 and notifies the us-east-1 topic of the same name, which needs its own email subscription. Throttles that no alarm sees: `Platform.EndpointConcurrentInitThrottle` 429s (too many environments starting at once) increment no throttle metric, only `HTTPResponseStatusClass4XX` |
 
 ### Data layer
 
@@ -60,6 +60,8 @@ GitHub Actions, [`.github/workflows/deploy-prod.yml`](../.github/workflows/deplo
 6. Postman smoke tests against `https://api.chronas.org`.
 7. If 3–6 fail: the endpoint goes back to the previous revision automatically.
 
+Lambda cleans up revisions beyond about 50, oldest first among those no endpoint routes to; keep the rollback target in mind before deleting or after many deploys.
+
 ## Changing infrastructure
 
 Everything goes through [`api-edge/`](api-edge/README.md), never the console. Every script checks the account, is a dry run unless called with `--apply --confirm "<phrase>"`, and snapshots into the gitignored `backups/`.
@@ -70,4 +72,11 @@ Everything goes through [`api-edge/`](api-edge/README.md), never the console. Ev
 
 ## Cost
 
-September 2026: $5.56 (DynamoDB $2.04, Route 53 $0.74, Secrets Manager $0.42, CloudWatch $0.31, S3 $0.22, tax $0.89). The Web Function adds roughly $8–12/month: memory is billed while its environments are up, and Lambda keeps about two of them running. API Gateway (≈ $0.85) is gone. No NAT Gateway, no WAF.
+September 2026: $5.56 (DynamoDB $2.04, Route 53 $0.74, Secrets Manager $0.42, CloudWatch $0.31, S3 $0.22, tax $0.89). API Gateway (≈ $0.85) is gone. No NAT Gateway, no WAF.
+
+The Web Function, measured in Cost Explorer for 2026-10-14: $0.332/day gross, about $10.1/month before tax (≈ $12 with tax): memory 81%, vCPU 15%, requests 4%. Account credits offset it for now (net $0 while they last). Memory is billed as consumed for each environment's whole lifetime, idle time included: 0.405 GB per environment-second on average, and about 7,200 environment-seconds per hour (2.0 environments) since `maxEnvironments` went to 2. Billed GB-seconds were within about 3% of the time-weighted `EnvironmentMaxMemoryUsage`; whether billing uses peak or current memory is not documented.
+
+Why two environments run almost all the time, and what can lower it:
+- The docs have no minimum or reserved-environment setting and say an endpoint scales to zero without traffic, but Lambda keeps spare environments ("headroom") ahead of demand, up to `maxEnvironments` ([scaling](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-scaling.html)). Origin traffic is continuous in about 84% of minutes, so the endpoint sits at 2.
+- Measured: it scaled to zero after about 5–6 idle minutes at least 6 times between 2026-10-13 and 10-15 (no idle period is documented), and Lambda replaced environments without any idle gap too (about 22 fresh starts in 35 h). A fresh environment uses about 150 MB and grows to about 430 MB over hours.
+- `maxEnvironments` can't go below 2. The levers are memory per environment (`NODE_OPTIONS`, cache sizes), fewer origin requests (edge cache hit ratio), and longer idle gaps, which a site with visitors around the clock rarely has.

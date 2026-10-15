@@ -2,7 +2,6 @@ import express from 'express';
 import logger from 'morgan';
 // body-parser is now built into Express 4.16+
 import compress from 'compression';
-import methodOverride from 'method-override';
 import cors from 'cors';
 import httpStatus from 'http-status';
 import expressWinston from 'express-winston';
@@ -16,9 +15,7 @@ import winstonInstance from './winston.js';
 import { config } from './config.js';
 import { corsOptions } from './cors.js';
 import { buildErrorLoggerOptions } from './error-logger-options.js';
-
-
-// import versionRoutes from '../server/routes/version.router.js'; // Disabled for Lambda
+import { log5xxResponses } from './http-5xx-log.js';
 import { createPerformanceMiddleware } from './performance.js';
 
 const app = express();
@@ -33,6 +30,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// One console.error line per 5xx response (config/http-5xx-log.js).
+app.use(log5xxResponses());
+
 if (config.env === 'development') {
   app.use(logger('dev'));
 }
@@ -42,7 +42,7 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 app.use(compress());
-app.use(methodOverride());
+// No method-override: Lambda strips X-HTTP-Method-Override and its variants.
 
 // secure apps by setting various HTTP headers
 app.use(helmet());
@@ -50,7 +50,7 @@ app.use(helmet());
 // enable CORS - Cross Origin Resource Sharing
 app.use(cors(corsOptions));
 
-// Add performance monitoring middleware
+// Warn about requests slower than 5 s (Web Functions have no latency metric).
 app.use(createPerformanceMiddleware());
 
 

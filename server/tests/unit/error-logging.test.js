@@ -83,7 +83,7 @@ describe('Issue #158 — structured error logging', () => {
         method: 'GET',
         originalUrl: '/v1/markers?year=1000',
         url: '/v1/markers?year=1000',
-        headers: { 'x-amzn-requestid': 'req-abc-123' },
+        headers: { 'lambda-web-request-id': 'req-abc-123' },
         // fields express-winston reads off the request
         connection: {},
         query: {}
@@ -178,8 +178,8 @@ describe('Issue #158 — structured error logging', () => {
     });
   });
 
-  // The Web Function runtime drops raw process.stdout/stderr writes at
-  // applicationLogLevel WARN; only console.warn/console.error survive.
+  // At applicationLogLevel WARN, raw process.stdout/stderr lines (no level)
+  // were not delivered in our test; console.warn/console.error are.
   describe('production logger uses console methods', () => {
     const calls = [];
     const original = {};

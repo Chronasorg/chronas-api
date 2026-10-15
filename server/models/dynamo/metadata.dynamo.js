@@ -7,7 +7,7 @@ import DynamoDocument from './dynamo-document.js';
 import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { BatchGetProxy } from './batch-get-proxy.js';
-import { getDocClient, getDynamoClient, tableName, batchGetWithRetry } from './dynamo-client.js';
+import { getDocClient, getDynamoClient, tableName, batchGetWithRetry, isPossibleKey } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
 import BoundedCache from '../../helpers/bounded-cache.js';
 
@@ -18,9 +18,11 @@ const MB = 1024 * 1024;
 // memory. The 1 h TTL also bounds staleness in environments that didn't
 // handle a write (save() only clears the cache of the one that did). The
 // init dictionaries are about 1 MB of JSON, a type=e list about 165 KB.
+// maxBytes counts JSON length, which understates heap use several times
+// (see areaCache); 8 MB still holds the init variants.
 export const metadataCache = new BoundedCache({
   maxEntries: 500,
-  maxBytes: 24 * MB,
+  maxBytes: 8 * MB,
   maxEntryBytes: 4 * MB,
   ttlMs: 60 * 60 * 1000
 });
@@ -49,6 +51,7 @@ export default class MetadataDynamo extends DynamoDocument {
 
   static findById(id) {
     const promise = (async () => {
+      if (!isPossibleKey(id)) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
         Key: { _id: String(id) }

@@ -6,7 +6,6 @@ import APIError from './APIError.js';
 
 function checkPrivilege(threshold) {
   return function (req, res, next) {
-    console.debug(req.auth);
     if (req && req.auth && ((req.auth.subscription && req.auth.subscription !== '-1' && req.auth.subscription !== '') || req.auth.privilege >= threshold)) {
       next();
     } else {
