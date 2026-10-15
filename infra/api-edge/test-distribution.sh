@@ -21,7 +21,9 @@ FOUND="$(find_test_distribution)"
 case "${ARGS[0]:-}" in
   create)
     [[ -z "$FOUND" ]] || die "a test distribution already exists: $FOUND"
-    read -r DYNAMIC_ID PUBLIC_ID <<< "$(policy_ids)"
+    # A failure inside $(…) only ends the subshell, so stop here explicitly.
+    POLICY_IDS="$(policy_ids)" || exit 1
+    read -r DYNAMIC_ID PUBLIC_ID <<< "$POLICY_IDS"
     DIR="$(backup_dir test-distribution)"
     aws_cli cloudfront get-distribution-config --id "$DISTRIBUTION_ID" --output json > "$DIR/live.json"
     edge_config render --live "$DIR/live.json" --dynamic-id "$DYNAMIC_ID" --public-id "$PUBLIC_ID" --test-distribution \

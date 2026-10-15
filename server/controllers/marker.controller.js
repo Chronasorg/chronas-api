@@ -190,7 +190,10 @@ function list(req, res, next) {
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
-      res.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+      // Edge copy for a day: marker lists are the largest share of origin
+      // requests, and an edit doesn't invalidate the edge (until then the
+      // edit shows after at most a day, or after a manual invalidation).
+      res.set('Cache-Control', 'public, max-age=300, s-maxage=86400');
       res.json(markers);
     })
     .catch(e => next(e));

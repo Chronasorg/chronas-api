@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import {
-  renderDistributionConfig, validateDistributionConfig, checkPolicy, POLICY_SPECS,
+  renderDistributionConfig, validateDistributionConfig, checkPolicy, POLICY_SPECS, PREVIOUS_POLICY_NAMES,
   ALL_VIEWER_EXCEPT_HOST_ID, PUBLIC_PATHS, TEMPORARY_PATHS, WEB_FUNCTION_ORIGIN_ID
 } from '../../../infra/api-edge/edge-config.mjs';
 
@@ -119,6 +119,12 @@ describe('## api-edge CloudFront config', () => {
       expect(checkPolicy(POLICY_SPECS.public, 'public')).to.deep.equal([]);
       expect(checkPolicy({ ...POLICY_SPECS.public, DefaultTTL: 3600 }, 'public')).to.include('DefaultTTL is 3600, expected 0');
       expect(checkPolicy(POLICY_SPECS.dynamic, 'public')).to.not.be.empty;
+    });
+
+    it('the public policy lets area years keep their 7-day s-maxage, under a new name', () => {
+      expect(POLICY_SPECS.public.MaxTTL).to.equal(604800);
+      expect(PREVIOUS_POLICY_NAMES.public).to.equal('ChronasApiPublicV3');
+      expect(POLICY_SPECS.public.Name).to.not.equal(PREVIOUS_POLICY_NAMES.public);
     });
 
     it('both policies key on Authorization (OAC needs it forwarded)', () => {

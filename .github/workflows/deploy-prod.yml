@@ -126,31 +126,74 @@ jobs:
         id: previous
         run: |
           PREV_COMMIT=$(curl -sf --max-time 20 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+          # The revision with the most traffic: after an interrupted canary
+          # the endpoint routes to two, in no particular order.
           PREV_REVISION=$(aws lambda-web get-web-function-endpoint --function-name chronas-api --endpoint-name prod \
-            --region ${{ env.AWS_REGION }} --profile chronas-prod --query 'revisionWeights[0].revisionId' --output text)
+            --region ${{ env.AWS_REGION }} --profile chronas-prod --query 'sort_by(revisionWeights, &weight)[-1].revisionId' --output text)
           echo "prev_commit=$PREV_COMMIT" >> $GITHUB_OUTPUT
           echo "prev_revision=$PREV_REVISION" >> $GITHUB_OUTPUT
           echo "Live before deploy: commit ${PREV_COMMIT:-unknown}, revision $PREV_REVISION"
 
       # api.chronas.org → CloudFront → Lambda Web Function "chronas-api"
-      # (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). New revision, then the
-      # prod endpoint moves to it; the previous revision is the rollback target.
-      - name: Deploy to the Lambda Web Function
+      # (docs/API_CLOUDFRONT_WEB_FUNCTIONS_PLAN.md). New revision as a
+      # canary: 20% of requests go to it, the rest stay on the previous
+      # revision, which is also the rollback target.
+      - name: Deploy to the Lambda Web Function (canary)
         id: web
         continue-on-error: true
         run: |
-          infra/api-edge/web-function.sh deploy lambda-deployment.zip "${GITHUB_SHA::7}" \
-            --apply --confirm "deploy chronas-api"
+          infra/api-edge/web-function.sh deploy lambda-deployment.zip "${GITHUB_SHA::7}" --canary 20 \
+            --apply --confirm "deploy chronas-api" > web-deploy.out
+          cat web-deploy.out
+          cat web-deploy.out >> "$GITHUB_OUTPUT"
 
-      # The endpoint has already moved here: a failure must roll back too.
-      - name: Invalidate CloudFront cache
-        id: invalidate
+      # A revision is Active even when its server fails to start, so only a
+      # real response proves the deploy. /v1/version is never edge-cached.
+      # At 20%, 60 tries miss a healthy revision with probability 0.8^60
+      # (about 1 in 650,000); a miss rolls back, which is the safe side.
+      # Failing counts like a Postman failure.
+      - name: Check the new revision answers
+        id: version
         if: steps.web.outcome == 'success'
         continue-on-error: true
         run: |
+          EXPECTED="${GITHUB_SHA::7}"
+          for i in $(seq 1 60); do
+            LIVE=$(curl -sf --max-time 10 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
+            if [ "$LIVE" = "$EXPECTED" ]; then echo "The new revision answered (try $i)"; exit 0; fi
+            sleep 2
+          done
+          echo "::error::/v1/version did not report $EXPECTED in 60 tries"
+          exit 1
+
+      - name: Move all traffic to the new revision
+        id: promote
+        if: steps.version.outcome == 'success'
+        continue-on-error: true
+        run: |
+          infra/api-edge/web-function.sh promote "${{ steps.web.outputs.NEW_REVISION }}" \
+            --apply --confirm "promote chronas-api"
+
+      # Public map data stays at the edge across deploys: invalidating /v1/*
+      # on every deploy emptied the cache and sent the next visitors' bursts
+      # to the origin. Put [invalidate-edge] in a commit message (or the PR
+      # title, which the merge commit carries) when a public response changes.
+      - name: Invalidate CloudFront cache
+        id: invalidate
+        if: steps.promote.outcome == 'success'
+        continue-on-error: true
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          PATHS="/v1/version*"
+          if git log --format=%B "$BEFORE_SHA..$GITHUB_SHA" 2>/dev/null | grep -qF '[invalidate-edge]' \
+            || git log -1 --format=%B "$GITHUB_SHA" | grep -qF '[invalidate-edge]'; then
+            PATHS="/v1/*"
+          fi
+          echo "Invalidating $PATHS"
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id E1KTIK2H0W8J2Q \
-            --paths "/v1/*" \
+            --paths "$PATHS" \
             --profile chronas-prod \
             --query 'Invalidation.Id' --output text)
           aws cloudfront wait invalidation-completed \
@@ -159,26 +202,9 @@ jobs:
             --profile chronas-prod
           echo "CloudFront invalidation $INVALIDATION_ID completed"
 
-      # A revision is Active even when its server fails to start, so only a
-      # real response proves the deploy. Failing counts like a Postman failure.
-      - name: Check the live version is the new commit
-        id: version
-        if: steps.web.outcome == 'success' && steps.invalidate.outcome == 'success'
-        continue-on-error: true
-        run: |
-          EXPECTED="${GITHUB_SHA::7}"
-          for i in $(seq 1 24); do
-            LIVE=$(curl -sf --max-time 10 https://api.chronas.org/v1/version | jq -r '.commit // empty' || true)
-            if [ "$LIVE" = "$EXPECTED" ]; then echo "Live commit is $LIVE"; exit 0; fi
-            echo "Live commit is '${LIVE:-none}', waiting for $EXPECTED ($i/24)"
-            sleep 5
-          done
-          echo "::error::/v1/version did not report $EXPECTED within 2 minutes"
-          exit 1
-
       - name: Post-deploy Postman smoke tests
         id: postman
-        if: steps.version.outcome == 'success'
+        if: steps.invalidate.outcome == 'success'
         continue-on-error: true
         env:
           SMOKE_PASSWORD: ${{ secrets.API_SMOKE_PASSWORD }}
@@ -192,15 +218,17 @@ jobs:
 
       # Set the repository variable AUTO_ROLLBACK=false to keep a deploy that
       # fails Postman live (for example when rolling back would restore a
-      # build with a known security hole). The run still fails.
+      # build with a known security hole). The run still fails. It applies
+      # only after promotion: a canary that never got 100% always rolls back,
+      # so the endpoint is never left split between two revisions.
       - name: Keep deployment despite test failure
-        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
+        if: (steps.invalidate.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK == 'false'
         run: |
           echo "::error::Post-deploy checks FAILED and AUTO_ROLLBACK=false: the new build stays live. Fix forward."
           exit 1
 
       - name: Roll back the Web Function on test failure
-        if: (steps.web.outcome == 'failure' || steps.invalidate.outcome == 'failure' || steps.version.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false'
+        if: steps.web.outcome == 'failure' || steps.version.outcome == 'failure' || steps.promote.outcome == 'failure' || ((steps.invalidate.outcome == 'failure' || steps.postman.outcome == 'failure') && vars.AUTO_ROLLBACK != 'false')
         run: |
           echo "Deploy or checks FAILED -- moving the endpoint back to ${{ steps.previous.outputs.prev_revision }}"
           infra/api-edge/web-function.sh rollback "${{ steps.previous.outputs.prev_revision }}" \

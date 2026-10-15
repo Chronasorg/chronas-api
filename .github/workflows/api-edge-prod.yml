@@ -112,7 +112,9 @@ jobs:
                 -e ../../PostmanTests/chronas-api.postman_environment.json \
                 --env-var "baseUrl=$HOST" --env-var "smokePassword=$SMOKE_PASSWORD" \
                 --timeout-request 60000 --delay-request 500 ;;
-            behaviors)        ./apply-cloudfront.sh "${APPLY[@]}" ;;
+            # Unassigned behaviors default to the retired ApiGatewayOrigin.
+            behaviors)        ./apply-cloudfront.sh --assign default=WebFunctionOrigin,areas=WebFunctionOrigin,metadata=WebFunctionOrigin,markers=WebFunctionOrigin \
+                                --drop-api-gateway "${APPLY[@]}" ;;
             origin)           ./apply-cloudfront.sh "${EXTRA[@]}" "${APPLY[@]}" ;;
             restore)
               aws s3 cp "$BACKUP_PREFIX/${EXTRA[0]}/distribution-config.json" /tmp/restore.json --profile chronas-prod

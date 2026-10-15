@@ -22,7 +22,7 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
 | Revision settings | timeout 25 s, 64 concurrent requests per environment, `NODE_OPTIONS=--max-old-space-size=384` (live revision `rev-omgkb`; the next deploy adds `--max-semi-space-size=4`, see below), environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
 | Execution role | `chronas-api-web-function-role`: policy in [`api-edge/web-function-role-policy.json`](api-edge/web-function-role-policy.json) |
 | Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
-| CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`, at most 1 day), default on `ChronasApiDynamicV3`; both key on `Authorization` and the public one also on `Origin`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
+| CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`, at most 1 day), default on `ChronasApiDynamicV3`; both key on `Authorization` and the public one also on `Origin`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached. Prepared, not applied: `ChronasApiPublicV4` (MaxTTL 7 days) in `api-edge/edge-config.mjs` |
 | DNS | `api.chronas.org` A → alias of `d24mkpax7rmotx.cloudfront.net` (zone `Z005461139KF8GDMY491N`) |
 | Secrets | Secrets Manager `/chronas/secrets`; the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)) |
 | Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days; Lambda writes every event to both. The runtime captures stdout and stderr and filters them by `applicationLogLevel`; raw lines carry no level and were not delivered at WARN in our test (hence `forceConsole` in `config/winston.js`). Every app 5xx logs one `http5xx` line, so `HTTPResponseStatusClass5XX` minus those lines counts the 5xx Lambda returned itself (apart from the startup-failure 503s of `web-server.js`, logged as `Startup failed`) |
@@ -54,11 +54,14 @@ GitHub Actions, [`.github/workflows/deploy-prod.yml`](../.github/workflows/deplo
 
 1. Tests on Node 24, including a load with Lambda's module flags.
 2. `npm ci --omit=dev` and `zip`.
-3. `web-function.sh deploy`: upload, new revision with the full configuration, wait for Active, move the `prod` endpoint, wait.
-4. CloudFront invalidation of `/v1/*` (waits).
-5. `/v1/version` must report the new commit.
-6. Postman smoke tests against `https://api.chronas.org`.
-7. If 3–6 fail: the endpoint goes back to the previous revision automatically.
+3. `web-function.sh deploy --canary 20`: upload, new revision with the full configuration, wait for Active, send it 20% of the `prod` endpoint's requests, wait.
+4. `/v1/version` must report the new commit within 60 tries (a revision is Active even if its server never starts).
+5. `web-function.sh promote`: 100% to the new revision.
+6. CloudFront invalidation (waits): `/v1/version*` only, or `/v1/*` when a pushed commit message contains `[invalidate-edge]`.
+7. Postman smoke tests against `https://api.chronas.org`.
+8. If 3–5 fail, the endpoint goes back to the previous revision (the one that had the most traffic) automatically, and `/v1/*` is invalidated. If 6–7 fail, the same happens unless the repository variable `AUTO_ROLLBACK` is `false`, so the endpoint is never left split between two revisions.
+
+Edits through the API and data corrections don't invalidate the edge, so other visitors see them after the edge copy expires (marker lists 1 day; area years and metadata 1 day on `ChronasApiPublicV3`, up to 7 days on `ChronasApiPublicV4`). To show them sooner: `aws cloudfront create-invalidation --distribution-id E1KTIK2H0W8J2Q --paths "/v1/areas/*" "/v1/metadata*" "/v1/markers*" --profile chronas-prod`.
 
 Lambda cleans up revisions beyond about 50, oldest first among those no endpoint routes to; keep the rollback target in mind before deleting or after many deploys.
 
@@ -66,7 +69,7 @@ Lambda cleans up revisions beyond about 50, oldest first among those no endpoint
 
 Everything goes through [`api-edge/`](api-edge/README.md), never the console. Every script checks the account, is a dry run unless called with `--apply --confirm "<phrase>"`, and snapshots into the gitignored `backups/`.
 
-- Web Function: `api-edge/web-function.sh` (`status`, `deploy`, `rollback <revision>`, distribution access). It needs AWS CLI ≥ 2.37.13 for `aws lambda-web`; set `AWS_WEB_CLI` if your `aws` is older. Endpoint settings such as `maxEnvironments` and `rateLimit`: `aws lambda-web update-web-function-endpoint`.
+- Web Function: `api-edge/web-function.sh` (`status`, `deploy [--canary <weight>]`, `promote <revision>`, `rollback <revision>`, distribution access). It needs AWS CLI ≥ 2.37.13 for `aws lambda-web`; set `AWS_WEB_CLI` if your `aws` is older. Endpoint settings such as `maxEnvironments` and `rateLimit`: `aws lambda-web update-web-function-endpoint`.
 - CloudFront: `api-edge/apply-cloudfront.sh` (render, validate, diff, apply with the ETag), and `restore-cloudfront.sh <snapshot>` to undo.
 - Checks against any base URL: `api-edge/verify.mjs`, or the `API edge` workflow's `smoke` action (adds the full Postman suite).
 

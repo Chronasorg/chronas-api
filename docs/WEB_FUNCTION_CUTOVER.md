@@ -48,4 +48,6 @@ During the switch, API Gateway, its custom domain and the Event Function stayed 
 
 ## Since the switch (2026-10-15)
 
+- Deploys go through a canary: the new revision gets 20% of requests until `/v1/version` reports its commit, then 100% (`web-function.sh deploy --canary 20`, then `promote`). A canary that fails always rolls back.
+- Deploys invalidate only `/v1/version*`; put `[invalidate-edge]` in a commit message or PR title to invalidate `/v1/*`.
 - Lambda cleans up revisions beyond about 50, oldest first among those no endpoint routes to.

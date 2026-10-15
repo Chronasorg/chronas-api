@@ -6,12 +6,16 @@
 #   ./web-function.sh status
 #   ./web-function.sh revision-config <key> <version> <commit>   (prints the JSON)
 #   ./web-function.sh provision <zip> <commit>        --confirm "provision chronas-api"
-#   ./web-function.sh deploy <zip> <commit>           --confirm "deploy chronas-api"
+#   ./web-function.sh deploy <zip> <commit> [--canary <weight>]  --confirm "deploy chronas-api"
+#   ./web-function.sh promote <revision-id>           --confirm "promote chronas-api"
 #   ./web-function.sh rollback <revision-id>          --confirm "roll back chronas-api"
 #   ./web-function.sh allow-distribution <dist-id>    --confirm "allow <dist-id>"
 #   ./web-function.sh revoke-distribution <dist-id>   --confirm "revoke <dist-id>"
 #
-# deploy prints PREVIOUS_REVISION=… and NEW_REVISION=… on stdout.
+# deploy prints PREVIOUS_REVISION=… and NEW_REVISION=… on stdout. With
+# --canary <weight> it leaves the endpoint at <weight>% on the new revision and
+# the rest on the previous one; the caller checks the new revision answers,
+# then runs promote (100%) or rollback.
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 parse_common_args "$@"
 require_identity
@@ -76,15 +80,27 @@ revision_json() {
   }'
 }
 
+# The revision with the highest weight. An endpoint can route to two
+# revisions (an interrupted canary), so the list order means nothing.
 current_revision() {
   web_cli get-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" \
-    --query 'revisionWeights[0].revisionId' --output text
+    --query 'sort_by(revisionWeights, &weight)[-1].revisionId' --output text
+}
+
+# set_weights <revision> <weight> [<other revision>]: the rest goes to the other.
+set_weights() {
+  local weights="[{\"revisionId\":\"$1\",\"weight\":$2}]"
+  if [[ "$2" -lt 100 ]]; then
+    weights="[{\"revisionId\":\"$1\",\"weight\":$2},{\"revisionId\":\"$3\",\"weight\":$((100 - $2))}]"
+  fi
+  web_cli update-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" \
+    --revision-weights "$weights" --query updateStatus --output text >&2
+  web_cli wait web-function-endpoint-updated --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME"
+  log "Endpoint $WEB_ENDPOINT_NAME: $weights"
 }
 
 point_endpoint_at() {
-  web_cli update-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" \
-    --revision-weights "[{\"revisionId\":\"$1\",\"weight\":100}]" --query updateStatus --output text >&2
-  web_cli wait web-function-endpoint-updated --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME"
+  set_weights "$1" 100
   log "Endpoint $WEB_ENDPOINT_NAME now serves $1"
 }
 
@@ -175,9 +191,12 @@ case "$ACTION" in
     ;;
 
   deploy)
-    ZIP="${1:?zip}"; COMMIT="${2:?commit}"
+    ZIP="${1:?zip}"; COMMIT="${2:?commit}"; CANARY=100
+    if [[ "${3:-}" == "--canary" ]]; then CANARY="${4:?canary weight}"; fi
+    # Weights are integers 1-100 and must sum to 100 (web-functions-deployment).
+    [[ "$CANARY" =~ ^[0-9]+$ && "$CANARY" -ge 1 && "$CANARY" -le 100 ]] || die "canary weight must be 1-100"
     PREVIOUS="$(current_revision)"
-    log "Plan: upload $ZIP, create a revision for $COMMIT, move endpoint $WEB_ENDPOINT_NAME from $PREVIOUS to it."
+    log "Plan: upload $ZIP, create a revision for $COMMIT, send it ${CANARY}% of endpoint $WEB_ENDPOINT_NAME (now $PREVIOUS)."
     confirmed "deploy chronas-api" || exit 0
     read -r KEY VERSION <<< "$(upload_artifact "$ZIP" "$COMMIT")"
     REVISION_CONFIG="$(revision_json "$KEY" "$VERSION" "$COMMIT")"
@@ -189,9 +208,16 @@ case "$ACTION" in
     log "Revision $NEW created; waiting for Active"
     web_cli wait web-function-revision-active --function-name "$WEB_FUNCTION_NAME" --revision-id "$NEW"
     # Active doesn't mean the server started; the caller checks /v1/version.
-    point_endpoint_at "$NEW"
+    set_weights "$NEW" "$CANARY" "$PREVIOUS"
     echo "PREVIOUS_REVISION=$PREVIOUS"
     echo "NEW_REVISION=$NEW"
+    ;;
+
+  promote)
+    TARGET="${1:?revision id}"
+    log "Plan: move endpoint $WEB_ENDPOINT_NAME fully to $TARGET (now $(current_revision) has the most traffic)"
+    confirmed "promote chronas-api" || exit 0
+    point_endpoint_at "$TARGET"
     ;;
 
   revision-config)
@@ -213,5 +239,5 @@ case "$ACTION" in
     put_distribution_access "$MODE" "$DIST"
     ;;
 
-  *) die "usage: web-function.sh status|provision|deploy|rollback|allow-distribution|revoke-distribution" ;;
+  *) die "usage: web-function.sh status|provision|deploy|promote|rollback|allow-distribution|revoke-distribution" ;;
 esac

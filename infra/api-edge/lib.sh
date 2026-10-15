@@ -58,11 +58,14 @@ backup_dir() {
 
 edge_config() { node "$EDGE_DIR/edge-config.mjs" "$@"; }
 
+# Name of a cache policy spec (dynamic, public) in edge-config.mjs.
+policy_name() { edge_config policy-spec "$1" | jq -r .Name; }
+
 # Prints "<dynamic-id> <public-id>"; fails if either policy is missing or differs.
 policy_ids() {
   local dynamic public
-  dynamic="$(policy_id_by_name ChronasApiDynamicV3)"
-  public="$(policy_id_by_name ChronasApiPublicV3)"
+  dynamic="$(policy_id_by_name "$(policy_name dynamic)")"
+  public="$(policy_id_by_name "$(policy_name public)")"
   [[ -n "$dynamic" && -n "$public" ]] || die "cache policies missing; run policies.sh first"
   check_policy "$dynamic" dynamic
   check_policy "$public" public

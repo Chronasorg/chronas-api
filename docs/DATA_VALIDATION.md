@@ -142,9 +142,11 @@ the report. This is the safety net against stale data.
 
 Write order is fixed: `metadata.add` → `marker.add` → `area.update`. After
 apply, edge caches (CloudFront, S-MaxAge on `/v1/areas/:year` and `/v1/metadata`)
-may serve stale responses for up to 24h. Issue a CloudFront invalidation on
-`/v1/markers*`, `/v1/metadata*`, and `/v1/areas/*` if you need changes visible
-immediately.
+may serve stale responses for up to 24h (up to 7 days for area years once
+`ChronasApiPublicV4` is live). Deploys no longer clear them (only with
+`[invalidate-edge]`), so issue a CloudFront invalidation on `/v1/markers*`,
+`/v1/metadata*`, and `/v1/areas/*` if you need changes visible sooner:
+`aws cloudfront create-invalidation --distribution-id E1KTIK2H0W8J2Q --paths "/v1/areas/*" "/v1/metadata*" "/v1/markers*" --profile chronas-prod`.
 
 `--use-cached-only` runs the validator against the local Wikidata disk cache
 (`cache/wikidata/`) only — useful when Wikidata is unreachable.

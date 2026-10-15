@@ -19,15 +19,21 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-read -r DYNAMIC_ID PUBLIC_ID <<< "$(policy_ids)"
+# A failure inside $(…) only ends the subshell, so stop here explicitly.
+POLICY_IDS="$(policy_ids)" || exit 1
+read -r DYNAMIC_ID PUBLIC_ID <<< "$POLICY_IDS"
 SNAP="$(bash "$EDGE_DIR/snapshot.sh" before-apply)"
 LIVE="$SNAP/distribution-config.json"
 ETAG="$(jq -r .ETag "$LIVE")"
 
-# Drift: the live config must be either the recorded pre-P4 state or an
-# already valid §6 config. Anything else was changed outside these scripts.
+# Drift: the live config must be the recorded pre-P4 state, an already valid
+# §6 config, or one that is valid with the previous public policy
+# (PREVIOUS_POLICY_NAMES in edge-config.mjs). Anything else was changed
+# outside these scripts.
 PRE="$EDGE_DIR/fixtures/live-distribution-config-2026-10-13.json"
-if ! edge_config validate --config "$LIVE" --dynamic-id "$DYNAMIC_ID" --public-id "$PUBLIC_ID" >/dev/null 2>&1; then
+PREVIOUS_PUBLIC_ID="$(policy_id_by_name "$(edge_config previous-policy-name public)")"
+valid_with() { edge_config validate --config "$LIVE" --dynamic-id "$DYNAMIC_ID" --public-id "$1" >/dev/null 2>&1; }
+if ! valid_with "$PUBLIC_ID" && ! { [[ -n "$PREVIOUS_PUBLIC_ID" ]] && valid_with "$PREVIOUS_PUBLIC_ID"; }; then
   if ! diff -q <(jq -S '.DistributionConfig | del(.CallerReference)' "$LIVE") <(jq -S 'del(.CallerReference)' "$PRE") >/dev/null; then
     die "live distribution drifted from both the pre-P4 snapshot and the §6 target; inspect $SNAP"
   fi

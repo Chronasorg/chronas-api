@@ -55,16 +55,23 @@ export const POLICY_SPECS = {
     ParametersInCacheKeyAndForwardedToOrigin: encodingsAndKey(['Authorization'])
   },
   // Public map data. DefaultTTL 0: only responses with an explicit public
-  // Cache-Control are cached. Anonymous requests share one entry.
+  // Cache-Control are cached. Anonymous requests share one entry. MaxTTL
+  // 7 days lets area years keep their own s-maxage of 7 days (V3 capped it
+  // at 1 day; the policy before the cutover allowed 7 days). Policies are
+  // never edited in place, so a TTL change is a new name.
   public: {
-    Name: 'ChronasApiPublicV3',
-    Comment: 'api.chronas.org public map data: cached only when the origin says public',
+    Name: 'ChronasApiPublicV4',
+    Comment: 'api.chronas.org public map data: cached only when the origin says public, up to 7 days',
     MinTTL: 0,
     DefaultTTL: 0,
-    MaxTTL: 86400,
+    MaxTTL: 604800,
     ParametersInCacheKeyAndForwardedToOrigin: encodingsAndKey(['Authorization', 'Origin'])
   }
 };
+
+// Policies the live distribution may still use until apply-cloudfront.sh
+// moves it to the specs above: a known state, not drift.
+export const PREVIOUS_POLICY_NAMES = { public: 'ChronasApiPublicV3' };
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const unwrap = live => (live.DistributionConfig ? live.DistributionConfig : live);
@@ -288,6 +295,9 @@ function main(argv) {
     case 'policy-spec':
       process.stdout.write(`${JSON.stringify(POLICY_SPECS[args._[1]], null, 2)}\n`);
       break;
+    case 'previous-policy-name':
+      process.stdout.write(`${PREVIOUS_POLICY_NAMES[args._[1]] || ''}\n`);
+      break;
     case 'check-policy': {
       const errors = checkPolicy(unwrapPolicy(readJson(args.config)), args.spec);
       if (errors.length) {
@@ -298,7 +308,7 @@ function main(argv) {
       break;
     }
     default:
-      console.error('usage: edge-config.mjs render|validate|policy-spec|check-policy …');
+      console.error('usage: edge-config.mjs render|validate|policy-spec|previous-policy-name|check-policy …');
       process.exit(2);
   }
 }
