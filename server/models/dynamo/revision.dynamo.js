@@ -1,4 +1,4 @@
-import { GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 import crypto from 'node:crypto';
@@ -12,15 +12,23 @@ import { notImplemented } from './not-implemented.js';
 
 const TABLE = tableName('revisions');
 
+/**
+ * One summary item in the revisions table that holds the newest revision
+ * timestamp, so `/v1/welcome` can read the last edit with a single GetItem
+ * instead of scanning revisions. Scans of this table must skip it.
+ */
+export const STATS_ID = '__stats__';
+
 export default class RevisionDynamo extends DynamoDocument {
   static tableName = TABLE;
 
   static find(filter = {}) {
-    return new DynamoQuery(RevisionDynamo, filter);
+    return new DynamoQuery(RevisionDynamo, withoutStats(filter));
   }
 
   static findById(id) {
     const promise = (async () => {
+      if (String(id) === STATS_ID) return null;
       const { Item } = await getDocClient().send(new GetCommand({
         TableName: TABLE,
         Key: { _id: String(id) }
@@ -50,10 +58,19 @@ export default class RevisionDynamo extends DynamoDocument {
         }));
         return Items?.[0] ? new RevisionDynamo(Items[0]) : null;
       }
-      const results = await new DynamoQuery(RevisionDynamo, filter).limit(1).exec();
+      const results = await new DynamoQuery(RevisionDynamo, withoutStats(filter)).limit(1).exec();
       return results[0] || null;
     })();
     return new QueryProxy(promise);
+  }
+
+  /** Newest revision timestamp from the summary item, or null if it has none. */
+  static async lastEdit() {
+    const { Item } = await getDocClient().send(new GetCommand({
+      TableName: TABLE,
+      Key: { _id: STATS_ID }
+    }));
+    return Item?.lastEdit ?? null;
   }
 
   static async estimatedDocumentCount() {
@@ -64,7 +81,7 @@ export default class RevisionDynamo extends DynamoDocument {
   }
 
   static countDocuments(filter = {}) {
-    const promise = new DynamoQuery(RevisionDynamo, filter).countDocuments();
+    const promise = new DynamoQuery(RevisionDynamo, withoutStats(filter)).countDocuments();
     return { exec: () => promise };
   }
 
@@ -102,7 +119,31 @@ export default class RevisionDynamo extends DynamoDocument {
     if (typeof item.prevBody === 'object') item.prevBody = JSON.stringify(item.prevBody);
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     this._id = item._id;
+    await recordLastEdit(item.timestamp);
     return this;
+  }
+}
+
+function withoutStats(filter) {
+  return filter._id === undefined ? { ...filter, _id: { $ne: STATS_ID } } : filter;
+}
+
+/**
+ * Move the summary item's lastEdit forward. The revision is already stored, so
+ * a failure here is only logged; the next edit corrects the timestamp.
+ */
+async function recordLastEdit(timestamp) {
+  try {
+    await getDocClient().send(new UpdateCommand({
+      TableName: TABLE,
+      Key: { _id: STATS_ID },
+      UpdateExpression: 'SET lastEdit = :ts',
+      ConditionExpression: 'attribute_not_exists(lastEdit) OR lastEdit < :ts',
+      ExpressionAttributeValues: { ':ts': timestamp }
+    }));
+  } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') return;
+    console.warn({ msg: 'revisionLastEditFailed', name: err.name, message: err.message });
   }
 }
 
@@ -114,7 +155,7 @@ async function scanAll() {
     const params = { TableName: TABLE };
     if (next) params.ExclusiveStartKey = next;
     const out = await client.send(new ScanCommand(params));
-    if (out.Items) items.push(...out.Items);
+    if (out.Items) items.push(...out.Items.filter(i => i._id !== STATS_ID));
     next = out.LastEvaluatedKey;
   } while (next);
   return items;
