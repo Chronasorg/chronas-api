@@ -93,6 +93,7 @@ async function groupBy(table, field) {
     if (next) p.ExclusiveStartKey = next;
     const o = await dynamo.send(new ScanCommand(p));
     for (const i of o.Items || []) {
+      if (i._id === '__stats__') continue; // revisions summary item (revision.dynamo.js STATS_ID)
       const k = i[field] ?? null;
       counts[k] = (counts[k] || 0) + 1;
     }
