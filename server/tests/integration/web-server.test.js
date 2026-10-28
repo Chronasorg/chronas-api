@@ -335,3 +335,113 @@ describe('## index.js with JWT_SECRET_PARAMETER (Parameter Store)', function () 
     }
   });
 });
+
+describe('## web-server.js startup failures: the same for Parameter Store and Secrets Manager', function () {
+  this.timeout(40000);
+  let server;
+  let dynamoEnv;
+
+  // Both stores speak AWS JSON 1.1, so the fake Parameter Store stands in for
+  // Secrets Manager too. Each first answers with its "not found" error, then
+  // with the secret. A decoy environment secret must never be used.
+  const fakeAws = { AWS_REGION: 'eu-west-1', AWS_ACCESS_KEY_ID: 'fake', AWS_SECRET_ACCESS_KEY: 'fake' };
+  const SOURCES = [
+    {
+      name: 'Parameter Store',
+      env: url => parameterStoreEnv(url),
+      request: { target: 'AmazonSSM.GetParameter', body: { Name: '/chronas/jwt-secret', WithDecryption: true } },
+      missing: parameterError(400, 'ParameterNotFound'),
+      found: parameterValue('from-the-store'),
+      line: 'Startup failed: ParameterNotFound probe'
+    },
+    {
+      name: 'Secrets Manager',
+      env: url => ({ SECRET_CONFIG_NAME: '/chronas/secrets', JWT_SECRET: 'from-environment', AWS_ENDPOINT_URL_SECRETS_MANAGER: url, ...fakeAws }),
+      request: { target: 'secretsmanager.GetSecretValue', body: { SecretId: '/chronas/secrets' } },
+      missing: parameterError(400, 'ResourceNotFoundException'),
+      found: () => ({ status: 200, body: { Name: '/chronas/secrets', SecretString: JSON.stringify({ JWT_SECRET: 'from-the-store' }) } }),
+      line: 'Startup failed: ResourceNotFoundException probe'
+    }
+  ];
+
+  const waitUntil = async (condition, ms = 10000) => {
+    const started = Date.now();
+    while (!condition()) {
+      if (Date.now() - started > ms) throw new Error(`timed out; output: ${server.output()}`);
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    return Date.now();
+  };
+  const startupFailures = () => server.output().split('\n').filter(line => line.includes('Startup failed'));
+  const health = () => fetch(`${server.base}/v1/health`);
+
+  before(async () => {
+    await setupDynamoLocal();
+    dynamoEnv = { DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT };
+  });
+
+  afterEach(() => {
+    if (server && server.child.exitCode === null) server.child.kill('SIGKILL');
+  });
+
+  for (const source of SOURCES) {
+    it(`${source.name}: the generic 503, one 'Startup failed' line per attempt, the next attempt after 5 s, then the stored secret`, async () => {
+      let answer = source.missing;
+      // When each request reached the store; a failure can only follow its answer.
+      const askedAt = [];
+      const store = await startFakeParameterStore((request) => {
+        askedAt.push(Date.now());
+        return answer(request);
+      });
+      try {
+        server = await startServer({ ...dynamoEnv, ...source.env(store.url) }, {
+          entry: 'index.js',
+          nodeArgs: ['--no-experimental-require-module', '--no-experimental-detect-module']
+        });
+        // The attempt that starts with listen() fails.
+        const failedAt = await waitUntil(() => startupFailures().length > 0);
+
+        const res = await health();
+        expect(res.status).to.equal(503);
+        expect(['content-type', 'cache-control', 'retry-after'].map(name => res.headers.get(name)))
+          .to.deep.equal(['application/json', 'no-store', '5']);
+        expect(await res.text()).to.equal('{"message":"Service is starting, try again shortly."}');
+        expect(startupFailures()).to.deep.equal([source.line]);
+        expect(store.requests).to.deep.equal([source.request]);
+
+        // Within 5 s of the failure a request gets the 503 and starts no new
+        // attempt, even though the store would answer now.
+        answer = source.found;
+        const early = await health();
+        expect(early.status).to.equal(503);
+        expect(await early.text()).to.equal('{"message":"Service is starting, try again shortly."}');
+        expect(Date.now() - failedAt).to.be.below(4000);
+        expect(store.requests).to.have.length(1);
+
+        // The first request after that starts the next attempt and gets the app.
+        let status = 503;
+        while (status === 503 && Date.now() - failedAt < 15000) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+          const polled = await health();
+          ({ status } = polled);
+          await polled.text();
+        }
+        expect(status).to.equal(200);
+        expect(store.requests).to.deep.equal([source.request, source.request]);
+        expect(askedAt[1] - askedAt[0]).to.be.within(5000, 7000);
+        expect(startupFailures()).to.deep.equal([source.line]);
+
+        // Tokens verify with the stored secret only, never with the decoy.
+        const probe = 'probe@example.org';
+        const asProbe = secret => ({ headers: { Authorization: `Bearer ${jwt.sign({ id: probe, privilege: 1 }, secret, { algorithm: 'HS256' })}` } });
+        const [withStored, withEnvironment] = await Promise.all([
+          fetch(`${server.base}/v1/users/${probe}`, asProbe('from-the-store')),
+          fetch(`${server.base}/v1/users/${probe}`, asProbe('from-environment'))
+        ]);
+        expect([withStored.status, withEnvironment.status]).to.deep.equal([404, 401]);
+      } finally {
+        await store.close();
+      }
+    });
+  }
+});
