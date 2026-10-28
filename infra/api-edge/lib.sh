@@ -48,10 +48,24 @@ confirmed() {
   return 0
 }
 
-# Snapshots go to the gitignored infra/backups/ (and CI artifacts).
+# Snapshots go to the gitignored infra/backups/api-edge/ (and CI artifacts),
+# or below EDGE_BACKUP_DIR, an existing directory, when that is set (the tests
+# use a temporary one; the API edge workflow uploads only infra/backups/).
+# Inside this repository, or any other git work tree, the directory must be
+# gitignored, so a snapshot can never be committed. Checked before anything
+# is created.
 backup_dir() {
-  local dir="$REPO_ROOT/infra/backups/api-edge/$(date -u +%Y%m%dT%H%M%SZ)-$1"
-  git -C "$REPO_ROOT" check-ignore -q "$REPO_ROOT/infra/backups/x" || die "infra/backups/ must be gitignored"
+  local base="$REPO_ROOT/infra/backups/api-edge" dir
+  if [[ -z "${EDGE_BACKUP_DIR:-}" ]]; then
+    git -C "$REPO_ROOT" check-ignore -q "$REPO_ROOT/infra/backups/x" || die "infra/backups/ must be gitignored"
+  else
+    base="$(cd "$EDGE_BACKUP_DIR" 2>/dev/null && pwd -P)" || die "EDGE_BACKUP_DIR is not a directory: $EDGE_BACKUP_DIR"
+    if [[ "$base/" == "$(cd "$REPO_ROOT" && pwd -P)/"* \
+          || "$(git -C "$base" rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]]; then
+      git -C "$base" check-ignore -q "$base/x" || die "EDGE_BACKUP_DIR $base is in a git work tree and not gitignored"
+    fi
+  fi
+  dir="$base/$(date -u +%Y%m%dT%H%M%SZ)-$1"
   mkdir -p "$dir"
   echo "$dir"
 }
