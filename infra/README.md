@@ -18,7 +18,7 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
 | Resource | Setting |
 | --- | --- |
 | Web Function | `chronas-api`, `nodejs24.x`, arm64, entry `index.js` → `web-server.js`; 2 vCPU / 2 GB per environment |
-| Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 2 (the smallest value allowed), `rateLimit` 100 req/s |
+| Endpoint | `prod`: `HomeRegion`, `IamAuth` (only CloudFront `E1KTIK2H0W8J2Q` may call it; unsigned calls get 403), routing `Disabled` (moved by deploys), `maxEnvironments` 10 since 2026-10-28 (2, the smallest value allowed, before), `rateLimit` 100 req/s |
 | Revision settings | timeout 25 s, 64 concurrent requests per environment, `NODE_OPTIONS=--max-old-space-size=384` (live revision `rev-omgkb`; the next deploy adds `--max-semi-space-size=4`, see below), environment variables without secrets ([`api-edge/web-function.sh`](api-edge/web-function.sh) `revision_json`) |
 | Execution role | `chronas-api-web-function-role`: policy in [`api-edge/web-function-role-policy.json`](api-edge/web-function-role-policy.json) |
 | Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
@@ -66,7 +66,7 @@ Lambda cleans up revisions beyond about 50, oldest first among those no endpoint
 
 Everything goes through [`api-edge/`](api-edge/README.md), never the console. Every script checks the account, is a dry run unless called with `--apply --confirm "<phrase>"`, and snapshots into the gitignored `backups/`.
 
-- Web Function: `api-edge/web-function.sh` (`status`, `deploy`, `rollback <revision>`, distribution access). It needs AWS CLI ≥ 2.37.13 for `aws lambda-web`; set `AWS_WEB_CLI` if your `aws` is older. Endpoint settings such as `maxEnvironments` and `rateLimit`: `aws lambda-web update-web-function-endpoint`.
+- Web Function: `api-edge/web-function.sh` (`status`, `deploy`, `rollback <revision>`, `scale <maxEnvironments>`, distribution access). It needs AWS CLI ≥ 2.37.13 for `aws lambda-web`; set `AWS_WEB_CLI` if your `aws` is older. Deploys keep the endpoint's `maxEnvironments`; `rateLimit` has no script: `aws lambda-web update-web-function-endpoint`.
 - CloudFront: `api-edge/apply-cloudfront.sh` (render, validate, diff, apply with the ETag), and `restore-cloudfront.sh <snapshot>` to undo.
 - Checks against any base URL: `api-edge/verify.mjs`, or the `API edge` workflow's `smoke` action (adds the full Postman suite).
 
@@ -80,3 +80,4 @@ Why two environments run almost all the time, and what can lower it:
 - The docs have no minimum or reserved-environment setting and say an endpoint scales to zero without traffic, but Lambda keeps spare environments ("headroom") ahead of demand, up to `maxEnvironments` ([scaling](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-scaling.html)). Origin traffic is continuous in about 84% of minutes, so the endpoint sits at 2.
 - Measured: it scaled to zero after about 5–6 idle minutes at least 6 times between 2026-10-13 and 10-15 (no idle period is documented), and Lambda replaced environments without any idle gap too (about 22 fresh starts in 35 h). A fresh environment uses about 150 MB and grows to about 430 MB over hours.
 - `maxEnvironments` can't go below 2. The levers are memory per environment (`NODE_OPTIONS`, cache sizes), fewer origin requests (edge cache hit ratio), and longer idle gaps, which a site with visitors around the clock rarely has.
+- A higher cap raises the always-on count: at `maxEnvironments` 3 (2026-10-13 until 19:36 UTC) the endpoint ran 2.5–3.0 environments on average, at about $3.50/month each. It went to 10 at 08:31 UTC on 2026-10-28 as a 24-hour test, because at 2 capacity 429s came almost daily; compare `EndpointActiveEnvironments` and the memory GB-seconds in Cost Explorer before keeping it.

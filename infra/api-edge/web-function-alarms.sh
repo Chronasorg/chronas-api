@@ -5,9 +5,9 @@
 # EndpointActiveEnvironments isn't alarmed: under continuous traffic Lambda
 # keeps spare environments up to maxEnvironments (it scaled to zero after
 # about 5-6 idle minutes, measured 2026-10-13 to 10-15), so the throttle
-# metric is the real "out of capacity" signal. maxEnvironments is 2 to save
-# cost, so single throttles happen now and then, even at 14-49 requests per
-# minute: the first capacity alarm fired on 1 throttle at 19:58 UTC on
+# metric is the real "out of capacity" signal. maxEnvironments was 2 until
+# 2026-10-28 (then 10), and single throttles came now and then, even at 14-49
+# requests per minute: the first capacity alarm fired on 1 throttle at 19:58 UTC on
 # 2026-10-13 (period from 19:54) with threshold 1, raised to 5 at 20:32 UTC.
 # The per-environment request limit is dynamic and not published, and
 # EnvironmentConcurrentRequests reads 1-2 even in idle minutes, so it is no
@@ -38,7 +38,7 @@ USAGE_DIMS=("${EP_DIMS[@]}" Name=ExecutionRegion,Value="$REGION")
 ALARMS=(
   "chronas-api-web-5xx|AWS/Lambda/Web|HTTPResponseStatusClass5XX|Sum|10|300|1|1|10 or more 5xx responses in 5 minutes (replaces the Lambda error alarm)"
   "chronas-api-web-throttled|AWS/Lambda/Web/Usage|EndpointRequestThrottles|Sum|10|300|2|2|10 or more requests over the endpoint rate limit in each of two 5-minute periods in a row (replaces the API Gateway 429 alarm)"
-  "chronas-api-web-capacity|AWS/Lambda/Web/Usage|EndpointActiveEnvironmentThrottles|Sum|10|900|1|1|10 or more requests in 15 minutes got 429 because maxEnvironments (2) was reached (replaces the Lambda concurrency alarm)"
+  "chronas-api-web-capacity|AWS/Lambda/Web/Usage|EndpointActiveEnvironmentThrottles|Sum|10|900|1|1|10 or more requests in 15 minutes got 429 because maxEnvironments was reached (replaces the Lambda concurrency alarm)"
   "chronas-api-web-memory|AWS/Lambda/Web|EnvironmentMaxMemoryUsage|Maximum|768|300|1|1|An environment used 768 MB or more (peak 521 MB since the 384 MB heap cap): memory is growing. A V8 heap failure shows as a WARN platform.invokeReport failure (Runtime.ExitError, Exit, Unreachable or OutOfMemory) instead"
 )
 
