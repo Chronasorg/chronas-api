@@ -11,6 +11,7 @@
 import http from 'node:http';
 
 import { createApp } from './config/bootstrap.js';
+import { flushEdgeInvalidations } from './server/helpers/edge-invalidation.js';
 
 const RETRY_AFTER_MS = 5000;
 const SHUTDOWN_GRACE_MS = 900; // Lambda allows about 1 s after SIGTERM
@@ -63,9 +64,13 @@ server.listen(port, host, () => {
   start().catch(() => {});
 });
 
+// The CloudFront invalidations this environment still owes go out right
+// away; the request keeps the process alive until it is done or the grace
+// period ends.
 process.on('SIGTERM', () => {
   server.close();
   server.closeIdleConnections();
+  flushEdgeInvalidations();
   setTimeout(() => process.exit(0), SHUTDOWN_GRACE_MS).unref();
 });
 
@@ -85,5 +90,6 @@ process.on('uncaughtException', (error) => {
   console.error({ msg: 'uncaughtException', ...describeError(error) });
   server.close();
   server.closeIdleConnections();
+  flushEdgeInvalidations();
   setTimeout(() => process.exit(1), SHUTDOWN_GRACE_MS);
 });

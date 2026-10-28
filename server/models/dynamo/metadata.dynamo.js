@@ -10,6 +10,8 @@ import { BatchGetProxy } from './batch-get-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry, isPossibleKey } from './dynamo-client.js';
 import { prepareForWrite, decodeFromRead } from './compression.js';
 import BoundedCache from '../../helpers/bounded-cache.js';
+import { cacheDataAge, dataReadAt, noteSharedLoad } from '../../helpers/edge-cache.js';
+import { markDirty, markDirtyDeferred } from '../../helpers/edge-invalidation.js';
 
 const TABLE = tableName('metadata');
 const MB = 1024 * 1024;
@@ -19,12 +21,15 @@ const MB = 1024 * 1024;
 // handle a write (save() only clears the cache of the one that did). The
 // init dictionaries are about 1 MB of JSON, a type=e list about 165 KB.
 // maxBytes counts JSON length, which understates heap use several times
-// (see areaCache); 8 MB still holds the init variants.
+// (see areaCache); 8 MB still holds the init variants. A hit reports the
+// entry's age, so the edge never keeps an older copy past its expiry
+// (edge-cache.js).
 export const metadataCache = new BoundedCache({
   maxEntries: 500,
   maxBytes: 8 * MB,
   maxEntryBytes: 4 * MB,
-  ttlMs: 60 * 60 * 1000
+  ttlMs: 60 * 60 * 1000,
+  ...cacheDataAge
 });
 // Only the init dictionaries (optionally localized, e.g. ruler_de) are worth
 // caching for `f` lists; other ids are served but not cached.
@@ -149,16 +154,23 @@ export default class MetadataDynamo extends DynamoDocument {
     return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
-  async save(_options = {}) {
+  /**
+   * @param options.deferEdgeInvalidation for writes anyone can make (votes):
+   *   the edge copies go with the next invalidation instead of one of their own
+   */
+  async save(options = {}) {
     const item = prepareForWrite(this.toObject());
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     metadataCache.clear();
+    if (options.deferEdgeInvalidation) markDirtyDeferred('metadata');
+    else markDirty('metadata');
     return this;
   }
 
   async deleteOne() {
     const result = await super.deleteOne();
     metadataCache.clear();
+    markDirty('metadata');
     return result;
   }
 }
@@ -306,15 +318,18 @@ function toPlainJson(item) {
   return JSON.parse(JSON.stringify(item));
 }
 
-// Requests for the same uncached result share one load.
+// Requests for the same uncached result share one load. A request that
+// joins one gets data as old as the load (edge-cache.js).
 const inFlight = new Map();
 function once(key, load) {
-  let promise = inFlight.get(key);
-  if (!promise) {
-    promise = load().finally(() => inFlight.delete(key));
-    inFlight.set(key, promise);
+  const shared = inFlight.get(key);
+  if (shared) {
+    noteSharedLoad(shared.startedAt);
+    return shared.promise;
   }
-  return promise;
+  const entry = { startedAt: dataReadAt(), promise: load().finally(() => inFlight.delete(key)) };
+  inFlight.set(key, entry);
+  return entry.promise;
 }
 
 let loadsRunning = 0;

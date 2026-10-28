@@ -7,14 +7,15 @@
  *   node edge-config.mjs render   --live live.json --dynamic-id ID --public-id ID [--assign default=WebFunctionOrigin,...]
  *                                 [--web-origin DOMAIN --oac ID] [--drop-api-gateway] [--temporary] [--test-distribution]
  *   node edge-config.mjs validate --config target.json --dynamic-id ID --public-id ID [--test-distribution]
- *   node edge-config.mjs policy-spec dynamic|public
- *   node edge-config.mjs check-policy --spec dynamic|public --config policy.json
+ *   node edge-config.mjs policy-spec dynamic|public|publicV3
+ *   node edge-config.mjs previous-policy-name public
+ *   node edge-config.mjs check-policy --spec dynamic|public|publicV3 --config policy.json
  *
  * `live.json` is the output of `aws cloudfront get-distribution-config`
  * (with or without the ETag wrapper). Output is a DistributionConfig.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, realpathSync } from 'fs';
 import { pathToFileURL } from 'url';
 
 export const API_GATEWAY_ORIGIN_ID = 'ApiGatewayOrigin';
@@ -55,8 +56,22 @@ export const POLICY_SPECS = {
     ParametersInCacheKeyAndForwardedToOrigin: encodingsAndKey(['Authorization'])
   },
   // Public map data. DefaultTTL 0: only responses with an explicit public
-  // Cache-Control are cached. Anonymous requests share one entry.
+  // Cache-Control are cached. Anonymous requests share one entry. MaxTTL
+  // 7 days: the API invalidates these paths after every write
+  // (server/helpers/edge-invalidation.js), so responses keep their s-maxage
+  // of up to 7 days. Policies are never edited in place, so a TTL change is
+  // a new name.
   public: {
+    Name: 'ChronasApiPublicV4',
+    Comment: 'api.chronas.org public map data: cached only when the origin says public, up to 7 days',
+    MinTTL: 0,
+    DefaultTTL: 0,
+    MaxTTL: 604800,
+    ParametersInCacheKeyAndForwardedToOrigin: encodingsAndKey(['Authorization', 'Origin'])
+  },
+  // The public policy before V4 (at most 1 day), used by the live
+  // distribution until apply-cloudfront.sh moves it to V4.
+  publicV3: {
     Name: 'ChronasApiPublicV3',
     Comment: 'api.chronas.org public map data: cached only when the origin says public',
     MinTTL: 0,
@@ -65,6 +80,10 @@ export const POLICY_SPECS = {
     ParametersInCacheKeyAndForwardedToOrigin: encodingsAndKey(['Authorization', 'Origin'])
   }
 };
+
+// Specs a valid live distribution may still use instead of the target one:
+// a known state for apply-cloudfront.sh's drift check, not drift.
+export const PREVIOUS_POLICY_SPECS = { public: 'publicV3' };
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const unwrap = live => (live.DistributionConfig ? live.DistributionConfig : live);
@@ -288,6 +307,9 @@ function main(argv) {
     case 'policy-spec':
       process.stdout.write(`${JSON.stringify(POLICY_SPECS[args._[1]], null, 2)}\n`);
       break;
+    case 'previous-policy-name':
+      process.stdout.write(`${POLICY_SPECS[PREVIOUS_POLICY_SPECS[args._[1]]]?.Name || ''}\n`);
+      break;
     case 'check-policy': {
       const errors = checkPolicy(unwrapPolicy(readJson(args.config)), args.spec);
       if (errors.length) {
@@ -298,7 +320,7 @@ function main(argv) {
       break;
     }
     default:
-      console.error('usage: edge-config.mjs render|validate|policy-spec|check-policy …');
+      console.error('usage: edge-config.mjs render|validate|policy-spec|previous-policy-name|check-policy …');
       process.exit(2);
   }
 }
@@ -307,7 +329,20 @@ function unwrapPolicy(json) {
   return json.CachePolicy?.CachePolicyConfig || json.CachePolicyConfig || json;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+// Run as a command, not imported by a test. Node runs the main module from
+// its real path, so argv[1] is compared through realpath too: through a
+// symlinked path (macOS /tmp is /private/tmp) a plain comparison fails, the
+// command prints nothing, and the shell scripts read empty policy specs.
+export function isMainModule(moduleUrl = import.meta.url, scriptPath = process.argv[1]) {
+  if (!scriptPath) return false;
+  try {
+    return moduleUrl === pathToFileURL(realpathSync(scriptPath)).href || moduleUrl === pathToFileURL(scriptPath).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   try {
     main(process.argv.slice(2));
   } catch (error) {

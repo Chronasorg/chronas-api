@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 
 import APIError from '../helpers/APIError.js';
 import passError from '../helpers/pass-error.js';
+import { publicCacheControl } from '../helpers/edge-cache.js';
 import Metadata from '../models/metadata.model.js';
 import Marker from '../models/marker.model.js';
 import { config, cache, initItemsAndLinksToRefresh } from '../../config/config.js';
@@ -102,7 +103,7 @@ function load(req, res, next, id) {
  * @returns {Metadata}
  */
 function get(req, res) {
-  res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+  res.set('Cache-Control', publicCacheControl(3600, 86400));
   return res.json(req.entity);
 }
 
@@ -202,7 +203,9 @@ function vote(delta) {
     const metadata = req.entity;
     metadata.score += delta;
 
-    metadata.save()
+    // Any account can vote, so a vote never sends a CloudFront invalidation
+    // of its own: the new score goes out with the next one.
+    metadata.save({ deferEdgeInvalidation: true })
       .then((savedMetadata) => {
         if (username) userCtrl.changePoints(username, 'voted', 1);
         res.json(savedMetadata);
@@ -330,7 +333,7 @@ function updateLinkAtom(req, res, next, isAddLink, resolve = false) {
 
 // Edge-cached like the other public metadata reads; browsers revalidate so an
 // editor sees their own link changes once the edge entry is invalidated.
-const LINKED_CACHE_CONTROL = 'public, max-age=0, s-maxage=3600';
+const linkedCacheControl = () => publicCacheControl(0, 3600);
 
 function getLinked(req, res, next, resolve = false) {
   const sourceItem = req.query.source || false;
@@ -353,7 +356,7 @@ function getLinked(req, res, next, resolve = false) {
 
     if (!linkedItems) {
       if (resolve) return resolve(resObj);
-      res.set('Cache-Control', LINKED_CACHE_CONTROL);
+      res.set('Cache-Control', linkedCacheControl());
       return res.json(resObj);
     }
 
@@ -448,7 +451,7 @@ function getLinked(req, res, next, resolve = false) {
             });
 
             if (resolve) return resolve(resObj);
-            res.set('Cache-Control', LINKED_CACHE_CONTROL);
+            res.set('Cache-Control', linkedCacheControl());
             return res.json(resObj);
           });
       });
@@ -477,11 +480,11 @@ function list(req, res, next) {
   Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
       if (fList) {
-        res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+        res.set('Cache-Control', publicCacheControl(3600, 86400));
       } else if (type === 'e') {
-        res.set('Cache-Control', 'public, max-age=1800, s-maxage=43200');
+        res.set('Cache-Control', publicCacheControl(1800, 43200));
       } else {
-        res.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+        res.set('Cache-Control', publicCacheControl(300, 3600));
       }
       res.json(metadata);
     })

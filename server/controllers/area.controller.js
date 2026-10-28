@@ -4,6 +4,7 @@ import Metadata from '../models/metadata.model.js';
 import metadataCtrl from '../controllers/metadata.controller.js';
 import APIError from '../helpers/APIError.js';
 import passError, { logLateError } from '../helpers/pass-error.js';
+import { publicCacheControl } from '../helpers/edge-cache.js';
 import { config } from '../../config/config.js';
 
 const dimAccessor = {
@@ -36,7 +37,7 @@ async function load(req, res, next, id) {
  * @returns {Area}
  */
 function get(req, res) {
-  res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+  res.set('Cache-Control', publicCacheControl(86400, 604800));
   if (req.entity.data && Object.keys(req.entity.data).length > 0) {
     return res.json(req.entity.data);
   }

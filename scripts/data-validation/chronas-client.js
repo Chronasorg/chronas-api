@@ -6,8 +6,9 @@
 const DIM_INDEX = { ruler: 0, culture: 1, religion: 2, capital: 3, population: 4 };
 
 // Reads bypass the CloudFront cache: the validator and applier decide on what
-// they read, often right after their own writes, and an edge copy of an area
-// or metadata document can be up to a day old.
+// they read, often right after their own writes. The API invalidates the edge
+// copies only some seconds after a write, and an edge copy of an area or
+// metadata document can otherwise be up to 7 days old.
 function withCacheBuster(path) {
   return `${path}${path.includes('?') ? '&' : '?'}_cb=${crypto.randomUUID()}`;
 }
