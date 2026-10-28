@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import {
-  renderDistributionConfig, validateDistributionConfig, checkPolicy, POLICY_SPECS,
+  renderDistributionConfig, validateDistributionConfig, checkPolicy, POLICY_SPECS, PREVIOUS_POLICY_SPECS,
   ALL_VIEWER_EXCEPT_HOST_ID, PUBLIC_PATHS, TEMPORARY_PATHS, WEB_FUNCTION_ORIGIN_ID
 } from '../../../infra/api-edge/edge-config.mjs';
 
@@ -16,7 +16,12 @@ import {
  */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LIVE = JSON.parse(readFileSync(path.join(__dirname, '../../../infra/api-edge/fixtures/live-distribution-config-2026-10-13.json'), 'utf8'));
+const fixture = name => JSON.parse(readFileSync(path.join(__dirname, '../../../infra/api-edge/fixtures', name), 'utf8'));
+const LIVE = fixture('live-distribution-config-2026-10-13.json');
+// The live distribution after the cutover: everything on the Web Function,
+// public behaviors on ChronasApiPublicV3.
+const LIVE_2026_10_28 = fixture('live-distribution-config-2026-10-28.json');
+const LIVE_IDS = { dynamic: '113a9e01-bbbd-46f8-bbd5-760b70b2ab47', publicV3: '0862a230-d0d7-40d0-a421-fcfcf7381ea2' };
 const policyIds = { dynamic: 'dyn-0000', public: 'pub-0000' };
 
 describe('## api-edge CloudFront config', () => {
@@ -113,12 +118,49 @@ describe('## api-edge CloudFront config', () => {
     });
   });
 
+  describe('# render (ChronasApiPublicV4 on the live distribution of 2026-10-28)', () => {
+    const v4Ids = { dynamic: LIVE_IDS.dynamic, public: 'v4-0000' };
+    const assign = { default: WEB_FUNCTION_ORIGIN_ID, areas: WEB_FUNCTION_ORIGIN_ID, metadata: WEB_FUNCTION_ORIGIN_ID, markers: WEB_FUNCTION_ORIGIN_ID };
+
+    it('the live config is valid with the previous public policy, which the drift check accepts', () => {
+      expect(validateDistributionConfig(LIVE_2026_10_28, { policyIds: { dynamic: LIVE_IDS.dynamic, public: LIVE_IDS.publicV3 } })).to.deep.equal([]);
+      expect(validateDistributionConfig(LIVE_2026_10_28, { policyIds: v4Ids })).to.deep.equal(
+        PUBLIC_PATHS.map(p => `behavior ${p}: cache policy ${LIVE_IDS.publicV3}, expected v4-0000`)
+      );
+    });
+
+    it('moving to V4 changes only the cache policy of the three public behaviors', () => {
+      const config = renderDistributionConfig(LIVE_2026_10_28, { policyIds: v4Ids, assign, dropApiGateway: true });
+      expect(validateDistributionConfig(config, { policyIds: v4Ids })).to.deep.equal([]);
+      const expected = JSON.parse(JSON.stringify(LIVE_2026_10_28));
+      expected.CacheBehaviors.Items.forEach((b) => { b.CachePolicyId = 'v4-0000'; });
+      expect(config).to.deep.equal(expected);
+    });
+
+    it('without --assign, behaviors would point at the retired API Gateway origin and the render is invalid', () => {
+      const config = renderDistributionConfig(LIVE_2026_10_28, { policyIds: v4Ids });
+      expect(validateDistributionConfig(config, { policyIds: v4Ids })).to.include('default behavior: unknown origin ApiGatewayOrigin');
+    });
+  });
+
   describe('# cache policy specs', () => {
     it('the specs match themselves and catch a wrong TTL or key', () => {
-      expect(checkPolicy(POLICY_SPECS.dynamic, 'dynamic')).to.deep.equal([]);
-      expect(checkPolicy(POLICY_SPECS.public, 'public')).to.deep.equal([]);
+      for (const name of Object.keys(POLICY_SPECS)) expect(checkPolicy(POLICY_SPECS[name], name), name).to.deep.equal([]);
       expect(checkPolicy({ ...POLICY_SPECS.public, DefaultTTL: 3600 }, 'public')).to.include('DefaultTTL is 3600, expected 0');
       expect(checkPolicy(POLICY_SPECS.dynamic, 'public')).to.not.be.empty;
+      expect(checkPolicy(POLICY_SPECS.publicV3, 'public')).to.deep.equal(['Name is ChronasApiPublicV3, expected ChronasApiPublicV4', 'MaxTTL is 86400, expected 604800']);
+    });
+
+    it('ChronasApiPublicV4 is ChronasApiPublicV3 with a MaxTTL of 7 days, under a new name', () => {
+      const v4 = POLICY_SPECS.public;
+      const v3 = POLICY_SPECS.publicV3;
+      expect([v4.Name, v4.MaxTTL]).to.deep.equal(['ChronasApiPublicV4', 604800]);
+      expect([v3.Name, v3.MaxTTL]).to.deep.equal(['ChronasApiPublicV3', 86400]);
+      for (const key of ['MinTTL', 'DefaultTTL', 'ParametersInCacheKeyAndForwardedToOrigin']) {
+        expect(v4[key], key).to.deep.equal(v3[key]);
+      }
+      expect(Object.keys(v4).sort()).to.deep.equal(Object.keys(v3).sort());
+      expect(PREVIOUS_POLICY_SPECS).to.deep.equal({ public: 'publicV3' });
     });
 
     it('both policies key on Authorization (OAC needs it forwarded)', () => {

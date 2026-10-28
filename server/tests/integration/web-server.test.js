@@ -1,8 +1,9 @@
 import { describe, it, before, afterEach } from 'mocha';
 import { expect } from 'chai';
 import { spawn } from 'child_process';
+import http from 'http';
 import { createServer } from 'net';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
 
 import { setupDynamoLocal } from '../helpers/dynamodb-local.js';
@@ -58,6 +59,24 @@ async function startStalledEndpoint() {
       return new Promise(resolve => stalled.close(resolve));
     }
   };
+}
+
+// A stand-in for the CloudFront API that records CreateInvalidation calls.
+async function startFakeCloudFront() {
+  const requests = [];
+  const fake = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => {
+      requests.push({ method: req.method, url: req.url, body });
+      res.writeHead(201, { 'Content-Type': 'text/xml' });
+      res.end('<?xml version="1.0" encoding="UTF-8"?><Invalidation xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/">'
+        + '<Id>I1</Id><Status>InProgress</Status><CreateTime>2026-10-28T00:00:00Z</CreateTime>'
+        + '<InvalidationBatch><Paths><Quantity>0</Quantity></Paths><CallerReference>x</CallerReference></InvalidationBatch></Invalidation>');
+    });
+  });
+  await new Promise(resolve => fake.listen(0, '127.0.0.1', resolve));
+  return { url: `http://127.0.0.1:${fake.address().port}`, requests, close: () => new Promise(resolve => fake.close(resolve)) };
 }
 
 const exitOf = child => (child.exitCode !== null
@@ -131,6 +150,35 @@ describe('## web-server.js (Web Function entry)', function () {
     server.child.kill('SIGTERM');
     await exited;
     expect(Date.now() - sentAt).to.be.below(1500);
+  });
+
+  it('sends the CloudFront invalidation it still owes on SIGTERM, and still exits within about 1 s', async () => {
+    const cloudFront = await startFakeCloudFront();
+    try {
+      // A write marked the edge copies dirty; its 15 s window is not over.
+      const helper = pathToFileURL(path.join(ROOT, 'server/helpers/edge-invalidation.js')).href;
+      server = await startServer({
+        JWT_SECRET: 'test-secret',
+        CLOUDFRONT_DISTRIBUTION_ID: 'ETEST',
+        AWS_ENDPOINT_URL_CLOUDFRONT: cloudFront.url,
+        AWS_ACCESS_KEY_ID: 'fake',
+        AWS_SECRET_ACCESS_KEY: 'fake'
+      }, { nodeArgs: preload(`import(${JSON.stringify(helper)}).then(m => m.markDirty('areas', 'metadata'));`) });
+      await fetch(`${server.base}/v1/health`);
+      expect(cloudFront.requests).to.have.length(0);
+
+      const exited = new Promise(resolve => server.child.once('exit', resolve));
+      const sentAt = Date.now();
+      server.child.kill('SIGTERM');
+      await exited;
+      expect(Date.now() - sentAt).to.be.below(1500);
+      expect(cloudFront.requests).to.have.length(1);
+      expect(cloudFront.requests[0]).to.include({ method: 'POST', url: '/2020-05-31/distribution/ETEST/invalidation' });
+      expect(cloudFront.requests[0].body).to.include('<Path>/v1/areas/*</Path>').and.include('<Path>/v1/metadata*</Path>');
+      expect(server.output()).to.not.contain('edgeInvalidationFailed');
+    } finally {
+      await cloudFront.close();
+    }
   });
 });
 

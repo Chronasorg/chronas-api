@@ -9,6 +9,8 @@ import QueryProxy from './query-proxy.js';
 import { getDocClient, getDynamoClient, tableName, isPossibleKey } from './dynamo-client.js';
 import { notImplemented } from './not-implemented.js';
 import BoundedCache from '../../helpers/bounded-cache.js';
+import { cacheDataAge } from '../../helpers/edge-cache.js';
+import { markDirty } from '../../helpers/edge-invalidation.js';
 
 const TABLE = tableName('areas');
 // Recently read years, so popular years don't cost a GetItem (~17 read units
@@ -18,11 +20,14 @@ const TABLE = tableName('areas');
 // heap, and Web Function memory is billed for the environment's lifetime.
 // 4 MB (about 30 years) instead of 16 MB lowered RSS by ~60 MB in a
 // 400-year sweep on Node 24 (2026-10-15).
+// A write clears only this environment's copy; a hit reports the entry's
+// age, so the edge never keeps an older copy past its expiry (edge-cache.js).
 export const areaCache = new BoundedCache({
   maxEntries: 100,
   maxBytes: 4 * 1024 * 1024,
   maxEntryBytes: 1024 * 1024,
-  ttlMs: 24 * 60 * 60 * 1000
+  ttlMs: 24 * 60 * 60 * 1000,
+  ...cacheDataAge
 });
 
 /**
@@ -97,7 +102,15 @@ export default class AreaDynamo extends DynamoDocument {
       Item: item
     }));
     areaCache.delete(String(item._id));
+    markDirty('areas');
     return this;
+  }
+
+  async deleteOne() {
+    const result = await super.deleteOne();
+    areaCache.delete(String(this._id));
+    markDirty('areas');
+    return result;
   }
 
   static list(_options = {}) {

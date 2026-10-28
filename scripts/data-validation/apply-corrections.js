@@ -140,7 +140,11 @@ async function runIssueDriven(report, opts, client) {
   fs.writeFileSync(appliedSidecar, JSON.stringify(result, null, 2));
   console.log(`  Sidecar (apply log): ${appliedSidecar}`);
   console.log('  NOTE: no automatic rollback. To revert, use the revisions UI.');
-  console.log('  NOTE: CloudFront/edge caches may serve stale responses for up to 24h.');
+  console.log('  NOTE: the API invalidates its CloudFront copies about 15 s after a write (at most every');
+  console.log('        2 minutes while writes continue), so visitors see the changes within a few minutes.');
+  console.log('        Copies another API environment cached before the write can stay up to their');
+  console.log('        in-process expiry (area years 24 h, metadata lists 1 h); browsers keep theirs up');
+  console.log('        to max-age (area years 1 day).');
 }
 
 async function run() {

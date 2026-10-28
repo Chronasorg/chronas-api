@@ -1,6 +1,7 @@
 import { GetCommand, PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
 import { getDocClient, tableName, batchGetWithRetry } from './dynamo-client.js';
+import { markDirty } from '../../helpers/edge-invalidation.js';
 
 /**
  * Per-entity links store — replaces the monolithic `Metadata._id='links'`
@@ -16,6 +17,14 @@ import { getDocClient, tableName, batchGetWithRetry } from './dynamo-client.js';
  */
 
 export const LINKS_TABLE = tableName('links');
+
+// Links are public through /v1/metadata/:id/getLinked: every write that
+// succeeded invalidates it, also when a later write of the same change fails.
+async function write(command) {
+  const result = await getDocClient().send(command);
+  markDirty('metadata');
+  return result;
+}
 
 export async function getLinked(entityRef) {
   const { Item } = await getDocClient().send(new GetCommand({
@@ -92,7 +101,6 @@ export async function removeLink(sourceRef, targetRef) {
  * Used when a marker's wiki (and therefore _id) changes.
  */
 export async function renameEntity(oldRef, newRef) {
-  const client = getDocClient();
   const oldLinks = await getLinked(oldRef);
 
   const allRefs = [
@@ -116,22 +124,22 @@ export async function renameEntity(oldRef, newRef) {
       }
     }
     if (dirty) {
-      await client.send(new PutCommand({ TableName: LINKS_TABLE, Item: item }));
+      await write(new PutCommand({ TableName: LINKS_TABLE, Item: item }));
     }
   }
 
   // Move the old entity's link item to the new key — put first, delete only on success
   if (oldLinks.markers.length > 0 || oldLinks.metadata.length > 0) {
-    await client.send(new PutCommand({
+    await write(new PutCommand({
       TableName: LINKS_TABLE,
       Item: { entityRef: newRef, markers: oldLinks.markers, metadata: oldLinks.metadata }
     }));
-    await client.send(new DeleteCommand({
+    await write(new DeleteCommand({
       TableName: LINKS_TABLE,
       Key: { entityRef: oldRef }
     }));
   } else {
-    await client.send(new DeleteCommand({
+    await write(new DeleteCommand({
       TableName: LINKS_TABLE,
       Key: { entityRef: oldRef }
     }));
@@ -147,7 +155,6 @@ async function getRawItem(entityRef) {
 }
 
 async function upsertLink(entityRef, slot, linkedId, linkType) {
-  const client = getDocClient();
   const existing = await getRawItem(entityRef);
   const item = existing || { entityRef, markers: [], metadata: [] };
 
@@ -159,22 +166,21 @@ async function upsertLink(entityRef, slot, linkedId, linkType) {
     item[slot][idx] = [linkedId, linkType];
   }
 
-  await client.send(new PutCommand({ TableName: LINKS_TABLE, Item: item }));
+  await write(new PutCommand({ TableName: LINKS_TABLE, Item: item }));
 }
 
 async function removeLinkEntry(entityRef, slot, linkedId) {
-  const client = getDocClient();
   const existing = await getRawItem(entityRef);
   if (!existing || !existing[slot]) return;
 
   existing[slot] = existing[slot].filter(el => el[0] !== linkedId);
 
   if (existing.markers.length === 0 && existing.metadata.length === 0) {
-    await client.send(new DeleteCommand({
+    await write(new DeleteCommand({
       TableName: LINKS_TABLE,
       Key: { entityRef }
     }));
   } else {
-    await client.send(new PutCommand({ TableName: LINKS_TABLE, Item: existing }));
+    await write(new PutCommand({ TableName: LINKS_TABLE, Item: existing }));
   }
 }

@@ -8,6 +8,7 @@ import DynamoQuery from './dynamo-query.js';
 import QueryProxy from './query-proxy.js';
 import { BatchGetProxy } from './batch-get-proxy.js';
 import { getDocClient, getDynamoClient, tableName, batchGetWithRetry, isPossibleKey } from './dynamo-client.js';
+import { markDirty } from '../../helpers/edge-invalidation.js';
 
 const TABLE = tableName('markers');
 // Must match the type values stored in GSI-TypeYear. Update if new types are added.
@@ -147,10 +148,19 @@ export default class MarkerDynamo extends DynamoDocument {
     return { exec: () => promise, then: (ok, fail) => promise.then(ok, fail), catch: fn => promise.catch(fn) };
   }
 
+  // Marker lists show markers, and /v1/metadata/:id/getLinked embeds them
+  // (name, year, type, coordinates, score), so both are invalidated.
   async save() {
     const item = this.toObject();
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
+    markDirty('markers', 'metadata');
     return this;
+  }
+
+  async deleteOne() {
+    const result = await super.deleteOne();
+    markDirty('markers', 'metadata');
+    return result;
   }
 }
 

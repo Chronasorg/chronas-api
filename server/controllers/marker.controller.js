@@ -4,6 +4,7 @@ import Marker from '../models/marker.model.js';
 import { APIError } from '../../server/helpers/APIError.js';
 import { config } from '../../config/config.js';
 import Metadata from '../models/metadata.model.js';
+import { publicCacheControl } from '../helpers/edge-cache.js';
 import * as linksStore from '../models/dynamo/links-store.js';
 
 const useDynamoLinks = config.dynamodb?.useMetadata;
@@ -190,7 +191,7 @@ function list(req, res, next) {
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
-      res.set('Cache-Control', 'public, max-age=300, s-maxage=3600');
+      res.set('Cache-Control', publicCacheControl(300, 3600));
       res.json(markers);
     })
     .catch(e => next(e));
