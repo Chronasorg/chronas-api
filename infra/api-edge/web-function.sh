@@ -8,6 +8,7 @@
 #   ./web-function.sh provision <zip> <commit>        --confirm "provision chronas-api"
 #   ./web-function.sh deploy <zip> <commit>           --confirm "deploy chronas-api"
 #   ./web-function.sh rollback <revision-id>          --confirm "roll back chronas-api"
+#   ./web-function.sh scale <maxEnvironments>         --confirm "scale chronas-api to <n>"
 #   ./web-function.sh allow-distribution <dist-id>    --confirm "allow <dist-id>"
 #   ./web-function.sh revoke-distribution <dist-id>   --confirm "revoke <dist-id>"
 #
@@ -119,7 +120,7 @@ case "$ACTION" in
   provision)
     ZIP="${1:?zip}"; COMMIT="${2:?commit}"
     log "Plan: bucket $WEB_ARTIFACT_BUCKET (versioned, private, TLS only), role $WEB_ROLE_NAME, log groups (${WEB_LOG_RETENTION_DAYS} d),"
-    log "      web function $WEB_FUNCTION_NAME with endpoint $WEB_ENDPOINT_NAME (IamAuth, routing Disabled, maxEnvironments 2, rateLimit 100),"
+    log "      web function $WEB_FUNCTION_NAME with endpoint $WEB_ENDPOINT_NAME (IamAuth, routing Disabled, maxEnvironments $WEB_MAX_ENVIRONMENTS, rateLimit 100),"
     log "      CloudFront access for $DISTRIBUTION_ID only, OAC $WEB_OAC_NAME. Serves no traffic until CloudFront points at it."
     confirmed "provision chronas-api" || exit 0
 
@@ -161,7 +162,7 @@ case "$ACTION" in
       read -r KEY VERSION <<< "$(upload_artifact "$ZIP" "$COMMIT")"
       web_cli create-web-function --function-name "$WEB_FUNCTION_NAME" --tags app=chronas \
         --revision-config "$(revision_json "$KEY" "$VERSION" "$COMMIT")" \
-        --endpoint-config "{\"endpointName\":\"$WEB_ENDPOINT_NAME\",\"endpointType\":\"HomeRegion\",\"authType\":\"IamAuth\",\"autoDeploymentMode\":\"Disabled\",\"scalingConfig\":{\"maxEnvironments\":2},\"throttleConfig\":{\"rateLimit\":100}}" \
+        --endpoint-config "{\"endpointName\":\"$WEB_ENDPOINT_NAME\",\"endpointType\":\"HomeRegion\",\"authType\":\"IamAuth\",\"autoDeploymentMode\":\"Disabled\",\"scalingConfig\":{\"maxEnvironments\":$WEB_MAX_ENVIRONMENTS},\"throttleConfig\":{\"rateLimit\":100}}" \
         --query functionArn --output text
     fi
     web_cli wait web-function-endpoint-active --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME"
@@ -205,6 +206,23 @@ case "$ACTION" in
     point_endpoint_at "$TARGET"
     ;;
 
+  scale)
+    # Deploys keep the endpoint's scalingConfig; only this changes it.
+    TARGET="${1:?maxEnvironments}"
+    [[ "$TARGET" =~ ^[0-9]+$ ]] && (( TARGET >= 2 )) || die "maxEnvironments must be a whole number >= 2"
+    CURRENT="$(web_cli get-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" --output json)"
+    log "Plan: endpoint $WEB_ENDPOINT_NAME scalingConfig $(jq -c '.scalingConfig // {}' <<< "$CURRENT") -> {\"maxEnvironments\":$TARGET}"
+    log "      Under continuous traffic Lambda keeps about maxEnvironments running; each is billed for its memory."
+    confirmed "scale chronas-api to $TARGET" || exit 0
+    DIR="$(backup_dir web-function-scale)"
+    printf '%s\n' "$CURRENT" > "$DIR/endpoint.json"
+    log "Snapshot: $DIR/endpoint.json"
+    web_cli update-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" \
+      --scaling-config "{\"maxEnvironments\":$TARGET}" --query updateStatus --output text >&2
+    web_cli wait web-function-endpoint-updated --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME"
+    bash "$0" status
+    ;;
+
   allow-distribution|revoke-distribution)
     DIST="${1:?distribution id}"
     MODE="${ACTION%%-*}"
@@ -213,5 +231,5 @@ case "$ACTION" in
     put_distribution_access "$MODE" "$DIST"
     ;;
 
-  *) die "usage: web-function.sh status|provision|deploy|rollback|allow-distribution|revoke-distribution" ;;
+  *) die "usage: web-function.sh status|provision|deploy|rollback|scale|allow-distribution|revoke-distribution" ;;
 esac

@@ -29,4 +29,8 @@ WEB_ARTIFACT_BUCKET="chronas-lambda-web-artifacts"
 WEB_OAC_NAME="chronas-api-web-oac"
 WEB_LOG_GROUP="/aws/lambda/web/${WEB_FUNCTION_NAME}"
 WEB_LOG_RETENTION_DAYS=3
+# Endpoint maxEnvironments (2 is the minimum). Under continuous traffic Lambda
+# keeps about this many environments running, each billed for its memory.
+# 10 since 2026-10-28 (24-hour test; at 2, capacity 429s came almost daily).
+WEB_MAX_ENVIRONMENTS=10
 SECRET_ARN="arn:aws:secretsmanager:${REGION}:${ACCOUNT_ID}:secret:/chronas/secrets-YDUZQG"

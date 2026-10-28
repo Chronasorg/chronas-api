@@ -18,7 +18,7 @@ Scripts for the edge and the Web Function ([docs/API_CLOUDFRONT_WEB_FUNCTIONS_PL
 | `apply-cloudfront.sh` | P4, P8 | Renders the target from the live config (`--assign`, `--temporary`, `--web-origin`/`--oac`), refuses on drift, shows the diff, applies with the ETag, waits for `Deployed`, invalidates and waits. |
 | `restore-cloudfront.sh` | rollback | Puts a snapshot's distribution config back. |
 | `route53.sh` | P5 | `status` of the `api.chronas.org` alias (CloudFront since 2026-10-13). |
-| `web-function.sh` | P7–P8 | Web Function: `status`, `provision`, `deploy`, `rollback`, distribution access. Used by `deploy-prod.yml`. |
+| `web-function.sh` | P7–P8 | Web Function: `status`, `provision`, `deploy`, `rollback`, `scale <maxEnvironments>`, distribution access. Used by `deploy-prod.yml`. |
 | `web-function-alarms.sh` | — | The four Web Function alarms. |
 
 ## Status
