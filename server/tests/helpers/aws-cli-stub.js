@@ -6,8 +6,9 @@
  * Secrets Manager secret) and, once created, parameter.json
  * ({ Type, KeyId, Tier, Version, Value }). Every argv is appended to
  * calls.log, so a test can check that no value reached a command line.
- * Calls without --profile $STUB_PROFILE fail, and STUB_HANG=<command> makes
- * that command wait STUB_HANG_MS (default 5000) first.
+ * Calls without --profile $STUB_PROFILE fail, STUB_HANG=<command> makes
+ * that command wait STUB_HANG_MS (default 5000) first, and STUB_PUT_ERROR
+ * makes put-parameter fail.
  */
 import fs from 'fs';
 import path from 'path';
@@ -71,6 +72,8 @@ if (service === 'ssm' && command === 'put-parameter') {
   if (parameter()) fail('ParameterAlreadyExists', 'The parameter already exists.');
   const file = option('--cli-input-json').replace(/^file:\/\//, '');
   const input = JSON.parse(fs.readFileSync(file, 'utf8'));
+  // STUB_PUT_ERROR=<code>: fail with a message that quotes the value.
+  if (process.env.STUB_PUT_ERROR) fail(process.env.STUB_PUT_ERROR, `Value '${input.Value}' was not accepted`);
   fs.writeFileSync(path.join(state, 'put-input.json'), JSON.stringify({
     mode: (fs.statSync(file).mode & 0o777).toString(8),
     keys: Object.keys(input).sort(),

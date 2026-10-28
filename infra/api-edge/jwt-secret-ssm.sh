@@ -10,7 +10,9 @@
 # The value never reaches the terminal, a log, a snapshot or a command line:
 # it only passes through 0600 files in a private temporary directory that is
 # removed on exit, and the digests are compared as files, never printed.
-# copy refuses to overwrite an existing parameter that holds another value.
+# copy refuses to overwrite an existing parameter that holds another value,
+# and stops before PutParameter (dry run included) for a value it would
+# reject: more than 4 KB, or containing '{{' and '}}'.
 set +x
 umask 077
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -105,8 +107,31 @@ verify() {
   fi
 }
 
+# PutParameter rejects a Standard tier value above 4 KB (checked in bytes,
+# the strictest reading) and one with '{{' and '}}' (it reads them as a
+# parameter reference), so copy stops before it. The message names only the
+# rule, never the value.
+check_copyable() {
+  local bytes braces
+  bytes="$(wc -c < "$1")"
+  (( bytes <= 4096 )) || refuse "is longer than 4096 bytes, the Standard tier limit"
+  braces="$(jq -n -r --rawfile value "$1" '$value | contains("{{") and contains("}}")')" \
+    || die "could not check the JWT_SECRET value (value not shown)"
+  [[ "$braces" == "false" ]] || refuse "contains '{{' and '}}', which Parameter Store rejects in a value"
+}
+
+refuse() {
+  die "the JWT_SECRET value $1, so it can't be copied as is (value not shown). Keep reading Secrets Manager; a new secret would log every user out."
+}
+
+# The error code in an AWS CLI error message (file $1), or "no error code".
+error_code() {
+  awk 'match($0, /An error occurred \([A-Za-z0-9._]+\)/) { print substr($0, RSTART + 19, RLENGTH - 20); found = 1; exit }
+       END { if (!found) print "no error code" }' "$1"
+}
+
 copy() {
-  local meta
+  local meta dir
   read_secret_value "$WORK/secret.value"
   meta="$(parameter_metadata)"
   if [[ -n "$meta" ]]; then
@@ -117,10 +142,13 @@ copy() {
     verify
     return
   fi
+  check_copyable "$WORK/secret.value"
 
   log "Plan: create $PARAMETER_NAME (SecureString, $PARAMETER_KEY, Standard tier: no charge),"
   log "      holding the JWT_SECRET field of $SECRET_ARN (value not shown)."
   confirmed "copy jwt secret to ssm" || return 0
+  # Before the write, so that a snapshot location that isn't allowed stops it.
+  dir="$(backup_dir jwt-secret-ssm)"
 
   # No Overwrite: PutParameter fails if the parameter appeared meanwhile.
   jq -n --rawfile value "$WORK/secret.value" --arg name "$PARAMETER_NAME" --arg key "$PARAMETER_KEY" '{
@@ -132,14 +160,16 @@ copy() {
     Tier: "Standard",
     Tags: [{Key: "app", Value: "chronas"}]
   }' > "$WORK/put-parameter.json"
-  aws_cli ssm put-parameter --region "$REGION" --cli-input-json "file://$WORK/put-parameter.json" \
-    --query Version --output text > "$WORK/version.txt"
-  rm -f "$WORK/put-parameter.json"
+  # An error message could quote the request, so only its error code is shown.
+  if ! aws_cli ssm put-parameter --region "$REGION" --cli-input-json "file://$WORK/put-parameter.json" \
+      --query Version --output text > "$WORK/version.txt" 2> "$WORK/put-parameter.err"; then
+    rmdir "$dir" 2>/dev/null || true
+    die "PutParameter failed ($(error_code "$WORK/put-parameter.err"); message not shown, it could quote the value). Check with: ./jwt-secret-ssm.sh verify"
+  fi
+  rm -f "$WORK/put-parameter.json" "$WORK/put-parameter.err"
   log "Created $PARAMETER_NAME version $(cat "$WORK/version.txt"); checking the copy"
 
   # Metadata only (no value) for the record.
-  local dir
-  dir="$(backup_dir jwt-secret-ssm)"
   aws_cli ssm describe-parameters --region "$REGION" \
     --parameter-filters "Key=Name,Option=Equals,Values=$PARAMETER_NAME" --output json > "$dir/parameter-metadata.json"
   log "Snapshot (metadata only): $dir/parameter-metadata.json"
