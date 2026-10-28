@@ -30,8 +30,11 @@
  * writes it handled. Without CLOUDFRONT_DISTRIBUTION_ID (tests, local runs,
  * scripts) nothing is recorded or sent, and edge-cache.js keeps each
  * response's previous edge lifetime, as it does while the last flush has
- * failed. Nothing here throws into request handling, and the timers never
- * keep the process alive.
+ * failed. Scripts that write through the models are short-lived processes
+ * that exit before any timer here fires; they call invalidateNow() after
+ * their writes instead (scripts/data-validation/edge-invalidation-cli.js).
+ * Nothing here throws into request handling, and the timers never keep the
+ * process alive.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -185,8 +188,8 @@ export function createInvalidationScheduler({
   };
 }
 
-// The CloudFront SDK is loaded on the first flush, so environments that
-// handle no writes never load it.
+// The CloudFront SDK is loaded on the first flush (or invalidateNow), so
+// environments that handle no writes never load it.
 let cloudFront = null;
 
 function sendWithCloudFront(input) {
@@ -207,6 +210,34 @@ function sendWithCloudFront(input) {
       throw error;
     });
   return cloudFront.then(({ client, CreateInvalidationCommand }) => client.send(new CreateInvalidationCommand(input)));
+}
+
+/**
+ * For writes this process's scheduler can't cover: admin scripts that write
+ * through the models exit long before a flush. Sends one CreateInvalidation
+ * for these resources now, and resolves when CloudFront has accepted it
+ * (it then takes about 10–100 s to complete); rejects when it hasn't.
+ * @param resources 'areas' | 'markers' | 'metadata'
+ * @param options.distributionId defaults to CLOUDFRONT_DISTRIBUTION_ID
+ * @returns {Promise<{ distributionId, paths, id, status }>}
+ */
+export async function invalidateNow(resources, {
+  distributionId = process.env.CLOUDFRONT_DISTRIBUTION_ID,
+  send = sendWithCloudFront,
+  callerReference = `chronas-api-script-${Date.now()}-${randomUUID()}`
+} = {}) {
+  if (!distributionId) throw new Error('invalidateNow: no CloudFront distribution id');
+  const paths = [...new Set(resources.map((resource) => {
+    const path = RESOURCE_PATHS[resource];
+    if (!path) throw new Error(`invalidateNow: unknown resource ${String(resource)}`);
+    return path;
+  }))].sort();
+  if (!paths.length) throw new Error('invalidateNow: nothing to invalidate');
+  const result = await send({
+    DistributionId: distributionId,
+    InvalidationBatch: { CallerReference: callerReference, Paths: { Quantity: paths.length, Items: paths } }
+  });
+  return { distributionId, paths, id: result?.Invalidation?.Id ?? null, status: result?.Invalidation?.Status ?? null };
 }
 
 let scheduler = createInvalidationScheduler({

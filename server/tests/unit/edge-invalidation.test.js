@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import {
   createInvalidationScheduler, RESOURCE_PATHS,
   FLUSH_DELAY_MS, MIN_FLUSH_INTERVAL_MS, SETTLE_MS, MAX_RETRY_DELAY_MS,
-  markDirty, markDirtyDeferred, edgeInvalidationActive, flushEdgeInvalidations, useSchedulerForTests
+  markDirty, markDirtyDeferred, edgeInvalidationActive, flushEdgeInvalidations, invalidateNow, useSchedulerForTests
 } from '../../helpers/edge-invalidation.js';
 
 /**
@@ -406,6 +406,60 @@ describe('## Edge invalidation scheduler', () => {
     expect(refs).to.have.length(2);
     expect(refs[0]).to.match(/^chronas-api-\d+-[0-9a-f-]{36}$/);
     expect(refs[0]).to.not.equal(refs[1]);
+  });
+
+  describe('# invalidateNow (scripts that write through the models)', () => {
+    const recordingSend = (result = { Invalidation: { Id: 'I7', Status: 'InProgress' } }) => {
+      const calls = [];
+      const send = async (input) => {
+        calls.push(input);
+        if (result instanceof Error) throw result;
+        return result;
+      };
+      return { calls, send };
+    };
+
+    it('sends one invalidation with the sorted paths and resolves with what CloudFront accepted', async () => {
+      const { calls, send } = recordingSend();
+      const result = await invalidateNow(['metadata', 'areas', 'metadata'], { distributionId: DISTRIBUTION, send });
+      expect(calls).to.have.length(1);
+      expect(calls[0].DistributionId).to.equal(DISTRIBUTION);
+      expect(calls[0].InvalidationBatch.Paths).to.deep.equal({ Quantity: 2, Items: ['/v1/areas/*', '/v1/metadata*'] });
+      expect(calls[0].InvalidationBatch.CallerReference).to.match(/^chronas-api-script-\d+-[0-9a-f-]{36}$/);
+      expect(result).to.deep.equal({ distributionId: DISTRIBUTION, paths: ['/v1/areas/*', '/v1/metadata*'], id: 'I7', status: 'InProgress' });
+    });
+
+    it('uses CLOUDFRONT_DISTRIBUTION_ID by default', async () => {
+      const { calls, send } = recordingSend();
+      process.env.CLOUDFRONT_DISTRIBUTION_ID = 'EFROMENV';
+      try {
+        await invalidateNow(['markers'], { send });
+      } finally {
+        delete process.env.CLOUDFRONT_DISTRIBUTION_ID;
+      }
+      expect(calls[0].DistributionId).to.equal('EFROMENV');
+    });
+
+    it('rejects when CloudFront does, and without a distribution or anything to invalidate', async () => {
+      const accessDenied = Object.assign(new Error('not authorized'), { name: 'AccessDenied' });
+      const failing = recordingSend(accessDenied);
+      const reasons = [];
+      for (const [resources, options] of [
+        [['metadata'], { distributionId: DISTRIBUTION, send: failing.send }],
+        [['metadata'], { distributionId: '', send: failing.send }],
+        [['users'], { distributionId: DISTRIBUTION, send: failing.send }],
+        [[], { distributionId: DISTRIBUTION, send: failing.send }]
+      ]) {
+        reasons.push(await invalidateNow(resources, options).then(() => null, error => error.message));
+      }
+      expect(reasons).to.deep.equal([
+        'not authorized',
+        'invalidateNow: no CloudFront distribution id',
+        'invalidateNow: unknown resource users',
+        'invalidateNow: nothing to invalidate'
+      ]);
+      expect(failing.calls).to.have.length(1);
+    });
   });
 
   describe('# the process scheduler', () => {

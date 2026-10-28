@@ -27,6 +27,7 @@ import path from 'path';
 
 import { applyProposals } from './apply-corrections-core.js';
 import { ChronasClient } from './chronas-client.js';
+import { DEFAULT_DISTRIBUTION_ID, manualInvalidationCommand } from './edge-invalidation-cli.js';
 import { entityByQid as wikidataEntityByQid, queryAt as wikidataQueryAt } from './wikidata-client.js';
 
 function parseArgs() {
@@ -140,11 +141,13 @@ async function runIssueDriven(report, opts, client) {
   fs.writeFileSync(appliedSidecar, JSON.stringify(result, null, 2));
   console.log(`  Sidecar (apply log): ${appliedSidecar}`);
   console.log('  NOTE: no automatic rollback. To revert, use the revisions UI.');
-  console.log('  NOTE: the API invalidates its CloudFront copies about 15 s after a write (at most every');
-  console.log('        2 minutes while writes continue), so visitors see the changes within a few minutes.');
-  console.log('        Copies another API environment cached before the write can stay up to their');
-  console.log('        in-process expiry (area years 24 h, metadata lists 1 h); browsers keep theirs up');
-  console.log('        to max-age (area years 1 day).');
+  console.log('  NOTE: the API invalidates its CloudFront copies about 15 s after the first write, then at');
+  console.log('        most every 2 minutes while writes continue; CloudFront needs another 10-100 s.');
+  console.log('        An API environment that cached a year or metadata list before the write can serve');
+  console.log('        that copy until it expires (at most 1 h); browsers keep theirs up to max-age (area');
+  console.log('        years 1 day).');
+  console.log('        If the changes do not show within a few minutes, invalidate by hand:');
+  console.log(`        ${manualInvalidationCommand(DEFAULT_DISTRIBUTION_ID, ['/v1/areas/*', '/v1/markers*', '/v1/metadata*'])}`);
 }
 
 async function run() {
