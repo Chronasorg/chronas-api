@@ -10,12 +10,14 @@ const FIXTURE_PATH = path.join(__dirname, '../fixtures/dynamo/revisions-sample.j
 const TABLE = 'chronas-revisions';
 
 let RevisionDynamo;
+let STATS_ID;
 
 before(async function () {
   this.timeout(15000);
   await setupDynamoLocal();
   const mod = await import('../../models/dynamo/revision.dynamo.js');
   RevisionDynamo = mod.default;
+  STATS_ID = mod.STATS_ID;
 });
 
 after(async () => {
@@ -117,6 +119,45 @@ describe('RevisionDynamo (DynamoDB Local, real data)', () => {
       const result = await RevisionDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec();
       expect(result).to.be.an('array');
       expect(result.length).to.be.greaterThan(0);
+    });
+  });
+
+  describe('lastEdit summary item', () => {
+    const save = (timestamp) => new RevisionDynamo({ type: 'PUT', entityId: 'x', resource: 'markers', user: 'u', timestamp }).save();
+
+    it('returns null before any revision is saved through the model', async () => {
+      expect(await RevisionDynamo.lastEdit()).to.be.null;
+    });
+
+    it('save() records the newest timestamp', async () => {
+      await save('2026-05-01T00:00:00Z');
+      expect(await RevisionDynamo.lastEdit()).to.equal('2026-05-01T00:00:00Z');
+      await save('2026-06-01T00:00:00Z');
+      expect(await RevisionDynamo.lastEdit()).to.equal('2026-06-01T00:00:00Z');
+    });
+
+    it('an older revision does not move lastEdit back', async () => {
+      await save('2026-06-01T00:00:00Z');
+      await save('2026-05-01T00:00:00Z');
+      expect(await RevisionDynamo.lastEdit()).to.equal('2026-06-01T00:00:00Z');
+    });
+
+    it('save() without a timestamp records the generated one', async () => {
+      const r = await new RevisionDynamo({ type: 'PUT', entityId: 'x', resource: 'markers', user: 'u' }).save();
+      const stored = await RevisionDynamo.findById(r._id);
+      expect(await RevisionDynamo.lastEdit()).to.equal(stored.timestamp);
+    });
+
+    it('is hidden from findById, find, countDocuments and aggregate', async () => {
+      await save('2026-05-01T00:00:00Z');
+      expect(await RevisionDynamo.findById(STATS_ID)).to.be.null;
+      const all = await RevisionDynamo.find().lean().exec();
+      expect(all.map(r => r._id)).to.not.include(STATS_ID);
+      expect(all).to.have.length(fixtures.length + 1);
+      expect(await RevisionDynamo.countDocuments().exec()).to.equal(fixtures.length + 1);
+      const groups = await RevisionDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec();
+      expect(groups.find(g => g._id === null)).to.be.undefined;
+      expect(groups.reduce((a, g) => a + g.count, 0)).to.equal(fixtures.length + 1);
     });
   });
 
