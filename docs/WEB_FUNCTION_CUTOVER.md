@@ -13,7 +13,7 @@ All commands run from the repo root with the `chronas-prod` profile. `AWS_WEB_CL
 | Web Function | `chronas-api` (eu-west-1, `nodejs24.x`, arm64), entry `index.js` → `web-server.js` |
 | Endpoint | `prod`, `IamAuth`, routing `Disabled` (moved only by deploys), `maxEnvironments` 3 at cutover, 2 since 2026-10-13 19:36:04 UTC (CloudTrail `UpdateWebFunctionEndpoint`; an earlier note said 21:36, which was CEST), for cost; 10 since 2026-10-28 08:31 UTC (24-hour test against almost daily capacity 429s). The live revision moved to `rev-omgkb` at 20:36:09 UTC. `rateLimit` 100. Domain `qsysmsjd39s9mwkf.1p2.lambda-web.eu-west-1.on.aws`. Unsigned direct calls get 403 |
 | Resource policy | `lambda:InvokeWebFunctionEndpoint` for `cloudfront.amazonaws.com`, only from distribution `E1KTIK2H0W8J2Q` (plus the test distribution until it is deleted) |
-| Execution role | `chronas-api-web-function-role`: the `chronas-*` tables, the statistics object, `/chronas/secrets`, its own two log groups |
+| Execution role | `chronas-api-web-function-role`: the `chronas-*` tables, the statistics object, `/chronas/jwt-secret` (SSM, since 2026-10-28; `/chronas/secrets` before), its own two log groups |
 | Artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by this function's revisions, no expiry |
 | Logs | `/aws/lambda/web/chronas-api` and `.local`, 3 days, WARN and above |
 | OAC | `chronas-api-web-oac` (`E7INWQN9BB4TP`): `lambda`, `sigv4`, `always-amz-auth` |

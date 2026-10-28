@@ -37,7 +37,8 @@ upload_artifact() {
 
 # Full revision configuration. A revision copies nothing from the previous
 # one, so everything is passed every time. No secrets: JWT_SECRET comes from
-# Secrets Manager at startup (config/bootstrap.js).
+# the SSM SecureString /chronas/jwt-secret at startup (config/bootstrap.js),
+# a copy of the Secrets Manager value made with jwt-secret-ssm.sh.
 # Logging: warnings and errors only; the log groups keep 3 days.
 revision_json() {
   local key="$1" version="$2" commit="$3"
@@ -64,7 +65,7 @@ revision_json() {
         # No apostrophes in these comments: this jq program is single-quoted.
         NODE_OPTIONS: "--max-old-space-size=384 --max-semi-space-size=4",
         APP_VERSION: $commit,
-        SECRET_CONFIG_NAME: "/chronas/secrets",
+        JWT_SECRET_PARAMETER: "/chronas/jwt-secret",
         DYNAMODB_TABLE_PREFIX: "chronas",
         USE_DYNAMODB_AREAS: "true", USE_DYNAMODB_MARKERS: "true", USE_DYNAMODB_METADATA: "true",
         USE_DYNAMODB_USERS: "true", USE_DYNAMODB_FLAGS: "true", USE_DYNAMODB_REVISIONS: "true",

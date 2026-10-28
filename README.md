@@ -58,7 +58,7 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
                                        Lambda Web Function "chronas-api" (Node 24, arm64)
                                                            │  bounded in-memory caches
                                                            ▼
-                                       DynamoDB · S3 (statistics) · Secrets Manager
+                                       DynamoDB · S3 (statistics) · SSM Parameter Store
 ```
 
 | Endpoint | CDN (`s-maxage`) | Browser (`max-age`) |
