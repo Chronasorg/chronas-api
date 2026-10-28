@@ -1,9 +1,11 @@
 import { describe, it, before, afterEach } from 'mocha';
 import { expect } from 'chai';
 import { spawn } from 'child_process';
+import http from 'http';
 import { createServer } from 'net';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 
 import { setupDynamoLocal } from '../helpers/dynamodb-local.js';
 
@@ -59,6 +61,51 @@ async function startStalledEndpoint() {
     }
   };
 }
+
+// A Parameter Store endpoint (AWS JSON 1.1) that records each request and
+// answers with respond(request) → { status, body }.
+async function startFakeParameterStore(respond) {
+  const requests = [];
+  const fake = http.createServer((req, res) => {
+    let raw = '';
+    req.on('data', (chunk) => { raw += chunk; });
+    req.on('end', () => {
+      const request = { target: req.headers['x-amz-target'], body: JSON.parse(raw || '{}') };
+      requests.push(request);
+      const { status, body } = respond(request);
+      res.writeHead(status, { 'Content-Type': 'application/x-amz-json-1.1' });
+      res.end(JSON.stringify(body));
+    });
+  });
+  await new Promise(resolve => fake.listen(0, '127.0.0.1', resolve));
+  return {
+    url: `http://127.0.0.1:${fake.address().port}`,
+    requests,
+    close: () => {
+      fake.closeAllConnections();
+      return new Promise(resolve => fake.close(resolve));
+    }
+  };
+}
+
+const parameterValue = value => () => ({
+  status: 200,
+  body: { Parameter: { Name: '/chronas/jwt-secret', Type: 'SecureString', Value: value, Version: 1, DataType: 'text' } }
+});
+const parameterError = (status, type) => () => ({ status, body: { __type: type, message: 'probe' } });
+
+// The server environment for JWT_SECRET_PARAMETER, with a decoy environment
+// secret and a Secrets Manager that refuses connections: neither may be used.
+const parameterStoreEnv = url => ({
+  JWT_SECRET_PARAMETER: '/chronas/jwt-secret',
+  JWT_SECRET: 'from-environment',
+  SECRET_CONFIG_NAME: '/chronas/secrets',
+  AWS_ENDPOINT_URL_SECRETS_MANAGER: 'http://127.0.0.1:9',
+  AWS_ENDPOINT_URL_SSM: url,
+  AWS_REGION: 'eu-west-1',
+  AWS_ACCESS_KEY_ID: 'fake',
+  AWS_SECRET_ACCESS_KEY: 'fake'
+});
 
 const exitOf = child => (child.exitCode !== null
   ? Promise.resolve(child.exitCode)
@@ -119,6 +166,48 @@ describe('## web-server.js (Web Function entry)', function () {
       expect(server.output()).to.contain('Startup failed: TimeoutError');
     } finally {
       await stalled.close();
+    }
+  });
+
+  it('times out a stalled Parameter Store and answers 503 within about 6 s', async () => {
+    const stalled = await startStalledEndpoint();
+    try {
+      server = await startServer(parameterStoreEnv(stalled.url));
+      const sentAt = Date.now();
+      const res = await fetch(`${server.base}/v1/health`, { signal: AbortSignal.timeout(15000) });
+      expect(res.status).to.equal(503);
+      expect(res.headers.get('cache-control')).to.equal('no-store');
+      expect(Date.now() - sentAt).to.be.below(8000);
+      expect(server.output()).to.contain('Startup failed: TimeoutError');
+    } finally {
+      await stalled.close();
+    }
+  });
+
+  it('answers 503 when the parameter is missing: no fallback to the environment or Secrets Manager', async () => {
+    const store = await startFakeParameterStore(parameterError(400, 'ParameterNotFound'));
+    try {
+      server = await startServer(parameterStoreEnv(store.url));
+      const res = await fetch(`${server.base}/v1/health`);
+      expect(res.status).to.equal(503);
+      expect(server.output()).to.contain('Startup failed: ParameterNotFound');
+      expect(server.output()).to.not.contain('using JWT_SECRET from the environment');
+      expect(store.requests).to.have.length(1);
+    } finally {
+      await store.close();
+    }
+  });
+
+  it('tries a failing Parameter Store twice per startup attempt', async () => {
+    const store = await startFakeParameterStore(parameterError(500, 'InternalServerError'));
+    try {
+      server = await startServer(parameterStoreEnv(store.url));
+      const res = await fetch(`${server.base}/v1/health`);
+      expect(res.status).to.equal(503);
+      expect(server.output()).to.contain('Startup failed: InternalServerError');
+      expect(store.requests).to.have.length(2);
+    } finally {
+      await store.close();
     }
   });
 
@@ -202,6 +291,47 @@ describe('## index.js keeps serving when one request fails', function () {
       expect(server.output()).to.match(/route: '\/v1\/areas\/:areaId'/);
     } finally {
       await stalled.close();
+    }
+  });
+});
+
+describe('## index.js with JWT_SECRET_PARAMETER (Parameter Store)', function () {
+  this.timeout(30000);
+  let server;
+  let dynamoEnv;
+
+  before(async () => {
+    await setupDynamoLocal();
+    dynamoEnv = { DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT };
+  });
+
+  afterEach(() => {
+    if (server && server.child.exitCode === null) server.child.kill('SIGKILL');
+  });
+
+  it('signs and verifies tokens with the parameter value, read once with decryption', async () => {
+    const store = await startFakeParameterStore(parameterValue('from-parameter-store'));
+    try {
+      // The Parameter Store client is imported only on this path, so load it
+      // with the module flags CI uses for the Lambda runtime too.
+      server = await startServer({ ...dynamoEnv, ...parameterStoreEnv(store.url) }, {
+        entry: 'index.js',
+        nodeArgs: ['--no-experimental-require-module', '--no-experimental-detect-module']
+      });
+      // A user may read their own profile: 404 means the token verified and the
+      // (missing) user was looked up; 401 means the signature did not verify.
+      const probe = 'probe@example.org';
+      const asProbe = secret => ({ headers: { Authorization: `Bearer ${jwt.sign({ id: probe, privilege: 1 }, secret, { algorithm: 'HS256' })}` } });
+      const [withParameter, withEnvironment] = await Promise.all([
+        fetch(`${server.base}/v1/users/${probe}`, asProbe('from-parameter-store')),
+        fetch(`${server.base}/v1/users/${probe}`, asProbe('from-environment'))
+      ]);
+      expect([withParameter.status, withEnvironment.status]).to.deep.equal([404, 401]);
+      expect(store.requests).to.deep.equal([
+        { target: 'AmazonSSM.GetParameter', body: { Name: '/chronas/jwt-secret', WithDecryption: true } }
+      ]);
+    } finally {
+      await store.close();
     }
   });
 });
