@@ -34,6 +34,19 @@ const CACHEABLE_F_ID = /^(provinces|ruler|culture|religion|capital|province|reli
 // fetch. If we ever hit it the request still succeeds (we just truncate
 // and warn) so we don't OOM the Lambda silently.
 const MAX_ITEMS_IN_MEMORY = 25000;
+// Scan-backed lists (a type, year, wiki or search without a subtype, and the
+// plain list) read only what they filter, sort and page by, then load full
+// items for the requested page, 100 per BatchGet. A full item can take far
+// more heap than its JSON: the SDK builds year-keyed maps such as
+// {"1000": "Rome"} key by key, and V8 gives each a holey elements store of up
+// to 12 KB, so a scan returning the 2,416 `ap` items (2.5 MB of JSON) held
+// 268 MB, and three at once ended the process (2026-10-28).
+const LIST_FIELDS = ['_id', 'name', 'score', 'coo'];
+// Full items loaded for one scan-backed page. Known callers ask for at most
+// 150 (legacy Discover) or 25 (legacy admin list).
+const MAX_PAGE_ITEMS = 1000;
+// Scan-backed loads running at once in this process; the rest wait in turn.
+const MAX_CONCURRENT_LOADS = 2;
 
 export default class MetadataDynamo extends DynamoDocument {
   static tableName = TABLE;
@@ -170,17 +183,19 @@ async function fListBranch(fList, type, subtype, locale) {
   const cachedInit = cacheable ? metadataCache.get(cacheKey) : undefined;
   if (cachedInit) return cachedInit;
 
-  const items = await batchGetByIds(resourceArray);
-  const countLength = localeStr ? localeStr.length + 1 : 0;
-  const result = {};
-  for (const item of items) {
-    const decoded = decodeFromRead(item);
-    const id = String(decoded._id);
-    const key = countLength ? id.substr(0, id.length - countLength) : id;
-    result[key] = decoded.data;
-  }
-  if (cacheable) metadataCache.set(cacheKey, result);
-  return result;
+  return once(cacheKey, async () => {
+    const items = await batchGetByIds(resourceArray);
+    const countLength = localeStr ? localeStr.length + 1 : 0;
+    const result = {};
+    for (const item of items) {
+      const decoded = decodeFromRead(item);
+      const id = String(decoded._id);
+      const key = countLength ? id.substr(0, id.length - countLength) : id;
+      result[key] = decoded.data;
+    }
+    if (cacheable) metadataCache.set(cacheKey, result);
+    return result;
+  });
 }
 
 async function queryBranch(options) {
@@ -206,17 +221,42 @@ async function queryBranch(options) {
   // i.e., subtype is provided. The hot-path bug from #154 was the
   // type+subtype+year query (~99% of the RCU spike); type-only queries fall
   // back to Scan so we never miss items lacking subtype.
-  let rawItems;
-  if (subtypes.length > 0 && year) {
-    rawItems = await querySubtypeYearGSI(subtypes, yearLo, yearHi, { type, wiki });
-  } else if (type && subtypes.length > 0) {
-    rawItems = await queryTypeSubtypeGSI(type, subtypes, { yearLo: null, yearHi: null, wiki });
-  } else {
-    rawItems = await scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes });
+  if ((subtypes.length > 0 && year) || (type && subtypes.length > 0)) {
+    return once(cacheKey, async () => {
+      const rawItems = (subtypes.length > 0 && year)
+        ? await querySubtypeYearGSI(subtypes, yearLo, yearHi, { type, wiki })
+        : await queryTypeSubtypeGSI(type, subtypes, { yearLo: null, yearHi: null, wiki });
+      const items = filterAndSort(rawItems.map(i => decodeFromRead(i)), { search, mustGeo });
+      const paged = items.slice(+start, (+start) + (+end));
+      const result = search ? paged.map(item => item._id) : paged;
+      metadataCache.set(cacheKey, result);
+      return result;
+    });
   }
 
-  let items = rawItems.map(i => decodeFromRead(i));
+  // Scan: cache the filtered, sorted list of LIST_FIELDS (small, and shared by
+  // every page), then load full items for this page only.
+  const listKey = `list:${type}:${subtype}:${year}:${delta}:${wiki || ''}:${search || ''}:${mustGeo || ''}`;
+  const list = metadataCache.get(listKey) || await once(listKey, () => withLoadSlot(async () => {
+    const rows = await scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes });
+    const sorted = filterAndSort(rows, { search, mustGeo });
+    metadataCache.set(listKey, sorted);
+    return sorted;
+  }));
+  const paged = list.slice(+start, (+start) + (+end));
 
+  if (search) {
+    const result = paged.map(item => item._id);
+    metadataCache.set(cacheKey, result);
+    return result;
+  }
+
+  const ids = paged.slice(0, MAX_PAGE_ITEMS).map(item => item._id);
+  return once(cacheKey, () => withLoadSlot(() => loadPage(ids, toPlainJson)));
+}
+
+function filterAndSort(input, { search, mustGeo }) {
+  let items = input;
   if (search) {
     const lc = String(search).toLowerCase();
     items = items.filter(i =>
@@ -229,7 +269,7 @@ async function queryBranch(options) {
     items = items.filter(i => i.coo && Array.isArray(i.coo) && i.coo.length === 2);
   }
 
-  items.sort((a, b) => {
+  return items.sort((a, b) => {
     const av = a.score; const bv = b.score;
     if (av !== bv) {
       if (av === undefined || av === null) return 1;
@@ -243,17 +283,56 @@ async function queryBranch(options) {
     if (aid === bid) return 0;
     return aid < bid ? -1 : 1;
   });
+}
 
-  const paged = items.slice(+start, (+start) + (+end));
-
-  if (search) {
-    const result = paged.map(item => item._id);
-    metadataCache.set(cacheKey, result);
-    return result;
+// Full items for `ids`, in that order, read 100 per BatchGet and mapped as
+// each batch arrives, so the large SDK objects of one batch at most are alive.
+async function loadPage(ids, mapItem) {
+  const page = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const found = new Map((await batchGetByIds(chunk)).map(item => [String(item._id), item]));
+    for (const id of chunk) {
+      const item = found.get(String(id));
+      if (item) page.push(mapItem(decodeFromRead(item)));
+    }
   }
+  return page;
+}
 
-  metadataCache.set(cacheKey, paged);
-  return paged;
+// The same JSON the response gets, as objects JSON.parse built: for the
+// year-keyed `ap` items about 6 times less heap than the SDK's.
+function toPlainJson(item) {
+  return JSON.parse(JSON.stringify(item));
+}
+
+// Requests for the same uncached result share one load.
+const inFlight = new Map();
+function once(key, load) {
+  let promise = inFlight.get(key);
+  if (!promise) {
+    promise = load().finally(() => inFlight.delete(key));
+    inFlight.set(key, promise);
+  }
+  return promise;
+}
+
+let loadsRunning = 0;
+const loadQueue = [];
+async function withLoadSlot(work) {
+  if (loadsRunning < MAX_CONCURRENT_LOADS) {
+    loadsRunning++;
+  } else {
+    await new Promise(resolve => loadQueue.push(resolve));
+  }
+  try {
+    return await work();
+  } finally {
+    // Hand the slot straight to the next waiter, if any.
+    const next = loadQueue.shift();
+    if (next) next();
+    else loadsRunning--;
+  }
 }
 
 async function querySubtypeYearGSI(subtypes, yearLo, yearHi, extra) {
@@ -337,10 +416,15 @@ function checkCap(items, source) {
   return false;
 }
 
+// Returns only LIST_FIELDS of the matching items.
 async function scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes = [] }) {
   const filterParts = [];
   const values = {};
   const names = {};
+  const projection = LIST_FIELDS.map((field, i) => {
+    names[`#__f${i}`] = field;
+    return `#__f${i}`;
+  }).join(', ');
   if (year) {
     values[':__yearLo'] = yearLo;
     values[':__yearHi'] = yearHi;
@@ -370,11 +454,10 @@ async function scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes = [] 
     });
     filterParts.push(`#__subtype IN (${placeholders.join(', ')})`);
   }
-  const params = { TableName: TABLE };
+  const params = { TableName: TABLE, ProjectionExpression: projection, ExpressionAttributeNames: names };
   if (filterParts.length) {
     params.FilterExpression = filterParts.join(' AND ');
     params.ExpressionAttributeValues = values;
-    params.ExpressionAttributeNames = names;
   }
   const items = [];
   let next;
@@ -419,19 +502,24 @@ async function defaultBranch(start, end) {
   const cached = metadataCache.get(cacheKey);
   if (cached) return cached;
 
-  const items = await new DynamoQuery(MetadataDynamo, {})
-    .skip(+start)
-    .limit(+end)
-    .sort({ score: -1 })
-    .lean()
-    .exec();
+  return once(cacheKey, () => withLoadSlot(async () => {
+    // Same scan pages, sort and paging as before, on `_id` and `score` only.
+    const rows = await new DynamoQuery(MetadataDynamo, {})
+      .project(['_id', 'score'])
+      .skip(+start)
+      .limit(+end)
+      .sort({ score: -1 })
+      .lean()
+      .exec();
 
-  const result = items.map(obj => {
-    const decoded = decodeFromRead(obj);
-    const dataString = JSON.stringify(decoded.data).substring(0, 200);
-    decoded.data = dataString + ((dataString.length === 200) ? '...' : '');
-    return decoded;
-  });
-  metadataCache.set(cacheKey, result);
-  return result;
+    const ids = rows.slice(0, MAX_PAGE_ITEMS).map(row => row._id);
+    const result = await loadPage(ids, (decoded) => {
+      // A few items have no `data` at all.
+      const dataString = decoded.data === undefined ? '' : JSON.stringify(decoded.data).substring(0, 200);
+      decoded.data = dataString + ((dataString.length === 200) ? '...' : '');
+      return decoded;
+    });
+    metadataCache.set(cacheKey, result);
+    return result;
+  }));
 }
