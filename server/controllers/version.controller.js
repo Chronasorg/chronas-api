@@ -30,32 +30,46 @@ function get(req, res) {
   });
 }
 
-async function getPlusUser(req, res) {
-  const formatedDate = VERSION_INFO.build;
+// DescribeTable's ItemCount refreshes about every 6 hours; caching it keeps
+// the welcome call clear of DescribeTable's lower request limit.
+const USER_COUNT_TTL_MS = 10 * 60 * 1000;
+const USER_COUNT_RETRY_MS = 60 * 1000;
+let userCountCache = { value: 0, expires: 0 };
 
-  let lastDataEdit = 'n/a';
-  let userCount = 0;
-
+async function cachedUserCount() {
+  if (Date.now() < userCountCache.expires) return userCountCache.value;
   try {
-    const rev = await Revision.find().sort({ timestamp: -1 }).limit(1).lean().exec();
-    lastDataEdit = (rev && rev[0] && rev[0].timestamp) || 'n/a';
+    const value = await User.estimatedDocumentCount();
+    userCountCache = { value, expires: Date.now() + USER_COUNT_TTL_MS };
   } catch (err) {
-    console.error('Version endpoint: revision lookup failed', err.message);
+    userCountCache = { ...userCountCache, expires: Date.now() + USER_COUNT_RETRY_MS };
+    console.warn({ msg: 'welcomeUserCountFailed', name: err.name, message: err.message });
   }
-
-  try {
-    userCount = await User.countDocuments().exec();
-  } catch (err) {
-    console.error('Version endpoint: user count failed', err.message);
-  }
-
-  res.json({
-    lastDataEdit,
-    version: VERSION_INFO.version,
-    commit: VERSION_INFO.commit,
-    build: formatedDate,
-    user: userCount
-  });
+  return userCountCache.value;
 }
 
-export default { get, getPlusUser };
+/**
+ * GET /v1/welcome and /v1/version/welcome. Also serves as an end-to-end
+ * keep-alive check: the last-edit GetItem runs on every call and a failure
+ * answers 5xx. The user count is only a display number and never fails it.
+ */
+async function getPlusUser(req, res, next) {
+  try {
+    const [lastEdit, userCount] = await Promise.all([Revision.lastEdit(), cachedUserCount()]);
+    res.json({
+      lastDataEdit: lastEdit || 'n/a',
+      version: VERSION_INFO.version,
+      commit: VERSION_INFO.commit,
+      build: VERSION_INFO.build,
+      user: userCount
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+function resetUserCountCache() {
+  userCountCache = { value: 0, expires: 0 };
+}
+
+export default { get, getPlusUser, resetUserCountCache };
