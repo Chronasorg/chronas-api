@@ -57,6 +57,13 @@ describe('## Edge invalidation for scripts that write through the models', () =>
       .to.equal('aws cloudfront create-invalidation --distribution-id E1 --paths "/v1/areas/*" "/v1/markers*"');
   });
 
+  it('the manual command names the profile the script ran with, so it reaches the same account', () => {
+    expect(manualInvalidationCommand('E1KTIK2H0W8J2Q', ['/v1/metadata*'], { profile: 'chronas-prod' }))
+      .to.equal('aws cloudfront create-invalidation --distribution-id E1KTIK2H0W8J2Q --paths "/v1/metadata*" --profile chronas-prod');
+    expect(manualInvalidationCommand('E1', ['/v1/metadata*'], { profile: String.raw`it's mine` }))
+      .to.equal(String.raw`aws cloudfront create-invalidation --distribution-id E1 --paths "/v1/metadata*" --profile 'it'\''s mine'`);
+  });
+
   describe('# invalidateAfterDirectWrites', () => {
     it('waits SETTLE_MS, sends one invalidation, and prints what it invalidated', async () => {
       const { out, options } = recorder();
@@ -86,6 +93,15 @@ describe('## Edge invalidation for scripts that write through the models', () =>
       expect(ok).to.equal(false);
       expect(out.error[0]).to.equal('CloudFront invalidation failed: AccessDenied: User is not authorized to perform cloudfront:CreateInvalidation');
       expect(out.error).to.include('  aws cloudfront create-invalidation --distribution-id E1KTIK2H0W8J2Q --paths "/v1/metadata*"');
+    });
+
+    it('with AWS_PROFILE set, the printed commands use that profile', async () => {
+      const failed = recorder({ fail: accessDenied() });
+      await invalidateAfterDirectWrites(['metadata'], { ...failed.options, argv: [], env: { AWS_PROFILE: 'chronas-prod' } });
+      expect(failed.out.error).to.include('  aws cloudfront create-invalidation --distribution-id E1KTIK2H0W8J2Q --paths "/v1/metadata*" --profile chronas-prod');
+      const accepted = recorder();
+      await invalidateAfterDirectWrites(['metadata'], { ...accepted.options, argv: [], env: { AWS_PROFILE: 'chronas-prod' } });
+      expect(accepted.out.log).to.include('  aws cloudfront get-invalidation --distribution-id E1KTIK2H0W8J2Q --id I2ABC --profile chronas-prod');
     });
   });
 
@@ -126,7 +142,7 @@ describe('## Edge invalidation for scripts that write through the models', () =>
         expect(decodeFromRead(items.get('provinces')).data).to.deep.equal(corrected);
         return options.send(input);
       };
-      const ok = await writeProvincesDirect(corrected, { ...options, send, distributionId: 'ETEST' });
+      const ok = await writeProvincesDirect(corrected, { ...options, send, distributionId: 'ETEST', argv: [], env: {} });
       expect(ok).to.equal(true);
       expect(events).to.deep.equal(['put provinces', 'invalidate /v1/metadata*']);
       expect(out.sent[0].DistributionId).to.equal('ETEST');
@@ -135,7 +151,7 @@ describe('## Edge invalidation for scripts that write through the models', () =>
 
     it('a failed invalidation keeps the write and returns false (the script exits 1)', async () => {
       const { out, options } = recorder({ fail: accessDenied() });
-      const ok = await writeProvincesDirect(corrected, { ...options, distributionId: 'ETEST' });
+      const ok = await writeProvincesDirect(corrected, { ...options, distributionId: 'ETEST', argv: [], env: {} });
       expect(ok).to.equal(false);
       expect(decodeFromRead(items.get('provinces')).data).to.deep.equal(corrected);
       expect(out.error).to.include('  aws cloudfront create-invalidation --distribution-id ETEST --paths "/v1/metadata*"');
@@ -144,7 +160,7 @@ describe('## Edge invalidation for scripts that write through the models', () =>
     it('a missing provinces document fails before anything is written or invalidated', async () => {
       items.clear();
       const { out, options } = recorder();
-      const error = await writeProvincesDirect(corrected, { ...options, distributionId: 'ETEST' }).catch(e => e);
+      const error = await writeProvincesDirect(corrected, { ...options, distributionId: 'ETEST', argv: [], env: {} }).catch(e => e);
       expect(error.message).to.equal('The provinces document does not exist');
       expect(events).to.deep.equal([]);
       expect(out.sent).to.deep.equal([]);

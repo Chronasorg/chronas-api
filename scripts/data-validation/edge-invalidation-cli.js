@@ -30,9 +30,18 @@ export function distributionIdFrom(argv = process.argv.slice(2), env = process.e
   return value;
 }
 
-/** The AWS CLI command that sends the same invalidation by hand. */
-export function manualInvalidationCommand(distributionId, paths) {
-  return `aws cloudfront create-invalidation --distribution-id ${distributionId} --paths ${paths.map(p => `"${p}"`).join(' ')}`;
+// A value as one shell word: as it is when it needs no quoting, otherwise
+// in single quotes, each ' written as '\''.
+const shellWord = value => (/^[\w.@%+=:,/-]+$/.test(value) ? value : `'${value.replace(/'/g, String.raw`'\''`)}'`);
+
+/**
+ * The AWS CLI command that sends the same invalidation by hand. With the
+ * profile the script ran with, so it uses the same account even when the
+ * shell's default profile is another one.
+ */
+export function manualInvalidationCommand(distributionId, paths, { profile = null } = {}) {
+  const command = `aws cloudfront create-invalidation --distribution-id ${shellWord(distributionId)} --paths ${paths.map(p => `"${p}"`).join(' ')}`;
+  return profile ? `${command} --profile ${shellWord(profile)}` : command;
 }
 
 /**
@@ -62,14 +71,14 @@ export async function invalidateAfterDirectWrites(resources, {
     await wait(settleMs);
     const result = await invalidateNow(resources, { distributionId: distribution, ...(send ? { send } : {}) });
     log(`Invalidated ${result.paths.join(' ')} on ${distribution}: invalidation ${result.id}, ${result.status}. CloudFront usually completes it within 10-100 s:`);
-    log(`  aws cloudfront get-invalidation --distribution-id ${distribution} --id ${result.id}`);
+    log(`  aws cloudfront get-invalidation --distribution-id ${distribution} --id ${result.id}${env.AWS_PROFILE ? ` --profile ${shellWord(env.AWS_PROFILE)}` : ''}`);
     log('API environments that cached the old data keep serving it until their in-process copy expires (up to 1 h).');
     return true;
   } catch (e) {
     distribution ||= DEFAULT_DISTRIBUTION_ID;
     error(`CloudFront invalidation failed: ${e?.name || 'Error'}: ${e?.message ?? String(e)}`);
     error('The write is saved, but CloudFront keeps serving its copies until they expire (up to 1 day on ChronasApiPublicV3, 7 days on V4). Invalidate by hand:');
-    error(`  ${manualInvalidationCommand(distribution, paths)}`);
+    error(`  ${manualInvalidationCommand(distribution, paths, { profile: env.AWS_PROFILE })}`);
     return false;
   }
 }

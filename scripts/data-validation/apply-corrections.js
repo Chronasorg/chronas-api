@@ -147,7 +147,7 @@ async function runIssueDriven(report, opts, client) {
   console.log('        that copy until it expires (at most 1 h); browsers keep theirs up to max-age (area');
   console.log('        years 1 day).');
   console.log('        If the changes do not show within a few minutes, invalidate by hand:');
-  console.log(`        ${manualInvalidationCommand(DEFAULT_DISTRIBUTION_ID, ['/v1/areas/*', '/v1/markers*', '/v1/metadata*'])}`);
+  console.log(`        ${manualInvalidationCommand(DEFAULT_DISTRIBUTION_ID, ['/v1/areas/*', '/v1/markers*', '/v1/metadata*'], { profile: process.env.AWS_PROFILE })}`);
 }
 
 async function run() {
