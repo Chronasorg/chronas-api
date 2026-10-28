@@ -12,7 +12,7 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
                                                            ▼  OAC (SigV4, always-amz-auth)
                                        Lambda Web Function "chronas-api", endpoint "prod"
                                                            ▼
-                                       DynamoDB · S3 (statistics) · Secrets Manager
+                                       DynamoDB · S3 (statistics) · SSM Parameter Store
 ```
 
 | Resource | Setting |
@@ -24,7 +24,7 @@ api.chronas.org (legacy site, third parties) ── alias ────┤  Cloud
 | Code artifacts | `s3://chronas-lambda-web-artifacts/web/chronas-api-<commit>.zip`: versioned, private, TLS only, readable only by the function's revisions. **Never delete an object version a revision uses**, because that revision would fail permanently |
 | CloudFront | `E1KTIK2H0W8J2Q`: `/v1/areas/*`, `/v1/metadata*`, `/v1/markers*` on `ChronasApiPublicV3` (cached only when the origin says `public`, at most 1 day; `ChronasApiPublicV4`, at most 7 days, replaces it once the API's invalidations are verified, see [api-edge/README.md](api-edge/README.md)), default on `ChronasApiDynamicV3`; both key on `Authorization` and the public one also on `Origin`; origin request policy AllViewerExceptHostHeader; 500/502/503/504 not cached |
 | DNS | `api.chronas.org` A → alias of `d24mkpax7rmotx.cloudfront.net` (zone `Z005461139KF8GDMY491N`) |
-| Secrets | Secrets Manager `/chronas/secrets`; the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)). The switch to the free SSM SecureString `/chronas/jwt-secret` (`JWT_SECRET_PARAMETER`) is described in [JWT secret](#jwt-secret) |
+| Secrets | SSM Parameter Store SecureString `/chronas/jwt-secret` (Standard tier, AWS managed key `aws/ssm`, no charge) since 2026-10-28: the revision's `JWT_SECRET_PARAMETER` names it, and the app loads `JWT_SECRET` from it at startup ([config/bootstrap.js](../config/bootstrap.js)) with no fallback. Secrets Manager `/chronas/secrets` (same value) is scheduled for deletion; see [JWT secret](#jwt-secret) |
 | Logs | `/aws/lambda/web/chronas-api` and `.local`: warnings and errors only, 3 days; Lambda writes every event to both. The runtime captures stdout and stderr and filters them by `applicationLogLevel`; raw lines carry no level and were not delivered at WARN in our test (hence `forceConsole` in `config/winston.js`). Every app 5xx logs one `http5xx` line, so `HTTPResponseStatusClass5XX` minus those lines counts the 5xx Lambda returned itself (apart from the startup-failure 503s of `web-server.js`, logged as `Startup failed`) |
 | Alarms | `chronas-api-web-{5xx,throttled,capacity,memory}` → SNS `CloudWatch_Alarm_aumannjoachim` ([`api-edge/web-function-alarms.sh`](api-edge/web-function-alarms.sh); since 2026-10-15: 5xx ≥ 10 in 5 min, rate throttles ≥ 10 in two 5-min periods in a row, capacity throttles ≥ 10 in 15 min, environment memory ≥ 768 MB), plus the DynamoDB RCU and throttle alarms (none on `chronas-users`). `CloudFront-5xx-Rate-High` (5xx rate > 5 % for 10 min) is in us-east-1 and notifies the us-east-1 topic of the same name, which needs its own email subscription. Throttles that no alarm sees: `Platform.EndpointConcurrentInitThrottle` 429s (too many environments starting at once) increment no throttle metric, only `HTTPResponseStatusClass4XX` |
 
