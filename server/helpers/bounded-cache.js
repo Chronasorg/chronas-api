@@ -5,14 +5,21 @@
  * The size of a value is its JSON length, measured once when it is stored.
  * That undercounts the heap it occupies, so keep `maxBytes` well below the
  * memory you can spare. A value larger than `maxEntryBytes` isn't stored.
+ *
+ * Each entry records when its data was read (`dataAt`, the time it was
+ * stored unless the option says otherwise), and `onHit` sees every entry a
+ * get() returns, which server/helpers/edge-cache.js uses to limit how long
+ * the edge keeps a response built from it.
  */
 export default class BoundedCache {
-  constructor({ maxEntries, maxBytes, maxEntryBytes = maxBytes, ttlMs, now = Date.now }) {
+  constructor({ maxEntries, maxBytes, maxEntryBytes = maxBytes, ttlMs, now = Date.now, dataAt = now, onHit = null }) {
     this.maxEntries = maxEntries;
     this.maxBytes = maxBytes;
     this.maxEntryBytes = maxEntryBytes;
     this.ttlMs = ttlMs;
     this.now = now;
+    this.dataAt = dataAt;
+    this.onHit = onHit;
     this.entries = new Map();
     this.bytes = 0;
   }
@@ -31,6 +38,7 @@ export default class BoundedCache {
     // Re-insert so the Map's insertion order doubles as recency order.
     this.entries.delete(key);
     this.entries.set(key, entry);
+    if (this.onHit) this.onHit(entry);
     return entry.value;
   }
 
@@ -39,7 +47,7 @@ export default class BoundedCache {
     this.delete(key);
     if (size > this.maxEntryBytes) return false;
 
-    this.entries.set(key, { value, size, expiresAt: this.now() + this.ttlMs });
+    this.entries.set(key, { value, size, expiresAt: this.now() + this.ttlMs, dataAt: this.dataAt() });
     this.bytes += size;
     while (this.entries.size > this.maxEntries || this.bytes > this.maxBytes) {
       this.delete(this.entries.keys().next().value);

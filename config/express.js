@@ -10,6 +10,7 @@ import helmet from 'helmet';
 
 import routes from '../server/routes/index.route.js';
 import APIError from '../server/helpers/APIError.js';
+import { trackDataAge } from '../server/helpers/edge-cache.js';
 
 import winstonInstance from './winston.js';
 import { config } from './config.js';
@@ -65,6 +66,12 @@ if (config.env === 'development') {
     colorStatus: true // Color the status code (default green, 3XX cyan, 4XX yellow, 5XX red).
   }));
 }
+
+// Records how old the data of each response is, so a public response built
+// from an older in-process cache entry gets a shorter edge lifetime
+// (server/helpers/edge-cache.js). After the body parsers: their stream
+// callbacks would run outside the request's context.
+app.use(trackDataAge);
 
 // route for v1 (current) requests
 app.use('/v1', routes);

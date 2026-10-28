@@ -140,11 +140,34 @@ in the report. If the live Wikidata answer no longer matches what the report
 captured, the proposal is skipped with `wikidata-drift` and you must regenerate
 the report. This is the safety net against stale data.
 
-Write order is fixed: `metadata.add` → `marker.add` → `area.update`. After
-apply, edge caches (CloudFront, S-MaxAge on `/v1/areas/:year` and `/v1/metadata`)
-may serve stale responses for up to 24h. Issue a CloudFront invalidation on
-`/v1/markers*`, `/v1/metadata*`, and `/v1/areas/*` if you need changes visible
-immediately.
+Write order is fixed: `metadata.add` → `marker.add` → `area.update`.
+
+**When visitors see the changes.** The API invalidates the CloudFront copies of
+what it writes: the API environment that handled the first write sends the
+invalidation about 15 s later, then at most every 2 minutes while writes
+continue, and CloudFront needs another 10–100 s, so most visitors see the
+changes within a few minutes. Two kinds of copy can last longer: an API
+environment that cached a year or a metadata list before the write can serve
+that copy until it expires (at most 1 h), and a browser keeps its copy up to
+max-age (area years 1 day, metadata up to 1 h). The validator and applier read
+with a cache buster, so they always reach the API. If the changes don't show
+within a few minutes, invalidate by hand (the applier prints this command too):
+
+```bash
+aws cloudfront create-invalidation --profile chronas-prod --distribution-id E1KTIK2H0W8J2Q --paths "/v1/areas/*" "/v1/markers*" "/v1/metadata*"
+```
+
+### Writes that bypass the API
+
+The API only invalidates what it writes itself. `issue-32-borders.js --direct`
+saves through the server models (the `provinces` document is too large for the
+revision record of `PUT /v1/metadata/:id`), so after its write it waits 10 s,
+sends the invalidation itself and prints its id; on failure it prints the
+manual command above and exits 1. A new script that writes through the models
+must call `invalidateAfterDirectWrites(resources)` from
+`scripts/data-validation/edge-invalidation-cli.js` after its last write and exit
+non-zero when it returns false. After an edit in the DynamoDB console, run the
+manual command yourself.
 
 `--use-cached-only` runs the validator against the local Wikidata disk cache
 (`cache/wikidata/`) only — useful when Wikidata is unreachable.

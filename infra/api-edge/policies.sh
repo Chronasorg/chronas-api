@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Create, or check, the two cache policies of plan §6 (ChronasApiDynamicV3,
-# ChronasApiPublicV3). Existing policies are never modified: if one differs
-# from its spec the script stops.
+# Create, or check, the two cache policies of plan §6 (names and settings in
+# edge-config.mjs POLICY_SPECS: ChronasApiDynamicV3, ChronasApiPublicV4).
+# Existing policies are never modified: if one differs from its spec the
+# script stops, so a spec change gets a new name. ChronasApiPublicV3, the
+# public policy before V4, stays as it is.
 #   ./policies.sh [--apply --confirm "create cache policies"]
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 parse_common_args "$@"

@@ -47,6 +47,18 @@
       "Resource": "arn:aws:secretsmanager:eu-west-1:937826731833:secret:/chronas/secrets-YDUZQG"
     },
     {
+      "Sid": "JwtSecretParameter",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": "arn:aws:ssm:eu-west-1:937826731833:parameter/chronas/jwt-secret"
+    },
+    {
+      "Sid": "InvalidateApiEdge",
+      "Effect": "Allow",
+      "Action": "cloudfront:CreateInvalidation",
+      "Resource": "arn:aws:cloudfront::937826731833:distribution/E1KTIK2H0W8J2Q"
+    },
+    {
       "Sid": "Logs",
       "Effect": "Allow",
       "Action": [

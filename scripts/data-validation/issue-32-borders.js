@@ -24,6 +24,10 @@
  * Usage:
  *   node scripts/data-validation/issue-32-borders.js            # dry run
  *   node scripts/data-validation/issue-32-borders.js --apply    # write to API
+ *   node scripts/data-validation/issue-32-borders.js --direct [--distribution-id ID]
+ *        # write through the MetadataDynamo model (AWS credentials), then
+ *        # invalidate /v1/metadata* on CloudFront (default E1KTIK2H0W8J2Q, or
+ *        # CLOUDFRONT_DISTRIBUTION_ID); exits 1 if the invalidation fails
  *
  * Env (only needed for --apply):
  *   CHRONAS_API_URL   default https://api.chronas.org
@@ -33,7 +37,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import {
   difference,
   union,
@@ -42,6 +46,7 @@ import {
   polygon as turfPolygon
 } from '@turf/turf';
 import { ChronasClient } from './chronas-client.js';
+import { distributionIdFrom, invalidateAfterDirectWrites } from './edge-invalidation-cli.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INPUTS_DIR = path.join(__dirname, 'inputs');
@@ -104,8 +109,29 @@ function rulerAt(features, areas, pt) {
   return { name: null, ruler: null };
 }
 
+/**
+ * --direct: write the corrected collection through the MetadataDynamo model,
+ * then invalidate the edge copies. The API invalidates only what it writes
+ * itself, so a write from this process is never invalidated otherwise.
+ * Resolves to whether CloudFront accepted the invalidation.
+ * @param options passed to invalidateAfterDirectWrites (distributionId, …)
+ */
+export async function writeProvincesDirect(fc, { invalidate = invalidateAfterDirectWrites, ...options } = {}) {
+  const { default: MetadataDynamo } = await import('../../server/models/dynamo/metadata.dynamo.js');
+  const docModel = await MetadataDynamo.findById('provinces').exec();
+  if (!docModel) throw new Error('The provinces document does not exist');
+  docModel.data = fc;
+  if (typeof docModel.markModified === 'function') docModel.markModified('data');
+  await docModel.save();
+  console.log('Applied via model.');
+  return invalidate(['metadata'], options);
+}
+
 async function main() {
   const apply = process.argv.includes('--apply');
+  const direct = process.argv.includes('--direct');
+  // Before anything is written, so a bad flag stops the run early.
+  const distributionId = direct ? distributionIdFrom(process.argv.slice(2)) : null;
   fs.mkdirSync(INPUTS_DIR, { recursive: true });
 
   const client = new ChronasClient({ apiUrl: API_URL });
@@ -193,12 +219,10 @@ async function main() {
   }
   console.log('\nAll checks passed.');
 
-  const direct = process.argv.includes('--direct');
-
   if (!apply && !direct) {
     console.log('\nDRY RUN — no changes written.');
     console.log('  --apply   PUT via the API (needs CHRONAS_* creds)');
-    console.log('  --direct  write via the MetadataDynamo model (needs AWS creds)');
+    console.log('  --direct  write via the MetadataDynamo model, then invalidate CloudFront (needs AWS creds)');
     return;
   }
 
@@ -210,12 +234,7 @@ async function main() {
   // the item the API would have stored — minus the (impossible) revision row.
   if (direct) {
     console.log('\nWriting via MetadataDynamo model (skips the broken revision middleware) ...');
-    const { default: MetadataDynamo } = await import('../../server/models/dynamo/metadata.dynamo.js');
-    const docModel = await MetadataDynamo.findById('provinces').exec();
-    docModel.data = fc;
-    if (typeof docModel.markModified === 'function') docModel.markModified('data');
-    await docModel.save();
-    console.log('Applied via model.');
+    if (!(await writeProvincesDirect(fc, { distributionId }))) process.exitCode = 1;
     return;
   }
 
@@ -244,7 +263,22 @@ async function main() {
   console.log(`Applied. Status ${putRes.status}.`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Only when run, not when a test imports writeProvincesDirect. Node runs
+// the main module from its real path, so a symlinked checkout (macOS /tmp)
+// is compared through realpath.
+function isMain() {
+  const script = process.argv[1];
+  if (!script) return false;
+  try {
+    return [pathToFileURL(fs.realpathSync(script)).href, pathToFileURL(script).href].includes(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
