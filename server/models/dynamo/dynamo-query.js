@@ -32,6 +32,7 @@ export default class DynamoQuery {
     this._lean = false;
     this._index = null;
     this._keyCondition = null;
+    this._projection = null;
   }
 
   onIndex(indexName, keyCondition) {
@@ -57,6 +58,13 @@ export default class DynamoQuery {
 
   lean() {
     this._lean = true;
+    return this;
+  }
+
+  // Return only these attributes. Read units are the same (DynamoDB charges
+  // for the whole item), but far less data reaches memory.
+  project(fields) {
+    this._projection = fields;
     return this;
   }
 
@@ -134,7 +142,16 @@ export default class DynamoQuery {
       params.ExpressionAttributeValues = filterSpec.values;
       if (Object.keys(filterSpec.names).length) params.ExpressionAttributeNames = filterSpec.names;
     }
-    if (select === 'COUNT') params.Select = 'COUNT';
+    if (select === 'COUNT') {
+      params.Select = 'COUNT';
+    } else if (this._projection) {
+      const names = { ...(params.ExpressionAttributeNames || {}) };
+      params.ProjectionExpression = this._projection.map((field, i) => {
+        names[`#__p${i}`] = field;
+        return `#__p${i}`;
+      }).join(', ');
+      params.ExpressionAttributeNames = names;
+    }
     return params;
   }
 
