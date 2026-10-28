@@ -116,6 +116,26 @@ describe('## Bounded in-process caches', () => {
       expect(area.data.P[0]).to.equal('RUL');
     });
 
+    // A write clears only the cache of the environment that handled it, so
+    // the TTL is how long another environment can serve a corrected year
+    // as it was. 24 h before edge invalidation; now 1 h, like metadata lists.
+    it('keeps a year for 1 hour, then reads it again; the size bounds are unchanged', async () => {
+      expect({ ttlMs: areaCache.ttlMs, maxEntries: areaCache.maxEntries, maxBytes: areaCache.maxBytes, maxEntryBytes: areaCache.maxEntryBytes })
+        .to.deep.equal({ ttlMs: 60 * 60 * 1000, maxEntries: 100, maxBytes: 4 * 1024 * 1024, maxEntryBytes: 1024 * 1024 });
+      expect(areaCache.ttlMs).to.equal(metadataCache.ttlMs);
+
+      const fake = fakeDocClient((name, input) => areaItem(input.Key._id));
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = fake;
+      await AreaDynamo.get('1000');
+      const entry = areaCache.entries.get('1000');
+      expect(entry.expiresAt - Date.now()).to.be.within((60 * 60 * 1000) - 1000, 60 * 60 * 1000);
+      await AreaDynamo.get('1000');
+      expect(fake.calls.GetCommand).to.equal(1);
+      entry.expiresAt = Date.now() - 1; // an hour later
+      await AreaDynamo.get('1000');
+      expect(fake.calls.GetCommand).to.equal(2);
+    });
+
     it('writes read DynamoDB, and save() drops the cached year', async () => {
       const fake = fakeDocClient((name, input) => (name === 'GetCommand' ? areaItem(input.Key._id) : {}));
       globalThis.__TEST_DYNAMO_DOC_CLIENT = fake;

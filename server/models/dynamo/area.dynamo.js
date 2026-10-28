@@ -20,13 +20,17 @@ const TABLE = tableName('areas');
 // heap, and Web Function memory is billed for the environment's lifetime.
 // 4 MB (about 30 years) instead of 16 MB lowered RSS by ~60 MB in a
 // 400-year sweep on Node 24 (2026-10-15).
-// A write clears only this environment's copy; a hit reports the entry's
-// age, so the edge never keeps an older copy past its expiry (edge-cache.js).
+// A write clears only this environment's copy, so another environment can
+// serve the year as it was until its entry expires: 1 h, like metadataCache
+// (24 h before edge invalidation). A popular year then costs at most one
+// GetItem per environment and hour instead of per day. A hit reports the
+// entry's age, so the edge never keeps an older copy past its expiry
+// (edge-cache.js).
 export const areaCache = new BoundedCache({
   maxEntries: 100,
   maxBytes: 4 * 1024 * 1024,
   maxEntryBytes: 1024 * 1024,
-  ttlMs: 24 * 60 * 60 * 1000,
+  ttlMs: 60 * 60 * 1000,
   ...cacheDataAge
 });
 
