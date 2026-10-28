@@ -146,6 +146,35 @@ describe('## Edge lifetime of public responses', () => {
       }
     });
 
+    // Inactive: no CLOUDFRONT_DISTRIBUTION_ID (the state right after a
+    // deploy), or the last invalidation failed. The bounds exist only for the
+    // longer lifetimes invalidation allows.
+    it('without invalidation an old entry, a slow read and a shared load all keep exactly the previous lifetime', async () => {
+      active = false;
+      try {
+        cache.set('aged', { v: 1 });
+        Object.assign(cache.entries.get('aged'), { dataAt: Date.now() - (40 * MINUTE), expiresAt: Date.now() + (20 * MINUTE) });
+        const fromOldEntry = await inRequest(() => {
+          cache.get('aged');
+          return [86400, 43200, 604800, 3600].map(previous => publicCacheControl(3600, previous));
+        });
+        expect(fromOldEntry).to.deep.equal([86400, 43200, 604800, 3600].map(previous => `public, max-age=3600, s-maxage=${previous}`));
+        expect(await inRequest(() => edgeMaxAge(3600, Date.now() + FRESH_MS + 1000))).to.equal(3600);
+        expect(await inRequest(() => {
+          noteSharedLoad(Date.now() - FRESH_MS - 1000);
+          return edgeMaxAge(86400);
+        })).to.equal(86400);
+        // An entry about to expire, with invalidation, would get 0.
+        Object.assign(cache.entries.get('aged'), { expiresAt: Date.now() + 100 });
+        expect(await inRequest(() => {
+          cache.get('aged');
+          return edgeMaxAge(604800);
+        })).to.equal(604800);
+      } finally {
+        active = true;
+      }
+    });
+
     it('requests keep separate records', async () => {
       cache.set('shared', { v: 1 });
       Object.assign(cache.entries.get('shared'), { dataAt: Date.now() - (30 * MINUTE), expiresAt: Date.now() + (30 * MINUTE) });

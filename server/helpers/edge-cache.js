@@ -4,11 +4,13 @@
  * CloudFront may keep these responses for up to 7 days, because every write
  * invalidates them (edge-invalidation.js). Without invalidation (no
  * CLOUDFRONT_DISTRIBUTION_ID, or the last invalidation failed) each
- * response keeps the edge lifetime it had before, which its handler passes.
+ * response gets exactly the edge lifetime it had before edge invalidation
+ * existed, which its handler passes, and none of the bounds below: they
+ * only matter for lifetimes longer than that.
  *
- * Even with invalidation, that only holds for responses built from data
- * newer than any write whose invalidation may already have run. Two kinds
- * of response aren't:
+ * With invalidation, 7 days only holds for responses built from data newer
+ * than any write whose invalidation may already have run. Two kinds of
+ * response aren't:
  *
  * - Responses served from an in-process cache (area years, metadata
  *   lists). Each Web Function environment has its own caches, and a write
@@ -21,8 +23,9 @@
  *   get SLOW_READ_EDGE_MAX_AGE.
  *
  * The scheduler sends a path's invalidation at least SETTLE_MS after the
- * last write to it, and FRESH_MS = SETTLE_MS / 2 leaves the rest for
- * eventually consistent reads and the transfer to the edge.
+ * last write to it (votes wait for the next write's invalidation), and
+ * FRESH_MS = SETTLE_MS / 2 leaves the rest for eventually consistent reads
+ * and the transfer to the edge.
  *
  * Each request carries its own record (AsyncLocalStorage, started by
  * trackDataAge in config/express.js), so concurrent requests never share
@@ -75,7 +78,8 @@ export const cacheDataAge = Object.freeze({ dataAt: dataReadAt, onHit: noteCache
  * @param withoutInvalidation the s-maxage while edge copies aren't invalidated
  */
 export function edgeMaxAge(withoutInvalidation = 0, now = Date.now()) {
-  let maxAge = edgeInvalidationActive() ? EDGE_MAX_AGE : withoutInvalidation;
+  if (!edgeInvalidationActive()) return withoutInvalidation;
+  let maxAge = EDGE_MAX_AGE;
   const record = requests.getStore();
   if (!record) return maxAge;
   if (now - record.startedAt > FRESH_MS) maxAge = Math.min(maxAge, SLOW_READ_EDGE_MAX_AGE);

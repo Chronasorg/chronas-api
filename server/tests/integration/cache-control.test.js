@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 import { setupDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-local.js';
-import { useSchedulerForTests } from '../../helpers/edge-invalidation.js';
+import { createInvalidationScheduler, useSchedulerForTests } from '../../helpers/edge-invalidation.js';
 import { areaCache } from '../../models/dynamo/area.dynamo.js';
 import { metadataCache } from '../../models/dynamo/metadata.dynamo.js';
 
@@ -164,6 +164,68 @@ describe('## Cache-Control headers', () => {
         expect(res.status).to.equal(200);
         const sMaxAge = Number(res.headers['cache-control'].match(/s-maxage=(\d+)$/)[1]);
         expect(sMaxAge).to.be.within((120 * 60) - 5, 120 * 60);
+      });
+    });
+
+    // Inactive: right after the deploy (no CLOUDFRONT_DISTRIBUTION_ID, so the
+    // process scheduler is the real, disabled one), and after a failed
+    // invalidation. Every read, also one served from an old in-process
+    // entry, sends exactly the Cache-Control it sent before.
+    describe('while invalidation is inactive, reads from old in-process entries keep exactly the previous header', () => {
+      const ageCaches = () => {
+        for (const cache of [areaCache, metadataCache]) {
+          for (const entry of cache.entries.values()) {
+            entry.dataAt = Date.now() - (40 * MINUTE);
+            entry.expiresAt = Date.now() + (20 * MINUTE);
+          }
+        }
+      };
+      const sMaxAge = res => Number(res.headers['cache-control'].match(/s-maxage=(\d+)$/)[1]);
+      const cachedReads = ['/v1/areas/1000', '/v1/metadata?type=g&f=ruler,religion', '/v1/metadata?type=e&end=10&subtype=ew'];
+
+      const failedScheduler = async () => {
+        const scheduler = createInvalidationScheduler({
+          distributionId: 'ETEST',
+          send: async () => { throw Object.assign(new Error('not authorized'), { name: 'AccessDenied' }); },
+          setTimer: () => ({ unref() {} }),
+          clearTimer: () => {},
+          warn: () => {}
+        });
+        scheduler.markDirty('areas');
+        await scheduler.flush({ force: true });
+        expect(scheduler.active()).to.equal(false);
+        return scheduler;
+      };
+
+      const readsAfterAging = async () => {
+        for (const url of PUBLIC_READS) await request(app).get(url);
+        ageCaches();
+        const headers = {};
+        for (const url of PUBLIC_READS) headers[url] = (await request(app).get(url)).headers['cache-control'];
+        return headers;
+      };
+      const previousHeaders = () => Object.fromEntries(PUBLIC_READS.map(url => [url, `public, max-age=${LIFETIMES[url][0]}, s-maxage=${LIFETIMES[url][1]}`]));
+
+      it('the cached reads do come from the aged entries (with invalidation they get the 20 minutes left)', async () => {
+        await withInvalidation(true, async () => {
+          for (const url of cachedReads) await request(app).get(url);
+          ageCaches();
+          for (const url of cachedReads) expect(sMaxAge(await request(app).get(url)), url).to.be.within((20 * 60) - 5, 20 * 60);
+        });
+      });
+
+      it('without CLOUDFRONT_DISTRIBUTION_ID (the process scheduler as deployed)', async () => {
+        expect(process.env.CLOUDFRONT_DISTRIBUTION_ID).to.equal(undefined);
+        expect(await readsAfterAging()).to.deep.equal(previousHeaders());
+      });
+
+      it('after the last invalidation failed', async () => {
+        const previous = useSchedulerForTests(await failedScheduler());
+        try {
+          expect(await readsAfterAging()).to.deep.equal(previousHeaders());
+        } finally {
+          useSchedulerForTests(previous);
+        }
       });
     });
 
