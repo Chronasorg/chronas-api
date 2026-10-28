@@ -1,11 +1,13 @@
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from 'fs';
+import os from 'os';
+import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
 
 import {
-  renderDistributionConfig, validateDistributionConfig, checkPolicy, POLICY_SPECS, PREVIOUS_POLICY_SPECS,
+  renderDistributionConfig, validateDistributionConfig, checkPolicy, isMainModule, POLICY_SPECS, PREVIOUS_POLICY_SPECS,
   ALL_VIEWER_EXCEPT_HOST_ID, PUBLIC_PATHS, TEMPORARY_PATHS, WEB_FUNCTION_ORIGIN_ID
 } from '../../../infra/api-edge/edge-config.mjs';
 
@@ -166,6 +168,45 @@ describe('## api-edge CloudFront config', () => {
     it('both policies key on Authorization (OAC needs it forwarded)', () => {
       for (const spec of Object.values(POLICY_SPECS)) {
         expect(spec.ParametersInCacheKeyAndForwardedToOrigin.HeadersConfig.Headers.Items).to.include('Authorization');
+      }
+    });
+  });
+
+  // lib.sh runs `node "$EDGE_DIR/edge-config.mjs"` with the directory as
+  // given. Through a symlink (macOS /tmp is /private/tmp) the old check
+  // compared the real module URL with the symlinked argv[1]: the command
+  // printed nothing, and policies.sh reported '==>  is missing'.
+  describe('# command line', () => {
+    const EDGE_DIR = path.join(__dirname, '../../../infra/api-edge');
+    const run = (script, ...args) => execFileSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+
+    it('runs from its real path and through a symlinked directory', () => {
+      const tmp = mkdtempSync(path.join(os.tmpdir(), 'edge-config-'));
+      try {
+        symlinkSync(EDGE_DIR, path.join(tmp, 'api-edge'), 'dir');
+        for (const script of [path.join(EDGE_DIR, 'edge-config.mjs'), path.join(tmp, 'api-edge', 'edge-config.mjs')]) {
+          expect(JSON.parse(run(script, 'policy-spec', 'public')), script).to.deep.equal(POLICY_SPECS.public);
+          expect(run(script, 'previous-policy-name', 'public'), script).to.equal('ChronasApiPublicV3\n');
+        }
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    });
+
+    it('isMainModule compares through realpath, and is false when imported or without a script', () => {
+      const tmp = mkdtempSync(path.join(os.tmpdir(), 'edge-config-'));
+      try {
+        symlinkSync(EDGE_DIR, path.join(tmp, 'api-edge'), 'dir');
+        const moduleUrl = pathToFileURL(path.join(EDGE_DIR, 'edge-config.mjs')).href;
+        expect(isMainModule(moduleUrl, path.join(EDGE_DIR, 'edge-config.mjs'))).to.equal(true);
+        expect(isMainModule(moduleUrl, path.join(tmp, 'api-edge', 'edge-config.mjs'))).to.equal(true);
+        expect(isMainModule(moduleUrl, path.join(EDGE_DIR, 'lib.sh'))).to.equal(false);
+        expect(isMainModule(moduleUrl, path.join(tmp, 'missing.mjs'))).to.equal(false);
+        expect(isMainModule(moduleUrl, undefined)).to.equal(false);
+        // As imported by this test: argv[1] is mocha.
+        expect(isMainModule()).to.equal(false);
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
       }
     });
   });

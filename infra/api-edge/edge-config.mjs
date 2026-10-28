@@ -15,7 +15,7 @@
  * (with or without the ETag wrapper). Output is a DistributionConfig.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, realpathSync } from 'fs';
 import { pathToFileURL } from 'url';
 
 export const API_GATEWAY_ORIGIN_ID = 'ApiGatewayOrigin';
@@ -329,7 +329,20 @@ function unwrapPolicy(json) {
   return json.CachePolicy?.CachePolicyConfig || json.CachePolicyConfig || json;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+// Run as a command, not imported by a test. Node runs the main module from
+// its real path, so argv[1] is compared through realpath too: through a
+// symlinked path (macOS /tmp is /private/tmp) a plain comparison fails, the
+// command prints nothing, and the shell scripts read empty policy specs.
+export function isMainModule(moduleUrl = import.meta.url, scriptPath = process.argv[1]) {
+  if (!scriptPath) return false;
+  try {
+    return moduleUrl === pathToFileURL(realpathSync(scriptPath)).href || moduleUrl === pathToFileURL(scriptPath).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   try {
     main(process.argv.slice(2));
   } catch (error) {
