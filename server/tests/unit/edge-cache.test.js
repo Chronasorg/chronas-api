@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 import BoundedCache from '../../helpers/bounded-cache.js';
 import {
-  EDGE_MAX_AGE, FRESH_MS, SLOW_READ_EDGE_MAX_AGE,
+  EDGE_MAX_AGE, FRESH_MS, INACTIVE_MAX_AGE, SLOW_READ_EDGE_MAX_AGE,
   trackDataAge, dataReadAt, noteSharedLoad, cacheDataAge, edgeMaxAge, publicCacheControl
 } from '../../helpers/edge-cache.js';
 import { SETTLE_MS, useSchedulerForTests } from '../../helpers/edge-invalidation.js';
@@ -149,7 +149,7 @@ describe('## Edge lifetime of public responses', () => {
     // Inactive: no CLOUDFRONT_DISTRIBUTION_ID (the state right after a
     // deploy), or the last invalidation failed. The bounds exist only for the
     // longer lifetimes invalidation allows.
-    it('without invalidation an old entry, a slow read and a shared load all keep exactly the previous lifetime', async () => {
+    it('without invalidation an old entry, a slow read and a shared load keep the previous lifetime, at most one day', async () => {
       active = false;
       try {
         cache.set('aged', { v: 1 });
@@ -158,7 +158,7 @@ describe('## Edge lifetime of public responses', () => {
           cache.get('aged');
           return [86400, 43200, 604800, 3600].map(previous => publicCacheControl(3600, previous));
         });
-        expect(fromOldEntry).to.deep.equal([86400, 43200, 604800, 3600].map(previous => `public, max-age=3600, s-maxage=${previous}`));
+        expect(fromOldEntry).to.deep.equal([86400, 43200, 86400, 3600].map(previous => `public, max-age=3600, s-maxage=${previous}`));
         expect(await inRequest(() => edgeMaxAge(3600, Date.now() + FRESH_MS + 1000))).to.equal(3600);
         expect(await inRequest(() => {
           noteSharedLoad(Date.now() - FRESH_MS - 1000);
@@ -169,7 +169,7 @@ describe('## Edge lifetime of public responses', () => {
         expect(await inRequest(() => {
           cache.get('aged');
           return edgeMaxAge(604800);
-        })).to.equal(604800);
+        })).to.equal(INACTIVE_MAX_AGE);
       } finally {
         active = true;
       }

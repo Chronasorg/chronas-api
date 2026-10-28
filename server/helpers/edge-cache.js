@@ -4,9 +4,10 @@
  * CloudFront may keep these responses for up to 7 days, because every write
  * invalidates them (edge-invalidation.js). Without invalidation (no
  * CLOUDFRONT_DISTRIBUTION_ID, or the last invalidation failed) each
- * response gets exactly the edge lifetime it had before edge invalidation
- * existed, which its handler passes, and none of the bounds below: they
- * only matter for lifetimes longer than that.
+ * response gets the edge lifetime it had before edge invalidation existed,
+ * which its handler passes, capped at INACTIVE_MAX_AGE (what CloudFront
+ * honored then), and none of the bounds below: they only matter for
+ * lifetimes longer than that.
  *
  * With invalidation, 7 days only holds for responses built from data newer
  * than any write whose invalidation may already have run. Two kinds of
@@ -37,6 +38,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { SETTLE_MS, edgeInvalidationActive } from './edge-invalidation.js';
 
 export const EDGE_MAX_AGE = 7 * 24 * 60 * 60;
+// Without invalidation an edge copy must not outlive what ChronasApiPublicV3
+// allowed (1 day): with ChronasApiPublicV4 CloudFront would honor more.
+export const INACTIVE_MAX_AGE = 24 * 60 * 60;
 export const FRESH_MS = SETTLE_MS / 2;
 export const SLOW_READ_EDGE_MAX_AGE = 60;
 
@@ -78,7 +82,7 @@ export const cacheDataAge = Object.freeze({ dataAt: dataReadAt, onHit: noteCache
  * @param withoutInvalidation the s-maxage while edge copies aren't invalidated
  */
 export function edgeMaxAge(withoutInvalidation = 0, now = Date.now()) {
-  if (!edgeInvalidationActive()) return withoutInvalidation;
+  if (!edgeInvalidationActive()) return Math.min(withoutInvalidation, INACTIVE_MAX_AGE);
   let maxAge = EDGE_MAX_AGE;
   const record = requests.getStore();
   if (!record) return maxAge;

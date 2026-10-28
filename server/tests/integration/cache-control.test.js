@@ -59,6 +59,10 @@ const LIFETIMES = {
   '/v1/metadata/culture/getLinked?source=1:e_Some_Event': [0, 3600]
 };
 
+// Without invalidation: the previous edge lifetime, at most one day (what
+// ChronasApiPublicV3 honored), so ChronasApiPublicV4 can't keep more.
+const inactiveSMaxAge = url => Math.min(LIFETIMES[url][1], 86400);
+
 async function listJsFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = await Promise.all(entries.map((entry) => {
@@ -148,7 +152,7 @@ describe('## Cache-Control headers', () => {
       await withInvalidation(false, async () => {
         for (const url of PUBLIC_READS) {
           const res = await request(app).get(url);
-          expect(res.headers['cache-control'], url).to.equal(`public, max-age=${LIFETIMES[url][0]}, s-maxage=${LIFETIMES[url][1]}`);
+          expect(res.headers['cache-control'], url).to.equal(`public, max-age=${LIFETIMES[url][0]}, s-maxage=${inactiveSMaxAge(url)}`);
         }
       });
     });
@@ -204,7 +208,7 @@ describe('## Cache-Control headers', () => {
         for (const url of PUBLIC_READS) headers[url] = (await request(app).get(url)).headers['cache-control'];
         return headers;
       };
-      const previousHeaders = () => Object.fromEntries(PUBLIC_READS.map(url => [url, `public, max-age=${LIFETIMES[url][0]}, s-maxage=${LIFETIMES[url][1]}`]));
+      const previousHeaders = () => Object.fromEntries(PUBLIC_READS.map(url => [url, `public, max-age=${LIFETIMES[url][0]}, s-maxage=${inactiveSMaxAge(url)}`]));
 
       it('the cached reads do come from the aged entries (with invalidation they get the 20 minutes left)', async () => {
         await withInvalidation(true, async () => {
