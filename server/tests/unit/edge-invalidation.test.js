@@ -228,6 +228,106 @@ describe('## Edge invalidation scheduler', () => {
     expect(sent).to.have.length(1);
   });
 
+  // Votes need only an account, have no rate limit and aren't deduplicated.
+  // Before, a vote refreshed the time of a pending write, so one write and a
+  // vote every 10 s or less sent an invalidation every 2 minutes, all day.
+  [5, 9, 10, 30].forEach((seconds) => {
+    it(`a write and then a vote every ${seconds} s for 24 hours: one flush, which the votes ride along with, then none`, async () => {
+      const { clock, sent, scheduler, paths } = setup();
+      const start = clock.now();
+      scheduler.markDirty('markers', 'metadata');
+      for (let t = 0; t < 24 * 60 * 60 * 1000; t += seconds * 1000) {
+        await clock.advance(seconds * 1000);
+        scheduler.markDirtyDeferred('metadata');
+      }
+      expect(sent).to.have.length(1);
+      expect(sent[0].at).to.equal(start + FLUSH_DELAY_MS);
+      expect(paths(0)).to.deep.equal(['/v1/markers*', '/v1/metadata*']);
+      // The latest votes wait for the next write's flush; they schedule nothing.
+      expect(scheduler.duePaths()).to.deep.equal([]);
+      expect(scheduler.pendingPaths()).to.deep.equal(['/v1/metadata*']);
+      expect(scheduler.isScheduled()).to.equal(false);
+      expect(clock.timers()).to.deep.equal([]);
+      await scheduler.flush({ force: true });
+      expect(sent).to.have.length(1);
+    });
+  });
+
+  it('a second write less than 10 s before the flush, then votes: two flushes, then none', async () => {
+    const { clock, sent, scheduler, paths } = setup();
+    const start = clock.now();
+    scheduler.markDirty('markers', 'metadata');
+    await clock.advance(FLUSH_DELAY_MS - SETTLE_MS + 3000);
+    scheduler.markDirty('metadata');
+    for (let t = 0; t < 60 * 60 * 1000; t += 5000) {
+      scheduler.markDirtyDeferred('metadata');
+      await clock.advance(5000);
+    }
+    expect(sent.map(s => s.at - start)).to.deep.equal([FLUSH_DELAY_MS, FLUSH_DELAY_MS + MIN_FLUSH_INTERVAL_MS]);
+    expect(paths(1)).to.deep.equal(['/v1/metadata*']);
+    expect(scheduler.duePaths()).to.deep.equal([]);
+    expect(scheduler.isScheduled()).to.equal(false);
+  });
+
+  it('a vote less than 10 s before a flush is kept, not due, and goes out with the next write', async () => {
+    const { clock, sent, scheduler, paths } = setup();
+    scheduler.markDirty('areas');
+    await clock.advance(FLUSH_DELAY_MS - 2000);
+    scheduler.markDirtyDeferred('metadata');
+    await clock.advance(2000);
+    expect(paths(0)).to.deep.equal(['/v1/areas/*', '/v1/metadata*']);
+    expect(scheduler.pendingPaths()).to.deep.equal(['/v1/metadata*']);
+    expect(scheduler.duePaths()).to.deep.equal([]);
+    expect(scheduler.isScheduled()).to.equal(false);
+
+    await clock.advance(60 * 60 * 1000);
+    expect(sent).to.have.length(1);
+    scheduler.markDirty('areas');
+    await clock.advance(FLUSH_DELAY_MS);
+    expect(sent).to.have.length(2);
+    expect(paths(1)).to.deep.equal(['/v1/areas/*', '/v1/metadata*']);
+    expect(scheduler.pendingPaths()).to.deep.equal([]);
+  });
+
+  it('a vote while the request runs keeps the path pending, not due', async () => {
+    const clock = fakeClock();
+    const sent = [];
+    let release;
+    const scheduler = createInvalidationScheduler({
+      distributionId: DISTRIBUTION,
+      send: (input) => {
+        sent.push(input.InvalidationBatch.Paths.Items);
+        return new Promise((resolve) => { release = resolve; });
+      },
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, warn: () => {}
+    });
+    scheduler.markDirty('metadata');
+    await clock.advance(FLUSH_DELAY_MS);
+    expect(sent).to.deep.equal([['/v1/metadata*']]);
+    scheduler.markDirtyDeferred('metadata');
+    release({});
+    await settle();
+    expect(scheduler.pendingPaths()).to.deep.equal(['/v1/metadata*']);
+    expect(scheduler.duePaths()).to.deep.equal([]);
+    expect(scheduler.isScheduled()).to.equal(false);
+    await clock.advance(60 * 60 * 1000);
+    expect(sent).to.have.length(1);
+  });
+
+  it('a vote never moves the time of a pending write', async () => {
+    const { clock, sent, scheduler } = setup();
+    const start = clock.now();
+    scheduler.markDirty('metadata');
+    await clock.advance(FLUSH_DELAY_MS - SETTLE_MS - 1000);
+    // The write is now more than SETTLE_MS before the flush; a vote just
+    // before it must not make the flush keep the path due.
+    scheduler.markDirtyDeferred('metadata');
+    await clock.advance(SETTLE_MS + 1000);
+    expect(sent.map(s => s.at - start)).to.deep.equal([FLUSH_DELAY_MS]);
+    expect(scheduler.duePaths()).to.deep.equal([]);
+    expect(scheduler.isScheduled()).to.equal(false);
+  });
+
   it('shutdown (SIGTERM) sends at once, also paths written moments ago', async () => {
     const { clock, sent, scheduler, paths } = setup();
     scheduler.markDirty('areas');

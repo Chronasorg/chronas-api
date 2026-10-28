@@ -15,21 +15,23 @@
  * - While writes keep coming, flushes are at least 2 minutes apart, so a
  *   long data correction costs at most one path per resource and 2 minutes
  *   in each environment that handles its writes.
- * - A path written less than 10 s before a flush stays dirty for the next
+ * - A path written less than 10 s before a flush stays due for the next
  *   one: every write is followed by an invalidation at least SETTLE_MS
  *   later, which edge-cache.js relies on.
- * - Deferred marks (votes) never schedule a flush; they go out with the
- *   next one, so a write anyone can make costs no paths of its own.
+ * - Deferred marks (votes) never make a path due: they never schedule a
+ *   flush, never keep one going, and never move the time of a path's last
+ *   write. They go out with the next flush a write schedules, so a write
+ *   anyone can make costs no paths of its own, however often it comes.
  * - A failed flush keeps its paths and retries after 2, 4, 8 … minutes
  *   (at most 15), with one console.warn per failure.
  * - web-server.js sends whatever is still due on SIGTERM.
  *
  * One scheduler per process: each Web Function environment invalidates the
  * writes it handled. Without CLOUDFRONT_DISTRIBUTION_ID (tests, local runs,
- * scripts) nothing is recorded or sent, and edge-cache.js keeps the shorter
- * edge lifetimes, as it does while the last flush has failed. Nothing here
- * throws into request handling, and the timers never keep the process
- * alive.
+ * scripts) nothing is recorded or sent, and edge-cache.js keeps each
+ * response's previous edge lifetime, as it does while the last flush has
+ * failed. Nothing here throws into request handling, and the timers never
+ * keep the process alive.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -66,13 +68,16 @@ export function createInvalidationScheduler({
   // Kept paths are flushed again no earlier than this after a flush, which
   // is what gives every write SETTLE_MS before its invalidation.
   const gapMs = Math.max(minIntervalMs, settleMs);
-  const dirty = new Map(); // path -> { markedAt, deferred }
+  // path -> { markedAt, urgentAt }: the last mark of any kind, and the last
+  // non-deferred one (null while the path only has deferred marks). Only
+  // urgentAt makes a path due.
+  const dirty = new Map();
   let timer = null;
   let inFlight = null;
   let lastFlushAt = -Infinity;
   let failures = 0;
 
-  const due = () => [...dirty.values()].some(entry => !entry.deferred);
+  const due = () => [...dirty.values()].some(entry => entry.urgentAt !== null);
 
   function schedule(at) {
     if (timer || inFlight) return;
@@ -93,17 +98,20 @@ export function createInvalidationScheduler({
         warn({ msg: 'edgeInvalidationUnknownResource', resource: String(resource) });
         continue;
       }
-      const previous = dirty.get(path);
-      dirty.set(path, { markedAt: at, deferred: deferred && (!previous || previous.deferred) });
+      // A deferred mark keeps the time of the last non-deferred one: a
+      // stream of votes must not keep a path due once its write has been
+      // invalidated.
+      const urgentAt = deferred ? (dirty.get(path)?.urgentAt ?? null) : at;
+      dirty.set(path, { markedAt: at, urgentAt });
       if (!deferred) scheduled = true;
     }
     if (scheduled) schedule(Math.max(at + delayMs, lastFlushAt + gapMs));
   }
 
   /**
-   * Send every dirty path now. `force` (shutdown) also clears paths written
-   * moments ago. Nothing is sent while only deferred paths are dirty.
-   * Resolves when done; never rejects.
+   * Send every dirty path now, deferred ones included. `force` (shutdown)
+   * also clears paths written moments ago. Nothing is sent while only
+   * deferred paths are dirty. Resolves when done; never rejects.
    */
   function flush({ force = false } = {}) {
     if (timer) {
@@ -120,17 +128,28 @@ export function createInvalidationScheduler({
       DistributionId: distributionId,
       InvalidationBatch: { CallerReference: callerReference(), Paths: { Quantity: paths.length, Items: paths } }
     };
+    // Marked less than SETTLE_MS before the flush: DynamoDB reads may not
+    // see that change yet, so the edge could fetch the old data again.
+    const tooRecent = at => !force && at !== null && at > startedAt - settleMs;
 
     inFlight = Promise.resolve()
       .then(() => send(input))
       .then(() => {
         failures = 0;
         lastFlushAt = startedAt;
-        for (const [path, entry] of sent) {
-          // Marked again while the request ran, or less than SETTLE_MS before
-          // it: the next flush covers that write.
-          if (dirty.get(path)?.markedAt !== entry.markedAt) continue;
-          if (force || entry.markedAt <= startedAt - settleMs) dirty.delete(path);
+        for (const [path, before] of sent) {
+          const entry = dirty.get(path);
+          if (!entry) continue;
+          // A non-deferred mark while the request ran, or less than
+          // SETTLE_MS before it: still due, so the next flush covers it.
+          if (entry.urgentAt !== before.urgentAt || tooRecent(entry.urgentAt)) continue;
+          // Only deferred marks are that recent: they wait for the next
+          // flush without making the path due, so they schedule nothing.
+          if (entry.markedAt !== before.markedAt || tooRecent(entry.markedAt)) {
+            dirty.set(path, { markedAt: entry.markedAt, urgentAt: null });
+          } else {
+            dirty.delete(path);
+          }
         }
       }, (error) => {
         failures += 1;
@@ -160,6 +179,8 @@ export function createInvalidationScheduler({
     // Edge copies are being invalidated: configured, and the last flush worked.
     active: () => enabled && failures === 0,
     pendingPaths: () => [...dirty.keys()].sort(),
+    // Paths a write made due (deferred-only paths are pending, not due).
+    duePaths: () => [...dirty].filter(([, entry]) => entry.urgentAt !== null).map(([path]) => path).sort(),
     isScheduled: () => Boolean(timer)
   };
 }
@@ -207,7 +228,7 @@ export function markDirty(...resources) {
   safely(() => scheduler.markDirty(...resources));
 }
 
-/** After a write anyone may make (votes): invalidate with the next flush, never on its own. */
+/** After a write anyone may make (votes): invalidate with the next flush a write schedules, never on its own. */
 export function markDirtyDeferred(...resources) {
   safely(() => scheduler.markDirtyDeferred(...resources));
 }
