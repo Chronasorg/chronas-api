@@ -9,6 +9,7 @@
 #   ./web-function.sh deploy <zip> <commit>           --confirm "deploy chronas-api"
 #   ./web-function.sh rollback <revision-id>          --confirm "roll back chronas-api"
 #   ./web-function.sh scale <maxEnvironments>         --confirm "scale chronas-api to <n>"
+#   ./web-function.sh role-policy                     --confirm "update chronas-api role policy"
 #   ./web-function.sh allow-distribution <dist-id>    --confirm "allow <dist-id>"
 #   ./web-function.sh revoke-distribution <dist-id>   --confirm "revoke <dist-id>"
 #
@@ -16,7 +17,8 @@
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 parse_common_args "$@"
 require_identity
-require_web_cli
+# role-policy only talks to IAM, so it works with an older aws CLI too.
+[[ "${ARGS[0]:-}" == role-policy ]] || require_web_cli
 set -- "${ARGS[@]+"${ARGS[@]}"}"
 ACTION="${1:-}"; shift || true
 
@@ -39,7 +41,7 @@ upload_artifact() {
 # Logging: warnings and errors only; the log groups keep 3 days.
 revision_json() {
   local key="$1" version="$2" commit="$3"
-  jq -n --arg bucket "$WEB_ARTIFACT_BUCKET" --arg key "$key" --arg version "$version" --arg role "$ROLE_ARN" --arg commit "$commit" '{
+  jq -n --arg bucket "$WEB_ARTIFACT_BUCKET" --arg key "$key" --arg version "$version" --arg role "$ROLE_ARN" --arg commit "$commit" --arg dist "$DISTRIBUTION_ID" '{
     description: ("commit " + $commit),
     buildConfig: {
       codeConfig: {s3Object: {bucket: $bucket, key: $key, versionId: $version}},
@@ -70,7 +72,9 @@ revision_json() {
         STATISTICS_S3_BUCKET: "chronas-frontend-new",
         STATISTICS_S3_KEY: "api/statistics.json",
         CHRONAS_HOST: "https://chronas.org",
-        ALLOWED_ORIGINS: "https://chronas.org,https://new.chronas.org,http://localhost:3000,http://localhost:5173"
+        ALLOWED_ORIGINS: "https://chronas.org,https://new.chronas.org,http://localhost:3000,http://localhost:5173",
+        # The API invalidates its CloudFront copies after writes (server/helpers/edge-invalidation.js).
+        CLOUDFRONT_DISTRIBUTION_ID: $dist
       },
       telemetryConfig: {loggingConfig: {applicationLogLevel: "WARN", systemLogLevel: "WARN"}}
     }
@@ -223,6 +227,24 @@ case "$ACTION" in
     bash "$0" status
     ;;
 
+  role-policy)
+    # put-role-policy replaces the whole inline policy, so always apply the
+    # file as a whole and show the diff against the live policy first.
+    POLICY_FILE="$EDGE_DIR/web-function-role-policy.json"
+    CURRENT="$(aws_cli iam get-role-policy --role-name "$WEB_ROLE_NAME" --policy-name chronas-api-web-access --query PolicyDocument --output json)"
+    if diff <(jq -S . <<< "$CURRENT") <(jq -S . "$POLICY_FILE") >&2; then
+      log "Role policy already matches $POLICY_FILE"
+      exit 0
+    fi
+    log "Plan: replace the inline policy chronas-api-web-access of $WEB_ROLE_NAME with $POLICY_FILE (diff above: live < > file)"
+    confirmed "update chronas-api role policy" || exit 0
+    DIR="$(backup_dir web-function-role-policy)"
+    printf '%s\n' "$CURRENT" > "$DIR/role-policy.json"
+    log "Snapshot: $DIR/role-policy.json"
+    aws_cli iam put-role-policy --role-name "$WEB_ROLE_NAME" --policy-name chronas-api-web-access --policy-document "file://$POLICY_FILE"
+    log "Applied; environments started from now on get the new permissions"
+    ;;
+
   allow-distribution|revoke-distribution)
     DIST="${1:?distribution id}"
     MODE="${ACTION%%-*}"
@@ -231,5 +253,5 @@ case "$ACTION" in
     put_distribution_access "$MODE" "$DIST"
     ;;
 
-  *) die "usage: web-function.sh status|provision|deploy|rollback|scale|allow-distribution|revoke-distribution" ;;
+  *) die "usage: web-function.sh status|provision|deploy|rollback|scale|role-policy|allow-distribution|revoke-distribution" ;;
 esac
