@@ -1,6 +1,7 @@
 /**
- * A stand-in for the AWS CLI, for testing infra/api-edge/jwt-secret-ssm.sh
- * without AWS (server/tests/integration/jwt-secret-ssm.test.js).
+ * A stand-in for the AWS CLI, for testing infra/api-edge scripts without AWS:
+ * jwt-secret-ssm.sh (server/tests/integration/jwt-secret-ssm.test.js) and
+ * web-function.sh rollback (web-function-rollback.test.js).
  *
  * State lives in $STUB_STATE: secret-string.txt (the SecretString of the
  * Secrets Manager secret) and, once created, parameter.json
@@ -9,6 +10,13 @@
  * Calls without --profile $STUB_PROFILE fail, STUB_HANG=<command> makes
  * that command wait STUB_HANG_MS (default 5000) first, and STUB_PUT_ERROR
  * makes put-parameter fail.
+ *
+ * For web-function.sh: endpoint.txt (the routed revision id),
+ * revisions/<id>.json (get-web-function-revision output), secret.json
+ * (describe-secret output; missing = ResourceNotFoundException),
+ * policies.json ({ name: id } of the custom cache policies) and
+ * distribution-config.json (get-distribution-config output). STUB_FAIL=<command>
+ * makes that command fail with AccessDenied.
  */
 import fs from 'fs';
 import path from 'path';
@@ -82,4 +90,35 @@ if (service === 'ssm' && command === 'put-parameter') {
   fs.writeFileSync(parameterFile, JSON.stringify({ Type: input.Type, KeyId: input.KeyId, Tier: input.Tier, Version: 1, Value: input.Value }));
   print('1');
 }
+if (process.env.STUB_FAIL === command) fail('AccessDenied', `stub refuses ${command}`);
+const stateFile = name => path.join(state, name);
+const readState = name => (fs.existsSync(stateFile(name)) ? fs.readFileSync(stateFile(name), 'utf8') : null);
+if (service === 'lambda-web') {
+  if (command === 'help') process.exit(0);
+  if (command === 'get-web-function-endpoint') {
+    if (option('--query') !== 'revisionWeights[0].revisionId') fail('Stub', 'unexpected query');
+    print(readState('endpoint.txt').trim());
+  }
+  if (command === 'get-web-function-revision') {
+    const revision = readState(path.join('revisions', `${option('--revision-id')}.json`));
+    if (!revision) fail('ResourceNotFoundException', 'Revision not found');
+    print(revision.trim());
+  }
+  if (command === 'update-web-function-endpoint') {
+    fs.writeFileSync(stateFile('endpoint.txt'), JSON.parse(option('--revision-weights'))[0].revisionId);
+    print('InProgress');
+  }
+  if (command === 'wait') process.exit(0);
+}
+if (service === 'secretsmanager' && command === 'describe-secret') {
+  const secret = readState('secret.json');
+  if (!secret) fail('ResourceNotFoundException', 'Secrets Manager can\'t find the specified secret.');
+  print(secret.trim());
+}
+if (service === 'cloudfront' && command === 'list-cache-policies') {
+  const name = /Name=='([^']+)'/.exec(option('--query') || '')?.[1];
+  const policies = JSON.parse(readState('policies.json') || '{}');
+  print(policies[name] || 'None');
+}
+if (service === 'cloudfront' && command === 'get-distribution-config') print(readState('distribution-config.json').trim());
 fail('Stub', `unhandled: ${args.join(' ')}`);

@@ -87,6 +87,44 @@ current_revision() {
     --query 'revisionWeights[0].revisionId' --output text
 }
 
+# Refuses a rollback target that would answer 503 or leave edits stale at the
+# edge. Runs before the dry-run line too, and fails closed when a lookup fails.
+# - A revision that reads the JWT secret from Secrets Manager (SECRET_CONFIG_NAME
+#   without JWT_SECRET_PARAMETER) can't start while that secret is scheduled
+#   for deletion or gone.
+# - A revision without CLOUDFRONT_DISTRIBUTION_ID doesn't invalidate after
+#   writes, so it must not run while the 7-day public policy is assigned.
+check_rollback_target() {
+  local target="$1" revision env secret meta deleted public_name public_id config assigned
+  revision="$(web_cli get-web-function-revision --function-name "$WEB_FUNCTION_NAME" --revision-id "$target" --output json)" \
+    || die "can't read revision $target"
+  env="$(jq -c '.serviceConfig.environmentVariables // {}' <<< "$revision")" || die "can't parse revision $target"
+
+  secret="$(jq -r 'if .JWT_SECRET_PARAMETER then empty else (.SECRET_CONFIG_NAME // empty) end' <<< "$env")"
+  if [[ -n "$secret" ]]; then
+    meta="$(aws_cli secretsmanager describe-secret --region "$REGION" --secret-id "$secret" --output json)" \
+      || die "$target reads the JWT secret from Secrets Manager $secret, which can't be described (gone?), so it would answer every request with 503. Restore the secret first, or roll back to a revision that sets JWT_SECRET_PARAMETER."
+    deleted="$(jq -r '.DeletedDate // empty' <<< "$meta")" || die "can't parse the description of $secret"
+    [[ -z "$deleted" ]] \
+      || die "$target reads the JWT secret from Secrets Manager $secret, which is scheduled for deletion (since $deleted), so it would answer every request with 503. Restore it first: aws secretsmanager restore-secret --profile $PROFILE --region $REGION --secret-id $secret"
+  fi
+
+  if [[ -z "$(jq -r '.CLOUDFRONT_DISTRIBUTION_ID // empty' <<< "$env")" ]]; then
+    public_name="$(policy_name public)" || die "can't read the public cache policy spec"
+    public_id="$(policy_id_by_name "$public_name")" || die "can't list the cache policies"
+    if [[ -n "$public_id" ]]; then
+      config="$(aws_cli cloudfront get-distribution-config --id "$DISTRIBUTION_ID" --output json)" \
+        || die "can't read the config of distribution $DISTRIBUTION_ID"
+      assigned="$(jq -r --arg id "$public_id" '[.DistributionConfig.DefaultCacheBehavior.CachePolicyId] + [.DistributionConfig.CacheBehaviors.Items[]?.CachePolicyId] | index($id) != null' <<< "$config")" \
+        || die "can't parse the config of distribution $DISTRIBUTION_ID"
+      if [[ "$assigned" != false ]]; then
+        die "$target doesn't invalidate CloudFront after writes (no CLOUDFRONT_DISTRIBUTION_ID), but $public_name (up to 7 days) is assigned on $DISTRIBUTION_ID, so edits would stay stale at the edge. Restore ChronasApiPublicV3 first (restore-cloudfront.sh with a before-apply snapshot), then roll back."
+      fi
+    fi
+  fi
+  log "Rollback target $target passed the checks (JWT secret source, edge invalidation)"
+}
+
 point_endpoint_at() {
   web_cli update-web-function-endpoint --function-name "$WEB_FUNCTION_NAME" --endpoint-name "$WEB_ENDPOINT_NAME" \
     --revision-weights "[{\"revisionId\":\"$1\",\"weight\":100}]" --query updateStatus --output text >&2
@@ -207,6 +245,7 @@ case "$ACTION" in
   rollback)
     TARGET="${1:?revision id}"
     log "Plan: move endpoint $WEB_ENDPOINT_NAME from $(current_revision) back to $TARGET"
+    check_rollback_target "$TARGET"
     confirmed "roll back chronas-api" || exit 0
     point_endpoint_at "$TARGET"
     ;;
