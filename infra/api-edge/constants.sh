@@ -31,6 +31,7 @@ WEB_LOG_GROUP="/aws/lambda/web/${WEB_FUNCTION_NAME}"
 WEB_LOG_RETENTION_DAYS=3
 # Endpoint maxEnvironments (2 is the minimum). Under continuous traffic Lambda
 # keeps about this many environments running, each billed for its memory.
-# 10 since 2026-10-28 (24-hour test; at 2, capacity 429s came almost daily).
+# 10 since 2026-10-28, kept after a 24-hour test (2026-11-04): ~2.9 environments,
+# 0 capacity 429s; at 2 they came almost daily.
 WEB_MAX_ENVIRONMENTS=10
 SECRET_ARN="arn:aws:secretsmanager:${REGION}:${ACCOUNT_ID}:secret:/chronas/secrets-YDUZQG"
