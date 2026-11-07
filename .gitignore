@@ -86,3 +86,6 @@ playwright-report/
 # Data-validation pipeline artefacts (generated)
 cache/wikidata/
 reports/
+
+# Playwright MCP browser artefacts (screenshots, logs)
+.playwright-mcp/
