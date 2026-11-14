@@ -453,7 +453,7 @@ async function saveMetadata(MetadataDynamo, id, mutate) {
 
 export const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
-export async function applyDirect({ features, backupDir, distributionId, invalidate = invalidateAfterDirectWrites, log = console.log, loadModels = models, years = range(FIRST_YEAR, LAST_YEAR) }) {
+export async function applyDirect({ features, backupDir, distributionId, invalidate = invalidateAfterDirectWrites, log = console.log, loadModels = models, years = range(FIRST_YEAR, LAST_YEAR), expectedBefore = null }) {
   const { AreaDynamo, MetadataDynamo } = await loadModels();
   fs.mkdirSync(backupDir, { recursive: true });
   const backupFile = path.join(backupDir, 'areas.jsonl');
@@ -463,6 +463,11 @@ export async function applyDirect({ features, backupDir, distributionId, invalid
   if (!provinces || !provinceWiki) throw new Error('provinces or province metadata missing');
   if (provinces.data.features.some((f) => f.properties?.name === NEW_PROVINCE)) {
     throw new Error(`${NEW_PROVINCE} is in the live provinces already: the fix was applied`);
+  }
+  // The new geometry was computed from the API's (possibly edge-cached) copy:
+  // it must be what DynamoDB holds now, or a newer edit would be lost.
+  if (expectedBefore && JSON.stringify(provinces.data.features) !== JSON.stringify(expectedBefore)) {
+    throw new Error('The provinces in DynamoDB differ from the copy the API served: run again after the edge cache expires');
   }
   fs.writeFileSync(path.join(backupDir, 'provinces.json'), JSON.stringify(provinces.data));
   fs.writeFileSync(path.join(backupDir, 'province.json'), JSON.stringify(provinceWiki.data));
@@ -567,7 +572,7 @@ async function main() {
     return;
   }
   const backupDir = path.join(BACKUP_ROOT, `israel-1967-${new Date().toISOString().replace(/[:.]/g, '-')}`);
-  if (!(await applyDirect({ features, backupDir, distributionId }))) process.exitCode = 1;
+  if (!(await applyDirect({ features, backupDir, distributionId, expectedBefore: beforeFeatures }))) process.exitCode = 1;
   console.log(`\nDone. Revert with: --revert ${backupDir}`);
 }
 
