@@ -62,7 +62,8 @@ function create(req, res, next, fromRevision = false) {
         capital: req.body.capital,
         html: req.body.html,
         partOf: req.body.partOf,
-        end: req.body.end
+        end: req.body.end,
+        names: req.body.names
       });
 
       marker.save()
@@ -93,6 +94,7 @@ function update(req, res, next, fromRevision = false) {
   if (typeof req.body.partOf !== 'undefined') marker.partOf = req.body.partOf;
   if (typeof req.body.html !== 'undefined') marker.html = req.body.html;
   if (typeof req.body.end !== 'undefined') marker.end = req.body.end;
+  if (typeof req.body.names !== 'undefined') marker.names = req.body.names;
 
   const newId = decodeURIComponent(req.body.wiki || req.body._id);
   if (typeof newId !== 'undefined' && newId !== 'undefined' && newId !== marker._id) {
@@ -112,7 +114,8 @@ function update(req, res, next, fromRevision = false) {
       capital: marker.capital,
       html: marker.html,
       partOf: marker.partOf,
-      end: marker.end
+      end: marker.end,
+      names: marker.names
     });
 
     markerNew.save()

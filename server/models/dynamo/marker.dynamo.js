@@ -120,7 +120,7 @@ export default class MarkerDynamo extends DynamoDocument {
           geometry: { type: 'Point', coordinates: m.coo || [0, 0] },
           properties: {
             id: m._id, name: m.name, year: m.year, type: m.type,
-            wiki: m.wiki, capital: m.capital, partOf: m.partOf, end: m.end
+            wiki: m.wiki, capital: m.capital, partOf: m.partOf, end: m.end, names: m.names
           }
         }))
       };

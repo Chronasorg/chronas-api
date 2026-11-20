@@ -1,0 +1,3862 @@
+{
+ "Abaza_(town)": {
+  "name": "Abaza (town)",
+  "qid": "Q102469",
+  "names": [
+   [
+    1868,
+    1921,
+    "Abakano-Zavodskaya"
+   ],
+   [
+    1921,
+    null,
+    "Abaza"
+   ]
+  ]
+ },
+ "Astana": {
+  "name": "Akmolinsk",
+  "qid": "Q1520",
+  "names": [
+   [
+    1830,
+    1961,
+    "Akmolinsk"
+   ],
+   [
+    1961,
+    1992,
+    "Tselinograd"
+   ],
+   [
+    1992,
+    1998,
+    "Akmola"
+   ],
+   [
+    1998,
+    2019,
+    "Astana"
+   ],
+   [
+    2019,
+    2022,
+    "Nur-Sultan"
+   ],
+   [
+    2022,
+    null,
+    "Astana"
+   ]
+  ]
+ },
+ "Aktau": {
+  "name": "Aktau",
+  "qid": "Q198989",
+  "names": [
+   [
+    1961,
+    1964,
+    "Aktau"
+   ],
+   [
+    1964,
+    1991,
+    "Shevchenko"
+   ],
+   [
+    1991,
+    null,
+    "Aktau"
+   ]
+  ]
+ },
+ "Aktobe": {
+  "name": "Aktyubinsk",
+  "qid": "Q477232",
+  "names": [
+   [
+    1869,
+    1891,
+    "Ak-Tyube"
+   ],
+   [
+    1891,
+    1999,
+    "Aktyubinsk"
+   ],
+   [
+    1999,
+    null,
+    "Aktobe"
+   ]
+  ]
+ },
+ "Almaty": {
+  "name": "Almaty",
+  "qid": "Q35493",
+  "names": [
+   [
+    1854,
+    1867,
+    "Vernoye"
+   ],
+   [
+    1867,
+    1921,
+    "Vernyy"
+   ],
+   [
+    1921,
+    1993,
+    "Alma-Ata"
+   ],
+   [
+    1993,
+    null,
+    "Almaty"
+   ]
+  ]
+ },
+ "Alès": {
+  "name": "Alès",
+  "qid": "Q193183",
+  "names": [
+   [
+    null,
+    1926,
+    "Alais"
+   ],
+   [
+    1926,
+    null,
+    "Alès"
+   ]
+  ]
+ },
+ "Anadyr_(town)": {
+  "name": "Anadyr (town)",
+  "qid": "Q7978",
+  "names": [
+   [
+    1889,
+    1923,
+    "Novo-Mariinsk"
+   ],
+   [
+    1923,
+    null,
+    "Anadyr"
+   ]
+  ]
+ },
+ "Ankara": {
+  "name": "Ancyra",
+  "qid": "Q3640",
+  "names": [
+   [
+    null,
+    1930,
+    "Angora"
+   ],
+   [
+    1930,
+    null,
+    "Ankara"
+   ]
+  ]
+ },
+ "Angers": {
+  "name": "Angers",
+  "qid": "Q38380",
+  "names": [
+   [
+    1793,
+    1814,
+    "Peu-de-Fonds"
+   ],
+   [
+    1814,
+    null,
+    "Angers"
+   ]
+  ]
+ },
+ "Arsenyev": {
+  "name": "Arsenyev",
+  "qid": "Q103850",
+  "names": [
+   [
+    null,
+    1952,
+    "Semyonovka"
+   ],
+   [
+    1952,
+    null,
+    "Arsenyev"
+   ]
+  ]
+ },
+ "Ashkelon": {
+  "name": "Ashkelon",
+  "qid": "Q60956",
+  "names": [
+   [
+    1153,
+    1948,
+    "Ascalon"
+   ],
+   [
+    1948,
+    null,
+    "Ashkelon"
+   ]
+  ]
+ },
+ "Autun": {
+  "name": "Autun",
+  "qid": "Q190827",
+  "names": [
+   [
+    1793,
+    1814,
+    "Bibracte"
+   ],
+   [
+    1814,
+    null,
+    "Autun"
+   ]
+  ]
+ },
+ "Babushkin_(town)": {
+  "name": "Babushkin (town)",
+  "qid": "Q104299",
+  "names": [
+   [
+    null,
+    1902,
+    "Mysovsky vyselok"
+   ],
+   [
+    1902,
+    1941,
+    "Mysovsk"
+   ],
+   [
+    1941,
+    null,
+    "Babushkin"
+   ]
+  ]
+ },
+ "Baden-Baden": {
+  "name": "Baden-Baden",
+  "qid": "Q4100",
+  "names": [
+   [
+    null,
+    1931,
+    "Baden"
+   ],
+   [
+    1931,
+    null,
+    "Baden-Baden"
+   ]
+  ]
+ },
+ "Baksan_(town)": {
+  "name": "Baksan (town)",
+  "qid": "Q104538",
+  "names": [
+   [
+    null,
+    1920,
+    "Kuchmazukino"
+   ],
+   [
+    1920,
+    1960,
+    "Staraya Krepost"
+   ],
+   [
+    1960,
+    null,
+    "Baksan"
+   ]
+  ]
+ },
+ "Baltiysk": {
+  "name": "Baltiysk",
+  "qid": "Q5660",
+  "names": [
+   [
+    null,
+    1946,
+    "Pillau"
+   ],
+   [
+    1946,
+    null,
+    "Baltiysk"
+   ]
+  ]
+ },
+ "Bartoszyce": {
+  "name": "Bartoszyce",
+  "qid": "Q809585",
+  "names": [
+   [
+    null,
+    1945,
+    "Bartenstein"
+   ],
+   [
+    1945,
+    1947,
+    "Barsztyn"
+   ],
+   [
+    1947,
+    null,
+    "Bartoszyce"
+   ]
+  ]
+ },
+ "Bautzen": {
+  "name": "Bautzen",
+  "qid": "Q14835",
+  "names": [
+   [
+    null,
+    1868,
+    "Budissin"
+   ],
+   [
+    1868,
+    null,
+    "Bautzen"
+   ]
+  ]
+ },
+ "Belogorsk,_Amur_Oblast": {
+  "name": "Belogorsk, Amur Oblast",
+  "qid": "Q104735",
+  "names": [
+   [
+    null,
+    1926,
+    "Aleksandrovskoye"
+   ],
+   [
+    1926,
+    1931,
+    "Aleksandrovsk"
+   ],
+   [
+    1931,
+    1935,
+    "Krasnopartizansk"
+   ],
+   [
+    1935,
+    1957,
+    "Kuybyshevka-Vostochnaya"
+   ],
+   [
+    1957,
+    null,
+    "Belogorsk"
+   ]
+  ]
+ },
+ "Kyzyl": {
+  "name": "Belotsarsk",
+  "qid": "Q6049",
+  "names": [
+   [
+    null,
+    1918,
+    "Belotsarsk"
+   ],
+   [
+    1918,
+    1926,
+    "Khem-Beldir"
+   ],
+   [
+    1926,
+    null,
+    "Kyzyl"
+   ]
+  ]
+ },
+ "Belozersk": {
+  "name": "Belozersk",
+  "qid": "Q104764",
+  "names": [
+   [
+    null,
+    1777,
+    "Beloozero"
+   ],
+   [
+    1777,
+    null,
+    "Belozersk"
+   ]
+  ]
+ },
+ "Berdsk": {
+  "name": "Berdsk",
+  "qid": "Q104991",
+  "names": [
+   [
+    null,
+    1783,
+    "Berdsk"
+   ],
+   [
+    1783,
+    1797,
+    "Kolyvan"
+   ],
+   [
+    1797,
+    null,
+    "Berdsk"
+   ]
+  ]
+ },
+ "Beslan": {
+  "name": "Beslan",
+  "qid": "Q105035",
+  "names": [
+   [
+    null,
+    1941,
+    "Tulatovo"
+   ],
+   [
+    1941,
+    1950,
+    "Iriston"
+   ],
+   [
+    1950,
+    null,
+    "Beslan"
+   ]
+  ]
+ },
+ "Birobidzhan": {
+  "name": "Birobidzhan",
+  "qid": "Q7769",
+  "names": [
+   [
+    null,
+    1931,
+    "Tikhonkaya"
+   ],
+   [
+    1931,
+    1934,
+    "Biro-Bidzhan"
+   ],
+   [
+    1934,
+    null,
+    "Birobidzhan"
+   ]
+  ]
+ },
+ "Biryuch": {
+  "name": "Biryuch",
+  "qid": "Q105150",
+  "names": [
+   [
+    1919,
+    1958,
+    "Budyonnyy"
+   ],
+   [
+    1958,
+    2007,
+    "Krasnogvardeyskoye"
+   ],
+   [
+    2007,
+    null,
+    "Biryuch"
+   ]
+  ]
+ },
+ "Biryusinsk": {
+  "name": "Biryusinsk",
+  "qid": "Q105141",
+  "names": [
+   [
+    null,
+    1967,
+    "Suyetikha"
+   ],
+   [
+    1967,
+    null,
+    "Biryusinsk"
+   ]
+  ]
+ },
+ "Boulogne-sur-Mer": {
+  "name": "Boulogne-sur-Mer",
+  "qid": "Q81997",
+  "names": [
+   [
+    1793,
+    1814,
+    "Port-de-l'Union"
+   ],
+   [
+    1814,
+    null,
+    "Boulogne-sur-Mer"
+   ]
+  ]
+ },
+ "Brest,_Belarus": {
+  "name": "Brest, Belarus",
+  "qid": "Q140147",
+  "names": [
+   [
+    null,
+    1601,
+    "Berestye"
+   ],
+   [
+    1601,
+    null,
+    "Brest"
+   ]
+  ]
+ },
+ "Brno": {
+  "name": "Brno",
+  "qid": "Q14960",
+  "names": [
+   [
+    null,
+    1918,
+    "Brünn"
+   ],
+   [
+    1918,
+    null,
+    "Brno"
+   ]
+  ]
+ },
+ "Bronkhorstspruit": {
+  "name": "Bronkhorstspruit",
+  "qid": "Q927671",
+  "names": [
+   [
+    1905,
+    1935,
+    "Erasmus"
+   ],
+   [
+    1935,
+    null,
+    "Bronkhorstspruit"
+   ]
+  ]
+ },
+ "Calais": {
+  "name": "Calais",
+  "qid": "Q6454",
+  "names": [
+   [
+    1793,
+    1814,
+    "Dampierre-les-Dunes"
+   ],
+   [
+    1814,
+    null,
+    "Calais"
+   ]
+  ]
+ },
+ "Cape_Town": {
+  "name": "Cape Town",
+  "qid": "Q5465",
+  "names": [
+   [
+    null,
+    1814,
+    "Kaapstad"
+   ],
+   [
+    1814,
+    null,
+    "Cape Town"
+   ]
+  ]
+ },
+ "Chadan_(town)": {
+  "name": "Chadan (town)",
+  "qid": "Q197643",
+  "names": [
+   [
+    null,
+    1929,
+    "Artaadyt"
+   ],
+   [
+    1929,
+    null,
+    "Chadan"
+   ]
+  ]
+ },
+ "Chaplygin,_Lipetsk_Oblast": {
+  "name": "Chaplygin, Lipetsk Oblast",
+  "qid": "Q197691",
+  "names": [
+   [
+    null,
+    1778,
+    "Slobodskoye"
+   ],
+   [
+    1778,
+    1948,
+    "Ranenburg"
+   ],
+   [
+    1948,
+    null,
+    "Chaplygin"
+   ]
+  ]
+ },
+ "Chekalin": {
+  "name": "Chekalin",
+  "qid": "Q197902",
+  "names": [
+   [
+    null,
+    1944,
+    "Likhvin"
+   ],
+   [
+    1944,
+    null,
+    "Chekalin"
+   ]
+  ]
+ },
+ "Cherepanovo,_Novosibirsk_Oblast": {
+  "name": "Cherepanovo, Novosibirsk Oblast",
+  "qid": "Q197954",
+  "names": [
+   [
+    null,
+    1921,
+    "Svobodnyy"
+   ],
+   [
+    1921,
+    null,
+    "Cherepanovo"
+   ]
+  ]
+ },
+ "Cherkessk": {
+  "name": "Cherkessk",
+  "qid": "Q5326",
+  "names": [
+   [
+    1931,
+    1934,
+    "Batalpashinsk"
+   ],
+   [
+    1934,
+    1937,
+    "Sulimov"
+   ],
+   [
+    1937,
+    null,
+    "Cherkessk"
+   ]
+  ]
+ },
+ "Cincinnati": {
+  "name": "Cincinnati",
+  "qid": "Q43196",
+  "names": [
+   [
+    1788,
+    1790,
+    "Losantiville"
+   ],
+   [
+    1790,
+    null,
+    "Cincinnati"
+   ]
+  ]
+ },
+ "Cleveland": {
+  "name": "Cleveland",
+  "qid": "Q37320",
+  "names": [
+   [
+    1796,
+    1816,
+    "Cleaveland"
+   ],
+   [
+    1816,
+    null,
+    "Cleveland"
+   ]
+  ]
+ },
+ "Compiègne": {
+  "name": "Compiègne",
+  "qid": "Q180871",
+  "names": [
+   [
+    1793,
+    1814,
+    "Marat-sur-Oise"
+   ],
+   [
+    1814,
+    null,
+    "Compiègne"
+   ]
+  ]
+ },
+ "Condé-sur-l'Escaut": {
+  "name": "Condé-sur-l'Escaut",
+  "qid": "Q494533",
+  "names": [
+   [
+    null,
+    1887,
+    "Condé"
+   ],
+   [
+    1887,
+    null,
+    "Condé-sur-l'Escaut"
+   ]
+  ]
+ },
+ "Dalmatovo": {
+  "name": "Dalmatovo",
+  "qid": "Q134752",
+  "names": [
+   [
+    null,
+    1691,
+    "Sluzhnyaya"
+   ],
+   [
+    1691,
+    1781,
+    "Nikolayevskoye"
+   ],
+   [
+    1781,
+    1924,
+    "Dalmatov"
+   ],
+   [
+    1924,
+    null,
+    "Dalmatovo"
+   ]
+  ]
+ },
+ "Dalnegorsk": {
+  "name": "Dalnegorsk",
+  "qid": "Q7054",
+  "names": [
+   [
+    null,
+    1972,
+    "Tetyukhe"
+   ],
+   [
+    1972,
+    null,
+    "Dalnegorsk"
+   ]
+  ]
+ },
+ "Dalnerechensk": {
+  "name": "Dalnerechensk",
+  "qid": "Q134760",
+  "names": [
+   [
+    null,
+    1972,
+    "Iman"
+   ],
+   [
+    1972,
+    null,
+    "Dalnerechensk"
+   ]
+  ]
+ },
+ "Digora": {
+  "name": "Digora",
+  "qid": "Q135275",
+  "names": [
+   [
+    null,
+    1934,
+    "Khristianovskoye"
+   ],
+   [
+    1934,
+    null,
+    "Digora"
+   ]
+  ]
+ },
+ "Dimitrovgrad,_Russia": {
+  "name": "Dimitrovgrad, Russia",
+  "qid": "Q135285",
+  "names": [
+   [
+    null,
+    1877,
+    "Melekessky Zavod"
+   ],
+   [
+    1877,
+    1972,
+    "Melekess"
+   ],
+   [
+    1972,
+    null,
+    "Dimitrovgrad"
+   ]
+  ]
+ },
+ "Sukhumi": {
+  "name": "Dioscurias",
+  "qid": "Q40811",
+  "names": [
+   [
+    null,
+    1578,
+    "Tskhumi"
+   ],
+   [
+    1578,
+    1866,
+    "Sukhum-Kale"
+   ],
+   [
+    1866,
+    null,
+    "Sukhumi"
+   ]
+  ]
+ },
+ "Dolgoprudny": {
+  "name": "Dolgoprudny",
+  "qid": "Q135394",
+  "names": [
+   [
+    null,
+    1937,
+    "Dirizhablestroy"
+   ],
+   [
+    1937,
+    null,
+    "Dolgoprudny"
+   ]
+  ]
+ },
+ "Douala": {
+  "name": "Douala",
+  "qid": "Q132830",
+  "names": [
+   [
+    null,
+    1901,
+    "Kamerun"
+   ],
+   [
+    1901,
+    null,
+    "Douala"
+   ]
+  ]
+ },
+ "Vladikavkaz": {
+  "name": "Dzaudzhikau",
+  "qid": "Q5239",
+  "names": [
+   [
+    1784,
+    1931,
+    "Vladikavkaz"
+   ],
+   [
+    1931,
+    1944,
+    "Ordzhonikidze"
+   ],
+   [
+    1944,
+    1954,
+    "Dzaudzhikau"
+   ],
+   [
+    1954,
+    1990,
+    "Ordzhonikidze"
+   ],
+   [
+    1990,
+    null,
+    "Vladikavkaz"
+   ]
+  ]
+ },
+ "Daugavpils": {
+  "name": "Dünaburg",
+  "qid": "Q80021",
+  "names": [
+   [
+    1275,
+    1656,
+    "Dinaburg"
+   ],
+   [
+    1656,
+    1667,
+    "Borisoglebsk"
+   ],
+   [
+    1667,
+    1893,
+    "Dinaburg"
+   ],
+   [
+    1893,
+    1920,
+    "Dvinsk"
+   ],
+   [
+    1920,
+    null,
+    "Daugavpils"
+   ]
+  ]
+ },
+ "Dnipro": {
+  "name": "Ekaterinoslav",
+  "qid": "Q48256",
+  "names": [
+   [
+    1784,
+    1796,
+    "Yekaterinoslav"
+   ],
+   [
+    1796,
+    1802,
+    "Novorossiysk"
+   ],
+   [
+    1802,
+    1926,
+    "Ekaterinoslav"
+   ],
+   [
+    1926,
+    2016,
+    "Dnepropetrovsk"
+   ],
+   [
+    2016,
+    null,
+    "Dnipro"
+   ]
+  ]
+ },
+ "Engels,_Saratov_Oblast": {
+  "name": "Engels, Saratov Oblast",
+  "qid": "Q198748",
+  "names": [
+   [
+    null,
+    1914,
+    "Pokrovskaya sloboda"
+   ],
+   [
+    1914,
+    1931,
+    "Pokrovsk"
+   ],
+   [
+    1931,
+    null,
+    "Engels"
+   ]
+  ]
+ },
+ "Harare": {
+  "name": "Fort Salisbury",
+  "qid": "Q3921",
+  "names": [
+   [
+    null,
+    1982,
+    "Salisbury"
+   ],
+   [
+    1982,
+    null,
+    "Harare"
+   ]
+  ]
+ },
+ "Fort-Louis": {
+  "name": "Fort-Louis",
+  "qid": "Q21559",
+  "names": [
+   [
+    1793,
+    1814,
+    "Fort-Vauban"
+   ],
+   [
+    1814,
+    null,
+    "Fort-Louis"
+   ]
+  ]
+ },
+ "Gdańsk": {
+  "name": "Gdańsk",
+  "qid": "Q1792",
+  "names": [
+   [
+    null,
+    1793,
+    "Gdańsk"
+   ],
+   [
+    1793,
+    1945,
+    "Danzig"
+   ],
+   [
+    1945,
+    null,
+    "Gdańsk"
+   ]
+  ]
+ },
+ "Guryevsk,_Kaliningrad_Oblast": {
+  "name": "Guryevsk, Kaliningrad Oblast",
+  "qid": "Q134707",
+  "names": [
+   [
+    null,
+    1946,
+    "Neuhausen"
+   ],
+   [
+    1946,
+    null,
+    "Guryevsk"
+   ]
+  ]
+ },
+ "Gus-Khrustalny_(town)": {
+  "name": "Gus-Khrustalny (town)",
+  "qid": "Q134735",
+  "names": [
+   [
+    null,
+    1926,
+    "Gus-Maltsevsky"
+   ],
+   [
+    1926,
+    null,
+    "Gus-Khrustalny"
+   ]
+  ]
+ },
+ "Hagerstown,_Maryland": {
+  "name": "Hagerstown",
+  "qid": "Q755559",
+  "names": [
+   [
+    1762,
+    1814,
+    "Elizabethtown"
+   ],
+   [
+    1814,
+    null,
+    "Hagerstown"
+   ]
+  ]
+ },
+ "Imeni_Poliny_Osipenko_(rural_locality)": {
+  "name": "Imeni Poliny Osipenko (rural locality)",
+  "qid": "Q1659808",
+  "names": [
+   [
+    null,
+    1939,
+    "Kerbi"
+   ],
+   [
+    1939,
+    null,
+    "Imeni Poliny Osipenko"
+   ]
+  ]
+ },
+ "Istra,_Istrinsky_District,_Moscow_Oblast": {
+  "name": "Istra, Istrinsky District, Moscow Oblast",
+  "qid": "Q143297",
+  "names": [
+   [
+    null,
+    1589,
+    "Safatovo"
+   ],
+   [
+    1589,
+    1781,
+    "Voskresenskoye"
+   ],
+   [
+    1781,
+    1930,
+    "Voskresensk"
+   ],
+   [
+    1930,
+    null,
+    "Istra"
+   ]
+  ]
+ },
+ "Ivano-Frankivsk": {
+  "name": "Ivano-Frankivsk",
+  "qid": "Q156726",
+  "names": [
+   [
+    1662,
+    1962,
+    "Stanisławów"
+   ],
+   [
+    1962,
+    null,
+    "Ivano-Frankivsk"
+   ]
+  ]
+ },
+ "Izhevsk": {
+  "name": "Izhevsk",
+  "qid": "Q5426",
+  "names": [
+   [
+    null,
+    1984,
+    "Izhevsk"
+   ],
+   [
+    1984,
+    1987,
+    "Ustinov"
+   ],
+   [
+    1987,
+    null,
+    "Izhevsk"
+   ]
+  ]
+ },
+ "Izmail": {
+  "name": "Izmail",
+  "qid": "Q147739",
+  "names": [
+   [
+    1812,
+    1878,
+    "Tuchkov"
+   ],
+   [
+    1878,
+    null,
+    "Izmail"
+   ]
+  ]
+ },
+ "Jakarta": {
+  "name": "Jayakarta",
+  "qid": "Q3630",
+  "names": [
+   [
+    1619,
+    1949,
+    "Batavia"
+   ],
+   [
+    1949,
+    null,
+    "Jakarta"
+   ]
+  ]
+ },
+ "Kalemie": {
+  "name": "Kalemie",
+  "qid": "Q732801",
+  "names": [
+   [
+    null,
+    1971,
+    "Albertville"
+   ],
+   [
+    1971,
+    null,
+    "Kalemie"
+   ]
+  ]
+ },
+ "Kaliningrad": {
+  "name": "Kaliningrad",
+  "qid": "Q1829",
+  "names": [
+   [
+    1255,
+    1946,
+    "Königsberg"
+   ],
+   [
+    1946,
+    null,
+    "Kaliningrad"
+   ]
+  ]
+ },
+ "Kalininsk,_Saratov_Oblast": {
+  "name": "Kalininsk, Saratov Oblast",
+  "qid": "Q143697",
+  "names": [
+   [
+    null,
+    1962,
+    "Balanda"
+   ],
+   [
+    1962,
+    null,
+    "Kalininsk"
+   ]
+  ]
+ },
+ "Kamensk-Shakhtinsky": {
+  "name": "Kamensk-Shakhtinsky",
+  "qid": "Q144017",
+  "names": [
+   [
+    null,
+    1927,
+    "Kamenskaya"
+   ],
+   [
+    1927,
+    1929,
+    "Kamensk"
+   ],
+   [
+    1929,
+    null,
+    "Kamensk-Shakhtinsky"
+   ]
+  ]
+ },
+ "Kamianets-Podilskyi": {
+  "name": "Kamianets-Podilskyi",
+  "qid": "Q193965",
+  "names": [
+   [
+    null,
+    1944,
+    "Kamenets-Podolsk"
+   ],
+   [
+    1944,
+    null,
+    "Kamianets-Podilskyi"
+   ]
+  ]
+ },
+ "Kananga": {
+  "name": "Kananga",
+  "qid": "Q205327",
+  "names": [
+   [
+    null,
+    1966,
+    "Luluabourg"
+   ],
+   [
+    1966,
+    null,
+    "Kananga"
+   ]
+  ]
+ },
+ "Kanash": {
+  "name": "Kanash",
+  "qid": "Q144234",
+  "names": [
+   [
+    null,
+    1925,
+    "Shikhrany"
+   ],
+   [
+    1925,
+    null,
+    "Kanash"
+   ]
+  ]
+ },
+ "Karachayevsk": {
+  "name": "Karachayevsk",
+  "qid": "Q145073",
+  "names": [
+   [
+    null,
+    1927,
+    "Georgiyevskoye"
+   ],
+   [
+    1927,
+    1943,
+    "Mikoyan-Shakhar"
+   ],
+   [
+    1943,
+    1957,
+    "Klukhori"
+   ],
+   [
+    1957,
+    null,
+    "Karachayevsk"
+   ]
+  ]
+ },
+ "Karpinsk": {
+  "name": "Karpinsk",
+  "qid": "Q145406",
+  "names": [
+   [
+    null,
+    1933,
+    "Bogoslovsk"
+   ],
+   [
+    1933,
+    1941,
+    "Ugolnyy"
+   ],
+   [
+    1941,
+    null,
+    "Karpinsk"
+   ]
+  ]
+ },
+ "Kasimov": {
+  "name": "Kasimov",
+  "qid": "Q145457",
+  "names": [
+   [
+    1152,
+    1376,
+    "Gorodets Meshchyorsky"
+   ],
+   [
+    1376,
+    1471,
+    "Novyy Nizovoy Gorod"
+   ],
+   [
+    1471,
+    null,
+    "Kasimov"
+   ]
+  ]
+ },
+ "Katowice": {
+  "name": "Katowice",
+  "qid": "Q588",
+  "names": [
+   [
+    null,
+    1922,
+    "Kattowitz"
+   ],
+   [
+    1922,
+    1953,
+    "Katowice"
+   ],
+   [
+    1953,
+    1956,
+    "Stalinogród"
+   ],
+   [
+    1956,
+    null,
+    "Katowice"
+   ]
+  ]
+ },
+ "Kemerovo": {
+  "name": "Kemerovo",
+  "qid": "Q6066",
+  "names": [
+   [
+    1918,
+    1932,
+    "Shcheglovsk"
+   ],
+   [
+    1932,
+    null,
+    "Kemerovo"
+   ]
+  ]
+ },
+ "Khanty-Mansiysk": {
+  "name": "Khanty-Mansiysk",
+  "qid": "Q6329",
+  "names": [
+   [
+    null,
+    1940,
+    "Ostyako-Vogulsk"
+   ],
+   [
+    1940,
+    null,
+    "Khanty-Mansiysk"
+   ]
+  ]
+ },
+ "Khujand": {
+  "name": "Khujand",
+  "qid": "Q373808",
+  "names": [
+   [
+    null,
+    1936,
+    "Khodzhent"
+   ],
+   [
+    1936,
+    1991,
+    "Leninabad"
+   ],
+   [
+    1991,
+    null,
+    "Khujand"
+   ]
+  ]
+ },
+ "Kirov,_Kaluga_Oblast": {
+  "name": "Kirov, Kaluga Oblast",
+  "qid": "Q153490",
+  "names": [
+   [
+    1744,
+    1925,
+    "Pesochensky Zavod"
+   ],
+   [
+    1925,
+    1936,
+    "Pesochnya"
+   ],
+   [
+    1936,
+    null,
+    "Kirov"
+   ]
+  ]
+ },
+ "Kirov,_Kirov_Oblast": {
+  "name": "Kirov, Kirov Oblast",
+  "qid": "Q5384",
+  "names": [
+   [
+    1374,
+    1457,
+    "Vyatka"
+   ],
+   [
+    1457,
+    1780,
+    "Khlynov"
+   ],
+   [
+    1780,
+    1934,
+    "Vyatka"
+   ],
+   [
+    1934,
+    null,
+    "Kirov"
+   ]
+  ]
+ },
+ "Klaipėda": {
+  "name": "Klaipėda",
+  "qid": "Q776965",
+  "names": [
+   [
+    1252,
+    1923,
+    "Memel"
+   ],
+   [
+    1923,
+    1939,
+    "Klaipėda"
+   ],
+   [
+    1939,
+    1945,
+    "Memel"
+   ],
+   [
+    1945,
+    null,
+    "Klaipėda"
+   ]
+  ]
+ },
+ "Kokkola": {
+  "name": "Kokkola",
+  "qid": "Q207891",
+  "names": [
+   [
+    null,
+    1977,
+    "Gamlakarleby"
+   ],
+   [
+    1977,
+    null,
+    "Kokkola"
+   ]
+  ]
+ },
+ "Kokshetau": {
+  "name": "Kokshetau",
+  "qid": "Q490643",
+  "names": [
+   [
+    1868,
+    1993,
+    "Kokchetav"
+   ],
+   [
+    1993,
+    null,
+    "Kokshetau"
+   ]
+  ]
+ },
+ "Konakovo": {
+  "name": "Konakovo",
+  "qid": "Q155095",
+  "names": [
+   [
+    null,
+    1929,
+    "Kuznetsovo"
+   ],
+   [
+    1929,
+    null,
+    "Konakovo"
+   ]
+  ]
+ },
+ "Korolyov,_Moscow_Oblast": {
+  "name": "Korolyov, Moscow Oblast",
+  "qid": "Q155309",
+  "names": [
+   [
+    null,
+    1938,
+    "Kalininsky"
+   ],
+   [
+    1938,
+    1996,
+    "Kaliningrad"
+   ],
+   [
+    1996,
+    null,
+    "Korolyov"
+   ]
+  ]
+ },
+ "Krasnoarmeysk,_Saratov_Oblast": {
+  "name": "Krasnoarmeysk, Saratov Oblast",
+  "qid": "Q155553",
+  "names": [
+   [
+    null,
+    1925,
+    "Golyy Karamysh"
+   ],
+   [
+    1925,
+    1942,
+    "Baltser"
+   ],
+   [
+    1942,
+    null,
+    "Krasnoarmeysk"
+   ]
+  ]
+ },
+ "Krasnoturyinsk": {
+  "name": "Krasnoturyinsk",
+  "qid": "Q155767",
+  "names": [
+   [
+    null,
+    1944,
+    "Turinskiye rudniki"
+   ],
+   [
+    1944,
+    null,
+    "Krasnoturyinsk"
+   ]
+  ]
+ },
+ "Krasnouralsk": {
+  "name": "Krasnouralsk",
+  "qid": "Q155774",
+  "names": [
+   [
+    1925,
+    1929,
+    "Bogomolstroy"
+   ],
+   [
+    1929,
+    1931,
+    "Uralmedstroy"
+   ],
+   [
+    1931,
+    null,
+    "Krasnouralsk"
+   ]
+  ]
+ },
+ "Krasnoznamensk,_Kaliningrad_Oblast": {
+  "name": "Krasnoznamensk, Kaliningrad Oblast",
+  "qid": "Q155606",
+  "names": [
+   [
+    null,
+    1938,
+    "Lasdehnen"
+   ],
+   [
+    1938,
+    1946,
+    "Haselberg (Ostpr.)"
+   ],
+   [
+    1946,
+    null,
+    "Krasnoznamensk"
+   ]
+  ]
+ },
+ "Krasny_Sulin": {
+  "name": "Krasny Sulin",
+  "qid": "Q155829",
+  "names": [
+   [
+    null,
+    1926,
+    "Sulin"
+   ],
+   [
+    1926,
+    null,
+    "Krasny Sulin"
+   ]
+  ]
+ },
+ "Kuressaare": {
+  "name": "Kuressaare",
+  "qid": "Q188179",
+  "names": [
+   [
+    null,
+    1918,
+    "Arensburg"
+   ],
+   [
+    1918,
+    null,
+    "Kuressaare"
+   ]
+  ]
+ },
+ "Kusa,_Russia": {
+  "name": "Kusa, Russia",
+  "qid": "Q156261",
+  "names": [
+   [
+    null,
+    1943,
+    "Kusinsky zavod"
+   ],
+   [
+    1943,
+    null,
+    "Kusa"
+   ]
+  ]
+ },
+ "Kuvshinovo,_Kuvshinovsky_District,_Tver_Oblast": {
+  "name": "Kuvshinovo, Kuvshinovsky District, Tver Oblast",
+  "qid": "Q155923",
+  "names": [
+   [
+    1624,
+    1938,
+    "Kamennoye"
+   ],
+   [
+    1938,
+    null,
+    "Kuvshinovo"
+   ]
+  ]
+ },
+ "Kuybyshev,_Novosibirsk_Oblast": {
+  "name": "Kuybyshev, Novosibirsk Oblast",
+  "qid": "Q155955",
+  "names": [
+   [
+    null,
+    1935,
+    "Kainsk"
+   ],
+   [
+    1935,
+    null,
+    "Kuybyshev"
+   ]
+  ]
+ },
+ "Kyakhta": {
+  "name": "Kyakhta",
+  "qid": "Q156337",
+  "names": [
+   [
+    null,
+    1934,
+    "Troitskosavsk"
+   ],
+   [
+    1934,
+    null,
+    "Kyakhta"
+   ]
+  ]
+ },
+ "Priozersk": {
+  "name": "Käkisalmi",
+  "qid": "Q7977",
+  "names": [
+   [
+    1295,
+    1580,
+    "Korela"
+   ],
+   [
+    1580,
+    1595,
+    "Keksgolm"
+   ],
+   [
+    1595,
+    1611,
+    "Korela"
+   ],
+   [
+    1611,
+    1917,
+    "Keksgolm"
+   ],
+   [
+    1917,
+    1940,
+    "Kyakisalmi"
+   ],
+   [
+    1940,
+    1948,
+    "Keksgolm"
+   ],
+   [
+    1948,
+    null,
+    "Priozersk"
+   ]
+  ]
+ },
+ "La_Charité-sur-Loire": {
+  "name": "La Charité-sur-Loire",
+  "qid": "Q504883",
+  "names": [
+   [
+    null,
+    1961,
+    "Charité"
+   ],
+   [
+    1961,
+    null,
+    "La Charité-sur-Loire"
+   ]
+  ]
+ },
+ "Leninsk-Kuznetsky_(city)": {
+  "name": "Leninsk-Kuznetsky (city)",
+  "qid": "Q157482",
+  "names": [
+   [
+    null,
+    1922,
+    "Kolchugino"
+   ],
+   [
+    1922,
+    1925,
+    "Lenino"
+   ],
+   [
+    1925,
+    null,
+    "Leninsk-Kuznetsky"
+   ]
+  ]
+ },
+ "Lesnoy,_Sverdlovsk_Oblast": {
+  "name": "Lesnoy, Sverdlovsk Oblast",
+  "qid": "Q157523",
+  "names": [
+   [
+    1947,
+    1994,
+    "Gornyy"
+   ],
+   [
+    1994,
+    null,
+    "Lesnoy"
+   ]
+  ]
+ },
+ "Liberec": {
+  "name": "Liberec",
+  "qid": "Q146351",
+  "names": [
+   [
+    null,
+    1945,
+    "Reichenberg"
+   ],
+   [
+    1945,
+    null,
+    "Liberec"
+   ]
+  ]
+ },
+ "Likasi": {
+  "name": "Likasi",
+  "qid": "Q18780",
+  "names": [
+   [
+    1931,
+    1971,
+    "Jadotville"
+   ],
+   [
+    1971,
+    null,
+    "Likasi"
+   ]
+  ]
+ },
+ "Ljubljana": {
+  "name": "Ljubljana",
+  "qid": "Q437",
+  "names": [
+   [
+    null,
+    1918,
+    "Laibach"
+   ],
+   [
+    1918,
+    null,
+    "Ljubljana"
+   ]
+  ]
+ },
+ "Lomonosov,_Russia": {
+  "name": "Lomonosov, Russia",
+  "qid": "Q157688",
+  "names": [
+   [
+    1780,
+    1948,
+    "Oraniyenbaum"
+   ],
+   [
+    1948,
+    null,
+    "Lomonosov"
+   ]
+  ]
+ },
+ "Luhansk": {
+  "name": "Luhansk",
+  "qid": "Q134279",
+  "names": [
+   [
+    null,
+    1882,
+    "Lugansky zavod"
+   ],
+   [
+    1882,
+    1935,
+    "Luhansk"
+   ],
+   [
+    1935,
+    1958,
+    "Voroshilovgrad"
+   ],
+   [
+    1958,
+    1970,
+    "Luhansk"
+   ],
+   [
+    1970,
+    1990,
+    "Voroshilovgrad"
+   ],
+   [
+    1990,
+    null,
+    "Luhansk"
+   ]
+  ]
+ },
+ "Lviv": {
+  "name": "Lviv",
+  "qid": "Q36036",
+  "names": [
+   [
+    1256,
+    1340,
+    "Lvov"
+   ],
+   [
+    1340,
+    1773,
+    "Lwów"
+   ],
+   [
+    1773,
+    1918,
+    "Lemberg"
+   ],
+   [
+    1918,
+    1946,
+    "Lwów"
+   ],
+   [
+    1946,
+    null,
+    "Lviv"
+   ]
+  ]
+ },
+ "Lyubertsy": {
+  "name": "Lyubertsy",
+  "qid": "Q141358",
+  "names": [
+   [
+    null,
+    1705,
+    "Liberitsy-Nazarovo"
+   ],
+   [
+    1705,
+    1727,
+    "Preobrazhenskoye"
+   ],
+   [
+    1727,
+    null,
+    "Lyubertsy"
+   ]
+  ]
+ },
+ "Makhachkala": {
+  "name": "Mahachkala",
+  "qid": "Q5168",
+  "names": [
+   [
+    null,
+    1857,
+    "Petrovskoye"
+   ],
+   [
+    1857,
+    1921,
+    "Petrovsk-Port"
+   ],
+   [
+    1921,
+    1951,
+    "Makhach-Kala"
+   ],
+   [
+    1951,
+    null,
+    "Makhachkala"
+   ]
+  ]
+ },
+ "Makassar": {
+  "name": "Makassar",
+  "qid": "Q14634",
+  "names": [
+   [
+    null,
+    1999,
+    "Kota Ujung Pandang"
+   ],
+   [
+    1999,
+    null,
+    "Makassar"
+   ]
+  ]
+ },
+ "Malabo": {
+  "name": "Malabo",
+  "qid": "Q3818",
+  "names": [
+   [
+    1827,
+    1855,
+    "Port Clarence"
+   ],
+   [
+    1855,
+    1973,
+    "Santa Isabel"
+   ],
+   [
+    1973,
+    null,
+    "Malabo"
+   ]
+  ]
+ },
+ "Maputo": {
+  "name": "Maputo",
+  "qid": "Q3889",
+  "names": [
+   [
+    null,
+    1976,
+    "Lourenço Marques"
+   ],
+   [
+    1976,
+    null,
+    "Maputo"
+   ]
+  ]
+ },
+ "Mariinsky_Posad": {
+  "name": "Mariinsky Posad",
+  "qid": "Q158336",
+  "names": [
+   [
+    null,
+    1856,
+    "Sundyr"
+   ],
+   [
+    1856,
+    null,
+    "Mariinsky Posad"
+   ]
+  ]
+ },
+ "Mariupol": {
+  "name": "Mariupol",
+  "qid": "Q37133",
+  "names": [
+   [
+    null,
+    1949,
+    "Mariupol"
+   ],
+   [
+    1949,
+    1989,
+    "Zhdanov"
+   ],
+   [
+    1989,
+    null,
+    "Mariupol"
+   ]
+  ]
+ },
+ "Marseille": {
+  "name": "Massilia",
+  "qid": "Q23482",
+  "names": [
+   [
+    1793,
+    1814,
+    "Ville-sans-Nom"
+   ],
+   [
+    1814,
+    null,
+    "Marseille"
+   ]
+  ]
+ },
+ "Mendeleyevsk": {
+  "name": "Mendeleyevsk",
+  "qid": "Q158816",
+  "names": [
+   [
+    null,
+    1967,
+    "Bondyuzhsky"
+   ],
+   [
+    1967,
+    null,
+    "Mendeleyevsk"
+   ]
+  ]
+ },
+ "Mikkeli": {
+  "name": "Mikkeli",
+  "qid": "Q190583",
+  "names": [
+   [
+    1809,
+    1918,
+    "Sankt-Mikhel"
+   ],
+   [
+    1918,
+    null,
+    "Mikkeli"
+   ]
+  ]
+ },
+ "Jelgava": {
+  "name": "Mitau",
+  "qid": "Q179830",
+  "names": [
+   [
+    null,
+    1918,
+    "Mitava"
+   ],
+   [
+    1918,
+    null,
+    "Jelgava"
+   ]
+  ]
+ },
+ "Montauban": {
+  "name": "Montauban",
+  "qid": "Q172593",
+  "names": [
+   [
+    1793,
+    1814,
+    "Rive-Civique"
+   ],
+   [
+    1814,
+    null,
+    "Montauban"
+   ]
+  ]
+ },
+ "Naberezhnye_Chelny": {
+  "name": "Naberezhnye Chelny",
+  "qid": "Q95041",
+  "names": [
+   [
+    null,
+    1982,
+    "Naberezhnye Chelny"
+   ],
+   [
+    1982,
+    1988,
+    "Brezhnev"
+   ],
+   [
+    1988,
+    null,
+    "Naberezhnye Chelny"
+   ]
+  ]
+ },
+ "Nazran": {
+  "name": "Nazran",
+  "qid": "Q163935",
+  "names": [
+   [
+    1944,
+    1959,
+    "Kosta-Khetagurovo"
+   ],
+   [
+    1959,
+    null,
+    "Nazran"
+   ]
+  ]
+ },
+ "Neman,_Russia": {
+  "name": "Neman, Russia",
+  "qid": "Q5671",
+  "names": [
+   [
+    null,
+    1947,
+    "Ragnit"
+   ],
+   [
+    1947,
+    null,
+    "Neman"
+   ]
+  ]
+ },
+ "Nikolayevsk-on-Amur": {
+  "name": "Nikolayevsk-na-Amure",
+  "qid": "Q173037",
+  "names": [
+   [
+    null,
+    1926,
+    "Nikolayevsk"
+   ],
+   [
+    1926,
+    null,
+    "Nikolayevsk-on-Amur"
+   ]
+  ]
+ },
+ "Nizhny_Novgorod": {
+  "name": "Nizhny Novgorod",
+  "qid": "Q891",
+  "names": [
+   [
+    1221,
+    1932,
+    "Nizhny Novgorod"
+   ],
+   [
+    1932,
+    1990,
+    "Gorky"
+   ],
+   [
+    1990,
+    null,
+    "Nizhny Novgorod"
+   ]
+  ]
+ },
+ "Noginsk": {
+  "name": "Noginsk",
+  "qid": "Q175480",
+  "names": [
+   [
+    null,
+    1506,
+    "Rogozhi"
+   ],
+   [
+    1506,
+    1781,
+    "Rogozha"
+   ],
+   [
+    1781,
+    1930,
+    "Bogorodsk"
+   ],
+   [
+    1930,
+    null,
+    "Noginsk"
+   ]
+  ]
+ },
+ "Novodvinsk": {
+  "name": "Novodvinsk",
+  "qid": "Q174124",
+  "names": [
+   [
+    1941,
+    1957,
+    "Voroshilovsky"
+   ],
+   [
+    1957,
+    1977,
+    "Pervomaysky"
+   ],
+   [
+    1977,
+    null,
+    "Novodvinsk"
+   ]
+  ]
+ },
+ "Novosibirsk": {
+  "name": "Novosibirsk",
+  "qid": "Q883",
+  "names": [
+   [
+    1893,
+    1894,
+    "Novaya derevnya"
+   ],
+   [
+    1894,
+    1895,
+    "Aleksandrovsky"
+   ],
+   [
+    1895,
+    1903,
+    "Novo-Nikolayevsky"
+   ],
+   [
+    1903,
+    1926,
+    "Novo-Nikolayevsk"
+   ],
+   [
+    1926,
+    null,
+    "Novosibirsk"
+   ]
+  ]
+ },
+ "Nuuk": {
+  "name": "Nuuk",
+  "qid": "Q226",
+  "names": [
+   [
+    1728,
+    1996,
+    "Godthåb"
+   ],
+   [
+    1996,
+    null,
+    "Nuuk"
+   ]
+  ]
+ },
+ "Orenburg": {
+  "name": "Orenburg",
+  "qid": "Q5337",
+  "names": [
+   [
+    1743,
+    1938,
+    "Orenburg"
+   ],
+   [
+    1938,
+    1957,
+    "Chkalov"
+   ],
+   [
+    1957,
+    null,
+    "Orenburg"
+   ]
+  ]
+ },
+ "Shlisselburg": {
+  "name": "Oreshek",
+  "qid": "Q15339",
+  "names": [
+   [
+    1323,
+    1611,
+    "Oreshek"
+   ],
+   [
+    1611,
+    1702,
+    "Noteburg"
+   ],
+   [
+    1702,
+    1944,
+    "Shlisselburg"
+   ],
+   [
+    1944,
+    1993,
+    "Petrokrepost"
+   ],
+   [
+    1993,
+    null,
+    "Shlisselburg"
+   ]
+  ]
+ },
+ "Oslo": {
+  "name": "Oslo",
+  "qid": "Q585",
+  "names": [
+   [
+    null,
+    1624,
+    "Oslo"
+   ],
+   [
+    1624,
+    1925,
+    "Christiania"
+   ],
+   [
+    1925,
+    null,
+    "Oslo"
+   ]
+  ]
+ },
+ "Ozyory,_Moscow_Oblast": {
+  "name": "Ozyory, Moscow Oblast",
+  "qid": "Q176264",
+  "names": [
+   [
+    null,
+    1925,
+    "Ozerki"
+   ],
+   [
+    1925,
+    null,
+    "Ozyory"
+   ]
+  ]
+ },
+ "Pavlovsky_Posad": {
+  "name": "Pavlovsky Posad",
+  "qid": "Q177908",
+  "names": [
+   [
+    null,
+    1844,
+    "Pavlovo"
+   ],
+   [
+    1844,
+    null,
+    "Pavlovsky Posad"
+   ]
+  ]
+ },
+ "Kyzylorda": {
+  "name": "Perovsk",
+  "qid": "Q491123",
+  "names": [
+   [
+    1925,
+    1997,
+    "Kzyl-Orda"
+   ],
+   [
+    1997,
+    null,
+    "Kyzylorda"
+   ]
+  ]
+ },
+ "Pervouralsk": {
+  "name": "Pervouralsk",
+  "qid": "Q19157",
+  "names": [
+   [
+    1732,
+    1920,
+    "Vasilyevsko-Shaytansky zavod"
+   ],
+   [
+    1920,
+    null,
+    "Pervouralsk"
+   ]
+  ]
+ },
+ "Petropavlovsk-Kamchatsky": {
+  "name": "Petropavlovsk",
+  "qid": "Q7951",
+  "names": [
+   [
+    null,
+    1849,
+    "Petropavlovskaya gavan"
+   ],
+   [
+    1849,
+    1924,
+    "Petropavlovsky Port"
+   ],
+   [
+    1924,
+    null,
+    "Petropavlovsk-Kamchatsky"
+   ]
+  ]
+ },
+ "Pionersky,_Kaliningrad_Oblast": {
+  "name": "Pionersky, Kaliningrad Oblast",
+  "qid": "Q179439",
+  "names": [
+   [
+    null,
+    1946,
+    "Neukuhren"
+   ],
+   [
+    1946,
+    null,
+    "Pionersky"
+   ]
+  ]
+ },
+ "Pittsburgh": {
+  "name": "Pittsburgh",
+  "qid": "Q1342",
+  "names": [
+   [
+    1891,
+    1911,
+    "Pittsburg"
+   ],
+   [
+    1911,
+    null,
+    "Pittsburgh"
+   ]
+  ]
+ },
+ "Plzeň": {
+  "name": "Plzeň",
+  "qid": "Q43453",
+  "names": [
+   [
+    null,
+    1918,
+    "Pilsen"
+   ],
+   [
+    1918,
+    null,
+    "Plzeň"
+   ]
+  ]
+ },
+ "Poronaysk": {
+  "name": "Poronaysk",
+  "qid": "Q183093",
+  "names": [
+   [
+    null,
+    1905,
+    "Tikhmenevsky"
+   ],
+   [
+    1905,
+    1946,
+    "Sikuka"
+   ],
+   [
+    1946,
+    null,
+    "Poronaysk"
+   ]
+  ]
+ },
+ "Pravdinsk": {
+  "name": "Pravdinsk",
+  "qid": "Q183193",
+  "names": [
+   [
+    null,
+    1946,
+    "Fridland"
+   ],
+   [
+    1946,
+    null,
+    "Pravdinsk"
+   ]
+  ]
+ },
+ "Primorsk,_Kaliningrad_Oblast": {
+  "name": "Primorsk, Kaliningrad Oblast",
+  "qid": "Q183223",
+  "names": [
+   [
+    null,
+    1946,
+    "Fischhausen"
+   ],
+   [
+    1946,
+    null,
+    "Primorsk"
+   ]
+  ]
+ },
+ "Pugachyov": {
+  "name": "Pugachyov",
+  "qid": "Q184220",
+  "names": [
+   [
+    null,
+    1835,
+    "Mechetnaya"
+   ],
+   [
+    1835,
+    1918,
+    "Nikolayevsk"
+   ],
+   [
+    1918,
+    null,
+    "Pugachyov"
+   ]
+  ]
+ },
+ "Pushkin,_Saint_Petersburg": {
+  "name": "Pushkin, Saint Petersburg",
+  "qid": "Q7947",
+  "names": [
+   [
+    1710,
+    1918,
+    "Tsarskoye Selo"
+   ],
+   [
+    1918,
+    1937,
+    "Detskoye Selo"
+   ],
+   [
+    1937,
+    null,
+    "Pushkin"
+   ]
+  ]
+ },
+ "Rabwah": {
+  "name": "Rabwah",
+  "qid": "Q1069835",
+  "names": [
+   [
+    1948,
+    1998,
+    "Rabwah"
+   ],
+   [
+    1998,
+    1999,
+    "Nawan Qadian"
+   ],
+   [
+    1999,
+    null,
+    "Chenab Nagar"
+   ]
+  ]
+ },
+ "Revda,_Sverdlovsk_Oblast": {
+  "name": "Revda, Sverdlovsk Oblast",
+  "qid": "Q193277",
+  "names": [
+   [
+    1734,
+    1935,
+    "Revdinsky zavod"
+   ],
+   [
+    1935,
+    null,
+    "Revda"
+   ]
+  ]
+ },
+ "Rijeka": {
+  "name": "Rijeka",
+  "qid": "Q1647",
+  "names": [
+   [
+    null,
+    1945,
+    "Fiume"
+   ],
+   [
+    1945,
+    null,
+    "Rijeka"
+   ]
+  ]
+ },
+ "Ho_Chi_Minh_City": {
+  "name": "Saigon",
+  "qid": "Q1854",
+  "names": [
+   [
+    null,
+    1976,
+    "Sài Gòn"
+   ],
+   [
+    1976,
+    null,
+    "Ho Chi Minh City"
+   ]
+  ]
+ },
+ "Saint_Petersburg": {
+  "name": "Saint Petersburg",
+  "qid": "Q656",
+  "names": [
+   [
+    null,
+    1914,
+    "Saint Petersburg"
+   ],
+   [
+    1914,
+    1924,
+    "Petrograd"
+   ],
+   [
+    1924,
+    1991,
+    "Leningrad"
+   ],
+   [
+    1991,
+    null,
+    "Saint Petersburg"
+   ]
+  ]
+ },
+ "Saint-Jean-d'Angély": {
+  "name": "Saint-Jean-d'Angély",
+  "qid": "Q348807",
+  "names": [
+   [
+    1793,
+    1814,
+    "Angély-Boutonne"
+   ],
+   [
+    1814,
+    null,
+    "Saint-Jean-d'Angély"
+   ]
+  ]
+ },
+ "Samara": {
+  "name": "Samara",
+  "qid": "Q894",
+  "names": [
+   [
+    null,
+    1935,
+    "Samara"
+   ],
+   [
+    1935,
+    1991,
+    "Kuybyshev"
+   ],
+   [
+    1991,
+    null,
+    "Samara"
+   ]
+  ]
+ },
+ "San_Francisco": {
+  "name": "San Francisco",
+  "qid": "Q62",
+  "names": [
+   [
+    null,
+    1847,
+    "Yerba Buena"
+   ],
+   [
+    1847,
+    null,
+    "San Francisco"
+   ]
+  ]
+ },
+ "Serafimovich_(town)": {
+  "name": "Serafimovich (town)",
+  "qid": "Q194020",
+  "names": [
+   [
+    null,
+    1933,
+    "Ust-Medveditskaya"
+   ],
+   [
+    1933,
+    null,
+    "Serafimovich"
+   ]
+  ]
+ },
+ "Sergiyev_Posad": {
+  "name": "Sergiyev Posad",
+  "qid": "Q193722",
+  "names": [
+   [
+    null,
+    1919,
+    "Sergiyev Posad"
+   ],
+   [
+    1919,
+    1930,
+    "Sergiyev"
+   ],
+   [
+    1930,
+    1991,
+    "Zagorsk"
+   ],
+   [
+    1991,
+    null,
+    "Sergiyev Posad"
+   ]
+  ]
+ },
+ "Severomorsk": {
+  "name": "Severomorsk",
+  "qid": "Q193898",
+  "names": [
+   [
+    null,
+    1951,
+    "Vayenga"
+   ],
+   [
+    1951,
+    null,
+    "Severomorsk"
+   ]
+  ]
+ },
+ "Severouralsk": {
+  "name": "Severouralsk",
+  "qid": "Q193906",
+  "names": [
+   [
+    1758,
+    1944,
+    "Petropavlovsky"
+   ],
+   [
+    1944,
+    null,
+    "Severouralsk"
+   ]
+  ]
+ },
+ "Ulyanovsk": {
+  "name": "Simbirsk",
+  "qid": "Q5627",
+  "names": [
+   [
+    1648,
+    1780,
+    "Sinbirsk"
+   ],
+   [
+    1780,
+    1924,
+    "Simbirsk"
+   ],
+   [
+    1924,
+    null,
+    "Ulyanovsk"
+   ]
+  ]
+ },
+ "Sortavala": {
+  "name": "Sortavala",
+  "qid": "Q196397",
+  "names": [
+   [
+    null,
+    1918,
+    "Serdobol"
+   ],
+   [
+    1918,
+    null,
+    "Sortavala"
+   ]
+  ]
+ },
+ "Sovetskaya_Gavan": {
+  "name": "Sovetskaya Gavan",
+  "qid": "Q196374",
+  "names": [
+   [
+    null,
+    1923,
+    "Imperatorskaya Gavan"
+   ],
+   [
+    1923,
+    1930,
+    "Znamenskoye"
+   ],
+   [
+    1930,
+    null,
+    "Sovetskaya Gavan"
+   ]
+  ]
+ },
+ "Spassk-Dalny": {
+  "name": "Spassk-Dalny",
+  "qid": "Q196446",
+  "names": [
+   [
+    null,
+    1917,
+    "Spasskoye"
+   ],
+   [
+    1917,
+    1929,
+    "Spassk-Primorsky"
+   ],
+   [
+    1929,
+    null,
+    "Spassk-Dalny"
+   ]
+  ]
+ },
+ "Dushanbe": {
+  "name": "Stalinabad",
+  "qid": "Q9365",
+  "names": [
+   [
+    null,
+    1924,
+    "Dushanbe"
+   ],
+   [
+    1924,
+    1929,
+    "Dyushanbe"
+   ],
+   [
+    1929,
+    1961,
+    "Stalinabad"
+   ],
+   [
+    1961,
+    null,
+    "Dushanbe"
+   ]
+  ]
+ },
+ "Novokuznetsk": {
+  "name": "Stalinsk",
+  "qid": "Q93910",
+  "names": [
+   [
+    null,
+    1622,
+    "Kuznetsky ostrog"
+   ],
+   [
+    1622,
+    1931,
+    "Kuznetsk-Sibirsky"
+   ],
+   [
+    1931,
+    1961,
+    "Stalinsk"
+   ],
+   [
+    1961,
+    null,
+    "Novokuznetsk"
+   ]
+  ]
+ },
+ "Staraya_Russa": {
+  "name": "Staraja Russa",
+  "qid": "Q196479",
+  "names": [
+   [
+    null,
+    1552,
+    "Rusa"
+   ],
+   [
+    1552,
+    null,
+    "Staraya Russa"
+   ]
+  ]
+ },
+ "Sucre": {
+  "name": "Sucre",
+  "qid": "Q2907",
+  "names": [
+   [
+    null,
+    1538,
+    "Charcas"
+   ],
+   [
+    1538,
+    1776,
+    "La Plata"
+   ],
+   [
+    1776,
+    1825,
+    "Chuquisaca"
+   ],
+   [
+    1825,
+    null,
+    "Sucre"
+   ]
+  ]
+ },
+ "Svetlograd": {
+  "name": "Svetlograd",
+  "qid": "Q193604",
+  "names": [
+   [
+    null,
+    1965,
+    "Petrovskoye"
+   ],
+   [
+    1965,
+    null,
+    "Svetlograd"
+   ]
+  ]
+ },
+ "Svobodny,_Amur_Oblast": {
+  "name": "Svobodny, Amur Oblast",
+  "qid": "Q193636",
+  "names": [
+   [
+    1912,
+    1917,
+    "Alekseyevsk"
+   ],
+   [
+    1917,
+    null,
+    "Svobodny"
+   ]
+  ]
+ },
+ "Taraz": {
+  "name": "Taraz",
+  "qid": "Q486545",
+  "names": [
+   [
+    1856,
+    1936,
+    "Auliye-Ata"
+   ],
+   [
+    1936,
+    1938,
+    "Mirzoyan"
+   ],
+   [
+    1938,
+    1993,
+    "Dzhambul"
+   ],
+   [
+    1993,
+    1997,
+    "Zhambyl"
+   ],
+   [
+    1997,
+    null,
+    "Taraz"
+   ]
+  ]
+ },
+ "Tasiilaq": {
+  "name": "Tasiilaq",
+  "qid": "Q2139799",
+  "names": [
+   [
+    null,
+    1992,
+    "Ammassalik"
+   ],
+   [
+    1992,
+    null,
+    "Tasiilaq"
+   ]
+  ]
+ },
+ "Tiszaújváros": {
+  "name": "Tiszaújváros",
+  "qid": "Q375097",
+  "names": [
+   [
+    null,
+    1906,
+    "Szederkény"
+   ],
+   [
+    1906,
+    1970,
+    "Tiszaszederkény"
+   ],
+   [
+    1970,
+    1991,
+    "Leninváros"
+   ],
+   [
+    1991,
+    null,
+    "Tiszaújváros"
+   ]
+  ]
+ },
+ "Podgorica": {
+  "name": "Titograd",
+  "qid": "Q23564",
+  "names": [
+   [
+    null,
+    1400,
+    "Ribnitsa"
+   ],
+   [
+    1400,
+    1952,
+    "Podgorica"
+   ],
+   [
+    1952,
+    1992,
+    "Titograd"
+   ],
+   [
+    1992,
+    null,
+    "Podgorica"
+   ]
+  ]
+ },
+ "Tolyatti": {
+  "name": "Tolyatti",
+  "qid": "Q1341",
+  "names": [
+   [
+    null,
+    1964,
+    "Stavropol"
+   ],
+   [
+    1964,
+    null,
+    "Tolyatti"
+   ]
+  ]
+ },
+ "Toruń": {
+  "name": "Toruń",
+  "qid": "Q47554",
+  "names": [
+   [
+    1815,
+    1918,
+    "Thorn"
+   ],
+   [
+    1918,
+    null,
+    "Toruń"
+   ]
+  ]
+ },
+ "Toulon": {
+  "name": "Toulon",
+  "qid": "Q44160",
+  "names": [
+   [
+    1793,
+    1814,
+    "Port-la-Montagne"
+   ],
+   [
+    1814,
+    null,
+    "Toulon"
+   ]
+  ]
+ },
+ "Trakai": {
+  "name": "Trakai",
+  "qid": "Q191015",
+  "names": [
+   [
+    null,
+    1940,
+    "Troki"
+   ],
+   [
+    1940,
+    null,
+    "Trakai"
+   ]
+  ]
+ },
+ "Volgograd": {
+  "name": "Tsaritsyn",
+  "qid": "Q914",
+  "names": [
+   [
+    1589,
+    1925,
+    "Tsaritsyn"
+   ],
+   [
+    1925,
+    1961,
+    "Stalingrad"
+   ],
+   [
+    1961,
+    null,
+    "Volgograd"
+   ]
+  ]
+ },
+ "Tver": {
+  "name": "Tver",
+  "qid": "Q2288",
+  "names": [
+   [
+    1130,
+    1931,
+    "Tver"
+   ],
+   [
+    1931,
+    1990,
+    "Kalinin"
+   ],
+   [
+    1990,
+    null,
+    "Tver"
+   ]
+  ]
+ },
+ "Tyrnyauz": {
+  "name": "Tyrnyauz",
+  "qid": "Q196732",
+  "names": [
+   [
+    null,
+    1937,
+    "Girkhozhan"
+   ],
+   [
+    1937,
+    1955,
+    "Nizhny Baksan"
+   ],
+   [
+    1955,
+    null,
+    "Tyrnyauz"
+   ]
+  ]
+ },
+ "Ulan-Ude": {
+  "name": "Ude",
+  "qid": "Q6816",
+  "names": [
+   [
+    null,
+    1934,
+    "Verkhneudinsk"
+   ],
+   [
+    1934,
+    null,
+    "Ulan-Ude"
+   ]
+  ]
+ },
+ "Ukhta": {
+  "name": "Ukhta",
+  "qid": "Q197018",
+  "names": [
+   [
+    1929,
+    1939,
+    "Chibyu"
+   ],
+   [
+    1939,
+    null,
+    "Ukhta"
+   ]
+  ]
+ },
+ "Uryupinsk": {
+  "name": "Uryupinsk",
+  "qid": "Q105538",
+  "names": [
+   [
+    1300,
+    1929,
+    "Uryupesk"
+   ],
+   [
+    1929,
+    null,
+    "Uryupinsk"
+   ]
+  ]
+ },
+ "Usolye-Sibirskoye": {
+  "name": "Usolye-Sibirskoye",
+  "qid": "Q196925",
+  "names": [
+   [
+    null,
+    1940,
+    "Usolye"
+   ],
+   [
+    1940,
+    null,
+    "Usolye-Sibirskoye"
+   ]
+  ]
+ },
+ "Ussuriysk": {
+  "name": "Ussuriysk",
+  "qid": "Q196934",
+  "names": [
+   [
+    1898,
+    1935,
+    "Ussuriysk"
+   ],
+   [
+    1935,
+    1957,
+    "Voroshilov"
+   ],
+   [
+    1957,
+    null,
+    "Ussuriysk"
+   ]
+  ]
+ },
+ "Syktyvkar": {
+  "name": "Ust-Sysola",
+  "qid": "Q2143",
+  "names": [
+   [
+    null,
+    1780,
+    "Ust-Sysola"
+   ],
+   [
+    1780,
+    1930,
+    "Ust-Sysolsk"
+   ],
+   [
+    1930,
+    null,
+    "Syktyvkar"
+   ]
+  ]
+ },
+ "Vaasa": {
+  "name": "Vaasa",
+  "qid": "Q125080",
+  "names": [
+   [
+    1606,
+    1611,
+    "Mussor"
+   ],
+   [
+    1611,
+    1855,
+    "Wasa"
+   ],
+   [
+    1855,
+    1917,
+    "Nikolainkaupunki"
+   ],
+   [
+    1917,
+    null,
+    "Vaasa"
+   ]
+  ]
+ },
+ "Vantaa": {
+  "name": "Vantaa",
+  "qid": "Q127623",
+  "names": [
+   [
+    1865,
+    1972,
+    "Helsingin maalaiskunta"
+   ],
+   [
+    1972,
+    null,
+    "Vantaa"
+   ]
+  ]
+ },
+ "Varnavino,_Nizhny_Novgorod_Oblast": {
+  "name": "Varnavino, Nizhny Novgorod Oblast",
+  "qid": "Q3739708",
+  "names": [
+   [
+    null,
+    1778,
+    "Varnavinskaya"
+   ],
+   [
+    1778,
+    1961,
+    "Varnavin"
+   ],
+   [
+    1961,
+    null,
+    "Varnavino"
+   ]
+  ]
+ },
+ "Veliky_Novgorod": {
+  "name": "Veliky Novgorod",
+  "qid": "Q2235",
+  "names": [
+   [
+    null,
+    1999,
+    "Novgorod"
+   ],
+   [
+    1999,
+    null,
+    "Veliky Novgorod"
+   ]
+  ]
+ },
+ "Verkhnyaya_Pyshma": {
+  "name": "Verkhnyaya Pyshma",
+  "qid": "Q133037",
+  "names": [
+   [
+    1854,
+    1938,
+    "Mednyy Rudnik"
+   ],
+   [
+    1938,
+    1946,
+    "Pyshma"
+   ],
+   [
+    1946,
+    null,
+    "Verkhnyaya Pyshma"
+   ]
+  ]
+ },
+ "Vilnius": {
+  "name": "Vilna",
+  "qid": "Q216",
+  "names": [
+   [
+    null,
+    1922,
+    "Vilnius"
+   ],
+   [
+    1922,
+    1939,
+    "Wilno"
+   ],
+   [
+    1939,
+    null,
+    "Vilnius"
+   ]
+  ]
+ },
+ "Votkinsk": {
+  "name": "Votkinsk",
+  "qid": "Q133838",
+  "names": [
+   [
+    1758,
+    1760,
+    "Votkinsk"
+   ],
+   [
+    1760,
+    1919,
+    "Dmitriyevskoye"
+   ],
+   [
+    1919,
+    null,
+    "Votkinsk"
+   ]
+  ]
+ },
+ "Vyborg": {
+  "name": "Vyborg",
+  "qid": "Q14657",
+  "names": [
+   [
+    null,
+    1721,
+    "Viborg"
+   ],
+   [
+    1721,
+    1917,
+    "Vyborg"
+   ],
+   [
+    1917,
+    1940,
+    "Viipuri"
+   ],
+   [
+    1940,
+    1941,
+    "Vyborg"
+   ],
+   [
+    1941,
+    1944,
+    "Viipuri"
+   ],
+   [
+    1944,
+    null,
+    "Vyborg"
+   ]
+  ]
+ },
+ "Wrocław": {
+  "name": "Wrocław",
+  "qid": "Q1799",
+  "names": [
+   [
+    1350,
+    1945,
+    "Breslau"
+   ],
+   [
+    1945,
+    null,
+    "Wrocław"
+   ]
+  ]
+ },
+ "Yekaterinburg": {
+  "name": "Yekaterinburg",
+  "qid": "Q887",
+  "names": [
+   [
+    1723,
+    1924,
+    "Yekaterinburg"
+   ],
+   [
+    1924,
+    1991,
+    "Sverdlovsk"
+   ],
+   [
+    1991,
+    null,
+    "Yekaterinburg"
+   ]
+  ]
+ },
+ "Yevpatoria": {
+  "name": "Yevpatoria",
+  "qid": "Q33345",
+  "names": [
+   [
+    null,
+    1784,
+    "Gezlyov"
+   ],
+   [
+    1784,
+    null,
+    "Yevpatoria"
+   ]
+  ]
+ },
+ "Yuzhno-Sakhalinsk": {
+  "name": "Yuzhno-Sakhalinsk",
+  "qid": "Q7859",
+  "names": [
+   [
+    1882,
+    1947,
+    "Vladimirovka"
+   ],
+   [
+    1947,
+    null,
+    "Yuzhno-Sakhalinsk"
+   ]
+  ]
+ },
+ "Yuzhnouralsk": {
+  "name": "Yuzhnouralsk",
+  "qid": "Q198820",
+  "names": [
+   [
+    1745,
+    1948,
+    "Nizhneuvelskaya"
+   ],
+   [
+    1948,
+    null,
+    "Yuzhnouralsk"
+   ]
+  ]
+ },
+ "Zdvinsk": {
+  "name": "Zdvinsk",
+  "qid": "Q739108",
+  "names": [
+   [
+    null,
+    1896,
+    "Taskayevo"
+   ],
+   [
+    1896,
+    1933,
+    "Nizhny Kargat"
+   ],
+   [
+    1933,
+    null,
+    "Zdvinsk"
+   ]
+  ]
+ },
+ "Zelenogradsk": {
+  "name": "Zelenogradsk",
+  "qid": "Q5584",
+  "names": [
+   [
+    null,
+    1946,
+    "Cranz"
+   ],
+   [
+    1946,
+    null,
+    "Zelenogradsk"
+   ]
+  ]
+ },
+ "Zheleznodorozhny,_Moscow_Oblast": {
+  "name": "Zheleznodorozhny, Moscow Oblast",
+  "qid": "Q136023",
+  "names": [
+   [
+    null,
+    1939,
+    "Obiralovka"
+   ],
+   [
+    1939,
+    null,
+    "Zheleznodorozhny"
+   ]
+  ]
+ },
+ "Zheleznogorsk,_Kursk_Oblast": {
+  "name": "Zheleznogorsk, Kursk Oblast",
+  "qid": "Q72536",
+  "names": [
+   [
+    null,
+    1958,
+    "Oktyabrsky"
+   ],
+   [
+    1958,
+    null,
+    "Zheleznogorsk"
+   ]
+  ]
+ },
+ "České_Budějovice": {
+  "name": "České Budějovice",
+  "qid": "Q16506",
+  "names": [
+   [
+    null,
+    1920,
+    "Budějovice"
+   ],
+   [
+    1920,
+    1942,
+    "České Budějovice"
+   ],
+   [
+    1942,
+    1945,
+    "Budějovice"
+   ],
+   [
+    1945,
+    null,
+    "České Budějovice"
+   ]
+  ]
+ }
+}
