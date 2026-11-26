@@ -319,6 +319,29 @@ function updateLinkAtom(req, res, next, isAddLink, resolve = false) {
 // editor sees their own link changes once the edge entry is invalidated.
 const linkedCacheControl = () => publicCacheControl(0, 3600);
 
+/**
+ * GET /v1/metadata/:id/getLinked checks `source` before anything is read.
+ * The links come from the links store, not from the :id document, so with
+ * DynamoDB links the document isn't loaded at all (before 2026-11 any :id was
+ * loaded first, and a missing one answered 404 before `source` was checked).
+ */
+function checkLinkedSource(req, res, next) {
+  try {
+    linkedSourceParam(req.query);
+  } catch (e) {
+    return next(e);
+  }
+  return next();
+}
+
+function loadForLinked(req, res, next) {
+  if (useDynamoLinks) {
+    req.entity = { _id: 'links', data: {} };
+    return next();
+  }
+  return load(req, res, next, req.params.linksDocId);
+}
+
 function getLinked(req, res, next, resolve = false) {
   let sourceItem;
   try {
@@ -508,4 +531,4 @@ function _isInvalidRgb(rgb) {
   }
 }
 
-export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove };
+export default { defineEntity, checkLinkedSource, loadForLinked, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove };

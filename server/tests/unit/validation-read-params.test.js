@@ -129,6 +129,33 @@ describe('## Public list reads check their parameters', () => {
     });
   });
 
+  describe('# getLinked checks source before any read', () => {
+    for (const path of ['/v1/metadata/links/getLinked', '/v1/metadata/ruler/getLinked', '/v1/metadata/no-such-doc/getLinked']) {
+      it(`${path} with a bad source → 400 and no DynamoDB call`, async () => {
+        const calls = [];
+        const saved = globalThis.__TEST_DYNAMO_DOC_CLIENT;
+        globalThis.__TEST_DYNAMO_DOC_CLIENT = { send: async (command) => { calls.push(command.constructor.name); return {}; } };
+        try {
+          for (const query of ['?source=a&source=b', '?source=noprefix', `?source=1:${'a'.repeat(1100)}`]) {
+            const res = await request(app).get(`${path}${query}`);
+            expect(res.status, query).to.equal(400);
+          }
+        } finally {
+          globalThis.__TEST_DYNAMO_DOC_CLIENT = saved;
+        }
+        expect(calls).to.deep.equal([]);
+      });
+    }
+
+    it('a valid source works on any path, without loading the path document', async () => {
+      for (const path of ['/v1/metadata/links/getLinked', '/v1/metadata/no-such-doc/getLinked']) {
+        const res = await request(app).get(`${path}?source=1:e_Some_Event`);
+        expect(res.status, path).to.equal(200);
+        expect(res.body).to.have.keys(['map', 'media']);
+      }
+    });
+  });
+
   describe('# parameter functions', () => {
     it('clamps sizes instead of refusing them', () => {
       expect(markerListParams({ limit: '50000' }).length).to.equal(MAX_LIST_LENGTH);
@@ -162,28 +189,58 @@ describe('## Public list reads check their parameters', () => {
   });
 
   describe('# markers read cap', () => {
-    it('stops reading the type/year index after MAX_QUERY_ITEMS items in one request', async () => {
-      const { MAX_QUERY_ITEMS } = await import('../../models/dynamo/marker.dynamo.js');
-      const Marker = (await import('../../models/marker.model.js')).default;
-      let queries = 0;
-      const saved = globalThis.__TEST_DYNAMO_DOC_CLIENT;
-      // Every page holds 1000 items and claims there is another.
-      globalThis.__TEST_DYNAMO_DOC_CLIENT = {
-        send: async () => {
-          queries += 1;
-          const Items = Array.from({ length: 1000 }, (_, i) => ({ _id: `m${queries}_${i}`, name: 'x', type: 'c', year: 1 }));
-          return { Items, LastEvaluatedKey: { _id: `m${queries}` } };
+    const ALL_TYPES = ['a', 'at', 'e', 'm', 'op', 'p', 'r', 's', 'c', 'ca', 'w'];
+
+    // A fake index: `perType` items per type, served in pages of at most the
+    // request's Limit (DynamoDB returns at most Limit items for a key condition).
+    function fakeIndex(perType) {
+      const stats = { read: 0, queries: 0, maxLimit: 0 };
+      const client = {
+        send: async (command) => {
+          const { Limit, ExclusiveStartKey, ExpressionAttributeValues } = command.input;
+          stats.queries += 1;
+          stats.maxLimit = Math.max(stats.maxLimit, Limit);
+          const type = ExpressionAttributeValues[':t'];
+          const from = ExclusiveStartKey ? ExclusiveStartKey.n : 0;
+          const n = Math.min(Limit, perType - from);
+          stats.read += n;
+          const Items = Array.from({ length: n }, (_, i) => ({ _id: `${type}${from + i}`, name: 'x', type, year: 1 }));
+          return { Items, LastEvaluatedKey: from + n < perType ? { n: from + n } : undefined };
         }
       };
-      try {
-        const markers = await Marker.list({ typeArray: ['a', 'b', 'c'], year: -5000, end: 2100, length: 10 });
-        expect(markers).to.have.length(10);
-        // Three parallel queries share the budget; each may read one page past it.
-        expect(queries * 1000).to.be.at.most(MAX_QUERY_ITEMS + 3 * 1000);
-        expect(queries * 1000).to.be.at.least(MAX_QUERY_ITEMS);
-      } finally {
-        globalThis.__TEST_DYNAMO_DOC_CLIENT = saved;
-      }
+      return { client, stats };
+    }
+
+    async function withClient(client, fn) {
+      const saved = globalThis.__TEST_DYNAMO_DOC_CLIENT;
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = client;
+      try { return await fn(); } finally { globalThis.__TEST_DYNAMO_DOC_CLIENT = saved; }
+    }
+
+    it('reads at most MAX_QUERY_ITEMS in one request, across all eleven types in parallel', async () => {
+      const { MAX_QUERY_ITEMS, QUERY_PAGE_ITEMS } = await import('../../models/dynamo/marker.dynamo.js');
+      const Marker = (await import('../../models/marker.model.js')).default;
+      const { client, stats } = fakeIndex(1000000);
+      const markers = await withClient(client, () => Marker.list({ typeArray: ALL_TYPES, year: -5000, end: 2100, length: 10 }));
+      expect(markers).to.have.length(10);
+      expect(stats.read).to.equal(MAX_QUERY_ITEMS);
+      expect(stats.maxLimit).to.be.at.most(QUERY_PAGE_ITEMS);
+    });
+
+    it('still returns every type of an ordinary year request', async () => {
+      const Marker = (await import('../../models/marker.model.js')).default;
+      const { client, stats } = fakeIndex(40);
+      const markers = await withClient(client, () => Marker.list({ typeArray: ALL_TYPES, year: 1066, length: 2000 }));
+      expect(markers).to.have.length(ALL_TYPES.length * 40);
+      expect(new Set(markers.map(m => m.type))).to.have.property('size', ALL_TYPES.length);
+      expect(stats.queries).to.equal(ALL_TYPES.length);
+    });
+
+    it('reads all 4,663 cities, as chronas.org asks for them', async () => {
+      const Marker = (await import('../../models/marker.model.js')).default;
+      const { client } = fakeIndex(4663);
+      const markers = await withClient(client, () => Marker.list({ typeArray: ['c'], year: -5000, end: 2100, length: 10000 }));
+      expect(markers).to.have.length(4663);
     });
   });
 

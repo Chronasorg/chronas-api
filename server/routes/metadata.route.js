@@ -52,12 +52,18 @@ router.route('/:metadataId/single')
     revisionCtrl.addUpdateSingleRevision
   );
 
-router.route('/:metadataId/getLinked')
-  .all(metadataCtrl.defineEntity)
-  /** PUT /v1/metadata/:metadataId - Update metadata */
-  .get(
-    metadataCtrl.getLinked
-  );
+/**
+ * GET /v1/metadata/:id/getLinked - Linked markers and media of `source`.
+ * Not :metadataId, so the param loader doesn't read the document first;
+ * `source` is checked before anything is read (read-params.js).
+ */
+router.get(
+  '/:linksDocId/getLinked',
+  metadataCtrl.defineEntity,
+  metadataCtrl.checkLinkedSource,
+  metadataCtrl.loadForLinked,
+  metadataCtrl.getLinked
+);
 
 router.route('/:metadataId/addLink')
   .all(metadataCtrl.defineEntity)
