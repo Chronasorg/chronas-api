@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
 import jwt from 'jsonwebtoken';
 
-import { setupDynamoLocal } from '../helpers/dynamodb-local.js';
+import { setupDynamoLocal, seedTable } from '../helpers/dynamodb-local.js';
 
 /**
  * web-server.js, the Lambda Web Function entry, started as its own process the
@@ -360,6 +360,8 @@ describe('## index.js with JWT_SECRET_PARAMETER (Parameter Store)', function () 
 
   before(async () => {
     await setupDynamoLocal();
+    // The admin that asAdminProbe signs for; requireAdmin reads the account.
+    await seedTable('chronas-users', [{ _id: 'probe@example.org', email: 'probe@example.org', username: 'probe', privilege: 5 }]);
     dynamoEnv = { DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT };
   });
 
@@ -433,6 +435,8 @@ describe('## web-server.js startup failures: the same for Parameter Store and Se
 
   before(async () => {
     await setupDynamoLocal();
+    // The admin that asAdminProbe signs for; requireAdmin reads the account.
+    await seedTable('chronas-users', [{ _id: 'probe@example.org', email: 'probe@example.org', username: 'probe', privilege: 5 }]);
     dynamoEnv = { DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT };
   });
 

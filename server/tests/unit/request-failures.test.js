@@ -26,6 +26,16 @@ function fakeDocClient(handle) {
   return { send: async command => handle(command.constructor.name, command.input) };
 }
 
+// requireAdmin reads the caller's account; this one answers it as an admin
+// and passes every other request to the fake it wraps.
+function asAdmin(client) {
+  return {
+    send: async command => (command.input.TableName === 'chronas-users'
+      ? { Item: { _id: 'admin@chronas.org', email: 'admin@chronas.org', username: 'admin', privilege: 5 } }
+      : client.send(command))
+  };
+}
+
 // Collects console.error calls and unhandled rejections during a test.
 function captureFailures() {
   const captured = { errors: [], rejections: [] };
@@ -180,8 +190,19 @@ describe('## Request failures', () => {
       expect(captured.rejections).to.have.length(0);
     });
 
+    it('a write without an admin token reads nothing from DynamoDB', async () => {
+      const calls = [];
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = fakeDocClient((name, input) => { calls.push(input.TableName); return {}; });
+      const NOBODY = jwt.sign({ id: 'nobody@example.com', username: 'nobody', privilege: 1 }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
+      for (const [method, path] of [['put', '/v1/areas/1000'], ['delete', '/v1/markers/e_Some_Marker'], ['put', '/v1/metadata/religion'], ['put', '/v1/metadata/religion/single'], ['post', '/v1/statistics/refresh']]) {
+        expect((await request(app)[method](path).send({})).status, `${method} ${path}`).to.equal(401);
+        expect((await request(app)[method](path).set('Authorization', `Bearer ${NOBODY}`).send({})).status, `${method} ${path}`).to.equal(401);
+      }
+      expect(calls).to.deep.equal([]);
+    });
+
     it('PUT /v1/areas rejects a body without a provinces array', async () => {
-      globalThis.__TEST_DYNAMO_DOC_CLIENT = fakeDocClient(() => ({ Item: { _id: '1000', year: 1000, data: { Kiev: ['A', 'b', 'c', 'D', 1] } } }));
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = asAdmin(fakeDocClient(() => ({ Item: { _id: '1000', year: 1000, data: { Kiev: ['A', 'b', 'c', 'D', 1] } } })));
       for (const provinces of [undefined, 'Kiev', [1]]) {
         const res = await request(app).put('/v1/areas').set('Authorization', `Bearer ${ADMIN}`)
           .send({ start: 1000, end: 1001, provinces, religion: 'orthodox' })
@@ -193,7 +214,7 @@ describe('## Request failures', () => {
     });
 
     it('PUT /v1/areas: a failing year read answers 500 without an unhandled rejection', async () => {
-      globalThis.__TEST_DYNAMO_DOC_CLIENT = throttled();
+      globalThis.__TEST_DYNAMO_DOC_CLIENT = asAdmin(throttled());
       await request(app).put('/v1/areas').set('Authorization', `Bearer ${ADMIN}`)
         .send({ start: 1000, end: 1001, provinces: ['Kiev'], religion: 'orthodox' })
         .expect(500);

@@ -4,7 +4,7 @@ import httpStatus from 'http-status';
 import APIError from '../helpers/APIError.js';
 import { config } from '../../config/config.js';
 import User from '../models/user.model.js';
-import { TOKEN_LIFETIME } from '../helpers/require-auth.js';
+import { TOKEN_LIFETIME, tokenVersionOf } from '../helpers/require-auth.js';
 
 function displayName(user) {
   return user.username || (typeof user.name === 'string' ? user.name : (((user || {}).name || {}).first));
@@ -18,7 +18,8 @@ function tokenClaims(user) {
     score: user.karma,
     lastUpdated: user.lastUpdated || user.lastLogin,
     privilege: user.privilege ? user.privilege : 1,
-    subscription: user.subscription ? user.subscription : '-1'
+    subscription: user.subscription ? user.subscription : '-1',
+    tv: tokenVersionOf(user)
   };
 }
 

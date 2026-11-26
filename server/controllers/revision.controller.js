@@ -1,11 +1,11 @@
 import httpStatus from 'http-status';
 
+import APIError from '../helpers/APIError.js';
 import passError from '../helpers/pass-error.js';
 import Revision from '../models/revision.model.js';
 import Area from '../models/area.model.js';
 import Marker from '../models/marker.model.js';
 import Metadata from '../models/metadata.model.js';
-import { cache, config, initItemsAndLinksToRefresh } from '../../config/config.js';
 
 import areaCtrl from './area.controller.js';
 import userCtrl from './user.controller.js';
@@ -15,49 +15,19 @@ import metadataCtrl from './metadata.controller.js';
 /**
  * Load revision and append to req.
  */
+/**
+ * Load one revision for GET /v1/revisions/:revisionId (admins only). A
+ * missing revision is a 404; throttling or an outage is a 5xx.
+ */
 function load(req, res, next, id) {
-  const resourceCollection = {
-    areas: { id: 'year', model: Area, controller: areaCtrl },
-    markers: { id: 'wiki', model: Marker, controller: markerCtrl },
-    metadata: { id: '_id', model: Metadata, controller: metadataCtrl }
-  };
-
   Revision.findById(id)
     .then((revision) => {
+      if (!revision) return next(new APIError('Revision not found', httpStatus.NOT_FOUND, true));
       req.revision = revision;
-      // loadEntity
-      const { resource } = revision;
-      const { entityId } = revision;
-
-      if (entityId === 'MANY') {
-        next();
-      } else {
-        resourceCollection[resource].model.findById(entityId)
-          .then((entity) => {
-            if (resource === 'metadata' && initItemsAndLinksToRefresh.includes(entityId)) {
-              if (id === 'links') {
-                cache.del('links');
-              } else {
-                cache.del('init');
-              }
-            }
-
-            req.entity = entity;
-            return next();
-          })
-          .catch((e) => {
-            // Only a missing entity is a 404; throttling or an outage is a 5xx.
-            if (e.status !== httpStatus.NOT_FOUND) return next(e);
-            return res.status(httpStatus.NOT_FOUND).json({
-              message: e.isPublic ? e.message : httpStatus[e.status],
-              stack: config.env === 'development' ? e.stack : {}
-            });
-          });
-      }
+      return next();
     })
     .catch(e => next(e));
 }
-
 
 /**
  * Get revision

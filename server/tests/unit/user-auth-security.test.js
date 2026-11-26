@@ -150,6 +150,31 @@ describe('## User and auth route security', () => {
       expect((await getMetadata('ruler')).data).to.have.property('ENG');
     });
 
+    it('a demoted or deleted admin is refused at once, before the token expires', async () => {
+      const write = () => request(app).put('/v1/metadata/ruler/single').set('Authorization', `Bearer ${ADMIN}`)
+        .send({ subEntityId: 'POW', nextBody: ['Powhatan', 'rgb(150,150,150)', 'Powhatan', ''] });
+      await seedTable('chronas-users', [{ ...(await getUser('admin@chronas.org')), privilege: 1 }]);
+      expect((await write()).status).to.equal(401);
+      await clearTable('chronas-users');
+      expect((await write()).status).to.equal(401);
+      expect((await getMetadata('ruler')).data).to.not.have.property('POW');
+    });
+
+    it('raising tokenVersion revokes the tokens issued before; a new login works', async () => {
+      const login = await request(app).post('/v1/auth/login').send({ email: 'admin@chronas.org', password: PASSWORDS.admin });
+      expect(claims(login.body.token).tv).to.equal(0);
+      const write = jwtString => request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${jwtString}`)
+        .send({ data: { ENG: ['England', 'rgb(1,2,3)', 'England', ''] } });
+
+      await seedTable('chronas-users', [{ ...(await getUser('admin@chronas.org')), tokenVersion: 1 }]);
+      expect((await write(login.body.token)).status).to.equal(401);
+      expect((await getMetadata('ruler')).data.ENG[0]).to.equal('Kingdom of England');
+
+      const again = await request(app).post('/v1/auth/login').send({ email: 'admin@chronas.org', password: PASSWORDS.admin });
+      expect(claims(again.body.token).tv).to.equal(1);
+      expect((await write(again.body.token)).status).to.equal(200);
+    });
+
     it('a token signed with another secret is refused', async () => {
       const forged = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, 'not-the-secret', { algorithm: 'HS256', expiresIn: '1h' });
       expect((await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${forged}`).send({ data: {} })).status).to.equal(401);
@@ -233,6 +258,12 @@ describe('## User and auth route security', () => {
         .send({ data: { ENG: ['England', 'rgb(1,2,3)', 'England', ''] } });
       expect(res.status).to.equal(200);
       expect((await getMetadata('ruler')).data.ENG[0]).to.equal('England');
+    });
+
+    it('an admin reading a revision that does not exist gets 404, not 500', async () => {
+      const res = await request(app).get('/v1/revisions/no-such-revision').set(auth(ADMIN));
+      expect(res.status).to.equal(404);
+      expect(res.body.message).to.equal('Revision not found');
     });
 
     it('votes answer 410 and change no score', async () => {

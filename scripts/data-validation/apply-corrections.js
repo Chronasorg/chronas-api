@@ -15,7 +15,8 @@
  *
  * NOTE: there is no automatic rollback. The Chronas API does not return new
  * revision ids in the response body, so we cannot capture them from the
- * applier. To revert, use the revisions UI.
+ * applier. Reverting through the API was retired on 2026-11-26; to undo a
+ * change, apply a corrected report or restore the items (DynamoDB PITR).
  *
  * Usage:
  *   npm run validate:apply -- --report reports/issue-136-2026-05-15.json --dry-run
@@ -140,7 +141,7 @@ async function runIssueDriven(report, opts, client) {
     .replace(/\.json$/, '.applied.json');
   fs.writeFileSync(appliedSidecar, JSON.stringify(result, null, 2));
   console.log(`  Sidecar (apply log): ${appliedSidecar}`);
-  console.log('  NOTE: no automatic rollback. To revert, use the revisions UI.');
+  console.log('  NOTE: no automatic rollback. To undo, apply a corrected report or restore from DynamoDB PITR.');
   console.log('  NOTE: the API invalidates its CloudFront copies about 15 s after the first write, then at');
   console.log('        most every 2 minutes while writes continue; CloudFront needs another 10-100 s.');
   console.log('        An API environment that cached a year or metadata list before the write can serve');

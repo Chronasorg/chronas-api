@@ -77,7 +77,7 @@ describe('## Edge invalidation: write routes mark what they change', function ()
     await clearTable('chronas-revisions');
     await clearTable('chronas-users');
     await seedTable('chronas-users', ['admin', 'editor'].map(username => ({
-      _id: `${username}@chronas.org`, email: `${username}@chronas.org`, username, privilege: 1
+      _id: `${username}@chronas.org`, email: `${username}@chronas.org`, username, privilege: 5
     })));
     rec.marks.length = 0;
   });

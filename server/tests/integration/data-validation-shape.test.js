@@ -80,6 +80,8 @@ after(async () => {
 
 beforeEach(async function () {
   this.timeout(15000);
+  // The admin the token signs for; requireAdmin reads the account.
+  await seedTable('chronas-users', [{ _id: 'curator@example.com', email: 'curator@example.com', username: 'curator', privilege: 5 }]);
   await clearTable(TABLE);
   await seedTable(TABLE, [
     {
