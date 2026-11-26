@@ -24,7 +24,12 @@
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.token).to.not.be.empty;",
                   "    pm.expect(jsonData.username).to.not.be.empty;",
-                  "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/);"
+                  "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+\\.[A-Za-z0-9\\-_]+$/);",
+                  "pm.test('Token expires within 12 hours', function () {",
+                  "    var payload = JSON.parse(require('atob')(pm.response.json().token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "    pm.expect(payload.exp, 'exp claim').to.be.a('number');",
+                  "    pm.expect(payload.exp - payload.iat).to.be.at.most(12 * 60 * 60);",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -57,6 +62,93 @@
                 "v1",
                 "auth",
                 "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Signup (retired)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"Signup has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"postman-signup@example.com\", \"password\": \"x\", \"username\": \"x\"}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Token refresh (retired)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"Token refresh has been retired. Log in again.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "auth",
+                "refresh"
               ]
             }
           }
@@ -771,14 +863,18 @@
           }
         },
         {
-          "name": "Upvote Metadata",
+          "name": "Upvote Metadata (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"Voting has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -808,14 +904,18 @@
           }
         },
         {
-          "name": "Downvote Metadata",
+          "name": "Downvote Metadata (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"Voting has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1543,25 +1643,21 @@
       ]
     },
     {
-      "name": "User Management",
+      "name": "Users (retired - 410 Gone)",
       "item": [
         {
-          "name": "Get User by Email",
+          "name": "Get User by Email (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
                   "});",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property(\"email\");",
-                  "    pm.expect(jsonData).to.have.property(\"username\");",
-                  "    pm.expect(jsonData.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
-                  "    pm.expect(jsonData.email).to.equal(\"postman@aui.de\");",
-                  "pm.test(\"Profile has no password field\", function () {",
-                  "    pm.expect(pm.response.json()).to.not.have.property(\"password\");",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The users API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1590,54 +1686,18 @@
           }
         },
         {
-          "name": "Profile re-read without a token is refused",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "pm.test('Not served from an edge cache', function () {",
-                  "    pm.expect(pm.response.headers.get('X-Cache') || '').to.not.match(/^Hit/i);",
-                  "});",
-                  "pm.test('No profile data is returned', function () {",
-                  "    pm.expect(pm.response.text()).to.not.include('postman@aui.de');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/v1/users/postman@aui.de",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "users",
-                "postman@aui.de"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "Remove leftover test user",
+          "name": "Highscore (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Leftover test user removed or absent\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The users API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1645,7 +1705,7 @@
             }
           ],
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -1653,208 +1713,37 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/users/testUser@test.de",
+              "raw": "{{baseUrl}}/v1/users/highscore?top=-1",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "users",
-                "testUser@test.de"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create User",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "pm.collectionVariables.set(\"testUserPassword\", \"pw-\" + Date.now() + \"-\" + Math.random().toString(36).slice(2));",
-                  "pm.collectionVariables.set(\"testUserToken\", \"none\");"
-                ],
-                "type": "text/javascript"
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Signup succeeds\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "if (pm.response.code === 200) {",
-                  "    pm.collectionVariables.set(\"testUserToken\", pm.response.json().token);",
-                  "}",
-                  "pm.test(\"Signup returns a token\", function () {",
-                  "    pm.expect(pm.collectionVariables.get(\"testUserToken\")).to.not.equal(\"none\");",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"testUser@test.de\",\n  \"password\": \"{{testUserPassword}}\",\n  \"username\": \"testUser\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/v1/auth/signup",
-              "host": [
-                "{{baseUrl}}"
+                "highscore"
               ],
-              "path": [
-                "v1",
-                "auth",
-                "signup"
+              "query": [
+                {
+                  "key": "top",
+                  "value": "-1"
+                }
               ]
             }
           }
         },
         {
-          "name": "Create User via /v1/users is refused",
+          "name": "Update User (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"The open create route is gone\", function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"smoke-refused@test.de\",\n  \"password\": \"x\",\n  \"username\": \"smoke-refused\",\n  \"privilege\": 5,\n  \"signup\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/v1/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Signup with privilege is rejected",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 400\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"smoke-refused@test.de\",\n  \"password\": \"x-123456\",\n  \"username\": \"smoke-refused\",\n  \"privilege\": 5\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/v1/auth/signup",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "auth",
-                "signup"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Another user's profile is refused",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Ran with a real test-user token\", function () {",
-                  "    pm.expect(pm.collectionVariables.get(\"testUserToken\")).to.not.equal(\"none\");",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
                   "});",
-                  "pm.test(\"Status code is 401\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "pm.test(\"No profile data is returned\", function () {",
-                  "    pm.expect(pm.response.text()).to.not.include(\"postman@aui.de\");",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{testUserToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/v1/users/postman@aui.de",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "v1",
-                "users",
-                "postman@aui.de"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Update User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Response contains valid user\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('email');",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The users API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1865,44 +1754,44 @@
             "method": "PUT",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"updatedTestUser\"\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/v1/users/testUser@test.de",
+              "raw": "{{baseUrl}}/v1/users/postman@aui.de",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
                 "users",
-                "testUser@test.de"
+                "postman@aui.de"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"x\"}"
             }
           }
         },
         {
-          "name": "Delete User",
+          "name": "Create User via /v1/users (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
                   "});",
-                  "pm.test(\"Response contains valid user\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('email');",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The users API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -1910,23 +1799,29 @@
             }
           ],
           "request": {
-            "method": "DELETE",
+            "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/users/testUser@test.de",
+              "raw": "{{baseUrl}}/v1/users",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "v1",
-                "users",
-                "testUser@test.de"
+                "users"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"x@example.com\", \"password\": \"x\"}"
+            },
+            "auth": {
+              "type": "noauth"
             }
           }
         }
@@ -2032,24 +1927,22 @@
       ]
     },
     {
-      "name": "Flags",
+      "name": "Flags (retired - 410 Gone)",
       "item": [
         {
-          "name": "Get Flags List",
+          "name": "Get Flags List (retired)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200 or 401\", function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
                   "});",
-                  "if (pm.response.code === 200) {",
-                  "    pm.test(\"Response contains flags data\", function () {",
-                  "        var jsonData = pm.response.json();",
-                  "        pm.expect(jsonData).to.be.an('array');",
-                  "    });",
-                  "}"
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The flags API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -2057,12 +1950,7 @@
           ],
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/v1/flags",
               "host": [
@@ -2072,6 +1960,47 @@
                 "v1",
                 "flags"
               ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Delete Flag (retired)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 410 Gone', function () {",
+                  "    pm.response.to.have.status(410);",
+                  "});",
+                  "pm.test('Retired message, no data', function () {",
+                  "    pm.expect(pm.response.json().message).to.equal(\"The flags API has been retired.\");",
+                  "    pm.expect(pm.response.text()).to.not.include('@');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/flags/postman-probe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "flags",
+                "postman-probe"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
             }
           }
         }

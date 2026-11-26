@@ -88,14 +88,5 @@ export default {
       email: Joi.string().required(),
       password: Joi.string().required()
     })
-  },
-
-  // POST /v1/auth/signup
-  signup: {
-    body: Joi.object({
-      email: Joi.string().email().required(),
-      password: Joi.string().required(),
-      username: Joi.string()
-    })
   }
 };

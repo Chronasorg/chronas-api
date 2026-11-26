@@ -37,7 +37,7 @@ async function snapshot(table) {
 const TOKEN = jwt.sign(
   { id: 'curator@example.com', username: 'curator', privilege: 5 },
   process.env.JWT_SECRET || 'test-secret-key',
-  { algorithm: 'HS256' }
+  { algorithm: 'HS256', expiresIn: '1h' }
 );
 
 let app;

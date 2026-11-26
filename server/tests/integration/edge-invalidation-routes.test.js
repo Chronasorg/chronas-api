@@ -16,10 +16,10 @@ import { metadataCache } from '../../models/dynamo/metadata.dynamo.js';
  */
 
 const SECRET = process.env.JWT_SECRET || 'test-secret-key';
-const sign = (username, privilege) => jwt.sign({ id: `${username}@chronas.org`, username, privilege }, SECRET, { algorithm: 'HS256' });
+const sign = (username, privilege) => jwt.sign({ id: `${username}@chronas.org`, username, privilege }, SECRET, { algorithm: 'HS256', expiresIn: '1h' });
 const ADMIN = sign('admin', 5);
-const EDITOR = sign('editor', 3);
-const VOTER = sign('voter', 1);
+// Since 2026-11-26 only admins write; 'editor' is a second admin account.
+const EDITOR = sign('editor', 5);
 
 const KIEV = ['RUS', 'slavic', 'orthodox', 'Kiev', 1000];
 const areaYears = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => ({
@@ -76,7 +76,7 @@ describe('## Edge invalidation: write routes mark what they change', function ()
     await clearTable('chronas-links');
     await clearTable('chronas-revisions');
     await clearTable('chronas-users');
-    await seedTable('chronas-users', ['admin', 'editor', 'voter'].map(username => ({
+    await seedTable('chronas-users', ['admin', 'editor'].map(username => ({
       _id: `${username}@chronas.org`, email: `${username}@chronas.org`, username, privilege: 1
     })));
     rec.marks.length = 0;
@@ -245,58 +245,28 @@ describe('## Edge invalidation: write routes mark what they change', function ()
       expect(await marked({ expect: ['metadata'] })).to.deep.equal(['metadata']);
     });
 
-    for (const vote of ['upvote', 'downvote']) {
-      it(`PUT /v1/metadata/:metadataId/${vote} (any account) → metadata, deferred`, async () => {
-        const res = await request(app).put(`/v1/metadata/e_Some_Event/${vote}`).set('Authorization', `Bearer ${VOTER}`);
-        expect(res.status).to.equal(200);
-        expect(await marked({ expect: ['metadata'], deferred: true })).to.deep.equal(['metadata']);
-        expect(await marked()).to.deep.equal([]);
-      });
-    }
+    it('votes are retired: 410, and nothing is marked', async () => {
+      for (const vote of ['upvote', 'downvote']) {
+        const res = await request(app).put(`/v1/metadata/e_Some_Event/${vote}`).set('Authorization', `Bearer ${ADMIN}`);
+        expect(res.status).to.equal(410);
+      }
+      expect(await marked({ deferred: true })).to.deep.equal([]);
+      expect(await marked()).to.deep.equal([]);
+    });
   });
 
   describe('# revisions', () => {
-    it('PUT /v1/revisions/:revisionId (revert an area range) → areas', async () => {
-      await seedTable('chronas-revisions', [{
-        _id: 'rev-areas', entityId: 'MANY', type: 'UPDATE', resource: 'areas', user: 'editor', reverted: false,
-        prevBody: JSON.stringify({ '1000-1001': { Kiev: [undefined, undefined, 'pagan'] } }),
-        nextBody: JSON.stringify({ '1000-1001': { Kiev: [undefined, undefined, 'orthodox'] } }),
-        timestamp: new Date().toISOString()
-      }]);
-      const res = await request(app).put('/v1/revisions/rev-areas').set('Authorization', `Bearer ${EDITOR}`).send({});
-      expect(res.status).to.equal(200);
-      expect(await marked({ expect: ['areas'] })).to.deep.equal(['areas']);
-    });
-
-    it('PUT /v1/revisions/:revisionId (revert a marker creation) → markers, metadata', async () => {
+    it('revision edits (revert, delete) are retired: 410, nothing is marked, the revision stays', async () => {
       await seedTable('chronas-revisions', [{
         _id: 'rev-marker', entityId: 'Battle_of_Hastings', type: 'CREATE', resource: 'markers', user: 'editor', reverted: false,
         nextBody: JSON.stringify({ wiki: 'Battle_of_Hastings' }), timestamp: new Date().toISOString()
       }]);
-      const res = await request(app).put('/v1/revisions/rev-marker').set('Authorization', `Bearer ${EDITOR}`).send({});
-      expect(res.status).to.equal(200);
-      expect(await marked({ expect: ['markers', 'metadata'] })).to.deep.equal(['markers', 'metadata']);
-    });
-
-    it('PUT /v1/revisions/:revisionId (revert a dictionary entry) → metadata', async () => {
-      await seedTable('chronas-revisions', [{
-        _id: 'rev-single', entityId: 'culture', subEntityId: 'slavic', type: 'UPDATE', resource: 'metadata', user: 'editor', reverted: false,
-        prevBody: JSON.stringify(['Slavs', 'rgb(0,200,0)', 'Slavs', '']), nextBody: JSON.stringify(['Slavic', 'rgb(0,255,0)', 'Slavs', '']),
-        timestamp: new Date().toISOString()
-      }]);
-      const res = await request(app).put('/v1/revisions/rev-single').set('Authorization', `Bearer ${EDITOR}`).send({});
-      expect(res.status).to.equal(200);
-      expect(await marked({ expect: ['metadata'] })).to.deep.equal(['metadata']);
-    });
-
-    it('DELETE /v1/revisions/:revisionId deletes only the revision and marks nothing', async () => {
-      await seedTable('chronas-revisions', [{
-        _id: 'rev-delete', entityId: 'Battle_of_Hastings', type: 'CREATE', resource: 'markers', user: 'editor', reverted: false,
-        nextBody: JSON.stringify({ wiki: 'Battle_of_Hastings' }), timestamp: new Date().toISOString()
-      }]);
-      const res = await request(app).delete('/v1/revisions/rev-delete').set('Authorization', `Bearer ${ADMIN}`);
-      expect(res.status).to.equal(200);
+      expect((await request(app).put('/v1/revisions/rev-marker').set('Authorization', `Bearer ${ADMIN}`).send({})).status).to.equal(410);
+      expect((await request(app).delete('/v1/revisions/rev-marker').set('Authorization', `Bearer ${ADMIN}`)).status).to.equal(410);
       expect(await marked()).to.deep.equal([]);
+      const read = await request(app).get('/v1/revisions/rev-marker').set('Authorization', `Bearer ${ADMIN}`);
+      expect(read.status).to.equal(200);
+      expect(read.body.reverted).to.equal(false);
     });
   });
 });

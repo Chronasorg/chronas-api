@@ -52,7 +52,6 @@
     "joi": "^18.2.3",
     "jsonwebtoken": "^9.0.0",
     "memory-cache": "0.2.0",
-    "moniker": "0.1.2",
     "morgan": "^1.11.0",
     "winston": "^3.8.0"
   },

@@ -1,11 +1,9 @@
 import express from 'express';
-import { expressjwt as expressJwt } from 'express-jwt';
 import httpStatus from 'http-status';
 
 import areaCtrl from '../controllers/area.controller.js';
 import revisionCtrl from '../controllers/revision.controller.js';
-import { config } from '../../config/config.js';
-import checkPrivilege from '../helpers/privileges.js';
+import { requireAdmin } from '../helpers/require-auth.js';
 
 const router = express.Router();
 
@@ -16,15 +14,13 @@ router.route('/')
 
   /** PUT /v1/areas/ - Update area */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
+    requireAdmin,
     areaCtrl.updateMany,
     revisionCtrl.addUpdateManyRevision)
 
   /** POST /v1/areas - Create new area */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(5),
+    requireAdmin,
     // revisionCtrl.addCreateRevision,
     // validate(paramValidation.createArea),
     areaCtrl.create);
@@ -33,8 +29,7 @@ router.route('/replace')
   .all(areaCtrl.defineEntity)
   /** PUT /v1/areas/replace - Replace a ruler, culture or religion across a year range */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
+    requireAdmin,
     areaCtrl.replaceAll,
     revisionCtrl.addUpdateManyRevision);
 
@@ -56,15 +51,13 @@ router.route('/:areaId')
 
   /** PUT /v1/areas/:areaId - Update area */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
+    requireAdmin,
     revisionCtrl.addUpdateRevision,
     areaCtrl.update)
 
   /** DELETE /v1/areas/:areaId - Delete area */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(5),
+    requireAdmin,
     revisionCtrl.addDeleteRevision,
     areaCtrl.remove);
 

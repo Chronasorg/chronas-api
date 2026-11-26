@@ -88,6 +88,17 @@ async function startFakeParameterStore(respond) {
   };
 }
 
+// PUT /v1/areas as an admin, without provinces: answers 400 once the token
+// verified (the body check comes after it) and 401 if the signature did not.
+const asAdminProbe = secret => ({
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${jwt.sign({ id: 'probe@example.org', username: 'probe', privilege: 5 }, secret, { algorithm: 'HS256', expiresIn: '1h' })}`
+  },
+  body: '{}'
+});
+
 const parameterValue = value => () => ({
   status: 200,
   body: { Parameter: { Name: '/chronas/jwt-secret', Type: 'SecureString', Value: value, Version: 1, DataType: 'text' } }
@@ -365,15 +376,13 @@ describe('## index.js with JWT_SECRET_PARAMETER (Parameter Store)', function () 
         entry: 'index.js',
         nodeArgs: ['--no-experimental-require-module', '--no-experimental-detect-module']
       });
-      // A user may read their own profile: 404 means the token verified and the
-      // (missing) user was looked up; 401 means the signature did not verify.
-      const probe = 'probe@example.org';
-      const asProbe = secret => ({ headers: { Authorization: `Bearer ${jwt.sign({ id: probe, privilege: 1 }, secret, { algorithm: 'HS256' })}` } });
+      // An admin PUT /v1/areas without provinces: 400 means the token verified
+      // and the body was checked; 401 means the signature did not verify.
       const [withParameter, withEnvironment] = await Promise.all([
-        fetch(`${server.base}/v1/users/${probe}`, asProbe('from-parameter-store')),
-        fetch(`${server.base}/v1/users/${probe}`, asProbe('from-environment'))
+        fetch(`${server.base}/v1/areas`, asAdminProbe('from-parameter-store')),
+        fetch(`${server.base}/v1/areas`, asAdminProbe('from-environment'))
       ]);
-      expect([withParameter.status, withEnvironment.status]).to.deep.equal([404, 401]);
+      expect([withParameter.status, withEnvironment.status]).to.deep.equal([400, 401]);
       expect(store.requests).to.deep.equal([
         { target: 'AmazonSSM.GetParameter', body: { Name: '/chronas/jwt-secret', WithDecryption: true } }
       ]);
@@ -479,13 +488,11 @@ describe('## web-server.js startup failures: the same for Parameter Store and Se
         expect(startupFailures()).to.deep.equal([source.line]);
 
         // Tokens verify with the stored secret only, never with the decoy.
-        const probe = 'probe@example.org';
-        const asProbe = secret => ({ headers: { Authorization: `Bearer ${jwt.sign({ id: probe, privilege: 1 }, secret, { algorithm: 'HS256' })}` } });
         const [withStored, withEnvironment] = await Promise.all([
-          fetch(`${server.base}/v1/users/${probe}`, asProbe('from-the-store')),
-          fetch(`${server.base}/v1/users/${probe}`, asProbe('from-environment'))
+          fetch(`${server.base}/v1/areas`, asAdminProbe('from-the-store')),
+          fetch(`${server.base}/v1/areas`, asAdminProbe('from-environment'))
         ]);
-        expect([withStored.status, withEnvironment.status]).to.deep.equal([404, 401]);
+        expect([withStored.status, withEnvironment.status]).to.deep.equal([400, 401]);
       } finally {
         await store.close();
       }

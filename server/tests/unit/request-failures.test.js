@@ -16,7 +16,7 @@ import { areaCache } from '../../models/dynamo/area.dynamo.js';
  * a fake DynamoDB client, so they don't touch the shared dynalite tables.
  */
 
-const ADMIN = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, process.env.JWT_SECRET, { algorithm: 'HS256' });
+const ADMIN = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
 
 function awsError(name, message = name) {
   return Object.assign(new Error(message), { name, $fault: 'client', $metadata: { httpStatusCode: 400, requestId: 'aws-req-1' } });
