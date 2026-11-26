@@ -6,6 +6,7 @@ import { config } from '../../config/config.js';
 import Metadata from '../models/metadata.model.js';
 import { publicCacheControl } from '../helpers/edge-cache.js';
 import * as linksStore from '../models/dynamo/links-store.js';
+import { markerListParams } from '../helpers/read-params.js';
 
 const useDynamoLinks = config.dynamodb?.useMetadata;
 
@@ -175,22 +176,15 @@ function update(req, res, next, fromRevision = false) {
  * @returns {Marker[]}
  */
 function list(req, res, next) {
-  const { offset = 0, sort = 'name', order = 'asc', filter = '' } = req.query;
-  // Frontend sends "limit", legacy clients may send "count"
-  const count = req.query.limit || req.query.count || 2000;
-  const length = +count;
-  const typeArray = req.query.types || req.query.type || false;
-  const wikiArray = req.query.wikis || false;
-  const format = req.query.format || false;
-  const year = isNaN(req.query.year) ? false : +req.query.year;
-  const end = isNaN(req.query.end) ? false : +req.query.end;
-  const delta = +req.query.delta;
-  const includeMarkers = req.query.includeMarkers !== 'false';
-  const search = req.query.search || false;
-  const both = req.query.both || false;
-  const start = offset;
+  let params;
+  try {
+    params = markerListParams(req.query);
+  } catch (e) {
+    return next(e);
+  }
+  const { start, length, sort, order, filter, typeArray, wikiArray, format, year, end, delta, includeMarkers, search, both } = params;
   const finalDelta = delta ? +delta : (year > 1200) ? 10 : (year > 1000) ? 20 : (year > 500) ? 30 : (year > -200) ? 20 : (year > -500) ? 50 : (year > -1000) ? 100 : (year > -1200) ? 150 : (year > -1500) ? 200 : 10;
-  const migrationDelta = req.query.migration ? ((year > 1950) ? 1000 : (year > 1860) ? 50 : (year > 1820) ? 30 : (year > 1700) ? 20 : (year > 1500) ? 30 : (year > 1400) ? 50 : (year > 1200) ? 100 : (year > 1000) ? 250 : (year > 500) ? 300 : (year > -200) ? 200 : (year > -500) ? 250 : (year > -1000) ? 300 : (year > -1200) ? 400 : (year > -1500) ? 500 : 10) : false;
+  const migrationDelta = params.migration ? ((year > 1950) ? 1000 : (year > 1860) ? 50 : (year > 1820) ? 30 : (year > 1700) ? 20 : (year > 1500) ? 30 : (year > 1400) ? 50 : (year > 1200) ? 100 : (year > 1000) ? 250 : (year > 500) ? 300 : (year > -200) ? 200 : (year > -500) ? 250 : (year > -1000) ? 300 : (year > -1200) ? 400 : (year > -1500) ? 500 : 10) : false;
 
   Marker.list({ start, migrationDelta, length, sort, order, filter, delta: finalDelta, year, includeMarkers, end, typeArray, wikiArray, search, both, format })
     .then((markers) => {
@@ -198,6 +192,7 @@ function list(req, res, next) {
       res.json(markers);
     })
     .catch(e => next(e));
+  return undefined;
 }
 
 /**

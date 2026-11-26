@@ -174,12 +174,27 @@ function normalizeArray(val) {
   return null;
 }
 
+/**
+ * Most items one list request reads from the type/year index. The largest
+ * real request (every city, year -5000 to 2100) reads about 4,700; an
+ * all-types request over thousands of years would otherwise read the whole
+ * table (pentest F4). Past the cap the result is incomplete.
+ *
+ * The budget is reserved before each page is requested and sent as the
+ * page's Limit, so the parallel queries of one request (one per type) can
+ * never read more than the cap together. Pages are at most QUERY_PAGE_ITEMS
+ * so all eleven types get a first page out of the budget.
+ */
+export const MAX_QUERY_ITEMS = 20000;
+export const QUERY_PAGE_ITEMS = 1000;
+
 async function queryByTypeAndYear(typeArray, year, delta, end) {
   const yearLo = year - delta;
   const yearHi = end !== false && end !== undefined ? end : year + delta;
   const client = getDocClient();
+  const budget = { left: MAX_QUERY_ITEMS };
 
-  const queries = typeArray.map(type => paginatedQuery(client, {
+  const queries = typeArray.map(type => paginatedQuery(client, budget, {
     TableName: TABLE,
     IndexName: 'GSI-TypeYear',
     KeyConditionExpression: '#t = :t AND #y BETWEEN :lo AND :hi',
@@ -191,21 +206,30 @@ async function queryByTypeAndYear(typeArray, year, delta, end) {
   return results.flat();
 }
 
-async function paginatedQuery(client, baseParams) {
+// `budget.left` is shared by the queries of one request. Each page reserves
+// its Limit before it is sent and gives back what it didn't use. The key
+// condition is the only condition, so DynamoDB returns at most Limit items.
+async function paginatedQuery(client, budget, baseParams) {
   const items = [];
   let next;
   do {
-    const params = next ? { ...baseParams, ExclusiveStartKey: next } : baseParams;
+    const reserved = Math.min(QUERY_PAGE_ITEMS, budget.left);
+    if (reserved <= 0) break;
+    budget.left -= reserved;
+    const params = { ...baseParams, Limit: reserved };
+    if (next) params.ExclusiveStartKey = next;
     const out = await client.send(new QueryCommand(params));
-    if (out.Items) items.push(...out.Items);
+    const got = (out.Items || []).slice(0, reserved);
+    items.push(...got);
+    budget.left += reserved - got.length;
     next = out.LastEvaluatedKey;
   } while (next);
   return items;
 }
 
+// The ids arrive decoded and without duplicates (markerListParams).
 async function batchGetByWikis(wikiArray) {
-  const ids = wikiArray.map(w => decodeURIComponent(w));
-  return batchGetByIds(ids);
+  return batchGetByIds(wikiArray);
 }
 
 async function batchGetByIds(ids) {
