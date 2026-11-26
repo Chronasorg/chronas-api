@@ -37,7 +37,7 @@ async function snapshot(table) {
 const TOKEN = jwt.sign(
   { id: 'curator@example.com', username: 'curator', privilege: 5 },
   process.env.JWT_SECRET || 'test-secret-key',
-  { algorithm: 'HS256' }
+  { algorithm: 'HS256', expiresIn: '1h' }
 );
 
 let app;
@@ -80,6 +80,8 @@ after(async () => {
 
 beforeEach(async function () {
   this.timeout(15000);
+  // The admin the token signs for; requireAdmin reads the account.
+  await seedTable('chronas-users', [{ _id: 'curator@example.com', email: 'curator@example.com', username: 'curator', privilege: 5 }]);
   await clearTable(TABLE);
   await seedTable(TABLE, [
     {

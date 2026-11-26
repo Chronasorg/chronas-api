@@ -9,15 +9,17 @@ import { setupDynamoLocal, seedTable, clearTable } from '../helpers/dynamodb-loc
 import { getDocClient } from '../../models/dynamo/dynamo-client.js';
 
 /**
- * Account and permission rules for /v1/users, /v1/auth and type-g metadata.
- * Each case below is a request an attacker could send; all must be refused.
+ * Account and permission rules for /v1/auth, the retired account APIs, and
+ * writes. Each case below is a request an attacker could send; all must be
+ * refused. Since 2026-11-26 every authenticated route is for admins only and
+ * needs a token that expires.
  */
 
 const SECRET = process.env.JWT_SECRET || 'test-secret-key';
 const PASSWORDS = { admin: 'admin-pass', alice: 'alice-pass', bob: 'bob-pass', editor: 'editor-pass' };
 
-function token(id, privilege, extra = {}) {
-  return jwt.sign({ id, username: id.split('@')[0], privilege, ...extra }, SECRET, { algorithm: 'HS256' });
+function token(id, privilege, extra = {}, options = { expiresIn: '1h' }) {
+  return jwt.sign({ id, username: id.split('@')[0], privilege, ...extra }, SECRET, { algorithm: 'HS256', ...options });
 }
 
 function claims(jwtString) {
@@ -41,6 +43,7 @@ describe('## User and auth route security', () => {
 
   const ADMIN = token('admin@chronas.org', 5);
   const ALICE = token('alice@example.com', 1);
+  const ADMIN_FOREVER = token('admin@chronas.org', 5, {}, {});
   const EDITOR = token('editor@chronas.org', 3);
 
   before(async function () {
@@ -69,164 +72,112 @@ describe('## User and auth route security', () => {
     ]);
   });
 
-  describe('account creation', () => {
-    it('POST /v1/users is gone, in any letter case or with a trailing slash', async () => {
-      for (const path of ['/v1/users', '/v1/users/', '/v1/USERS']) {
+  describe('retired account APIs', () => {
+    it('signup answers 410 and creates no account', async () => {
+      for (const path of ['/v1/auth/signup', '/v1/auth/SIGNUP', '/v1/auth/signup/']) {
         const res = await request(app).post(path)
-          .send({ username: 'evil', email: 'evil@example.com', password: 'x', privilege: 5, signup: true });
-        expect(res.status, path).to.equal(404);
+          .send({ email: 'mallory@example.com', password: 'x', username: 'mallory', privilege: 5 });
+        expect(res.status, path).to.equal(410);
         expect(res.body.token, path).to.equal(undefined);
       }
-      expect(await getUser('evil@example.com')).to.equal(undefined);
-    });
-
-    it('POST /v1/users with thirdParty never logs in as an existing user', async () => {
-      const res = await request(app).post('/v1/users')
-        .send({ username: 'x', email: 'alice@example.com', thirdParty: true });
-      expect(res.status).to.equal(404);
-      expect(res.headers.location).to.equal(undefined);
-    });
-
-    it('signup rejects privilege and thirdParty in the body', async () => {
-      const base = { email: 'mallory@example.com', password: 'pw-123456', username: 'mallory' };
-      expect((await request(app).post('/v1/auth/signup').send({ ...base, privilege: 5 })).status).to.equal(400);
-      expect((await request(app).post('/v1/auth/signup').send({ ...base, thirdParty: true })).status).to.equal(400);
       expect(await getUser('mallory@example.com')).to.equal(undefined);
     });
 
-    it('signup stores a bcrypt hash, issues a privilege-1 token, and the password logs in', async () => {
-      const signup = await request(app).post('/v1/auth/signup')
-        .send({ email: 'Carol@Example.com', password: 'carol-pass-1', username: 'carol' });
-      expect(signup.status).to.equal(200);
-      expect(claims(signup.body.token).privilege).to.equal(1);
+    it('token refresh answers 410, even for an admin token', async () => {
+      const res = await request(app).post('/v1/auth/refresh').set('Authorization', `Bearer ${ADMIN}`);
+      expect(res.status).to.equal(410);
+      expect(res.body.token).to.equal(undefined);
+    });
 
-      const stored = await getUser('carol@example.com');
-      expect(isPasswordHash(stored.password)).to.equal(true);
-      expect(stored.privilege).to.equal(1);
-      expect(stored.loginCount).to.equal(1);
-      expect(stored.subscription).to.equal('-1');
+    it('every /v1/users route answers 410 and changes nothing, even for an admin', async () => {
+      const before = await getUser('bob@example.com');
+      const admin = { Authorization: `Bearer ${ADMIN}` };
+      const calls = [
+        request(app).post('/v1/users').send({ email: 'evil@example.com', password: 'x', privilege: 5 }),
+        request(app).get('/v1/users/highscore?top=-1').set(admin),
+        request(app).get('/v1/users/sustainers').set(admin),
+        request(app).get('/v1/USERS/bob@example.com').set(admin),
+        request(app).put('/v1/users/bob@example.com').set(admin).send({ password: 'pwned' }),
+        request(app).delete('/v1/users/bob@example.com').set(admin)
+      ];
+      for (const res of await Promise.all(calls)) {
+        expect(res.status, `${res.req.method} ${res.req.path}`).to.equal(410);
+        expect(res.body).to.not.have.property('email');
+      }
+      expect(await getUser('bob@example.com')).to.deep.equal(before);
+      expect(await getUser('evil@example.com')).to.equal(undefined);
+    });
+  });
 
-      const login = await request(app).post('/v1/auth/login')
-        .send({ email: 'carol@example.com', password: 'carol-pass-1' });
-      expect(login.status).to.equal(200);
+  describe('login', () => {
+    it('issues a token that expires in 12 hours, with the stored privilege', async () => {
+      const res = await request(app).post('/v1/auth/login')
+        .send({ email: 'alice@example.com', password: PASSWORDS.alice });
+      expect(res.status).to.equal(200);
+      const { exp, iat, privilege } = claims(res.body.token);
+      expect(exp - iat).to.equal(12 * 60 * 60);
+      expect(privilege).to.equal(1);
+      expect((await getUser('alice@example.com')).loginCount).to.equal(1);
     });
 
     it('login for an account without a password looks like a wrong password', async () => {
       await new UserDynamo({ _id: 'nopass@example.com', email: 'nopass@example.com', authType: 'google' }).save();
       const noPassword = await request(app).post('/v1/auth/login').send({ email: 'nopass@example.com', password: 'guess-123' });
       const wrongPassword = await request(app).post('/v1/auth/login').send({ email: 'alice@example.com', password: 'guess-123' });
+      const noAccount = await request(app).post('/v1/auth/login').send({ email: 'nobody@example.com', password: 'guess-123' });
       expect(noPassword.status).to.equal(401);
-      expect(noPassword.status).to.equal(wrongPassword.status);
-      expect(noPassword.body.message).to.equal(wrongPassword.body.message);
-    });
-
-    it('signup refuses an email that already has an account', async () => {
-      const res = await request(app).post('/v1/auth/signup')
-        .send({ email: 'alice@example.com', password: 'other-pass', username: 'alice2' });
-      expect(res.status).to.equal(400);
-      expect(await bcrypt.compare(PASSWORDS.alice, (await getUser('alice@example.com')).password)).to.equal(true);
+      for (const res of [noPassword, noAccount]) {
+        expect(res.status).to.equal(wrongPassword.status);
+        expect(res.body.message).to.equal(wrongPassword.body.message);
+      }
     });
   });
 
-  describe('other users\' accounts', () => {
-    it('a user cannot read, change or delete another user', async () => {
-      const before = await getUser('bob@example.com');
-      const auth = { Authorization: `Bearer ${ALICE}` };
-
-      expect((await request(app).get('/v1/users/bob@example.com').set(auth)).status).to.equal(401);
-      expect((await request(app).get('/v1/USERS/BOB@example.com').set(auth)).status).to.equal(401);
-      expect((await request(app).put('/v1/users/bob@example.com').set(auth).send({ password: 'pwned' })).status).to.equal(401);
-      expect((await request(app).put('/v1/users/bob@example.com').set(auth).send({ username: 'pwned' })).status).to.equal(401);
-      expect((await request(app).delete('/v1/users/bob@example.com').set(auth)).status).to.equal(401);
-
-      expect(await getUser('bob@example.com')).to.deep.equal(before);
-    });
-
-    it('asking for an unknown email looks the same as asking for someone else', async () => {
-      const auth = { Authorization: `Bearer ${ALICE}` };
-      const known = await request(app).get('/v1/users/bob@example.com').set(auth);
-      const unknown = await request(app).get('/v1/users/nobody@example.com').set(auth);
-      expect(unknown.status).to.equal(known.status);
-    });
-
-    it('requests without a token are refused before the user is looked up', async () => {
-      expect((await request(app).get('/v1/users/bob@example.com')).status).to.equal(401);
-      expect((await request(app).get('/v1/users/nobody@example.com')).status).to.equal(401);
-    });
-  });
-
-  describe('own account', () => {
-    it('GET returns the profile without the password', async () => {
-      const res = await request(app).get('/v1/users/alice@example.com').set('Authorization', `Bearer ${ALICE}`);
-      expect(res.status).to.equal(200);
-      expect(res.body.email).to.equal('alice@example.com');
-      expect(res.body.id).to.equal('alice@example.com');
-      expect(res.body).to.not.have.property('password');
-    });
-
-    it('owners cannot grant themselves subscription, privilege, karma or a new email', async () => {
-      const res = await request(app).put('/v1/users/alice@example.com')
-        .set('Authorization', `Bearer ${ALICE}`)
-        .send({ subscription: 'patreon', patreon: 1, privilege: 5, karma: 999, email: 'admin@chronas.org', username: 'alice2' });
-      expect(res.status).to.equal(200);
-      expect(res.body).to.not.have.property('password');
-
-      const stored = await getUser('alice@example.com');
-      expect(stored.username).to.equal('alice2');
-      expect(stored.privilege).to.equal(1);
-      expect(stored.karma).to.equal(3);
-      expect(stored.email).to.equal('alice@example.com');
-      expect(stored).to.not.have.property('subscription');
-      expect(stored).to.not.have.property('patreon');
-    });
-
-    it('changing your own password needs the current one', async () => {
-      const auth = { Authorization: `Bearer ${ALICE}` };
-      const url = '/v1/users/alice@example.com';
-      expect((await request(app).put(url).set(auth).send({ password: 'new-pass-1' })).status).to.equal(401);
-      expect((await request(app).put(url).set(auth).send({ password: 'new-pass-1', currentPassword: 'wrong' })).status).to.equal(401);
-      expect((await request(app).put(url).set(auth).send({ password: 'new-pass-1', currentPassword: PASSWORDS.alice })).status).to.equal(200);
-
-      expect(isPasswordHash((await getUser('alice@example.com')).password)).to.equal(true);
-      expect((await request(app).post('/v1/auth/login').send({ email: 'alice@example.com', password: 'new-pass-1' })).status).to.equal(200);
-      expect((await request(app).post('/v1/auth/login').send({ email: 'alice@example.com', password: PASSWORDS.alice })).status).to.equal(401);
-    });
-  });
-
-  describe('admins', () => {
-    it('can change another user\'s privilege and password, and delete them', async () => {
-      const auth = { Authorization: `Bearer ${ADMIN}` };
-      const put = await request(app).put('/v1/users/bob@example.com').set(auth).send({ privilege: 3, password: 'reset-pass-1' });
-      expect(put.status).to.equal(200);
-      const stored = await getUser('bob@example.com');
-      expect(stored.privilege).to.equal(3);
-      expect(await bcrypt.compare('reset-pass-1', stored.password)).to.equal(true);
-
-      const del = await request(app).delete('/v1/users/bob@example.com').set(auth);
-      expect(del.status).to.equal(200);
-      expect(del.body).to.not.have.property('password');
-      expect(await getUser('bob@example.com')).to.equal(undefined);
-    });
-
-    it('a subscription claim alone does not make someone an admin of user accounts', async () => {
-      const subscriber = token('alice@example.com', 1, { subscription: 'patreon' });
-      const res = await request(app).put('/v1/users/bob@example.com').set('Authorization', `Bearer ${subscriber}`).send({ username: 'x' });
+  describe('tokens', () => {
+    it('a token without an expiry is refused, even an admin token', async () => {
+      const res = await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${ADMIN_FOREVER}`)
+        .send({ data: {} });
       expect(res.status).to.equal(401);
-    });
-  });
-
-  describe('token refresh', () => {
-    it('issues the privilege stored in the database, not the one in the old token', async () => {
-      const inflated = token('alice@example.com', 5, { subscription: 'patreon' });
-      const res = await request(app).post('/v1/auth/refresh').set('Authorization', `Bearer ${inflated}`);
-      expect(res.status).to.equal(200);
-      expect(claims(res.body.token).privilege).to.equal(1);
-      expect(claims(res.body.token).subscription).to.equal('-1');
+      expect(res.body.message).to.equal('Token expired, log in again.');
+      expect((await getMetadata('ruler')).data).to.have.property('ENG');
     });
 
-    it('refuses tokens of deleted users', async () => {
-      const ghost = token('ghost@example.com', 5);
-      expect((await request(app).post('/v1/auth/refresh').set('Authorization', `Bearer ${ghost}`)).status).to.equal(401);
+    it('an expired token is refused', async () => {
+      const expired = token('admin@chronas.org', 5, { exp: Math.floor(Date.now() / 1000) - 60 }, {});
+      const res = await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${expired}`)
+        .send({ data: {} });
+      expect(res.status).to.equal(401);
+      expect((await getMetadata('ruler')).data).to.have.property('ENG');
+    });
+
+    it('a demoted or deleted admin is refused at once, before the token expires', async () => {
+      const write = () => request(app).put('/v1/metadata/ruler/single').set('Authorization', `Bearer ${ADMIN}`)
+        .send({ subEntityId: 'POW', nextBody: ['Powhatan', 'rgb(150,150,150)', 'Powhatan', ''] });
+      await seedTable('chronas-users', [{ ...(await getUser('admin@chronas.org')), privilege: 1 }]);
+      expect((await write()).status).to.equal(401);
+      await clearTable('chronas-users');
+      expect((await write()).status).to.equal(401);
+      expect((await getMetadata('ruler')).data).to.not.have.property('POW');
+    });
+
+    it('raising tokenVersion revokes the tokens issued before; a new login works', async () => {
+      const login = await request(app).post('/v1/auth/login').send({ email: 'admin@chronas.org', password: PASSWORDS.admin });
+      expect(claims(login.body.token).tv).to.equal(0);
+      const write = jwtString => request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${jwtString}`)
+        .send({ data: { ENG: ['England', 'rgb(1,2,3)', 'England', ''] } });
+
+      await seedTable('chronas-users', [{ ...(await getUser('admin@chronas.org')), tokenVersion: 1 }]);
+      expect((await write(login.body.token)).status).to.equal(401);
+      expect((await getMetadata('ruler')).data.ENG[0]).to.equal('Kingdom of England');
+
+      const again = await request(app).post('/v1/auth/login').send({ email: 'admin@chronas.org', password: PASSWORDS.admin });
+      expect(claims(again.body.token).tv).to.equal(1);
+      expect((await write(again.body.token)).status).to.equal(200);
+    });
+
+    it('a token signed with another secret is refused', async () => {
+      const forged = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, 'not-the-secret', { algorithm: 'HS256', expiresIn: '1h' });
+      expect((await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${forged}`).send({ data: {} })).status).to.equal(401);
     });
   });
 
@@ -260,22 +211,35 @@ describe('## User and auth route security', () => {
     });
   });
 
-  describe('type g metadata', () => {
+  describe('writes are for admins only', () => {
     const SINGLE = { subEntityId: 'POW', nextBody: ['Powhatan', 'rgb(150,150,150)', 'Powhatan', ''] };
-    const EDITOR_AUTH = () => ({ Authorization: `Bearer ${EDITOR}` });
+    const auth = jwtString => ({ Authorization: `Bearer ${jwtString}` });
+    const SUBSCRIBER = token('alice@example.com', 1, { subscription: 'patreon' });
 
-    it('privilege 3 cannot delete or replace a type g document, even without a type in the body', async () => {
-      expect((await request(app).delete('/v1/metadata/ruler').set(EDITOR_AUTH())).status).to.equal(401);
-      expect((await request(app).put('/v1/metadata/ruler').set(EDITOR_AUTH()).send({ data: {} })).status).to.equal(401);
-      expect((await request(app).put('/v1/metadata/ruler').set(EDITOR_AUTH()).send({ type: 'e', data: {} })).status).to.equal(401);
+    it('privilege 3, a subscriber and privilege 1 cannot write metadata', async () => {
+      for (const who of [EDITOR, SUBSCRIBER, ALICE]) {
+        expect((await request(app).delete('/v1/metadata/ruler').set(auth(who))).status).to.equal(401);
+        expect((await request(app).put('/v1/metadata/ruler').set(auth(who)).send({ data: {} })).status).to.equal(401);
+        expect((await request(app).put('/v1/metadata/ruler/single').set(auth(who)).send(SINGLE)).status).to.equal(401);
+        expect((await request(app).post('/v1/metadata').set(auth(who))
+          .send({ _id: 'ruler', parentId: 'ENG', childId: '4', childValue: 'injected' })).status).to.equal(401);
+        expect((await request(app).put('/v1/metadata/e_Some_Event').set(auth(who)).send({ type: 'g' })).status).to.equal(401);
+      }
+      const ruler = await getMetadata('ruler');
+      expect(ruler.data.ENG).to.have.length(4);
+      expect(ruler.data).to.not.have.property('POW');
+      expect((await getMetadata('e_Some_Event')).type).to.equal('e');
+    });
 
-      const stored = await getMetadata('ruler');
-      expect(stored.type).to.equal('g');
-      expect(stored.data).to.have.property('ENG');
+    it('privilege 3 and a subscriber cannot write areas or markers', async () => {
+      for (const who of [EDITOR, SUBSCRIBER]) {
+        expect((await request(app).put('/v1/areas').set(auth(who)).send({ start: 1000, end: 1000, provinces: ['Kiev'], ruler: 'X' })).status).to.equal(401);
+        expect((await request(app).post('/v1/markers').set(auth(who)).send({ _id: 'x', name: 'x', type: 'c', coo: [0, 0], year: 1 })).status).to.equal(401);
+      }
     });
 
     it('a PUT cannot move a document onto another id', async () => {
-      const res = await request(app).put('/v1/metadata/e_Some_Event').set(EDITOR_AUTH())
+      const res = await request(app).put('/v1/metadata/e_Some_Event').set(auth(ADMIN))
         .send({ _id: 'ruler', type: 'e', data: { x: 1 } });
       expect(res.status).to.equal(400);
       const ruler = await getMetadata('ruler');
@@ -283,56 +247,31 @@ describe('## User and auth route security', () => {
       expect(ruler.data).to.have.property('ENG');
     });
 
-    it('only admins can change the type of a document', async () => {
-      expect((await request(app).put('/v1/metadata/e_Some_Event').set(EDITOR_AUTH()).send({ type: 'g' })).status).to.equal(401);
-      expect((await getMetadata('e_Some_Event')).type).to.equal('e');
-    });
-
-    it('privilege 3 cannot write into a type g document through POST', async () => {
-      const res = await request(app).post('/v1/metadata').set(EDITOR_AUTH())
-        .send({ _id: 'ruler', parentId: 'ENG', childId: '4', childValue: 'injected' });
-      expect(res.status).to.equal(401);
-      expect((await getMetadata('ruler')).data.ENG).to.have.length(4);
-    });
-
-    it('editors can still change single entries, which is the dictionary editing workflow', async () => {
-      const res = await request(app).put('/v1/metadata/ruler/single').set(EDITOR_AUTH()).send(SINGLE);
+    it('admins can change single entries, the dictionary editing workflow', async () => {
+      const res = await request(app).put('/v1/metadata/ruler/single').set(auth(ADMIN)).send(SINGLE);
       expect(res.status).to.not.equal(401);
       expect((await getMetadata('ruler')).data).to.have.property('POW');
     });
 
-    it('privilege 5 can replace a type g document', async () => {
-      const res = await request(app).put('/v1/metadata/ruler').set('Authorization', `Bearer ${ADMIN}`)
+    it('admins can replace a type g document', async () => {
+      const res = await request(app).put('/v1/metadata/ruler').set(auth(ADMIN))
         .send({ data: { ENG: ['England', 'rgb(1,2,3)', 'England', ''] } });
       expect(res.status).to.equal(200);
       expect((await getMetadata('ruler')).data.ENG[0]).to.equal('England');
     });
-  });
 
-  describe('profile field validation', () => {
-    it('rejects non-string profile fields', async () => {
-      const res = await request(app).put('/v1/users/alice@example.com').set('Authorization', `Bearer ${ALICE}`)
-        .send({ username: { $ne: null } });
-      expect(res.status).to.equal(400);
-      expect((await getUser('alice@example.com')).username).to.equal('alice');
+    it('an admin reading a revision that does not exist gets 404, not 500', async () => {
+      const res = await request(app).get('/v1/revisions/no-such-revision').set(auth(ADMIN));
+      expect(res.status).to.equal(404);
+      expect(res.body.message).to.equal('Revision not found');
     });
 
-    it('rejects a username that belongs to someone else', async () => {
-      const res = await request(app).put('/v1/users/alice@example.com').set('Authorization', `Bearer ${ALICE}`)
-        .send({ username: 'bob' });
-      expect(res.status).to.equal(400);
-      expect((await getUser('alice@example.com')).username).to.equal('alice');
-    });
-
-    it('admins cannot change an email, which is the account id', async () => {
-      await request(app).put('/v1/users/bob@example.com').set('Authorization', `Bearer ${ADMIN}`)
-        .send({ email: 'other@example.com' });
-      expect((await getUser('bob@example.com')).email).to.equal('bob@example.com');
-    });
-
-    it('signup needs an email address', async () => {
-      const res = await request(app).post('/v1/auth/signup').send({ email: 'google12345', password: 'pw-123456', username: 'x' });
-      expect(res.status).to.equal(400);
+    it('votes answer 410 and change no score', async () => {
+      for (const path of ['/v1/metadata/e_Some_Event/upvote', '/v1/metadata/e_Some_Event/downvote', '/v1/metadata/e_Some_Event/UPVOTE/']) {
+        expect((await request(app).put(path).set(auth(ADMIN))).status, path).to.equal(410);
+      }
+      expect((await request(app).put('/v1/metadata/e_Some_Event/upvote')).status).to.equal(410);
+      expect((await getMetadata('e_Some_Event')).score).to.equal(undefined);
     });
   });
 });

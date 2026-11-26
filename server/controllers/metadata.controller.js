@@ -197,23 +197,6 @@ function update(req, res, next, fromRevision = false) {
     .catch((e) => { if (!fromRevision) next(e); });
 }
 
-function vote(delta) {
-  return (req, res, next) => {
-    const { username } = req.auth || {};
-    const metadata = req.entity;
-    metadata.score += delta;
-
-    // Any account can vote, so a vote never sends a CloudFront invalidation
-    // of its own: the new score goes out with the next one.
-    metadata.save({ deferEdgeInvalidation: true })
-      .then((savedMetadata) => {
-        if (username) userCtrl.changePoints(username, 'voted', 1);
-        res.json(savedMetadata);
-      })
-      .catch(e => next(e));
-  };
-}
-
 function updateSinglePromise(req, res, next, fromRevision = false) {
   return new Promise((resolve) => {
     updateSingle(req, res, next, fromRevision, resolve);
@@ -511,21 +494,6 @@ function defineEntity(req, res, next) {
   next();
 }
 
-/**
- * For POST: if the body targets an existing document, record its stored type
- * so privilege checks can't be sidestepped by omitting `type`.
- */
-function loadStoredType(req, res, next) {
-  const id = (req.body || {})._id;
-  if (typeof id === 'undefined') return next();
-  return Metadata.findById(id).exec()
-    .then((existing) => {
-      if (existing) req.storedType = existing.type;
-      next();
-    })
-    .catch(e => next(e));
-}
-
 function _isInvalidRgb(rgb) {
   const rxValidRgb = /([R][G][B][A]?[(]\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\s*,\s*([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])(\s*,\s*((0\.[0-9]{1})|(1\.0)|(1)))?[)])/i;
 
@@ -536,4 +504,4 @@ function _isInvalidRgb(rgb) {
   }
 }
 
-export default { defineEntity, loadStoredType, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove, vote };
+export default { defineEntity, getLinked, load, get, updateLink, updateLinkAtom, create, update, updateSingle, list, remove };

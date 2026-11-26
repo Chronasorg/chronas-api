@@ -86,7 +86,7 @@ Everything goes through [`api-edge/`](api-edge/README.md), never the console. Ev
 
 ## JWT secret
 
-`/chronas/jwt-secret` is an SSM Parameter Store SecureString (Standard tier, AWS managed key `aws/ssm`) that holds only the HS256 signing secret. Tokens carry no expiry, so any change of the value logs every user of chronas.org and old.chronas.org out, and the deploy's Postman run doesn't notice (it logs in fresh).
+`/chronas/jwt-secret` is an SSM Parameter Store SecureString (Standard tier, AWS managed key `aws/ssm`) that holds only the HS256 signing secret. Tokens expire 12 h after login (since 2026-11-26), so a change of the value only logs admins out early, and the deploy's Postman run doesn't notice (it logs in fresh).
 
 - `api-edge/jwt-secret-ssm.sh copy` creates it from the `JWT_SECRET` field of Secrets Manager `/chronas/secrets`: a dry run first, then `--apply --confirm "copy jwt secret to ssm"`. It never overwrites another value. It stops before PutParameter, dry run included, for a value Parameter Store rejects: more than 4096 bytes, or containing `{{` and `}}`. If that happens, don't switch: keep reading Secrets Manager, because a new value would log every user out. If PutParameter itself fails, only its error code is shown, since a message could quote the value.
 - `api-edge/jwt-secret-ssm.sh verify` compares the two values by SHA-256 and prints only `match` (exit 0) or `mismatch` (exit 1). Run it right before the push that switches the revision, and again before retiring Secrets Manager.

@@ -31,8 +31,8 @@
  *
  * Env (only needed for --apply):
  *   CHRONAS_API_URL   default https://api.chronas.org
- *   CHRONAS_EMAIL / CHRONAS_PASSWORD   curator account (privilege >= 3), OR
- *   CHRONAS_TOKEN     a pre-obtained JWT
+ *   CHRONAS_EMAIL / CHRONAS_PASSWORD   admin account (privilege 5), OR
+ *   CHRONAS_TOKEN     a JWT from /v1/auth/login (expires after 12 h)
  */
 
 import fs from 'fs';

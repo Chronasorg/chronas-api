@@ -21,7 +21,7 @@ import { metadataCache } from '../../models/dynamo/metadata.dynamo.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SERVER_DIR = path.join(__dirname, '../..');
 const SECRET = process.env.JWT_SECRET || 'test-secret-key';
-const ADMIN = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, SECRET, { algorithm: 'HS256' });
+const ADMIN = jwt.sign({ id: 'admin@chronas.org', username: 'admin', privilege: 5 }, SECRET, { algorithm: 'HS256', expiresIn: '1h' });
 const GARBAGE_TOKEN = 'Bearer not-a-jwt';
 
 // Every place that sets a `public` Cache-Control, by file: the calls of
@@ -253,8 +253,9 @@ describe('## Cache-Control headers', () => {
       ['GET', '/v1/version', null, 200],
       ['GET', '/v1/areas', null, 200],
       ['GET', '/v1/markers/Battle_of_Hastings', null, 200],
-      ['GET', '/v1/users/admin@chronas.org', ADMIN, 200],
-      ['GET', '/v1/users/admin@chronas.org', null, 401],
+      ['GET', '/v1/users/admin@chronas.org', ADMIN, 410],
+      ['GET', '/v1/revisions/no-such-revision', null, 401],
+      ['GET', '/v1/flags', null, 410],
       ['GET', '/v1/metadata/culture/getLinked', null, 400],
       ['PUT', '/v1/areas/1000', null, 401],
       ['GET', '/v1/areas/99999', null, 404],

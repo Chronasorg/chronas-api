@@ -1,12 +1,13 @@
 import express from 'express';
-import { expressjwt as expressJwt } from 'express-jwt';
 
 import markerCtrl from '../controllers/marker.controller.js';
 import revisionCtrl from '../controllers/revision.controller.js';
-import { config } from '../../config/config.js';
-import checkPrivilege from '../helpers/privileges.js';
+import { adminWrites } from '../helpers/require-auth.js';
 
 const router = express.Router();
+
+// Every write on this router is for admins; checked before any loader runs.
+adminWrites(router);
 
 router.route('/')
   .all(markerCtrl.defineEntity)
@@ -17,8 +18,6 @@ router.route('/')
 
   /** POST /v1/markers - Create new marker */
   .post(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addCreateRevision,
     // validate(paramValidation.createMarker),
     markerCtrl.create);
@@ -31,16 +30,12 @@ router.route('/:markerId')
 
   /** PUT /v1/markers/:markerId - Update marker */
   .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
     // validate(paramValidation.updateMarker),
     revisionCtrl.addUpdateRevision,
     markerCtrl.update)
 
   /** DELETE /v1/markers/:markerId - Delete marker */
   .delete(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    checkPrivilege.checkPrivilege(3),
     revisionCtrl.addDeleteRevision,
     markerCtrl.remove);
 

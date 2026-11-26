@@ -1,31 +1,14 @@
 import express from 'express';
-import { expressjwt as expressJwt } from 'express-jwt';
 
-import flagCtrl from '../controllers/flag.controller.js';
-import { config } from '../../config/config.js';
+import { retired } from '../helpers/require-auth.js';
 
+// Retired 2026-11-26 after the pentest (anyone could create, close or delete
+// flags). In the 60 days before, only old.chronas.org sent reports (7), and
+// none was ever processed. The chronas-flags table is kept.
 const router = express.Router();
+const gone = retired('The flags API has been retired.');
 
-router.route('/')
-  /** GET /v1/flags - Get list of flags */
-  .get(
-    flagCtrl.list)
-
-  /** POST /v1/flags - Create new flag */
-  .post(
-    // validate(paramValidation.createMarker),
-    flagCtrl.create);
-
-router.route('/:flagId')
-  .put(
-    expressJwt({ secret: config.jwtSecret, requestProperty: 'auth', algorithms: ['HS256'] }),
-    flagCtrl.update)
-
-  /** DELETE /v1/flags/:flagId - Delete flag */
-  .delete(
-    flagCtrl.remove);
-
-/** Load flag when API with flagId route parameter is hit */
-router.param('flagId', flagCtrl.load);
+router.all('/', gone);
+router.all('/*splat', gone);
 
 export default router;
