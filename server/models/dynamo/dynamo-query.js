@@ -22,6 +22,9 @@ import { getDocClient } from './dynamo-client.js';
  * Both target small tables so the scan cost is acceptable; do not try to
  * DescribeTable-optimize filtered counts.
  */
+/** Page size for a limit that is not a positive integer. */
+export const DEFAULT_PAGE_SIZE = 50;
+
 export default class DynamoQuery {
   constructor(Model, filter = {}) {
     this.Model = Model;
@@ -46,13 +49,24 @@ export default class DynamoQuery {
     return this;
   }
 
+  // A negative or non-integer skip reads from the start.
   skip(n) {
-    this._skip = n;
+    const value = Number(n);
+    this._skip = Number.isSafeInteger(value) && value > 0 ? value : 0;
     return this;
   }
 
+  // A limit that is not a positive integer (0, -1, 'abc') used to mean "no
+  // limit", a read of the whole table (pentest F4). It now means the default
+  // page size; `null` or `undefined` still mean no limit, as callers that
+  // want everything pass nothing.
   limit(n) {
-    this._limit = n;
+    if (n === null || n === undefined) {
+      this._limit = null;
+      return this;
+    }
+    const value = Number(n);
+    this._limit = Number.isSafeInteger(value) && value > 0 ? value : DEFAULT_PAGE_SIZE;
     return this;
   }
 

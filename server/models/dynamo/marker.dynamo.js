@@ -174,12 +174,21 @@ function normalizeArray(val) {
   return null;
 }
 
+/**
+ * Most items one list request reads from the type/year index. The largest
+ * real request (every city, year -5000 to 2100) reads about 4,700; an
+ * all-types request over thousands of years would otherwise read the whole
+ * table (pentest F4). Past the cap the result is incomplete.
+ */
+export const MAX_QUERY_ITEMS = 20000;
+
 async function queryByTypeAndYear(typeArray, year, delta, end) {
   const yearLo = year - delta;
   const yearHi = end !== false && end !== undefined ? end : year + delta;
   const client = getDocClient();
+  const budget = { left: MAX_QUERY_ITEMS };
 
-  const queries = typeArray.map(type => paginatedQuery(client, {
+  const queries = typeArray.map(type => paginatedQuery(client, budget, {
     TableName: TABLE,
     IndexName: 'GSI-TypeYear',
     KeyConditionExpression: '#t = :t AND #y BETWEEN :lo AND :hi',
@@ -191,21 +200,25 @@ async function queryByTypeAndYear(typeArray, year, delta, end) {
   return results.flat();
 }
 
-async function paginatedQuery(client, baseParams) {
+// `budget.left` is shared by the queries of one request.
+async function paginatedQuery(client, budget, baseParams) {
   const items = [];
   let next;
   do {
     const params = next ? { ...baseParams, ExclusiveStartKey: next } : baseParams;
     const out = await client.send(new QueryCommand(params));
-    if (out.Items) items.push(...out.Items);
+    if (out.Items) {
+      items.push(...out.Items);
+      budget.left -= out.Items.length;
+    }
     next = out.LastEvaluatedKey;
-  } while (next);
+  } while (next && budget.left > 0);
   return items;
 }
 
+// The ids arrive decoded and without duplicates (markerListParams).
 async function batchGetByWikis(wikiArray) {
-  const ids = wikiArray.map(w => decodeURIComponent(w));
-  return batchGetByIds(ids);
+  return batchGetByIds(wikiArray);
 }
 
 async function batchGetByIds(ids) {

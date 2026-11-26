@@ -216,7 +216,8 @@ async function queryBranch(options) {
     wiki, search, mustGeo, discover
   } = options;
 
-  const cacheKey = `query:${type}:${subtype}:${year}:${delta}:${start}:${end}:${wiki || ''}:${search || ''}:${mustGeo || ''}:${discover || ''}`;
+  // JSON keeps a missing filter (false) apart from the text "false" (pentest F3).
+  const cacheKey = `query:${JSON.stringify([type, subtype, year, delta, +start, +end, wiki || '', search || '', mustGeo || '', discover || ''])}`;
   const cached = metadataCache.get(cacheKey);
   if (cached) return cached;
 
@@ -248,7 +249,7 @@ async function queryBranch(options) {
 
   // Scan: cache the filtered, sorted list of LIST_FIELDS (small, and shared by
   // every page), then load full items for this page only.
-  const listKey = `list:${type}:${subtype}:${year}:${delta}:${wiki || ''}:${search || ''}:${mustGeo || ''}`;
+  const listKey = `list:${JSON.stringify([type, subtype, year, delta, wiki || '', search || '', mustGeo || ''])}`;
   const list = metadataCache.get(listKey) || await once(listKey, () => withLoadSlot(async () => {
     const rows = await scanWithFilter({ year, yearLo, yearHi, wiki, type, subtypes });
     const sorted = filterAndSort(rows, { search, mustGeo });

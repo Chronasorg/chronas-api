@@ -10,6 +10,7 @@ import * as linksStore from '../models/dynamo/links-store.js';
 
 import userCtrl from './user.controller.js';
 import revisionCtrl from './revision.controller.js';
+import { metadataListParams, linkedSourceParam } from '../helpers/read-params.js';
 
 const useDynamoLinks = config.dynamodb?.useMetadata;
 
@@ -319,7 +320,13 @@ function updateLinkAtom(req, res, next, isAddLink, resolve = false) {
 const linkedCacheControl = () => publicCacheControl(0, 3600);
 
 function getLinked(req, res, next, resolve = false) {
-  const sourceItem = req.query.source || false;
+  let sourceItem;
+  try {
+    sourceItem = linkedSourceParam(req.query);
+  } catch (e) {
+    if (resolve) return resolve({ map: [], media: [] });
+    return next(e);
+  }
 
   const MAPIDS = ['a', 'b'];
   const MEDIAIDS = ['e', 'b'];
@@ -448,17 +455,13 @@ function getLinked(req, res, next, resolve = false) {
  * @returns {Metadata[]}
  */
 function list(req, res, next) {
-  const { start = 0, end = 10, sort = 'createdAt', order = 'asc', filter = '' } = req.query;
-  const fList = req.query.f || false;
-  const locale = req.query.locale || false;
-  const type = req.query.type || false;
-  const subtype = req.query.subtype || false;
-  const year = +req.query.year || false;
-  const delta = +req.query.delta || 10;
-  const wiki = req.query.wiki || false;
-  const search = req.query.search || false;
-  const mustGeo = req.query.geo || false;
-  const discover = req.query.discover || false;
+  let params;
+  try {
+    params = metadataListParams(req.query);
+  } catch (e) {
+    return next(e);
+  }
+  const { start, end, sort, order, filter, fList, locale, type, subtype, year, delta, wiki, search, mustGeo, discover } = params;
 
   Metadata.list({ start, end, sort, order, mustGeo, filter, fList, locale, type, subtype, year, delta, wiki, search, discover })
     .then((metadata) => {
@@ -472,6 +475,7 @@ function list(req, res, next) {
       res.json(metadata);
     })
     .catch(e => next(e));
+  return undefined;
 }
 
 /**
