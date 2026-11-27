@@ -2,6 +2,7 @@ import { GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import httpStatus from 'http-status';
 import crypto from 'node:crypto';
+import { gzipSync, gunzipSync } from 'node:zlib';
 
 import APIError from '../../helpers/APIError.js';
 import DynamoDocument from './dynamo-document.js';
@@ -111,17 +112,77 @@ export default class RevisionDynamo extends DynamoDocument {
     'Revision list endpoint has 0 production traffic. Only write + findById are in scope.'
   );
 
+  constructor(props = {}) {
+    super(decodeBodies(props));
+  }
+
   async save() {
     const item = this.toObject();
     if (!item._id) item._id = crypto.randomUUID();
     if (!item.timestamp) item.timestamp = new Date().toISOString();
-    if (typeof item.nextBody === 'object') item.nextBody = JSON.stringify(item.nextBody);
-    if (typeof item.prevBody === 'object') item.prevBody = JSON.stringify(item.prevBody);
+    if (item.nextBody !== null && typeof item.nextBody === 'object') item.nextBody = JSON.stringify(item.nextBody);
+    if (item.prevBody !== null && typeof item.prevBody === 'object') item.prevBody = JSON.stringify(item.prevBody);
+    shrinkBodies(item);
     await getDocClient().send(new PutCommand({ TableName: TABLE, Item: item }));
     this._id = item._id;
     await recordLastEdit(item.timestamp);
     return this;
   }
+}
+
+/**
+ * DynamoDB refuses items over 400 KB. A revision of a large metadata document
+ * (`provinces` is about 740 KB of JSON) carries the changed field twice, in
+ * nextBody and prevBody, so the PutItem failed and the update answered 500
+ * before the document was saved (#164).
+ *
+ * Bodies of together at least COMPRESS_BODY_BYTES are gzipped into Binary
+ * attributes (`bodyCompressed: true`); the constructor turns them back into
+ * strings on read. If they are still over MAX_BODY_BYTES compressed, the
+ * revision keeps its metadata and the body sizes only (`bodyOmitted: true`),
+ * and a WARN line says so: the edit is not blocked by its own history.
+ */
+export const COMPRESS_BODY_BYTES = 100 * 1024;
+export const MAX_BODY_BYTES = 350 * 1024;
+const BODY_FIELDS = ['nextBody', 'prevBody'];
+
+function bodyBytes(item) {
+  return BODY_FIELDS.reduce((sum, f) => sum + (
+    typeof item[f] === 'string' ? Buffer.byteLength(item[f], 'utf8')
+      : item[f] instanceof Uint8Array ? item[f].byteLength : 0
+  ), 0);
+}
+
+function shrinkBodies(item) {
+  const rawBytes = bodyBytes(item);
+  if (rawBytes < COMPRESS_BODY_BYTES) return;
+  for (const f of BODY_FIELDS) {
+    if (typeof item[f] === 'string') item[f] = gzipSync(Buffer.from(item[f], 'utf8'));
+  }
+  item.bodyCompressed = true;
+  const compressedBytes = bodyBytes(item);
+  if (compressedBytes <= MAX_BODY_BYTES) return;
+  for (const f of BODY_FIELDS) delete item[f];
+  delete item.bodyCompressed;
+  item.bodyOmitted = true;
+  item.bodyBytes = rawBytes;
+  console.warn({
+    msg: 'revisionBodyOmitted',
+    resource: item.resource,
+    entityId: item.entityId,
+    rawBytes,
+    compressedBytes
+  });
+}
+
+function decodeBodies(props) {
+  if (!props?.bodyCompressed) return props;
+  const out = { ...props };
+  for (const f of BODY_FIELDS) {
+    if (out[f] instanceof Uint8Array) out[f] = gunzipSync(out[f]).toString('utf8');
+  }
+  delete out.bodyCompressed;
+  return out;
 }
 
 function withoutStats(filter) {

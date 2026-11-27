@@ -107,6 +107,75 @@ describe('RevisionDynamo (DynamoDB Local, real data)', () => {
     });
   });
 
+  describe('large bodies (#164: 400 KB item limit)', () => {
+    // A FeatureCollection-like body of about 740 KB per side, like `provinces`.
+    function largeBody(tag) {
+      const features = [];
+      for (let i = 0; features.length * 150 < 740 * 1024; i++) {
+        features.push({ type: 'Feature', id: `${tag}-${i}`, geometry: { type: 'Point', coordinates: [i % 180, i % 90] } });
+      }
+      return { data: { type: 'FeatureCollection', features } };
+    }
+
+    it('gzips bodies over the threshold and reads them back as strings', async () => {
+      const nextBody = largeBody('next');
+      const prevBody = largeBody('prev');
+      expect(Buffer.byteLength(JSON.stringify(nextBody))).to.be.greaterThan(400 * 1024);
+
+      const r = new RevisionDynamo({
+        type: 'UPDATE', entityId: 'provinces', resource: 'metadata', user: 'admin@chronas.org',
+        nextBody: JSON.stringify(nextBody), prevBody: JSON.stringify(prevBody)
+      });
+      await r.save();
+      expect(r.nextBody).to.be.a('string');
+
+      const fetched = await RevisionDynamo.findById(r._id);
+      expect(fetched.bodyCompressed).to.be.undefined;
+      expect(fetched.bodyOmitted).to.be.undefined;
+      expect(JSON.parse(fetched.nextBody)).to.deep.equal(nextBody);
+      expect(JSON.parse(fetched.prevBody)).to.deep.equal(prevBody);
+
+      const viaGsi = await RevisionDynamo.findOne({ entityId: 'provinces' });
+      expect(JSON.parse(viaGsi.prevBody)).to.deep.equal(prevBody);
+    });
+
+    it('leaves small bodies as plain strings', async () => {
+      const r = new RevisionDynamo({
+        type: 'UPDATE', entityId: 'small', resource: 'metadata', user: 'admin@chronas.org',
+        nextBody: '{"a":1}', prevBody: '{"a":0}'
+      });
+      await r.save();
+      const fetched = await RevisionDynamo.findById(r._id);
+      expect(fetched.nextBody).to.equal('{"a":1}');
+      expect(fetched.bodyCompressed).to.be.undefined;
+    });
+
+    it('stores the revision without bodies when they stay too large compressed', async () => {
+      const crypto = await import('node:crypto');
+      const noise = crypto.randomBytes(300 * 1024).toString('base64'); // incompressible, ~400 KB
+      const warnings = [];
+      const origWarn = console.warn;
+      console.warn = (o) => { warnings.push(o); };
+      let r;
+      try {
+        r = new RevisionDynamo({
+          type: 'UPDATE', entityId: 'noise', resource: 'metadata', user: 'admin@chronas.org',
+          nextBody: JSON.stringify({ data: noise }), prevBody: JSON.stringify({ data: noise.slice(1) })
+        });
+        await r.save();
+      } finally {
+        console.warn = origWarn;
+      }
+      const fetched = await RevisionDynamo.findById(r._id);
+      expect(fetched.bodyOmitted).to.equal(true);
+      expect(fetched.bodyBytes).to.be.greaterThan(700 * 1024);
+      expect(fetched.nextBody).to.be.undefined;
+      expect(fetched.prevBody).to.be.undefined;
+      expect(fetched.entityId).to.equal('noise');
+      expect(warnings.some(w => w?.msg === 'revisionBodyOmitted' && w.entityId === 'noise')).to.equal(true);
+    });
+  });
+
   describe('.aggregate() — statistics', () => {
     it('groups by type', async () => {
       const result = await RevisionDynamo.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]);
