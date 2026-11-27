@@ -108,12 +108,13 @@ Feature flags (`USE_DYNAMODB_*` env vars) remain as local-override switches only
 - Marker types: `'a', 'at', 'e', 'm', 'op', 'p', 'r', 's', 'c', 'ca', 'w'`
 - Links: normalized per-entity items in `chronas-links` table (decomposed from monolithic doc)
 - Large metadata items (provinces, ruler) are gzip-compressed transparently via `compression.js`
+- Revisions gzip `nextBody`/`prevBody` once they reach 100 KB together (`bodyCompressed`, decoded on read); still over 350 KB compressed, the revision is stored without bodies (`bodyOmitted`, `bodyBytes`) and logs `revisionBodyOmitted` (WARN), so a large edit is never blocked by its own history (#164)
 - Areas: `null` values in province arrays are restored to `""` on read for frontend compatibility
 - `$in` arrays >100 items are auto-chunked in [dynamo-query.js](server/models/dynamo/dynamo-query.js) to stay under the DynamoDB IN operator limit
 
 ## Testing
 
-- **Unit/Integration tests**: Mocha + Chai (2026-11-26: 674 unit tests passing plus 1 pending, 131 integration tests). DynamoDB models tested against dynalite (in-memory emulator). Test env auto-configured in `server/tests/helpers.js`. `server/tests/integration/web-server.test.js` starts `web-server.js` and `index.js` as their own processes, the way the runtime does (startup, SIGTERM, unhandled rejections, stalled Secrets Manager and DynamoDB endpoints).
+- **Unit/Integration tests**: Mocha + Chai (2026-11-27: 677 unit tests passing plus 1 pending, 132 integration tests). DynamoDB models tested against dynalite (in-memory emulator). Test env auto-configured in `server/tests/helpers.js`. `server/tests/integration/web-server.test.js` starts `web-server.js` and `index.js` as their own processes, the way the runtime does (startup, SIGTERM, unhandled rejections, stalled Secrets Manager and DynamoDB endpoints).
 - **Postman/Newman tests**: `PostmanTests/chronas-enhanced.postman_collection.json` — 44 requests, 92 assertions. Run via `npm run test:postman:prod` against prod or `npm run test:postman:dev` against dev. Runs automatically in GitHub Actions post-deploy (with auto-rollback on failure).
 - **Playwright E2E**: `e2e-tests/dev-smoke.spec.js` — 12 tests covering API + frontend, run against deployed dev env.
 
